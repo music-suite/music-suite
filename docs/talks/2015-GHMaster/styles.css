@@ -1,0 +1,79 @@
+html { 
+         background-image:url('farm2014/images/bg2.jpg');
+        background-repeat:repeat;
+        }
+body { 
+/*        border-radius: 5px;*/
+        margin: 5px;
+/*        background-color: rgba(255,255,255,0.7);*/
+        }
+/* A section is a slide. It's size is 800x600, and this will never change */
+section {
+/*    font-family: Arial, serif;*/
+    font-family: Baskerville;
+    font-size: 20pt;   
+    color: #222;
+  }
+address, blockquote, dl, fieldset, form, h1, h2, h3, h4, h5, h6, hr, ol, p, pre, table, ul, dl { padding: 10px 20px 10px 20px; }
+h1, h2, h3 {
+  text-align: center;
+  margin: 10pt 10pt 20pt 10pt;
+}
+ul, ol {
+  margin: 10px 10px 10px 50px;
+}
+section.titleslide h1 { margin-top: 200px; }
+h1.title { margin-top: 150px; }
+h1 { font-size: 180%; }
+h2 { font-size: 120%; }
+h3 { font-size: 100%; }
+q { quotes: "“" "”" "‘" "’"; }
+blockquote { font-style: italic }
+/* Figures are displayed full-page, with the caption on
+   top of the image/video */
+figure {
+  background-color: black;
+}
+figcaption {
+  margin: 70px;
+}
+footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 40px;
+  text-align: right;
+  background-color: #F3F4F8;
+  border-top: 1px solid #CCC;
+}
+
+/* Transition effect */
+/* Feel free to change the transition effect for original
+   animations. See here:
+   https://developer.mozilla.org/en/CSS/CSS_transitions
+   How to use CSS3 Transitions: */
+section {
+/*    -moz-transition: left 400ms linear 0s;*/
+/*    -webkit-transition: left 400ms linear 0s;*/
+/*    -ms-transition: left 400ms linear 0s;*/
+
+/*    transition: left 400ms linear 0s;*/
+}
+
+/* Before */
+section { left: -150%; }
+/* Now */
+section[aria-selected] { left: 0; }
+/* After */
+section[aria-selected] ~ section { left: +150%; }
+
+/* Incremental elements */
+
+/* By default, visible */
+.incremental > * { opacity: 1; }
+
+/* The current item */
+.incremental > *[aria-selected] { color: red; opacity: 1; }
+
+/* The items to-be-selected */
+.incremental > *[aria-selected] ~ * { opacity: 0.2; }

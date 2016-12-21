@@ -1,0 +1,174 @@
+
+
+body {
+        margin-left: 350px;
+        margin-right: 40px;
+        max-width: 690px;
+        line-height: 160%;
+        color: #202027;     
+        background: #fcfefe;
+        font-size: 12.5px;
+        font-family: Geneva, Arial;
+}
+a:link, a:active, a:visited {
+        color: #3050a7;
+        text-decoration:none;
+}
+a:hover {
+        color: #ccc;
+        text-decoration:none;
+}
+
+h1,
+h2,
+h3
+{
+        font-family: Palatino;
+        color: black;
+        text-decoration:none;
+        text-shadow: 0px 0px 2px #eef;
+}
+code {
+        line-height:140%;
+}   
+pre {
+/*        font-size: 13px;*/
+}
+
+h1 { font-size: 1.9em }
+h2 { font-size: 1.6em }
+h3 { font-size: 1.4em }
+
+
+h1 {
+        margin-top: 2em;
+}
+h2 {
+        margin-top: 2em;
+}
+h3 {
+        margin-top: 1em;
+}
+
+
+
+div.haskell-music {
+        padding:                20px;
+        margin-bottom:          5px;
+        background:             #faffff;
+        border-radius:          12px;
+        border:                 1px solid LightGrey;
+        box-shadow:             3px 3px 5px #eee;
+/*        opacity:                0.95;*/
+        overflow:               auto;
+}
+div.haskell-music img {
+        padding-bottom:         10px;
+}
+body > pre {
+        padding:                20px;
+        margin-top:             15px;
+        margin-bottom:          15px;
+        background:             #faffff;
+        border-radius:          12px;
+        border:                 1px solid LightGrey;
+        box-shadow:             3px 3px 5px #eee;
+/*        opacity:                0.95;*/
+        overflow:               auto;
+        
+}
+
+@media screen {
+        div#TOC {       
+                position:               fixed;
+                overflow-y:             auto;
+                top:                    0px;
+                left:                   0px;
+                width:                  310px;
+        
+                border-right:           1px solid LightGrey;
+           
+        /*        background-color:       #3050a7;*/
+        	height:                 100%;
+  
+        /*        font-family: Arial, sans-serif; */
+                font-family: Palatino;
+                font-size:              14px;
+                padding :               5px;
+                padding-bottom :        15px;
+                line-height:            170%;
+
+                background-color:       #feffff;
+        }
+
+        div#TOC > ul {
+                margin-top:             40px;
+        
+        }
+        div#TOC > ul > li {
+                margin-top:             10px;        
+        }
+
+        div#TOC > ul, div > ul > li > ul {
+                list-style-type: none;
+                margin-left:     -10px;
+        }
+
+        div#TOC a {
+                color: #222;
+                text-shadow: 0px 0px 1px #ccc;
+                text-decoration:none;
+        }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+.haskell-music-listen {
+        font-size: 9px;
+}
+
+
+
+
+
+
+
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #222; font-weight: bold; }
+code > span.dt { color: #293; }
+code > span.dv { color: #3a3; }
+code > span.bn { color: red; }
+code > span.fl { color: orange; }
+code > span.ch { color: red; }
+code > span.st { color: red; }
+code > span.co { color: gray; font-style: italic; }
+code > span.al { color: green; font-weight: bold; }
+code > span.ot { color: #2573a0; }
+code > span.fu { color: #2573a0; }
+code > span.er { color: red; font-weight: bold; }
+
+
+
+
+
+
+
+
+
+
+
+
+
