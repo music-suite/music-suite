@@ -4,10 +4,10 @@
 module Music.Score.Internal.Data (getData) where
 
 #ifndef GHCI
-#define GET_DATA_FILE Paths_music_score.getDataFileName
-import qualified Paths_music_score
+#define GET_DATA_FILE Paths_music_suite.getDataFileName
+import qualified Paths_music_suite
 #else
-#define GET_DATA_FILE (return . ("../music-score/"++))
+#define GET_DATA_FILE (return . ("./"++))
 #endif
 
 import qualified System.IO.Unsafe
@@ -20,4 +20,3 @@ getData name = System.IO.Unsafe.unsafePerformIO $ do
   fp <- GET_DATA_FILE ("data/" ++ name)
   d <- Data.ByteString.Lazy.readFile fp
   return $ Data.ByteString.Lazy.Char8.unpack d
-

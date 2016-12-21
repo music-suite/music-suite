@@ -553,13 +553,13 @@ voice1 = a -- mconcat [a,a,b,b,b,b,c,c]
     -- c = [(2,c)^.note]^.voice
 
 -- music-suite/test/legacy-music-files/pitch_inv.music
-pitch_inv :: Music
-pitch_inv =
-  (scat [c..g]|*(2/5))
-      </>
-  (invertPitches c $ scat [c..g]|*(2/5))
-      </>
-  (invertPitches e $ scat [c..g]|*(2/5))
+-- pitch_inv :: Music
+-- pitch_inv =
+--   (scat [c..g]|*(2/5))
+--       </>
+--   (invertPitches c $ scat [c..g]|*(2/5))
+--       </>
+--   (invertPitches e $ scat [c..g]|*(2/5))
 
 
 -- music-suite/test/legacy-music-files/sharpen.music
@@ -596,13 +596,13 @@ special_gliss =
 -- How?
 
 -- music-suite/test/legacy-music-files/special_harmonics.music
-special_harmonics :: Music
-special_harmonics =
-  (harmonic 1 $ c|/2)
-      </>
-  (harmonic 2 $ c|/2)
-      </>
-  (harmonic 3 $ c|/2)
+-- special_harmonics :: Music
+-- special_harmonics =
+--   (harmonic 1 $ c|/2)
+--       </>
+--   (harmonic 2 $ c|/2)
+--       </>
+--   (harmonic 3 $ c|/2)
 -- TODO should be moved to techniques
 -- Nicer way of distinguishing artificial/natural (for instruments where this
 -- makes sense).
