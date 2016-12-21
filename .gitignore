@@ -1,2 +1,10 @@
 dist
 *sandbox.config
+.shelly
+.hackette
+*.ly
+*.pdf
+*.xml
+*sandbox.config
+.DS_Store
+*.mid
