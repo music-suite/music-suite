@@ -2,9 +2,9 @@ dist
 *sandbox.config
 .shelly
 .hackette
+.ackoptions
 *.ly
 *.pdf
 *.xml
-*sandbox.config
 .DS_Store
 *.mid
