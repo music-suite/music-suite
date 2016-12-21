@@ -3,6 +3,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 # music-articulation
@@ -53,6 +54,15 @@ This functionality is still experimental: you need to manually install the Sibel
 
 This library an exterimental addition to the Music Suite, see <http://music-suite.github.io>.
 >>>>>>> d8479b761bb709ffe7c2043012c017b93613c933
+=======
+[![Build Status](https://travis-ci.org/music-suite/lilypond.png)](https://travis-ci.org/music-suite/lilypond)
+
+# Lilypond
+
+This package contains a terse Haskell representation of (a subset of) Lilypond 
+expressions and a pretty-printer for such expressions. They can be used to generate 
+musical notation.
+>>>>>>> ea85e3198157777b8eeb259a2b38586b0dbd6bcd
 
 ## Requirements
 
@@ -60,6 +70,7 @@ This library an exterimental addition to the Music Suite, see <http://music-suit
 
 ## Installation
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     cabal configure
     cabal install
@@ -79,3 +90,7 @@ This library an exterimental addition to the Music Suite, see <http://music-suit
 
 This library is part of the Music Suite, see <http://music-suite.github.io>.
 >>>>>>> e9f60cb927908806e8d70e94fcb7ef3699429cf7
+=======
+    cabal configure
+    cabal install
+>>>>>>> ea85e3198157777b8eeb259a2b38586b0dbd6bcd

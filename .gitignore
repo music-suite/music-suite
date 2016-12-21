@@ -34,3 +34,13 @@ src/private
 test*
 test.pdf
 wiki
+dist
+*.png
+*.ly
+*.pdf
+*.eps
+*.count
+*.tex
+*.texi
+.shelly
+*sandbox.config
