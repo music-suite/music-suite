@@ -33,3 +33,12 @@ sketches/docs
 *sandbox.config
 *.hi
 *.o
+*.plg
+*.json
+*.bom
+*.sib
+*.DS_Store
+dist
+*.ly
+*.pdf
+cabal.sandbox.config

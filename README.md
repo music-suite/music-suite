@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 # music-articulation
@@ -41,6 +42,16 @@ Musical score and part representation.
 
 This library is part of the Music Suite, see <http://music-suite.github.io>.
 >>>>>>> ae6508d8028ed17823820241472dfe7fcbfe0a50
+=======
+
+# music-sibelius
+
+Exporting of Sibelius scores to a compatible music representations. This export retains most features of the original scores and does not require a MusicXML export plugin.
+
+This functionality is still experimental: you need to manually install the Sibelius plugin (see below), and run it as *Plugins > JSON > Export JSON*.
+
+This library an exterimental addition to the Music Suite, see <http://music-suite.github.io>.
+>>>>>>> d8479b761bb709ffe7c2043012c017b93613c933
 
 ## Requirements
 
@@ -48,5 +59,16 @@ This library is part of the Music Suite, see <http://music-suite.github.io>.
 
 ## Installation
 
+<<<<<<< HEAD
     cabal configure
     cabal install
+=======
+### Haskell library 
+
+    cabal configure
+    cabal install
+
+### Sibelius plugin 
+
+    make install-plugin
+>>>>>>> d8479b761bb709ffe7c2043012c017b93613c933

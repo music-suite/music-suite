@@ -1,0 +1,41 @@
+
+name:                   music-sibelius
+version:                1.9.2
+author:                 Hans Hoglund
+maintainer:             Hans Hoglund <hans@hanshoglund.se>
+license:                BSD3
+license-file:           COPYING
+synopsis:               Interaction with Sibelius.
+category:               Music
+tested-with:            GHC
+build-type:             Simple
+cabal-version:          >= 1.10
+
+description:
+    Import music from Sibelius (experimental).
+    .
+    This library is part of the Music Suite, see <http://music-suite.github.io>.
+
+source-repository head
+  type:                 git
+  location:             git://github.com/music-suite/music-sibelius.git
+
+library
+    build-depends:      base                    >= 4        && < 5,
+                        aeson                   >= 0.7.0.6  && < 1,
+                        lens                    >= 4.11     && < 5,
+                        semigroups              >= 0.13.0.1 && < 1,
+                        monadplus,
+                        unordered-containers,
+                        bytestring,
+                        aeson,
+                        music-score             == 1.9.2,
+                        music-pitch             == 1.9.2,
+                        music-parts             == 1.9.2,
+                        music-dynamics          == 1.9.2,
+                        music-articulation      == 1.9.2,
+                        music-suite             == 1.9.2
+    exposed-modules:    Data.Music.Sibelius
+                        Music.Score.Import.Sibelius
+    hs-source-dirs:     src
+    default-language:   Haskell2010

@@ -1,0 +1,433 @@
+{
+    Initialize "(){
+        //
+        // This Sibelius plugin writes a Sibelius score as a JSON file
+        //
+        // It basically copies the internal object model in Sibelius to
+        // a JSON approximation. There is *no* specification, but it
+        // should be relatively easy to see what this file does.
+        //
+        AddToPluginsMenu('Export JSON','Run');
+    }"
+    
+   
+    DEBUG "true"
+
+
+    Run "() {                  
+        score = Sibelius.ActiveScore;
+        
+        if (DEBUG) {
+            path = '/Users/hans/Desktop/test.sib_json';
+            WriteScoreToPath(score, path);
+        } else {
+            file = Sibelius.SelectFileToSave(
+                'Export JSON',
+                score.FileName,
+                null,
+                'json',
+                'TEXT',
+                'JSON document');
+
+            if (file != null) {
+                path = file.NameWithExt;
+                WriteScoreToPath(score, path);
+            }
+        }
+    }"
+    
+    WriteScoreToPath "(score, path) {  
+        progress = CreateProgressCallback();
+
+        BeginProgress(score);
+        json = ScoreToJSON(score, progress);
+
+        MidProgress(score);
+        text = ShowJSON(json) & '\n\n';
+        Sibelius.CreateTextFile(path);
+        Sibelius.AppendTextFile(path, text, false);
+
+        EndProgress(score);
+    }"
+
+    
+    
+    CreateProgressCallback "() {
+        progress = CreateDictionary();
+        progress.SetMethod('Apply', Self, 'SetProgress');
+        return progress;
+    }"
+    
+    BeginProgress "(score) {
+        Sibelius.CreateProgressDialog('Exporting JSON...', 0, score.SystemStaff.BarCount);
+    }"
+    
+    MidProgress "(score) {
+        Sibelius.UpdateProgressDialog(score.SystemStaff.BarCount, 'Writing file...');
+    }"
+    
+    EndProgress "(score) {
+        Sibelius.DestroyProgressDialog();
+    }"
+    
+    SetProgress "(_, staffName, bar, numBars) {       
+        // StaffName -> Bar -> NumBars -> ()
+
+        // Updates the global progress dialog with the current
+        // translation state.
+
+        Sibelius.UpdateProgressDialog(bar, 'Processing staff: ' & staffName);
+    }"
+
+
+    ScoreToJSON "(score, progress) {
+        // Score -> (StaffName -> Bar -> NumBars -> ()) -> ()
+
+        // Converts the given score to a JSON representation
+
+        // The progress callback is invoked repeatedly and may be used to report
+        // the current state of the translation to the user.
+
+        score2 = CreateJSONObject();
+        score2['title']                     = ToJSONString(score.Title);
+        score2['composer']                  = ToJSONString(score.Composer);
+        score2['information']               = ToJSONString(score.OtherInformation);
+        score2['transposing']               = ToJSONBool(score.TransposingScore);
+        score2['staffHeight']               = score.StaffHeight;
+
+        temp = CreateJSONArray();
+        ExportSystemStaff(temp, score.SystemStaff, progress);
+        score2['systemStaff']               = temp[0];
+
+        score2['staves']                    = CreateJSONArray();
+        for each staff in score {
+            ExportStaff(score2.staves, staff, progress);
+        }
+
+        return score2;
+    }"
+
+    ExportSystemStaff "(dest, staff, progress) {
+        // JSONScore -> Staff -> ()
+        // Converts and sets the system staff in the given score
+
+        staff2 = CreateJSONObject();
+        staff2['bars']                      = CreateJSONArray();
+
+        for each bar in staff {
+            // trace('    Exporting bar' & bar.BarNumber & ' out of ' & staff.BarCount & ' in ' & staff.InstrumentName);
+            if (progress != null) {
+                progress.Apply('System staff', bar.BarNumber, staff.BarCount);
+            }
+            ExportBar(staff2.bars, bar);
+        }
+        PushJSONArray(dest, staff2);
+    }"
+
+    ExportStaff "(dest, staff, progress) {
+        // [JSONStaff] -> Staff -> ()
+        // Appends the given staff to the given destination
+
+        staff2 = CreateJSONObject();
+        staff2['name']                      = ToJSONString(staff.InstrumentName);
+        staff2['shortName']                 = ToJSONString(staff.ShortInstrumentName);
+        staff2['bars']                      = CreateJSONArray();
+
+        for each bar in staff {
+            // trace('    Exporting bar' & bar.BarNumber & ' out of ' & staff.BarCount & ' in ' & staff.InstrumentName);
+            if (progress != null) {
+                progress.Apply(staff.InstrumentName, bar.BarNumber, staff.BarCount);
+            }
+
+            ExportBar(staff2.bars, bar);
+        }
+        PushJSONArray(dest, staff2);
+    }"
+
+    ExportBar "(dest, bar) {
+        // [JSONBar] -> Bar -> ()
+        // Appends the given bar to the given destination
+
+        bar2 = CreateJSONObject();
+        bar2['number']                      = bar.BarNumber;
+        bar2['elements']                    = CreateJSONArray();
+        for each object in bar {
+            ExportBarObject(bar2.elements, object);
+        }
+        PushJSONArray(dest, bar2);
+    }"
+
+    ExportBarObject "(dest, object) {
+        // [JSONBarObject] -> BarObject -> ()
+        // Appends the given bar object to the given destination
+
+        object2 = CreateJSONObject();
+
+        object2['type'] = ToJSONString('unknown: ' & object.Type);
+
+        if (object.Type = 'NoteRest') {
+            object2['type']                = ToJSONString('chord');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
+            object2['duration']            = object.Duration;
+            
+            object2['doubleTremolos']      = object.Position;
+            object2['singleTremolos']      = object.SingleTremolos;                 // -1 for Z
+            object2['acciaccatura']        = ToJSONBool(object.IsAcciaccatura);
+            object2['appoggiatura']        = ToJSONBool(object.IsAppoggiatura);
+            
+            object2['articulations']       = CreateJSONArray();
+            ExportArticulations(object2.articulations, object);
+            
+            object2['notes']               = CreateJSONArray();
+            for each note in object {
+                ExportNote(object2.notes, note);
+            }
+        }
+        if (object.Type = 'Text') {
+            object2['type']                = ToJSONString('text');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
+            object2['text']                = ToJSONString(object.Text);
+            if (object.StyleId = 'text.staff.expression') {
+                object2['style']           = ToJSONString('expression');
+            }
+            if (object.StyleId = 'text.staff.technique') {
+                object2['style']           = ToJSONString('technique');
+            }
+        }
+        if (object.Type = 'Clef') {
+            object2['type']                = ToJSONString('clef');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
+            object2['style']               = ToJSONString(object.StyleId);
+        }         
+        if (object.Type = 'Slur') {
+            object2['type']                = ToJSONString('slur');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
+            object2['duration']            = object.Duration;
+            object2['style']               = ToJSONString(object.StyleId);
+        }
+        if (object.Type = 'CrescendoLine') {
+            object2['type']                = ToJSONString('cresc');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
+            object2['duration']            = object.Duration;
+            object2['style']               = ToJSONString(object.StyleId);
+        }
+        if (object.Type = 'DiminuendoLine') {
+            object2['type']                = ToJSONString('dim');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
+            object2['duration']            = object.Duration;
+            object2['style']               = ToJSONString(object.StyleId);
+        }
+        if (object.Type = 'KeySignature') {
+            object2['type']                = ToJSONString('key');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
+            object2['major']               = ToJSONBool(object.Major);
+            object2['sharps']              = object.Sharps;
+            object2['isOpen']              = ToJSONBool(false);
+        }
+        if (object.Type = 'TimeSignature') {
+            object2['type']                = ToJSONString('time');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
+            object2['value']               = CreateJSONArray();
+            object2.value[0]               = object.Numerator;
+            object2.value[1]               = object.Denominator;
+            if (object.Text = CommonTimeString) {
+                object2['common']          = ToJSONBool(true);
+            } else {
+                object2['common']          = ToJSONBool(false);
+            }
+            if (object.Text = AllaBreveTimeString) {
+                object2['allaBreve']       = ToJSONBool(true);
+            } else {
+                object2['allaBreve']       = ToJSONBool(false);
+            }
+        }
+        if (object.Type = 'BarLine') {
+            object2['type']                = ToJSONString('barLine');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
+            // TODO
+        }
+        if (object.Type = 'Tuplet') {
+            // Note: this is an annotation that the given voice is tupleted
+            // from this point on.
+            object2['type']                = ToJSONString('tuplet');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
+            object2['duration']            = object.Duration;
+            object2['playedDuration']      = object.PlayedDuration; // TODO What is the difference?
+
+            object2['value']               = CreateJSONArray();
+            object2.value[0]               = object.Left;
+            object2.value[1]               = object.Right;
+        }
+
+        // Bar rests are simply empty element arrays
+        if (object.Type != 'BarRest') {
+            PushJSONArray(dest, object2);
+        }
+    }"
+             
+    ExportArticulations "(dest, chord) {
+        // [JSONArticulation] -> Chord -> ()
+        // Appends the articulations of the given chord to the given destination
+
+        if (chord.GetArticulation(DownBowArtic)) {
+            PushJSONArray(dest, ToJSONString('upBow'));
+        }
+        if (chord.GetArticulation(UpBowArtic)) {
+            PushJSONArray(dest, ToJSONString('downBow'));
+        }
+        if (chord.GetArticulation(PlusArtic)) {
+            PushJSONArray(dest, ToJSONString('plus'));
+        }
+        if (chord.GetArticulation(HarmonicArtic)) {
+            PushJSONArray(dest, ToJSONString('harmonic'));
+        }
+        if (chord.GetArticulation(MarcatoArtic)) {
+            PushJSONArray(dest, ToJSONString('marcato'));
+        }
+        if (chord.GetArticulation(AccentArtic)) {
+            PushJSONArray(dest, ToJSONString('accent'));
+        }
+        if (chord.GetArticulation(TenutoArtic)) {
+            PushJSONArray(dest, ToJSONString('tenuto'));
+        }
+        if (chord.GetArticulation(WedgeArtic)) {
+            PushJSONArray(dest, ToJSONString('wedge'));
+        }
+        if (chord.GetArticulation(StaccatissimoArtic)) {
+            PushJSONArray(dest, ToJSONString('staccatissimo'));
+        }
+        if (chord.GetArticulation(StaccatoArtic)) {
+            PushJSONArray(dest, ToJSONString('staccato'));
+        }
+    }"
+
+    ExportNote "(dest, note) {
+        // [JSONNote] -> Note -> ()
+        // Appends a note to the given destination
+        
+        note2 = CreateJSONObject();
+        note2['pitch']                      = note.Pitch;
+        note2['accidental']                 = note.Accidental;
+        note2['diatonicPitch']              = note.DiatonicPitch;
+        note2['tied']                       = ToJSONBool(note.Tied);
+        note2['style']                      = note.NoteStyle;       // Number identifier by note style name, 0 for normal
+        PushJSONArray(dest, note2);
+    }"
+
+
+    CreateJSONObject "() {
+        // () -> JSON
+        // Creates an empty JSON object
+
+        x = CreateDictionary();
+        x._property:__type__ = 'object';
+        return x;
+    }"
+
+    CreateJSONArray "() {
+        // () -> JSON
+        // Creates an empty JSON array
+
+        x = CreateDictionary();
+        x._property:__type__ = 'array';
+        return x;
+    }"
+
+    PushJSONArray "(obj, x) {
+        // JSON -> Value -> ()
+        // Pushes an element to a JSON array
+        
+        len = obj._propertyNames.Length - 1; // Ignore the __type__ field
+        obj['' & len] = x;
+    }"
+
+    IsJSONObject "(obj) {
+        // JSON -> Bool
+
+        return (obj._property:__type__ = 'object');
+    }"
+
+    IsJSONArray "(obj) {
+        // JSON -> Bool
+
+        return (obj._property:__type__ = 'array');
+    }"
+
+    ToJSONString "(x) {
+        // String -> JSON
+
+        return Chr(34) & x & Chr(34);
+    }"
+
+    ToJSONBool "(x) {
+        // Bool -> JSON
+
+        if (x = 0) {
+            return 'false';
+        } else {
+            return 'true';
+        }
+    }"
+
+    ShowJSON "(obj) {
+        // JSON -> String
+
+        str = '';
+        if (not IsObject(obj)) {
+            str = str & obj;
+        } else { 
+            if (IsJSONObject(obj)) {
+                str = str & '{';
+                fst = true;
+                for i = 0 to obj._propertyNames.Length {
+                    k = obj._propertyNames[i];
+                    v = obj[k];
+                    if (k != '__type__') {
+                        if (not fst) {
+                            str = str & ', ';
+                        } else {
+                            fst = false;
+                        }
+                        str = str & ShowJSON(ToJSONString(k));
+                        str = str & ': ';
+                        str = str & ShowJSON(v);
+                    }
+                }
+                str = str & '}';
+            }
+            else { 
+                if (IsJSONArray(obj)) {
+                    str = str & '[';
+                    fst = true;
+                    for i = 0 to (obj._propertyNames.Length - 1) { // Ignore __type__
+                        k = '' & i;
+                        v = obj[k];
+                        if (true) {
+                            if (not fst) {
+                                str = str & ', ';
+                            } else {
+                                fst = false;
+                            }
+                            str = str & ShowJSON(v);
+                        }
+                    }
+                    str = str & ']';
+                }
+                else {
+                    StopPlugin('ShowJSON: Could not convert object.');
+                } 
+            } 
+        }
+        return str;
+    }"
+}
