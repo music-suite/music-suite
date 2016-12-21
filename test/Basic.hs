@@ -383,9 +383,9 @@ articulation_staccato =
 
 
 -- music-suite/test/legacy-music-files/dynamics_constant.music
-dynamics_test :: Music
-dynamics_test =
-  scat $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
+-- dynamics_test :: Music
+-- dynamics_test =
+--   scat $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
 
 dynamics_test2 :: Music
 dynamics_test2 =
@@ -563,11 +563,11 @@ voice1 = a -- mconcat [a,a,b,b,b,b,c,c]
 
 
 -- music-suite/test/legacy-music-files/sharpen.music
-sharpen' :: Music
-sharpen' =
-  sharpen c
-      </>
-  (sharpen . sharpen) c
+-- sharpen' :: Music
+-- sharpen' =
+--   sharpen c
+--       </>
+--   (sharpen . sharpen) c
 
 
 -- music-suite/test/legacy-music-files/simple_figure.music

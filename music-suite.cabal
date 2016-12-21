@@ -259,22 +259,22 @@ test-suite "music-suite-test-laws"
     hs-source-dirs:     test
     default-language:   Haskell2010
 
-
-test-suite "music-suite-test-basic"
-    build-depends:      base,
-                        tasty,
-                        tasty-golden,
-                        process,
-                        average,
-                        containers,
-                        tasty-quickcheck,
-                        QuickCheck,
-                        semigroups,
-                        comonad,
-                        lens,
-                        record,
-                        music-suite
-    type:               exitcode-stdio-1.0
-    main-is:            Basic.hs
-    hs-source-dirs:     test
-    default-language:   Haskell2010
+-- executable "music-suite-test-basic"
+-- test-suite "music-suite-test-basic"
+    -- build-depends:      base,
+    --                     tasty,
+    --                     tasty-golden,
+    --                     process,
+    --                     average,
+    --                     containers,
+    --                     tasty-quickcheck,
+    --                     QuickCheck,
+    --                     semigroups,
+    --                     comonad,
+    --                     lens,
+    --                     record,
+    --                     music-suite
+    -- type:               exitcode-stdio-1.0
+    -- main-is:            Basic.hs
+    -- hs-source-dirs:     test
+    -- default-language:   Haskell2010

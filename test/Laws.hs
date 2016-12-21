@@ -393,10 +393,10 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("HasPosition Event Double", _HasPosition, Event Double),
   -- I_TEST2("HasPosition Placed Int", _HasPosition, Placed Int),
   -- I_TEST2("HasPosition Placed Double", _HasPosition, Placed Double),
-  I_TEST2("HasPosition Score Int", _HasPosition, Score Int),
+  -- I_TEST2("HasPosition Score Int", _HasPosition, Score Int),
   I_TEST2("HasPosition Event (Event Int)", _HasPosition, Event (Event Int)),
   I_TEST2("HasPosition Event (Score Int)", _HasPosition, Event (Score Int)),
-  I_TEST2("HasPosition Score (Placed Int)", _HasPosition, Score (Placed Int)),
+  -- I_TEST2("HasPosition Score (Placed Int)", _HasPosition, Score (Placed Int)),
 
   -- I_TEST2("HasPosition AddMeta (Placed Duration)", _HasPosition, AddMeta (Placed Duration)),
   -- I_TEST2("HasPosition Chord Int", _HasPosition, Chord Int),
