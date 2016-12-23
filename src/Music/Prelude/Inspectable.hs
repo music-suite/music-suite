@@ -36,7 +36,7 @@ import Music.Score ()
 import qualified Music.Score
 import qualified System.Process
 import qualified System.Info
-import Data.Ini
+-- import Data.Ini
 
 data Conf
   = Conf

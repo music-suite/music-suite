@@ -36,7 +36,7 @@ library
                         optparse-applicative,
                         average,
                         semigroups,
-                        hsini,
+                        -- hsini,
                         monadplus,
                         transformers,
                         unordered-containers,
@@ -62,8 +62,9 @@ library
                         type-unary,
                         xml,
                         random,
-                        random-shuffle,
-                        record
+                        random-shuffle
+                        -- ,
+                        -- record
     if !os(windows)
       build-depends:    unix
 
