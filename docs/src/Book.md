@@ -6,7 +6,7 @@
   There are many other types...
     (just demonstrate Pitch, Interval, Part, Instrument and some other useful ones)
 ## Working with rhythm
-  Duration patterns and rhythms to voices
+  Duration patterns and rhythms to voices/quantization
 ## Working with melody
   Notes, voices and melodies
   Aligned voices, phrases and metrical grids (the new TREE thing)
@@ -16,7 +16,6 @@
   Multiple aligned voices
   Scores and events
   Homophonic to polyphonic texture
-  XXX instroduce quantization?
 ## Rests, multi-level rhythmical texture etc
   Nested scores
 ## Working with harmony
@@ -25,6 +24,7 @@
   Parts, instruments and subparts
   Selecting instrument
   Using part-related information (for filters and traversals)
+## Working with space
 ## Dynamics and articulation
 ## Time-varying values, interpolation
 ## Repetition, variation and randomness

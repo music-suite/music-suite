@@ -3,12 +3,7 @@
 
 module Music.Score.Internal.Data (getData) where
 
-#ifndef GHCI
-#define GET_DATA_FILE Paths_music_suite.getDataFileName
-import qualified Paths_music_suite
-#else
-#define GET_DATA_FILE (return . ("./"++))
-#endif
+#define GET_DATA_FILE (return . ("/Users/Hoglund/Code/hs/music-suite/"++))
 
 import qualified System.IO.Unsafe
 import qualified Data.ByteString.Lazy

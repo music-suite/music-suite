@@ -247,11 +247,13 @@ instance Arbitrary a => Arbitrary (Event a) where
 instance Arbitrary a => Arbitrary (AddMeta a) where
   arbitrary = fmap pure arbitrary
 
+{-
 instance (Ord a, Arbitrary a) => Arbitrary (Set.Set a) where
   arbitrary = fmap Set.fromList arbitrary
 
 instance (Ord k, Arbitrary k, Ord a, Arbitrary a) => Arbitrary (Map.Map k a) where
   arbitrary = fmap Map.fromList $ liftA2 zip arbitrary arbitrary
+-}
 
 instance Arbitrary a => Arbitrary (Voice a) where
   arbitrary = fmap (view voice) arbitrary

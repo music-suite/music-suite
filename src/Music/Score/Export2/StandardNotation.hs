@@ -1,7 +1,7 @@
 
 
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, GADTs, ConstraintKinds, NoMonomorphismRestriction #-}
 
 -- For MonadLog
 {-# LANGUAGE FunctionalDependencies #-}

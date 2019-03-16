@@ -31,5 +31,3 @@ extra-deps:
 - basic-lens-0.0.0
 # - combinat-0.2.8.1
 resolver: lts-7.14
-ghc-options:
-  music-preludes: -fno-warn-typed-holes

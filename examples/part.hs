@@ -63,7 +63,7 @@ strings = pcat [
         stringPart = delay (1/2) $ withTintin (down (_P8^*4) $ (a::Pitch)) $ mainSubject
 
 -- music :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
-music = meta $ stretch (3/2) $ {-before 60-} (mempty <> bell <> delay 6 strings)
+music = meta $ stretch (3/2) $ bell <> delay 6 strings
     where
         meta = id
           . title "Cantus in Memoriam Benjamin Britten"
