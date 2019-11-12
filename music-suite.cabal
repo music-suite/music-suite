@@ -25,6 +25,7 @@ source-repository head
 library
     build-depends:      base,
                         lens,
+                        text,
                         split,
                         containers,
                         comonad,

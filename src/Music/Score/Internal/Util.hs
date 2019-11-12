@@ -184,6 +184,8 @@ tripr (a,(b,c)) = (a,b,c)
 
 
 -- TODO mo
+partial :: (a -> Bool) -> a -> Maybe a
+partial p x = if p x then Just x else Nothing
 partial2 :: (a -> b      -> Bool) -> a -> b      -> Maybe b
 partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
 partial2 f = curry  (fmap snd  . partial (uncurry f))

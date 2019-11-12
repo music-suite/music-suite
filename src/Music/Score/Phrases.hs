@@ -6,6 +6,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FunctionalDependencies     #-}
+{-# LANGUAGE UndecidableInstances     #-}
 
 -- | Provides phrase-wise traversal.
 
@@ -101,6 +102,7 @@ instance HasPhrases (PVoice a) (PVoice b) a b where
   mvoices = from mVoicePVoiceIgnoringMeta
 
 -- | Traverses all phrases in each voice, using 'extracted'.
+-- TODO get rid of UndecidableInstances
 instance (HasPart' a, Ord (Part a), a ~ b) => HasPhrases (Score a) (Score b) a b where
   mvoices = extracted . each . singleMVoice
 {-

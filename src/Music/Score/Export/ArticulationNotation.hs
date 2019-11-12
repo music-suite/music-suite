@@ -77,13 +77,17 @@ data Mark
 
 instance Monoid Slur where
   mempty = NoSlur
-  mappend NoSlur a = a
-  mappend a _      = a
+  mappend = (<>)
+instance Semigroup Slur where
+  NoSlur <> a = a
+  a <> _      = a
 
 instance Monoid Mark where
   mempty = NoMark
-  mappend NoMark a = a
-  mappend a _      = a
+  mappend = (<>)
+instance Semigroup Mark where
+  NoMark <> a = a
+  a <> _      = a
 
 newtype ArticulationNotation
   = ArticulationNotation { getArticulationNotation :: ([Slur], [Mark]) }
@@ -131,9 +135,11 @@ instance Tiable ArticulationNotation where
 
 instance Monoid ArticulationNotation where
   mempty = ArticulationNotation ([], [])
-  ArticulationNotation ([], []) `mappend` y = y
-  x `mappend` ArticulationNotation ([], []) = x
-  x `mappend` y = x
+  mappend = (<>)
+instance Semigroup ArticulationNotation where
+  ArticulationNotation ([], []) <> y = y
+  x <> ArticulationNotation ([], []) = x
+  x <> y = x
 
 slurs :: Lens' ArticulationNotation [Slur]
 slurs = _Wrapped' . _1

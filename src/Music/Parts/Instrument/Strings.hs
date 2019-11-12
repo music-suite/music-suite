@@ -18,7 +18,6 @@ module Music.Parts.Instrument.Strings (
   ) where
 
 import Control.Lens
-import Control.Monad.Plus (partial)
 import Data.List (isPrefixOf)
 import Music.Parts.Instrument
 import Data.Set (Set)
@@ -29,6 +28,9 @@ newtype StringInstrument = StringInstrument { getStringInstrument :: Instrument}
 
 stringInstrument :: Prism' Instrument StringInstrument
 stringInstrument = prism' getStringInstrument (fmap StringInstrument . partial isStringInstrument)
+
+partial :: (a -> Bool) -> a -> Maybe a
+partial p x = if p x then Just x else Nothing
 
 isStringInstrument :: Instrument -> Bool
 isStringInstrument x = case toMusicXmlSoundId x of

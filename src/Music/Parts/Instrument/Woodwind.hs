@@ -12,7 +12,6 @@ module Music.Parts.Instrument.Woodwind (
   ) where
 
 import Control.Lens
-import Control.Monad.Plus (partial)
 import Data.List (isPrefixOf)
 import Music.Parts.Instrument
 import Data.Set (Set)
@@ -23,6 +22,9 @@ newtype WoodwindInstrument = WoodwindInstrument { getWoodwindInstrument :: Instr
 
 woodwindInstrument :: Prism' Instrument WoodwindInstrument
 woodwindInstrument = prism' getWoodwindInstrument (fmap WoodwindInstrument . partial isWoodwindInstrument)
+
+partial :: (a -> Bool) -> a -> Maybe a
+partial p x = if p x then Just x else Nothing
 
 isWoodwindInstrument :: Instrument -> Bool
 isWoodwindInstrument x = case toMusicXmlSoundId x of

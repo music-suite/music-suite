@@ -8,7 +8,6 @@ module Music.Parts.Instrument.Vocal (
   ) where
 
 import Control.Lens
-import Control.Monad.Plus (partial)
 import Data.List (isPrefixOf)
 import Music.Parts.Instrument
 import Data.Set (Set)
@@ -17,10 +16,13 @@ import Music.Pitch (Ambitus, Clef)
 
 newtype VocalInstrument = VocalInstrument { getVocalInstrument :: Instrument}
 
+partial :: (a -> Bool) -> a -> Maybe a
+partial p x = if p x then Just x else Nothing
+
 vocalInstrument :: Prism' Instrument VocalInstrument
 vocalInstrument = prism' getVocalInstrument (fmap VocalInstrument . partial isVocalInstrument)
 
 isVocalInstrument :: Instrument -> Bool
-isVocalInstrument x = case toMusicXmlSoundId x of 
+isVocalInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
   Just i  -> Data.List.isPrefixOf "voice" i

@@ -648,6 +648,8 @@ instance Monoid BracketType where
   mappend x y
     | x == mempty = y
     | otherwise   = x
+instance Semigroup BracketType where
+  (<>) = mappend
 
 instance Semigroup SystemBar where
   (<>) = mappend
@@ -671,18 +673,24 @@ instance Monoid ArpeggioNotation where
   mappend x y
     | x == mempty = y
     | otherwise   = x
+instance Semigroup ArpeggioNotation where
+  (<>) = mappend
 
 instance Monoid TremoloNotation where
   mempty = NoTremolo
   mappend x y
     | x == mempty = y
     | otherwise   = x
+instance Semigroup TremoloNotation where
+  (<>) = mappend
 
 instance Monoid BreathNotation where
   mempty = NoBreath
   mappend x y
     | x == mempty = y
     | otherwise   = x
+instance Semigroup BreathNotation where
+  (<>) = mappend
 
 instance Semigroup Fermata where
   (<>) = mappend
@@ -700,6 +708,8 @@ instance Monoid Chord where
   mappend x y
     | x == mempty = y
     | otherwise   = x
+instance Semigroup Chord where
+  (<>) = mappend
 
 instance IsPitch Chord where
   fromPitch p = pitches .~ [p] $ mempty
@@ -708,9 +718,14 @@ instance Monoid Bar where
   mempty = Bar mempty mempty
   mappend (Bar a1 a2) (Bar b1 b2) = Bar (a1 <> b1) (a2 <> b2)
 
+instance Semigroup Bar where
+  (<>) = mempty
+
 instance Monoid Staff where
   mempty = Staff mempty mempty
   mappend (Staff a1 a2) (Staff b1 b2) = Staff (a1 <> b1) (a2 <> b2)
+instance Semigroup Staff where
+  (<>) = mappend
 
 instance Monoid MovementInfo where
   mempty = MovementInfo mempty mempty mempty
@@ -721,6 +736,8 @@ instance Monoid MovementInfo where
 instance Monoid Work where
   mempty = Work mempty mempty
   mappend (Work a1 a2) (Work b1 b2) = Work (a1 <> b1) (a2 <> b2)
+instance Semigroup Work where
+  (<>) = mempty
 
 instance Semigroup WorkInfo where
   (<>) = mappend
@@ -730,6 +747,8 @@ instance Monoid WorkInfo where
   mappend x y
     | x == mempty = y
     | otherwise   = x
+instance Semigroup MovementInfo where
+  (<>) = mappend
 
 systemStaffTakeBars :: Int -> SystemStaff -> SystemStaff
 systemStaffTakeBars = take

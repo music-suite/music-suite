@@ -34,3 +34,5 @@ src/private
 test*
 test.pdf
 wiki
+cabal.project.local*
+dist-newstyle

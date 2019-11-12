@@ -267,10 +267,11 @@ instance Arbitrary a => Arbitrary (Track a) where
 -- instance Arbitrary a => Arbitrary (Reactive a) where
   -- arbitrary = liftA2 zip arbitrary arbitrary
 
-instance Arbitrary a => Arbitrary (Sum a) where
-  arbitrary = fmap Sum arbitrary
-instance Arbitrary a => Arbitrary (Product a) where
-  arbitrary = fmap Product arbitrary
+
+-- instance Arbitrary a => Arbitrary (Sum a) where
+--   arbitrary = fmap Sum arbitrary
+-- instance Arbitrary a => Arbitrary (Product a) where
+--   arbitrary = fmap Product arbitrary
 instance Arbitrary a => Arbitrary (Average a) where
   arbitrary = fmap Average arbitrary
 

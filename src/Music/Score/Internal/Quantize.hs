@@ -291,9 +291,11 @@ data RhythmContext = RhythmContext {
       tupleDepth :: Int
   }
 
+instance Semigroup RhythmContext where
+  a <> _ = a
 instance Monoid RhythmContext where
+  mappend = (<>)
   mempty = RhythmContext { timeMod = 1, timeSub = 0, tupleDepth = 0 }
-  a `mappend` _ = a
 
 modifyTimeMod :: (Duration -> Duration) -> RhythmContext -> RhythmContext
 modifyTimeMod f (RhythmContext tm ts td) = RhythmContext (f tm) ts td

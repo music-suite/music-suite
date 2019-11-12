@@ -6,7 +6,6 @@ module Music.Parts.Instrument.Percussion (
   ) where
 
 import Control.Lens
-import Control.Monad.Plus (partial)
 import Data.List (isPrefixOf)
 import Music.Parts.Instrument
 import Data.Set (Set)
@@ -18,8 +17,11 @@ newtype PercussionInstrument = PercussionInstrument { getPercussionInstrument ::
 percussionInstrument :: Prism' Instrument PercussionInstrument
 percussionInstrument = prism' getPercussionInstrument (fmap PercussionInstrument . partial isPercussionInstrument)
 
+partial :: (a -> Bool) -> a -> Maybe a
+partial p x = if p x then Just x else Nothing
+
 isPercussionInstrument :: Instrument -> Bool
-isPercussionInstrument x = case toMusicXmlSoundId x of 
+isPercussionInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
   Just i  -> any (== True) $ fmap (`Data.List.isPrefixOf` i)
                      ["pitched-percussion", "drum", "wood", "metal"]

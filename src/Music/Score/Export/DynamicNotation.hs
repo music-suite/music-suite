@@ -35,7 +35,7 @@ module Music.Score.Export.DynamicNotation (
     DynamicNotation(..),
     crescDim,
     dynamicLevel,
-    
+
     notateDynamic,
 
     -- * Utility
@@ -57,9 +57,11 @@ data CrescDim = NoCrescDim | BeginCresc | EndCresc | BeginDim | EndDim
 
 instance Monoid CrescDim where
   mempty = NoCrescDim
-  mappend NoCrescDim a = a
-  mappend a NoCrescDim = a
-  mappend a _ = a
+  mappend = (<>)
+instance Semigroup CrescDim where
+  NoCrescDim <> a = a
+  a <> NoCrescDim = a
+  a <> _ = a
 
 newtype DynamicNotation
   = DynamicNotation { getDynamicNotation :: ([CrescDim], Maybe Double) }
@@ -83,9 +85,11 @@ instance Tiable DynamicNotation where
 
 instance Monoid DynamicNotation where
   mempty = DynamicNotation ([], Nothing)
-  DynamicNotation ([], Nothing) `mappend` y = y
-  x `mappend` DynamicNotation ([], Nothing) = x
-  x `mappend` y = x
+  mappend = (<>)
+instance Semigroup DynamicNotation where
+  DynamicNotation ([], Nothing) <> y = y
+  x <> DynamicNotation ([], Nothing) = x
+  x <> y = x
 
 crescDim :: Lens' DynamicNotation [CrescDim]
 crescDim = _Wrapped' . _1
