@@ -14,6 +14,7 @@ nix-shell --pure
 Inside the build shell, run:
 
 ```
+cabal v2-update
 cabal --reject-unconstrained-dependencies=all v2-test
 ```
 
