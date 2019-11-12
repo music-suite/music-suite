@@ -1,0 +1,10 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: nixos/nix # TODO pin tag with Nix 2.0 of this image (e.g. NixOS 18.03)
+        environment:
+          LC_ALL: C.UTF-8
+    steps:
+      - checkout
+      - run: nix-shell --pure --command "cabal v2-test"
