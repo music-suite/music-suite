@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: nixos/nix # TODO pin tag with Nix 2.0 of this image (e.g. NixOS 18.03)
+      - image: nixos/nix:2.3
         environment:
           LC_ALL: C.UTF-8
     steps:
