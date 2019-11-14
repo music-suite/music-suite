@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: nixos/nix:2.3
+      - image: nixos/nix:2.3@sha256:af330838e838cedea2355e7ca267280fc9dd68615888f4e20972ec51beb101d8
         environment:
           LC_ALL: C.UTF-8
     steps:
