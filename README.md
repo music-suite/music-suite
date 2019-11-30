@@ -17,6 +17,7 @@ Inside the build shell, run:
 
 ```
 cabal v2-update
+cabal --reject-unconstrained-dependencies=all v2-build
 cabal --reject-unconstrained-dependencies=all v2-test
 ```
 
