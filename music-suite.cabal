@@ -280,3 +280,22 @@ test-suite "music-suite-test-laws"
     -- main-is:            Basic.hs
     -- hs-source-dirs:     test
     -- default-language:   Haskell2010
+
+
+-- Examples:
+test-suite "music-suite-examples-part"
+    build-depends:      base,
+                        tasty,
+                        tasty-golden,
+                        process,
+                        average,
+                        containers,
+                        tasty-quickcheck,
+                        QuickCheck,
+                        semigroups,
+                        comonad,
+                        music-suite
+    type:               exitcode-stdio-1.0
+    main-is:            part.hs
+    hs-source-dirs:     examples
+    default-language:   Haskell2010

@@ -32,10 +32,10 @@ tintin' melInterval
         tintinStandardNotes = concat $ iterate (fmap (+ _P8)) minorTriad
         minorTriad = [_P1,m3,_P5]
 
-fallingScale :: (IsPitch a, Enum a) => [Score a]
-fallingScale = [a',g'..a_]
+fallingScale :: IsPitch a => [Score a]
+fallingScale = fmap fromPitch [a',g'..a_]
 
-fallingScaleSect :: (IsPitch a, Enum a) => Int -> [Score a]
+fallingScaleSect :: IsPitch a => Int -> [Score a]
 fallingScaleSect n = {-fmap (annotate (show n)) $-} take n $ fallingScale
 
 mapEvensOdds :: (a -> b) -> (a -> b) -> [a] -> [b]
@@ -63,6 +63,7 @@ strings = pcat [
         stringPart = delay (1/2) $ withTintin (down (_P8^*4) $ (a::Pitch)) $ mainSubject
 
 -- music :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
+music :: Music
 music = meta $ stretch (3/2) $ bell <> delay 6 strings
     where
         meta = id
@@ -74,5 +75,5 @@ music = meta $ stretch (3/2) $ bell <> delay 6 strings
 -- openBook :: Score StandardNote -> IO ()
 -- openBook = openLilypond' LyScoreFormat
 --
--- main :: IO ()
--- main = openBook music
+main :: IO ()
+main = pure ()
