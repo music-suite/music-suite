@@ -263,6 +263,13 @@ test-suite "music-suite-test-laws"
 
 -- Examples:
 
+executable "music-suite-examples-analysis"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            analysis.hs
+
 executable "music-suite-examples-part"
     build-depends:      base,
                         music-suite

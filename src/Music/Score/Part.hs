@@ -309,7 +309,26 @@ rcat :: (HasParts' a, Enum (Part a)) => [Score a] -> Score a
 rcat = List.foldr (</>) mempty
 
 -- |
--- Similar to '<>', but increases parts in the second part to prevent collision.
+-- TODO semantics of this?
+--
+-- We want it to behave similarly to |>, e.g. to "move" the second operand so that
+-- it does not overlap with the first, before composing with <>.
+--
+-- What does this move mean? We can describe a move as a function:
+--
+--    [Part] -> Part -> Part
+--
+-- Such that
+--    forall xs x . move xs x `notElem` xs
+-- and
+--    forall xs x . move xs x == x iff (x `notElem` xs)
+--
+-- TODO
+--  * Break out the above into a separate class, instances for Integer and Common.Part
+--  * Stop using Enum
+--  * Basic benchmark to make sure this is efficient for simple cases (e.g. doing lots
+--    of composition in the 'default' part, e.g. Piano). Note for now these operators
+--    are mainly useful for toy examples/testing.
 --
 (</>) :: (HasParts' a, Enum (Part a)) => Score a -> Score a -> Score a
 a </> b = a <> moveParts offset b
@@ -323,12 +342,13 @@ a </> b = a <> moveParts offset b
         moveParts :: (Integral b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
         moveParts x = parts %~ (successor x)
 
+{-
         -- |
         -- Move top-part to the specific voice (other parts follow).
         --
         moveToPart :: (Enum b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
         moveToPart v = moveParts (fromEnum v)
-
+-}
 
         iterating :: (a -> a) -> (a -> a) -> Int -> a -> a
         iterating f g n
