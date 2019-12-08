@@ -25,6 +25,8 @@
   - Vextab
   - csound-expression
   - scsynth
+  - Graphical backends
+    - Piano roll
 
 - Decide on top-level interface
   - By default recommend *no IO*
