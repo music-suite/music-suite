@@ -20,11 +20,19 @@
     - Lilypond
     - MusicXML
 
+- New backends (ideas):
+  - ABC notation
+  - Vextab
+  - csound-expression
+  - scsynth
+
 - Decide on top-level interface
   - By default recommend *no IO*
   - All data is is in the DSL/Haskell code. For *import formats* (such as Sibelius), we'll generate code.
   - Normal GHCI can *evaluate/normalize* music expression and print the result as text using `Show`. Add more type classes and provide a GHCI alternative that also allow rendering (e.g. via MIDI and Lilypond).
   - Use Jupyter for this?
   - Make `examples` use this
+
+- Replace Aeson with typed serialization
 
 - Get rid of duplication in music-suite.cabal
