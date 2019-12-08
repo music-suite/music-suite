@@ -35,6 +35,7 @@ info = id
     . timeSignature (4/4)
     . keySignature (key g False)
 
+score' :: Music
 score' = info $ compress 4 $ tempo (metronome (1/4) 30) $ {-delay (4*2) $ -}
     stanza1_instr </> stanza1_voc
 
@@ -115,52 +116,5 @@ stanza1_bc = asScore $ octavesDown 1 $ empty
     |> ll d  d     |> ll d d       |> ls cs  cs            |> ll d d
     |> ls a  a     |> s4 d d cs cs |> ls d             d   |> l4 a_
 
-
--- Stanza 2
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{-
-openAudacity :: Score Note -> IO ()
-openAudacity x = do
-    void $ writeMidi "test.mid" $ x
-    void $ system "timidity -Ow test.mid"
-    void $ system "open -a Audacity test.wav"
-
-openAudio :: Score Note -> IO ()
-openAudio x = do
-    void $ writeMidi "test.mid" $ x
-    void $ system "timidity -Ow test.mid"
-    void $ system "open -a Audacity test.wav"
--}
-
--- fixClefs :: Score Note -> Score Note
--- fixClefs = pcat . fmap (uncurry g) . extractParts'
---     where
---         g p x = clef (case defaultClef p of { 0 -> GClef; 1 -> CClef; 2 -> FClef } ) x
--- fixClefs = id
-
--- palindrome x = rev x |> x
-
 main :: IO ()
-main = open score'
+main = pure ()
