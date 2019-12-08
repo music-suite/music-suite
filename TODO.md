@@ -14,6 +14,11 @@
 - Improve rcat: do not use Enum
 
 - Finish/document new export code
+  - Add unit tests for all export formats/backends:
+    - MIDI
+    - Standard notation (common part of Lilypond/MusicXML)
+    - Lilypond
+    - MusicXML
 
 - Decide on top-level interface
   - By default recommend *no IO*
