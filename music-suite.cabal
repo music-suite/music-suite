@@ -276,6 +276,13 @@ executable "music-suite-examples-part"
     hs-source-dirs:     examples
     main-is:            part.hs
 
+executable "music-suite-examples-time_signatures"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            time_signatures.hs
+
 executable "music-suite-examples-trio"
     build-depends:      base,
                         lens,
