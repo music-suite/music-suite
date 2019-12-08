@@ -21,6 +21,7 @@ in
 pkgs.stdenv.mkDerivation {
   name = "build1";
   buildInputs = [
+    pkgs.lilypond
     (
     pkgs.haskellPackages.ghcWithPackages (pkgs:
         [ pkgs.cabal-install

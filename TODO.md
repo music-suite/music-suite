@@ -8,3 +8,8 @@
 - Add more examples/tests
 - Rename the core sequential combinator (to what?)
 - Improve rcat: do not use Enum
+- Finish/document new export code
+- Decide on top-level interface
+  - By default recommend *no IO*
+  - All data is is in the DSL/Haskell code. For *import formats* (such as Sibelius), we'll generate code.
+  - Normal GHCI can *evaluate/normalize* music expression and print the result as text using `Show`. Add more type classes and provide a GHCI alternative that also
