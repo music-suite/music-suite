@@ -3,6 +3,9 @@
 
 **We use this file instead of an issue tracker, for now**
 
+- Replace all uses of `data` directory with quasi-quoters (fail at compile-time if
+  not existing/not parsing correctly)
+
 - Make all examples compile with the new build system
 
 - Make documentation generation compile/work with the new build system
