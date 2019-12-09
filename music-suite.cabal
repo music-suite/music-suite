@@ -206,10 +206,8 @@ library
                         Music.Score.Import.Sibelius
                         Music.Prelude
                         Music.Prelude.Standard
-                        Music.Prelude.CmdLine
                         Music.Prelude.Instances
                         Music.Prelude.Inspectable
-    other-modules:      Paths_music_suite
     hs-source-dirs:     src
     default-language:   Haskell2010
     default-extensions: ConstraintKinds,
