@@ -8,6 +8,7 @@
 --
 import Music.Prelude hiding (open)
 import qualified Music.Score as S
+import Music.Score.Export2.StandardNotation (Asp, exportLilypond)
 
 withTintin :: (HasPitches' a, S.Pitch a ~ Pitch) => Pitch -> Score a -> Score a
 withTintin p x = x <> tintin p x
@@ -50,7 +51,7 @@ mainSubject = stretch (1/6) $ scat $ mapEvensOdds (accent . (|*2)) id $ concatMa
 bell = let
     -- cue :: Score (Maybe a)
     cue = stretchTo 1 (rest |> a)
-    in parts' .~ solo tubularBells $ text "l.v." $ removeRests $ times 40 $ scat [times 3 $ scat [cue,rest], rest|*2]
+    in parts' .~ solo tubularBells $ {- text "l.v." $ -} removeRests $ times 40 $ scat [times 3 $ scat [cue,rest], rest|*2]
 
 -- strings :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
 strings = pcat [
@@ -63,12 +64,12 @@ strings = pcat [
         stringPart = delay (1/2) $ withTintin (down (_P8^*4) $ (a::Pitch)) $ mainSubject
 
 -- music :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
-music :: Music
+music :: Asp
 music = meta $ stretch (3/2) $ bell <> delay 6 strings
     where
         meta = id
           . title "Cantus in Memoriam Benjamin Britten"
-          . composer "Arvo Pärt"
+          . composer "Arvo" -- TODO why does Unicode break? Pärt"
           . timeSignature (6/4)
           . tempo (metronome (1/4) 120)
 
@@ -76,4 +77,4 @@ music = meta $ stretch (3/2) $ bell <> delay 6 strings
 -- openBook = openLilypond' LyScoreFormat
 --
 main :: IO ()
-main = print music
+main = exportLilypond music

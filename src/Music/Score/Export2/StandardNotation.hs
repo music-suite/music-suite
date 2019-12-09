@@ -159,12 +159,14 @@ module Music.Score.Export2.StandardNotation
   -- * Test
   -- TODO hide/remove
   , test2
-  , test3
+  , exportLilypond
   , umts_export
   )
 where
 
 import           BasePrelude                             hiding (first, second, (<>), First(..))
+import           Data.FileEmbed
+import qualified Data.ByteString.Char8
 import           Control.Lens                            (over, preview, set, to, Lens'(..),
                                                           under, view, _head, at, _1, _2)
 import           Control.Lens.Operators                  hiding ((|>))
@@ -229,7 +231,6 @@ import           Music.Score.Internal.Quantize           (Rhythm (..), dotMod,
                                                           quantize, rewrite)
 import qualified Music.Score.Internal.Util
 import           Music.Score.Internal.Util (unRatio)
-import           Music.Score.Internal.Data               (getData)
 import qualified Music.Score.Meta
 import qualified Music.Score.Meta.Attribution
 import qualified Music.Score.Meta.Title
@@ -907,7 +908,7 @@ toLy work = do
         ("composer", Data.Maybe.fromMaybe "" $
           firstMovement^.movementInfo.movementAttribution.at "composer")
         ]
-  let header = getData "ly_big_score.ily" `expandTemplate` headerTempl
+  let header = (Data.ByteString.Char8.unpack $(embedFile "data/ly_big_score.ily")) `expandTemplate` headerTempl
 
   say "Lilypond: Converting music"
   music <- toLyMusic $ firstMovement
@@ -1846,7 +1847,10 @@ test = runPureExportMNoLog $ toLy $
 
 test2 x = runPureExportMNoLog $ toLy =<< fromAspects x
 
-test3 x = do
+
+-- | Write t.ly and run Lilypond on it
+exportLilypond :: Asp -> IO ()
+exportLilypond x = do
   let r = test2 x
   case r of
     Left e -> fail ("test3: "++e)
@@ -1856,7 +1860,8 @@ test3 x = do
       writeFile "t.ly" $ ly2
       void $ System.Process.system "lilypond t.ly"
 
-test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
+toMusicXml :: Asp -> Either String X.Score
+toMusicXml x = runPureExportMNoLog $ toXml =<< fromAspects x
 
 
 ----------------------------------------------------------------------------------------------------
@@ -4083,5 +4088,3 @@ umts_all =
 
 test  :: Either String (String, L.Music)
 test2 :: Asp -> Either String (String, L.Music)
-test4 :: Asp -> Either String X.Score
-test3 :: Asp -> IO ()

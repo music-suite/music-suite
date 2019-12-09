@@ -6,6 +6,8 @@
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
 
+- Get rid of all CPP
+
 - Make all examples compile with the new build system
 
 - Make documentation generation compile/work with the new build system
