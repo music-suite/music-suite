@@ -3,7 +3,7 @@
 
 **We use this file instead of an issue tracker, for now**
 
-- Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
+- [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
 
 - Make all examples compile with the new build system
