@@ -43,6 +43,7 @@ library
                         unordered-containers,
                         base-orphans,
                         data-default,
+                        file-embed,
                         aeson,
                         roman-numerals,
                         bytestring,

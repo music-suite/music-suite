@@ -39,13 +39,15 @@
     - Should work out of the box for all common types (e.g. Common.Pitch, Music.Prelude.Music etc)
     - Also show playback controls/audio rendering?
     - For functions, show controls for inputs (with option of reflecting selected value back into the code)
+
   - Previous work to copy/use:
     - Jupyter/Jupyterlab?
     - Interactive Haskell environments (e.g. "IDEs")
       - Can any of them show/eval/typecheck expression on hover/select?
-      - ghcide?
-      - hie-engine
-        - Does not look like it
+      - ghcide/hie-engine
+        - Both of these have Nix packaging, but the packager assume that the IDE env is
+          to be installed at the top-level (e.g. outside any build environment), which
+          means we can't depend on it for any user-facing functionality.
       - Customize/fork GHCi
     - Other DSLs (Diagrams, Haskell for Mac)
   - Make `examples` use this

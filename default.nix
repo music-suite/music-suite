@@ -29,6 +29,7 @@ pkgs.stdenv.mkDerivation {
     (
     pkgs.haskellPackages.ghcWithPackages (pkgs:
         [ pkgs.cabal-install
+          pkgs.haskell-ide-engine
         ])
     )
    ];

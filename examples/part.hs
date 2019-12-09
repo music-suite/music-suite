@@ -76,4 +76,4 @@ music = meta $ stretch (3/2) $ bell <> delay 6 strings
 -- openBook = openLilypond' LyScoreFormat
 --
 main :: IO ()
-main = pure ()
+main = print music

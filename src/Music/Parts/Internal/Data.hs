@@ -1,5 +1,5 @@
 
-{-# LANGUAGE CPP                  #-}
+{-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
@@ -23,6 +23,8 @@ import qualified Data.ByteString.Lazy
 import qualified Data.ByteString.Lazy.Char8
 import           Data.Csv                   (FromField (..), FromRecord (..),
                                              (.!))
+
+import Data.FileEmbed
 import qualified Data.Csv
 import qualified Data.List
 import qualified Data.Maybe
@@ -34,23 +36,18 @@ import           Music.Pitch
 import           Music.Pitch.Ambitus
 import           Music.Pitch.Clef
 
-#ifndef GHCI
-import qualified Paths_music_suite
-#define GET_DATA_FILE Paths_music_suite.getDataFileName
-#else
-#define GET_DATA_FILE (return . ("./"++))
-#endif
+import qualified Data.ByteString.Lazy
 
 
 type SoundId     = String
 type TechniqueId = String
 
-#ifndef GHCI
+{-
 instance Num Clef where
   fromInteger 0 = trebleClef
   fromInteger 1 = altoClef
   fromInteger 2 = bassClef
-#endif
+-}
 
 data InstrumentTopCategory
   = Woodwind
@@ -204,23 +201,19 @@ instance FromRecord InstrumentDef where
     <*> v .! 11
     <*> v .! 12
 
-{-
-Don't edit data files!
-Original here
-  https://docs.google.com/spreadsheets/d/1I7lCGd8u4ggqqa_ATMVb87V10Vc8J8TP9w-vXu0M18o/edit#gid=0
--}
+
+-- TODO remove IO and use TH to make this fail at compile time on CSV parse error.
+
 getInstrumentData' :: IO [Map String String]
 getInstrumentData' = do
-  fp <- GET_DATA_FILE "data/instruments.csv"
-  d <- Data.ByteString.Lazy.readFile fp
+  let d = Data.ByteString.Lazy.fromStrict $(embedFile "data/instruments.csv")
   return $ case Data.Csv.decodeByName d of
     Left e -> error $ "Could not read data/instruments.csv "++show e
     Right (_header, x) -> toListOf traverse x
 
 getInstrumentData :: IO [InstrumentDef]
 getInstrumentData = do
-  fp <- GET_DATA_FILE "data/instruments.csv"
-  d <- Data.ByteString.Lazy.readFile fp
+  let d = Data.ByteString.Lazy.fromStrict $(embedFile "data/instruments.csv")
   return $ case Data.Csv.decode Data.Csv.HasHeader d of
     Left e -> error $ "Could not read data/instruments.csv "++show e
     Right (x) -> toListOf traverse x
