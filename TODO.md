@@ -32,7 +32,15 @@
   - By default recommend *no IO*
   - All data is is in the DSL/Haskell code. For *import formats* (such as Sibelius), we'll generate code.
   - Normal GHCI can *evaluate/normalize* music expression and print the result as text using `Show`. Add more type classes and provide a GHCI alternative that also allow rendering (e.g. via MIDI and Lilypond).
-  - Use Jupyter for this?
+  - MVP: When moving cursor to an expression, show it visualized in Window
+    - Should work out of the box for all common types (e.g. Common.Pitch, Music.Prelude.Music etc)
+    - Also show playback controls/audio rendering?
+    - For functions, show controls for inputs (with option of reflecting selected value back into the code)
+  - Previous work to copy/use:
+    - Jupyter/Jupyterlab?
+    - Interactive Haskell environments (e.g. "IDEs")
+      - Can any of them show/eval/typecheck expression on hover/select?
+    - Other DSLs (Diagrams, Haskell for Mac)
   - Make `examples` use this
 
 - Replace Aeson with typed serialization
