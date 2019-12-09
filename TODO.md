@@ -20,7 +20,14 @@
 
 - Improve rcat: do not use Enum
 
-- Finish/document new export code
+- Finish/document new export code ("Export2")
+  - Make Export2 support:
+    - Colored noteheads
+    - Playing techinques: pizz, trem, harmonics, slide/gliss
+    - Expression text (e.g. "dolce")
+    - Lyrics
+    - Free-form text
+    - Meta-data (does it work?)
   - Add unit tests for all export formats/backends:
     - MIDI
     - Standard notation (common part of Lilypond/MusicXML)
