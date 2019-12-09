@@ -8,6 +8,8 @@
 
 - Get rid of all CPP
 
+- Never fail on overlapping events
+
 - Make all examples compile with the new build system
 
 - Make documentation generation compile/work with the new build system
