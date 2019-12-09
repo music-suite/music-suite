@@ -16,21 +16,14 @@ let
     sha256 = "1x4ivhrdfp93hhrns32gw9ns83pfzj80wqv4sadn4wz891hl78ww";
   }) { config = opts; };
 
-  ghcide-nix = (import (builtins.fetchTarball
-    {
-    url = "https://github.com/hercules-ci/ghcide-nix/tarball/master";
-    sha256 = "0ffzf4h0qmvgpviy878czxfbn3cv3af9y4aj4cfdk8xi3lw8py67";
-    }
-    ) {}).ghcide-ghc865;
-
+  # TODO try adding HIE or ghcide
+  # https://github.com/hercules-ci/ghcide-nix/tarball/master"
+  # https://github.com/Infinisil/all-hies
 in
 
 pkgs.stdenv.mkDerivation {
   name = "build1";
   buildInputs = [
-
-
-    ghcide-nix
 
     pkgs.lilypond
     (
