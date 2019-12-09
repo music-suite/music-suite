@@ -42,6 +42,7 @@
       - Can any of them show/eval/typecheck expression on hover/select?
     - Other DSLs (Diagrams, Haskell for Mac)
   - Make `examples` use this
+  - What is the value is big/slow to render?
 
 - Replace Aeson with typed serialization
 
