@@ -1,5 +1,9 @@
 
 import Music.Prelude
+import Control.Lens (set)
+import Music.Score.Export2.StandardNotation (Asp, exportLilypond)
+
+main = exportLilypond $ fugue1a
 
 {-
 Develop tools for basic counterpoint techniques.
@@ -12,12 +16,12 @@ Try to encode the form of classical fugues in table form, see for example
   http://www2.nau.edu/tas3/introaof.html
 
 -}
-subj :: Music
+subj :: Asp
 subj = scat [ a_|*2,c,d,e|*3,g,
  a|*2,g,a,e|*3,e,
  d|*4,e,a_,b_,c,d]
 
-fugue :: [(Part, Duration, Interval)] -> Music -> Music
+fugue :: [(Part, Duration, Interval)] -> Asp -> Asp
 fugue exps subj = pcat $ fmap (\(p,t,i) -> set parts' p . delay t . up i $ subj) exps
 
 fugue1 = fugue

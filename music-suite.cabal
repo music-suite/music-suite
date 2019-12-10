@@ -294,6 +294,13 @@ executable "music-suite-examples-canon"
     hs-source-dirs:     examples
     main-is:            canon.hs
 
+executable "music-suite-examples-fugue1"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            fugue1.hs
+
 executable "music-suite-examples-mozart"
     build-depends:      base,
                         music-suite
