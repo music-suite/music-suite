@@ -8,6 +8,8 @@
 
 - Get rid of all CPP
 
+- Port issues from the old tracker
+
 - Never fail on overlapping events
 
 - Make all examples compile with the new build system
@@ -33,6 +35,7 @@
     - Standard notation (common part of Lilypond/MusicXML)
     - Lilypond
     - MusicXML
+  - Benchmark!
 
 - New backends (ideas):
   - ABC notation
@@ -44,8 +47,11 @@
 
 - Decide on top-level interface
   - By default recommend *no IO*
+
   - All data is is in the DSL/Haskell code. For *import formats* (such as Sibelius), we'll generate code.
+
   - Normal GHCI can *evaluate/normalize* music expression and print the result as text using `Show`. Add more type classes and provide a GHCI alternative that also allow rendering (e.g. via MIDI and Lilypond).
+
   - MVP: When moving cursor to an expression, show it visualized in Window, with caching.
     - Should work out of the box for all common types (e.g. Common.Pitch, Music.Prelude.Music etc)
     - Also show playback controls/audio rendering?
@@ -61,7 +67,9 @@
           means we can't depend on it for any user-facing functionality.
       - Customize/fork GHCi
     - Other DSLs (Diagrams, Haskell for Mac)
+
   - Make `examples` use this
+
   - What is the value is big/slow to render?
 
 - Replace Aeson with typed serialization

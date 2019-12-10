@@ -1,6 +1,10 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 import Music.Prelude
 import qualified Music.Score
+import Music.Score.Export2.StandardNotation (Asp, exportLilypond)
 
 {-
     W.A. Mozart: Ave Verum (excerpt)
@@ -35,7 +39,7 @@ info = id
     . timeSignature (4/4)
     . keySignature (key g False)
 
-score' :: Music
+score' :: Asp
 score' = info $ compress 4 $ tempo (metronome (1/4) 30) $ {-delay (4*2) $ -}
     stanza1_instr </> stanza1_voc
 
@@ -71,7 +75,6 @@ fb2 = fb |* 2
 g2  = g  |* 2
 gs2 = gs |* 2
 gb2 = gb |* 2
-(//) = (|>)
 
 {-
     Can we "overload application" as in
@@ -85,36 +88,38 @@ gb2 = gb |* 2
 
 -- Stanza 1
 stanza1_voc = stanza1_sop </> stanza1_alto </> stanza1_ten </> stanza1_bass
-stanza1_sop = asScore $ delay 8 $ empty
+stanza1_sop = delay 8 $ empty
     |> s3 a2 d' fs |> s3 a gs g2   |> s4 g b a g           |> ssl g fs fs
     |> ls e e      |> s4 fs fs g g |> lss g (fit2 fs e) fs |> l4 e
-stanza1_alto = asScore $ delay 8 $ empty
+stanza1_alto = delay 8 $ empty
     |> ll fs fs    |> ll e e       |> s4 e g fs e          |> ssl e d d
     |> ls cs cs    |> s4 d d e e   |> lss e (fit2 d cs) d  |> l4 cs
-stanza1_ten = asScore $ delay 8 $ octavesDown 1 $ empty
+stanza1_ten = delay 8 $ octavesDown 1 $ empty
     |> ll a  a     |> ll b b       |> ls a   a             |> ll a a
     |> ls e  e     |> s4 a a b b   |> ls a             a   |> l4 e
-stanza1_bass = asScore $ delay 8 $ octavesDown 1 $ empty
+stanza1_bass = delay 8 $ octavesDown 1 $ empty
     |> ll d  d     |> ll d d       |> ls cs  cs            |> ll d d
     |> ls a  a     |> s4 d d cs cs |> ls d             d   |> l4 a_
 
 stanza1_instr = stanza1_vl1 </> stanza1_vl2 </> stanza1_vla </> stanza1_bc
-stanza1_vl1 = asScore $ empty
+stanza1_vl1 = empty
     |> s4 d a_ d e |> s4 fs d fs g
     |> lss a d' fs |> ssl a gs g   |> s4 g b a g           |> ssl g fs fs
     |> ls e e      |> s4 fs fs g g |> lss g (fit2 fs e) fs |> l4 e
-stanza1_vl2 = asScore $ empty
+stanza1_vl2 = empty
     |> s4 d a_ d e |> s4 fs d fs g
     |> ll fs fs    |> ll e e       |> s4 e g fs e          |> ssl e d d
     |> ls cs cs    |> s4 d d e e   |> lss e (fit2 d cs) d  |> l4 cs
-stanza1_vla = asScore $ octavesDown 1 $ empty
+stanza1_vla = octavesDown 1 $ empty
     |> s4 d a_ d e |> s4 fs d fs g
     |> ll a  a     |> ll b b       |> ls a   a             |> ll a a
     |> ls e  e     |> s4 a a b b   |> ls a             a   |> l4 e
-stanza1_bc = asScore $ octavesDown 1 $ empty
+stanza1_bc = octavesDown 1 $ empty
     |> s4 d a_ d e |> s4 fs d fs g
     |> ll d  d     |> ll d d       |> ls cs  cs            |> ll d d
     |> ls a  a     |> s4 d d cs cs |> ls d             d   |> l4 a_
 
 main :: IO ()
-main = pure ()
+main =
+  -- print $ length $ show example
+  exportLilypond score'

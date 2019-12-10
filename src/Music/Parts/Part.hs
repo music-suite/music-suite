@@ -71,6 +71,10 @@ instance Semigroup Part where
 instance Default Part where
   def = Part def def def
 
+instance Enum Part where
+  toEnum   = error "Enum Part"
+  fromEnum = error "Enum Part"
+
 instance ToJSON Part where
   toJSON p = Data.Aeson.object [
     ("instrument", toJSON $ p^.instrument),
