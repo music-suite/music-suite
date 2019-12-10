@@ -40,6 +40,13 @@
     - Trivial poset (prefix on strings)
     - How many players are allocated for each note depend on context
     - Backends may forbid/reallocate concurrent notes of overlapping parts (e.g. "Sop 1" and "Sop 1.1")
+    - The `</>` operator makes sure no overlapping notes have overlapping parts. For example:
+      ```
+        [Tpt, Cl] Tbn -> Tbn
+        [Pno I], Pno I -> Pno II
+        [Vln I, Vla], Vln I.1 -> Vln II
+        [Vln], Vln solo -> Vln solo -- no overlap
+      ```
 
 - Finish/document new export code ("Export2")
   - Make Export2 support:
