@@ -100,4 +100,6 @@
 
 - Replace Aeson with typed serialization
 
+- Get rid of Option (can use plain Maybe/First/Last now)
+
 - Get rid of duplication in music-suite.cabal
