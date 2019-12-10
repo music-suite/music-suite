@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 
 import Music.Prelude
 import Control.Lens (set)
@@ -30,4 +31,4 @@ music = let
 
   in meta $ compress 8 $ left <> set parts' cellos (down _P8 right)
 
--- main = openLilypond music
+main = pure ()

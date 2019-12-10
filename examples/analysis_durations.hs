@@ -6,15 +6,12 @@
 
 import Music.Prelude hiding ((</>))
 import qualified Music.Score
-import qualified System.Process
 import qualified Data.List
 
+music :: Music
 music = asScore $ times 55 (stretch (1/8) c) |> times 28 (stretch (1/16) d)
 
-main = do
-  -- open music
-  putStrLn $ "Durations: "
-  mapM_ (\(x,y) -> putStrLn ("  " ++ show x ++ " \t" ++ show y)) $ (scoreDurations music)
+main = pure ()
 
 
 voiceDurations :: Voice a -> [Duration]
