@@ -315,10 +315,12 @@ whilstL id
 
 -- type LensLike (f :: * -> *) s t a b = (a -> f b) -> s -> f t
 
+-- TODO rename
 dofoo :: Functor f => (x -> s -> a) -> (x -> b -> t) -> LensLike f (x,s) (x,t) a b
 dofoo v w = \f (s,a) -> (s,) <$> w s <$> f ((v s) a)
 
 -- :: Functor f => (x -> afb -> afb') -> (afb' -> s -> f t) -> afb -> (x, s) -> f (x, t)
+-- TODO rename
 dobar :: Functor f => (x -> LensLike f a' b' a b) -> LensLike f s t a' b' -> LensLike f (x,s) (x,t) a b
 dobar q l = \f (s,a) -> (s,) <$> (l (q s f)) a
 
