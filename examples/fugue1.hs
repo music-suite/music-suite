@@ -3,7 +3,7 @@ import Music.Prelude
 import Control.Lens (set)
 import Music.Score.Export2.StandardNotation (Asp, exportLilypond)
 
-main = exportLilypond $ fugue1a
+main = exportLilypond $ fugue1a |> fugueX
 
 {-
 Develop tools for basic counterpoint techniques.
@@ -45,7 +45,7 @@ fugue1 = fugue
   , (p3, 20+3*4, _P8+_P5)
   , (p4, 20+4*4, _P1)
   ]
-  where [p1,p2,p3,p4] = divide 4 violins
+  where [p1,p2,p3,p4] = divide 2 violins ++ [violas, cellos]
 
 {-
 TODO
