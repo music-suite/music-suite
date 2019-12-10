@@ -20,6 +20,8 @@
 
 - Rename the core sequential combinator (to what?)
 
+- Replace (Option :. Last) with Maybe
+
 - Improve rcat: do not use Enum
 
 - Finish/document new export code ("Export2")
