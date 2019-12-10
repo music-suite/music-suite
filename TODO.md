@@ -23,6 +23,23 @@
 - Replace (Option :. Last) with Maybe
 
 - Improve rcat: do not use Enum
+  - Instead define something akin to (HasPosition, Transformable), or Diagram's Juxtaposable:
+
+  ```
+  data Includes :: Type -> Type -> Type where
+    C :: c -> c -> Includes c
+  class Disamb a where
+    disamb :: Set a -> a -> a
+    -- not (disamb rs x `overlapsWithMemberOf` rs)
+    -- not (x `overlapsWithMemberOf` rs) -> (disamb rs x = x)
+    -- where
+    --   x `overlapsWithMemberOf` rs = forall (r `elem` rs) . not (x `C` r) && not (r `C` x)
+  ```
+
+  - Get rid of divisor component in Division, just mark everything as "I", "I.1" etc.
+    - Trivial poset (prefix on strings)
+    - How many players are allocated for each note depend on context
+    - Backends may forbid/reallocate concurrent notes of overlapping parts (e.g. "Sop 1" and "Sop 1.1")
 
 - Finish/document new export code ("Export2")
   - Make Export2 support:
