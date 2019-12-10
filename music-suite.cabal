@@ -280,6 +280,20 @@ executable "music-suite-examples-bartok"
     hs-source-dirs:     examples
     main-is:            bartok.hs
 
+executable "music-suite-examples-behavior"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            behavior.hs
+
+executable "music-suite-examples-canon"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            canon.hs
+
 executable "music-suite-examples-mozart"
     build-depends:      base,
                         music-suite
