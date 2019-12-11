@@ -15,6 +15,8 @@
 - Make all examples compile with the new build system
 
 - Make documentation generation compile/work with the new build system
+  - Make sure doctests are run in CI
+  - Use hslinks or similar (disabled in Makefile for now)
 
 - Add more examples/tests
 
