@@ -1,8 +1,8 @@
 
 
 
-CSS	       =../templates/pandoc-bootstrap-template/template.css
-PANDOC_TEMPLATE=../templates/pandoc-bootstrap-template/template.html
+CSS	       =$(shell pwd)/templates/music-suite/template.css
+PANDOC_TEMPLATE=$(shell pwd)/templates/music-suite/template.html
 #CSS	       =../templates/music-suite/template.css
 #PANDOC_TEMPLATE=../templates/music-suite/template.html
 
