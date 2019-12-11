@@ -1,5 +1,5 @@
 
-{-# LANGUAGE                  
+{-# LANGUAGE
     GeneralizedNewtypeDeriving #-}
 
 module Text.Transf (
@@ -37,7 +37,7 @@ module Text.Transf (
 
         -- * Transformormations
         printT,
-        evalT,   
+        evalT,
         musicT,
         MusicOpts(..),
         musicT',
@@ -93,7 +93,7 @@ type RelativePath = FilePath
 -- Action to be executed after main transf pass.
 --
 newtype Post m = Post [ContextT m ()]
-    deriving (Monoid)
+    deriving (Semigroup, Monoid)
 
 post :: ContextT m () -> Post m
 post = Post . return
@@ -101,14 +101,14 @@ post = Post . return
 type PrimContextT m = ErrorT String (WriterT (Post m) m)
 
 newtype ContextT m a = ContextT { runContextT_ :: PrimContextT m a }
-    deriving ( Functor, Monad, MonadIO, MonadPlus, Applicative, 
+    deriving ( Functor, Monad, MonadIO, MonadPlus, Applicative,
       Alternative, MonadError String, MonadWriter (Post m) )
 
 -- | 
 -- The 'Context' monad defines the context of a transformation.
 --
 -- The main purpose of this type is to restrict the the number
--- of functions you can pass to 'transform'. 
+-- of functions you can pass to 'transform'.
 --
 type Context = ContextT IO
 
@@ -143,7 +143,7 @@ ignoreErrorsAndPost x = (runWriterT . runErrorT . runContextT_) x >> return ()
 
 -- |
 -- A transformation.
--- 
+--
 data Transform
     = CompTrans {
         decomp    :: [Transform]
@@ -250,7 +250,7 @@ writeFile path str = liftIO $ Prelude.writeFile path str
 -- Evaluate a Haskell expression.
 --
 eval :: Typeable a => String -> Context a
-eval = evalWith ["Prelude", "Music.Prelude.Basic"] 
+eval = evalWith ["Prelude", "Music.Prelude.Basic"]
     -- FIXME hardcoded
     -- For some reason, Pitch needs to be in scope (type synonym exported from Music.Prelude.Basic)
 
@@ -291,7 +291,7 @@ inform m = liftIO $ hPutStr stderr $ m ++ "\n"
 --
 -- Note that addPost does not work trasitively, i.e. post actions of
 -- post actions are thrown away.
--- 
+--
 addPost :: Context () -> Context ()
 addPost = tell . post
 
@@ -376,31 +376,33 @@ musicT' opts = transform "music" $ \input -> do
     currentFile <- liftIO $ tryMaybe $ Prelude.readFile (name++".music")
     unless (currentFile == Just input) $ do
       writeFile (name++".music") input
-      liftIO $ void $ readProcess "music2ly"   ["--prelude", prel, "-o", name++".ly",  name++".music"] ""
-      liftIO $ void $ readProcess "music2midi" ["--prelude", prel, "-o", name++".mid", name++".music"] ""
+      --liftIO $ void $ readProcess "music2ly"   ["--prelude", prel, "-o", name++".ly",  name++".music"] ""
+      -- liftIO $ void $ readProcess "music2midi" ["--prelude", prel, "-o", name++".mid", name++".music"] ""
 
+      {-
       let makeLy = do
           (exit, out, err) <- readProcessWithExitCode "lilypond" [
-              "-f", format opts, 
+              "-f", format opts,
               "-dresolution=" ++ show (resolution opts) ++ "", name++".ly"
               ] mempty
           hPutStr stderr out
           hPutStr stderr err
           return ()
-    
-      let makePng = when (format opts == "png") $ void $ system $ 
-              "convert -transparent white -resize " 
+
+      let makePng = when (format opts == "png") $ void $ system $
+              "convert -transparent white -resize "
                   ++ show (resize opts) ++"% "
                   ++ name ++".png "
                   ++ name ++ "x.png"
 
       addPost (liftIO $ makeLy >> makePng)
-
+      -}
+      pure ()
     -- let playText = ""
 
     -- Play generated MIDI file
     let playText = "<div class='haskell-music-listen'><a href='"++name++".mid'>[listen]</a></div>"
-    
+
     -- Play generated WAV file
     -- let playText = "<div class='haskell-music-listen'><a href='"++name++".wav'>[listen]</a></div>"
 
@@ -409,7 +411,7 @@ musicT' opts = transform "music" $ \input -> do
     --                "  <a href=\"javascript:playFile('"++name++".mid')\">[play]</a>\n" ++
     --                "  <a href=\"javascript:stopPlaying()\">[stop]</a>\n" ++
     --                "</div>\n"
-                                                   
+
     let ending = if format opts == "png" then "x" else ""
     return $ playText ++ "\n\n" ++ "![](" ++ name ++ ending ++ "." ++ format opts ++ ")"
     --  -resize 30%
@@ -440,17 +442,17 @@ musicExtraT = transform "music-extra" $ \_ -> return txt
     <script src="js/main.js" type="text/javascript"></script>
 -}
 
-    
+
 -- |
 -- This named transformation passes everything through and retains the source.
--- 
+--
 haskellT :: Transform
 haskellT = transform "haskell" $ \input ->
     return $ "```haskell\n" ++ input ++ "\n```"
 
 -- |
 -- This named transformation runs the 'music' transformation and retains the source.
--- 
+--
 musicHaskellT :: Transform
 musicHaskellT = musicHaskellT' def
 
@@ -507,15 +509,15 @@ oneOf p q x = p x || q x
 parallel_ :: [IO ()] -> IO ()
 parallel_ = foldb concurrently_ (return ())
 
-concurrently_ :: IO a -> IO b -> IO ()
-concurrently_ = concurrentlyWith (\x y -> ())
+-- concurrently_ :: IO a -> IO b -> IO ()
+-- concurrently_ = concurrentlyWith (\x y -> ())
 
 concurrentlyWith :: (a -> b -> c) -> IO a -> IO b -> IO c
 concurrentlyWith f x y = uncurry f <$> x `concurrently` y
 
 foldb :: (a -> a -> a) -> a -> [a] -> a
-foldb f z []  = z  
-foldb f z [x] = x 
+foldb f z []  = z
+foldb f z [x] = x
 foldb f z xs = let (as,bs) = split xs
     in foldb f z as `f` foldb f z bs
     where

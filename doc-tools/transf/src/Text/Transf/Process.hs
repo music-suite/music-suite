@@ -34,7 +34,7 @@ import Prelude hiding (readFile, writeFile)
 -- halts and prints an error message to the standard error stream.
 --
 -- > defaultMain name transf
--- 
+--
 defaultMain :: String -> Transform -> IO ()
 defaultMain name transf = defaultMain' name [] (const transf)
 
@@ -45,9 +45,9 @@ defaultMain name transf = defaultMain' name [] (const transf)
 -- The @help@ and @version@ flags are added automatically.
 --
 -- > defaultMain' name opts transf
--- 
+--
 defaultMain' :: String -> [OptDescr a] -> ([a] -> Transform) -> IO ()
-defaultMain' name optDesc transf = do               
+defaultMain' name optDesc transf = do
     let optDesc' = stdOptDesc ++ (fmap . mapOptDescr) User optDesc
     (opts, args, optErrs) <- getOpt Permute optDesc' <$> getArgs
     return ()
@@ -55,7 +55,7 @@ defaultMain' name optDesc transf = do
     let usage = usageInfo (header name) optDesc'
     let printUsage   = putStr (usage ++ "\n")        >> exitSuccess
     let printVersion = putStr (version name ++ "\n") >> exitSuccess
-    -- 
+    --
     when (Help    `elem` opts) printUsage
     when (Version `elem` opts) printVersion
     let opts' = fmap (\(User a) -> a) opts
@@ -69,10 +69,10 @@ defaultMain' name optDesc transf = do
                        "Usage: "++name++" [options] files...\n" ++
                        "\n" ++
                        "Options:"
-        
+
         runFilter :: Transform -> IO ()
         runFilter transf = run transf stdin stdout
-        
+
         -- stdOptDesc :: [UserOpt a]
         stdOptDesc = [
                 Option ['h'] ["help"]    (NoArg Help)       "Print help and exit",
@@ -81,6 +81,8 @@ defaultMain' name optDesc transf = do
 
         run :: Transform -> Handle -> Handle -> IO ()
         run transf fin fout = do
+            hSetEncoding fin utf8
+            hSetEncoding fout utf8
             res <- runContext $ do
                 input  <- liftIO $ hGetContents fin
                 output <- runTransform transf input

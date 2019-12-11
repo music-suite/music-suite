@@ -1,7 +1,4 @@
 
-TRANSFORM    =transf +RTS -N4
-TRANSFORM_PDF=transf --format=pdf
-RESOLVE_LINKS=GHC_PACKAGE_PATH=`music-util package-path` hslinks
 
 
 CSS	       =../templates/pandoc-bootstrap-template/template.css
@@ -13,18 +10,25 @@ PANDOC=pandoc --standalone --toc
 PANDOC_PDF=$(PANDOC) --write=latex
 PANDOC_HTML=$(PANDOC) --write=html --toc-depth 4 --css styles.css --template $(PANDOC_TEMPLATE)
 
-CABAL_FILES=\
-	../../music-score/music-score.cabal \
-	../../music-pitch/music-pitch.cabal \
-	../../music-dynamics/music-dynamics.cabal \
-	../../music-articulation/music-articulation.cabal \
-	../../music-parts/music-parts.cabal \
-	../../music-pitch-literal/music-pitch-literal.cabal \
-	../../music-dynamics-literal/music-dynamics-literal.cabal \
+CABAL_FILES=""
+# CABAL_FILES=\
+# 	../../music-score/music-score.cabal \
+# 	../../music-pitch/music-pitch.cabal \
+# 	../../music-dynamics/music-dynamics.cabal \
+# 	../../music-articulation/music-articulation.cabal \
+# 	../../music-parts/music-parts.cabal \
+# 	../../music-pitch-literal/music-pitch-literal.cabal \
+# 	../../music-dynamics-literal/music-dynamics-literal.cabal \
 
 # Can't include prelude, as that makes all refs point to the Prelude module
 # 	../../music-preludes/music-preludes.cabal
 
+TRANSFORM    =cabal v2-exec transf -- +RTS -N4
+TRANSFORM_PDF=cabal v2-exec transf -- --format=pdf
+#TRANSFORM    =transf +RTS -N4
+#TRANSFORM_PDF=transf --format=pdf
+#RESOLVE_LINKS=GHC_PACKAGE_PATH=`music-util package-path` hslinks $(CABAL_FILES)
+RESOLVE_LINKS=cat
 
 SRC=src
 OUT=build
@@ -68,27 +72,27 @@ pdf: transform-pdf
 			| $(PANDOC_PDF) -o ../test.pdf && \
 	popd
 
-transform: 
+transform:
 	mkdir -p $(OUT)
 	pushd $(OUT) && \
 		pwd && \
-		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/About.md 		>About.md  && \
-		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/Usage.md 		>Usage.md   && \
-		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
-		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/Tutorial.md  	>Tutorial.md  && \
+		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/About.md 		>About.md  && \
+		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/Usage.md 		>Usage.md   && \
+		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
+		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/Tutorial.md  	>Tutorial.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
 		rm -f *.tex	 && \
 		rm -f *.texi && \
 	popd
 
-transform-pdf: 
+transform-pdf:
 	mkdir -p $(OUT)
 	pushd $(OUT) && \
 		pwd && \
-		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM_PDF) ) <../$(SRC)/About.md 	>About.md  && \
-		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM_PDF) ) <../$(SRC)/Usage.md 	>Usage.md   && \
-		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM_PDF) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
+		( $(RESOLVE_LINKS) | $(TRANSFORM_PDF) ) <../$(SRC)/About.md 	>About.md  && \
+		( $(RESOLVE_LINKS) | $(TRANSFORM_PDF) ) <../$(SRC)/Usage.md 	>Usage.md   && \
+		( $(RESOLVE_LINKS) | $(TRANSFORM_PDF) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
 		rm -f *.tex	 && \

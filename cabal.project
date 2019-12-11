@@ -1,4 +1,5 @@
 packages: ./music-suite.cabal
+          ./doc-tools/transf/transf.cabal
 
 package music-suite
   optimization: False
