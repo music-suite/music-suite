@@ -31,3 +31,5 @@ cabal --reject-unconstrained-dependencies=all v2-test all
 ```
 (cd docs && make)
 ```
+
+The output appears in `docs/build`.
