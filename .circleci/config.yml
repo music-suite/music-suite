@@ -7,4 +7,4 @@ jobs:
           LC_ALL: C.UTF-8
     steps:
       - checkout
-      - run: nix-shell --pure --command "cabal v2-update && cabal --reject-unconstrained-dependencies=all v2-build && cabal --reject-unconstrained-dependencies=all v2-test"
+      - run: nix-shell --pure --command "cabal v2-update && cabal --reject-unconstrained-dependencies=all v2-build all && cabal --reject-unconstrained-dependencies=all v2-test all"

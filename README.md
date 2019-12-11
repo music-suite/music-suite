@@ -6,21 +6,28 @@ Music Suite is a language for describing music, based on Haskell.
 
 See <http://music-suite.github.io>.
 
-## Building
+## Set up build environment
 
+Install Nix (2.3.1 is tested, others might work).
 
-Install Nix (2.3.1 tested, others might work)
+Enter build environment using:
 
 ```
 nix-shell --pure
 ```
 
-Inside the build shell, run:
+Inside the build shell, the following commands can be used:
+
+### Build and test everything
 
 ```
 cabal v2-update
-cabal --reject-unconstrained-dependencies=all v2-build
-cabal --reject-unconstrained-dependencies=all v2-test
+cabal --reject-unconstrained-dependencies=all v2-build all
+cabal --reject-unconstrained-dependencies=all v2-test all
 ```
 
+### Generate documentation
 
+```
+(cd docs && make)
+```
