@@ -1,0 +1,3 @@
+[submodule "pandoc-bootstrap"]
+  path = docs/templates/pandoc-bootstrap-template
+  url = https://github.com/music-suite/pandoc-bootstrap-template
