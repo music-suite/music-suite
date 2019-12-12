@@ -64,6 +64,7 @@
     - Lilypond
     - MusicXML
   - Benchmark!
+  - Depends on [entrypoint]
 
 - New backends (ideas):
   - ABC notation
@@ -73,7 +74,7 @@
   - Graphical backends
     - Piano roll
 
-- Decide on top-level interface
+- [entrypoint] Decide on top-level interface
   - By default recommend *no IO*
 
   - All data is is in the DSL/Haskell code. For *import formats* (such as Sibelius), we'll generate code.
@@ -95,6 +96,12 @@
           means we can't depend on it for any user-facing functionality.
       - Customize/fork GHCi
     - Other DSLs (Diagrams, Haskell for Mac)
+
+    - Alternatives
+      - defaultMain a la Diagrams
+        - generates a CLI program that renders the result (can take arguments)
+        - TODO what types should be renderable
+      - Make a
 
   - Make `examples` use this
 
