@@ -46,7 +46,7 @@ main = open example
 Then either execute it using:
 
     $ runhaskell test.hs
-    
+
 or compile and run it with
 
     $ ghc --make test
@@ -123,7 +123,7 @@ c
 ```
 
 To change the duration of a note, use @[stretch] or @[compress]. Note that:
-    
+
 ```haskell
 compress x = stretch (1/x)
 ```
@@ -135,7 +135,7 @@ stretch (1/2) c
 ```
 
 ```music+haskell
-stretch 2 c         
+stretch 2 c
 ```
 
 ```music+haskell
@@ -196,7 +196,7 @@ c </> e </> g
 Here is a more complex example:
 
 ```music+haskell
-let            
+let
     scale = scat [c,d,e,f,g,a,g,f]|/8
     triad a = a <> up _M3 a <> up _P5 a
 in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2
@@ -221,7 +221,7 @@ I figured out that these are names that you actually want to use in your own cod
 
 ### Pitch names
 
-To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*. 
+To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*.
 
 To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type @[IsPitch] `a => a`.
 
@@ -231,7 +231,7 @@ For Western-style pitch types, the standard pitch names can be used:
 scat [c, d, e, f, g, a, b]
 ```
 
-Pitch names in other languages work as well, for example `ut, do, re, mi, fa, so, la, ti, si`. 
+Pitch names in other languages work as well, for example `ut, do, re, mi, fa, so, la, ti, si`.
 
 <!--
 German names (using `h` and `b` instead of `b` and `bb`) can be approximated as follows:
@@ -262,7 +262,7 @@ There is also a shorthand for other octaves:
 c__ |> c_ |> c |> c' |> c''
 ```
 
-Sharps and flats can be added by the functions @[sharp] and @[flat], which are written 
+Sharps and flats can be added by the functions @[sharp] and @[flat], which are written
 *postfix* thanks to some overloading magic.
 
 ```music+haskell
@@ -272,8 +272,8 @@ c sharp |> d |> e flat
 You can also use the ordinary (prefix) versions @[sharpen] and @[flatten].
 
 ```music+haskell
-sharpen c 
-    </> 
+sharpen c
+    </>
 (sharpen . sharpen) c
 ```
 
@@ -393,7 +393,7 @@ accentAll (scat [c..g]|/8)
 
 Applying articulations over multiple parts:
 
-```music+haskell     
+```music+haskell
 let
     p1 = scat [c..c']|/4
     p2 = delay (1/4) $ scat [c..c']|/4
@@ -489,12 +489,12 @@ Similar to chords, there is usually no need to handle rests explicitly.
 
 TODO add explicit rests etc
 
-@[mcatMaybes] 
+@[mcatMaybes]
 
 ```music+haskell
-mcatMaybes $ times 4 (accentAll g|*2 |> rest |> scat [d,d]|/2)|/8 
+mcatMaybes $ times 4 (accentAll g|*2 |> rest |> scat [d,d]|/2)|/8
 ```
-                 
+
 
 
 
@@ -528,7 +528,7 @@ scat [e,d,f,e] <> c
 ## Onset and duration
 
 ```music+haskellx
-let                
+let
     melody = asScore $ legato $ scat [scat [c,d,e,c], scat [e,f], g|*2]
     pedal  = asScore $ delayTime (melody^.onset) $ stretch (melody^.duration) $ c_
 in compress 4 $ melody </> pedal
@@ -677,7 +677,7 @@ The @[Span] type represents a *slice* of time. We can represent spans in exactly
 
 ## Voices
 
-A @[Voice] represents a single voice of music. It consists of a sequence of values with duration. 
+A @[Voice] represents a single voice of music. It consists of a sequence of values with duration.
 
 ```music+haskell
 stretch (1/4) $ scat [c..a]|/2 |> b |> c'|*4
@@ -698,8 +698,8 @@ let
           (1, f),
           (1, e) ]^.voice
 
-    y = join $ [ (1, x), 
-                 (0.5, up _P5 x), 
+    y = join $ [ (1, x),
+                 (0.5, up _P5 x),
                  (4, up _P8 x) ]^.voice
 
 in stretch (1/8) $ voiceToScore $ y
@@ -720,8 +720,8 @@ It can be converted into a score by delaying each element and composing in paral
 ```music+haskellx
 let
     x = [ (0, c), (1, d), (2, e) ]^.track
-    y = join $ [ (0, x), 
-                (1.5,  up _P5 x), 
+    y = join $ [ (0, x),
+                (1.5,  up _P5 x),
                 (3.25, up _P8 x) ]^.track
 
 in trackToScore (1/8) y
@@ -775,7 +775,7 @@ composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ scat [c,d,e,c]|/
 
 @[withKeySignature]
 
-## Time signatures          
+## Time signatures
 
 @[time]
 
@@ -887,7 +887,7 @@ The conventions for input or output formats is similar to the convention for pro
 
 ## MIDI
 
-All standard representations support MIDI input and output. The MIDI representation uses [HCodecs](http://hackage.haskell.org/package/HCodecs) and the real-time support uses [hamid](http://hackage.haskell.org/package/hamid). 
+All standard representations support MIDI input and output. The MIDI representation uses [HCodecs](http://hackage.haskell.org/package/HCodecs) and the real-time support uses [hamid](http://hackage.haskell.org/package/hamid).
 
 <!--
 You can read and write MIDI files using the functions @[readMidi] and @[writeMidi]. To play MIDI back in real-time, use @[playMidi] or @[playMidiIO], which uses [reenact](http://hackage.haskell.org/package/reenact).
@@ -914,8 +914,8 @@ toLilypondString $ asScore $ scat [c,d,e]
 
 ## MusicXML
 
-All standard representations support MusicXML output. The [musicxml2](http://hackage.haskell.org/package/musicxml2) package is used for 
-parsing and pretty printing. 
+All standard representations support MusicXML output. The [musicxml2](http://hackage.haskell.org/package/musicxml2) package is used for
+parsing and pretty printing.
 
 The output is fairly complete, with some limitations ([reports][issue-tracker] welcome). There are no plans to support input in the near future.
 
@@ -998,7 +998,7 @@ toMusicXmlString $ asScore $ scat [c,d,e]
         </measure>
       </part>
     </score-partwise>
-    
+
 
 ## ABC Notation
 
