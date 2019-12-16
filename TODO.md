@@ -6,6 +6,8 @@
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
 
+- Run UMTS (Unofficial MusicXML Test Suite) as part of CI builds
+
 - Get rid of all CPP
 
 - Port issues from the old tracker
@@ -77,7 +79,7 @@
 - [entrypoint] Decide on top-level interface
   - By default recommend *no IO*
 
-  - All data is is in the DSL/Haskell code. For *import formats* (such as Sibelius), we'll generate code.
+  - All data is is in the DSL/Haskell code. For *import formats* (such as Sibelius), we'll generate either 1) Haskell code or 2) TIDL serialized data, which can be automatically converted to Haskell code.
 
   - Normal GHCI can *evaluate/normalize* music expression and print the result as text using `Show`. Add more type classes and provide a GHCI alternative that also allow rendering (e.g. via MIDI and Lilypond).
 
@@ -110,5 +112,7 @@
 - Replace Aeson with typed serialization
 
 - Get rid of Option (can use plain Maybe/First/Last now)
+
+- Fix lawless (HasPosition (Score a)) by adding default/empty position to class
 
 - Get rid of duplication in music-suite.cabal
