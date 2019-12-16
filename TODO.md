@@ -6,6 +6,8 @@
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
 
+- Add more examples (e.g from Piece1, Piece2 etc)
+
 - Run UMTS (Unofficial MusicXML Test Suite) as part of CI builds
 
 - Get rid of all CPP
@@ -22,9 +24,17 @@
 
 - Add more examples/tests
 
-- Rename the core sequential combinator (to what?)
+- Use Records (e.g. Vinyl) instead of transformers
+  - See `sketch`
+  - Check compatibility with current HasPitch/HasPitches etc and new GHC record proposals
 
-- Replace (Option :. Last) with Maybe
+- Rename the core sequential combinator (to what?)
+  - seq/par would be nice, but is taken in Prelude. We could override.
+  - sequence also taken
+  - line/chord, melody/chord? - Used in temporal-media, but both too specific?
+  - sequentially/simultaneously - Too long?
+
+- Replace (Option :. Last) with Maybe now that Semigroup is a superclass of Monoid
 
 - Improve rcat: do not use Enum
   - Instead define something akin to (HasPosition, Transformable), or Diagram's Juxtaposable:
