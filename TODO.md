@@ -18,6 +18,9 @@
 
 - Make all examples compile with the new build system
 
+- fromMidiProgram/fromMusicXmlSoundId are unsafe, rename accordingly. Only use these internally (users can use Music.Parts.<instrumentName> instead).
+  - Could potentially use a quasiquoter for compile-time checked arbitrary instrument IDs
+
 - Make documentation generation compile/work with the new build system
   - Make sure doc generation/doctests are run in CI
   - Use hslinks or similar (disabled in Makefile for now)
