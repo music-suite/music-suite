@@ -108,7 +108,17 @@
 
   - All data is is in the DSL/Haskell code. For *import formats* (such as Sibelius), we'll generate either 1) Haskell code or 2) TIDL serialized data, which can be automatically converted to Haskell code as per TIDL semantics.
 
-  - Normal GHCI can *evaluate/normalize* music expression and print the result as text using `Show`. Add more type classes and provide a GHCI alternative that also allow rendering (e.g. via MIDI and Lilypond).
+  - Normal GHCI can *evaluate/normalize* music expression and print the result as text using `Show`.
+
+
+  - Step I: Have a defaultMain that works for a single type (`Score StandardNote` or similar: `Asp` should move towards this when it makes sense). E.g. `defaultMain :: Score StandardNotate -> IO ()`. The IO action defines a CLI which takes output format, path etc and writes the output file.
+  - Step IIA (TODO good idea): Instead of an IO action, something more composable (e.g. a stateful app exposing a typed TIDL interface for interactive display).
+  - Step IIB: Allow other types than `Score StandardNote`.
+    - Track MidiEvent?
+    - Anything that can be converted to `Export2.StandardNotation.Work`
+    - A type similar to `StandardNotation.Work`, but for title-less, single movement excerpts?
+    - Simple things like chords, scales, pitches etc, by rendering into the above.
+
 
   - MVP: When moving cursor to an expression, show it visualized in Window, with caching.
     - Should work out of the box for all common types (e.g. Common.Pitch, Music.Prelude.Music etc)
