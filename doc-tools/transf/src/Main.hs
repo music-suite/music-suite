@@ -5,18 +5,15 @@ import System.Console.GetOpt
 import Data.Default
 import Data.Maybe
 import Data.Semigroup hiding (Option)
-import Text.Transf
+import Text.Transf (MusicOpts(..),
+  haskellT, musicT, musicHaskellT, musicExtraT)
 import Text.Transf.Process
 
 main        = defaultMain' "transf" optDesc transf
-transf opts = 
-  haskellT
-  <> printT
-  <> evalT
-  -- <> haskellT
-  <> evalHaskellT
-  <> musicT' (getMusicOpts opts) 
-  <> musicHaskellT' (getMusicOpts opts) 
+transf opts =
+     haskellT
+  <> musicT (getMusicOpts opts)
+  <> musicHaskellT (getMusicOpts opts)
   <> musicExtraT
 
 
@@ -25,13 +22,17 @@ data Opt
     | Resolution Int
     | Resize     Int
     | Prelude    String
+
 getFormat :: Opt -> Maybe String
 getFormat     (Format a)        = Just a
 getFormat     _                 = Nothing
+
 getResolution (Resolution a)    = Just a
 getResolution _                 = Nothing
+
 getResize     (Resize a)        = Just a
 getResize     _                 = Nothing
+
 getPrelude    (Prelude a)       = Just a
 getPrelude    _                 = Nothing
 

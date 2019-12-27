@@ -21,15 +21,17 @@ Inside the build shell, the following commands can be used:
 ### Build and test everything
 
 ```
-cabal v2-update
+cabal v2-update # TODO necessary?
 cabal --reject-unconstrained-dependencies=all v2-build all
 cabal --reject-unconstrained-dependencies=all v2-test all
 ```
 
 ### Generate documentation
 
+First run the "cabal ... build all" command, then:
+
 ```
 (cd docs && make)
 ```
 
-The output appears in `docs/build`.
+The output appears in `docs/build`. You can point a HTTP server to this directory.

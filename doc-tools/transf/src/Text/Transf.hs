@@ -38,13 +38,11 @@ module Text.Transf (
         -- * Transformormations
         printT,
         evalT,
-        musicT,
         MusicOpts(..),
-        musicT',
+        musicT,
         haskellT,
         evalHaskellT,
         musicHaskellT,
-        musicHaskellT',
         musicExtraT,
   ) where
 
@@ -322,7 +320,7 @@ printT = transform "print" $ \input -> inform input >> return ""
 evalT :: Transform
 -- evalT = transform "eval" $ \input -> evalWith ["Prelude"] input
 evalT = transform "eval" $ \input -> do
-  (exit, out, err) <- liftIO $ readProcessWithExitCode "runhaskell2" [] input
+  (exit, out, err) <- liftIO $ readProcessWithExitCode "runhaskell" [] input
   inform err
   return out
 
@@ -351,11 +349,8 @@ instance Default MusicOpts where def = MusicOpts {
 -- The expression must return a value of type @Score Note@. The "Music.Prelude.Basic"
 -- module is implicitly imported.
 --
-musicT :: Transform
-musicT = musicT' def
-
-musicT' :: MusicOpts -> Transform
-musicT' opts = transform "music" $ \input -> do
+musicT :: MusicOpts -> Transform
+musicT opts = transform "music" $ \input -> do
     let prel = prelude opts
     let name = showHex (abs $ hash input) ""
 
@@ -453,14 +448,11 @@ haskellT = transform "haskell" $ \input ->
 -- |
 -- This named transformation runs the 'music' transformation and retains the source.
 --
-musicHaskellT :: Transform
-musicHaskellT = musicHaskellT' def
-
-musicHaskellT' :: MusicOpts -> Transform
-musicHaskellT' opts = transform "music+haskell" $ \input -> do
+musicHaskellT :: MusicOpts -> Transform
+musicHaskellT opts = transform "music+haskell" $ \input -> do
     let begin    = "<div class='haskell-music'>"
     let end      = "</div>"
-    musicRes   <- doTrans (musicT' opts) input
+    musicRes   <- doTrans (musicT opts) input
     haskellRes <- doTrans haskellT input
     return $ begin ++ "\n\n" ++ musicRes ++ "\n\n" ++ haskellRes ++ "\n\n" ++ end
 
