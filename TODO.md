@@ -8,7 +8,15 @@
 
 - Add more examples (e.g from Piece1, Piece2 etc)
 
-- Run UMTS (Unofficial MusicXML Test Suite) as part of CI builds
+- Finish UMTS (Unofficial MusicXML Test Suite)
+  - We have manual Haskell encodings of UMTS data which we used to test the export pipeline from StandardNotation.Work to Lilypond/XML
+  - Remaining work:
+    - Make sure output look like the official Lilypond output (produced through running musicxml2ly on the official XML files) for both
+      our Lilypond and MusicXML exports (using Sibelius/MuseScore).
+  - Turn into golden/regression tests assuring the XML/Ly output of Haskell encoded UMTS cases does not affect visual appearance. If the
+    output changes the goldens will flag and the developer has to manually ensure that the visuals are unaffected.
+  - Later: Maybe use approximate image diffs (comparing the entire rendering pipeline to musicxml2ly on the original XML files) instead
+  - Run as part of CI builds
 
 - Get rid of all CPP
 
