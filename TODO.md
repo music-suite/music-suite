@@ -32,10 +32,14 @@
 - Make documentation generation compile/work with the new build system
   - Make sure doc generation/doctests are run in CI
   - Use hslinks or similar (disabled in Makefile for now)
+  - Make transf generate music files:
+    - Depends on [entry-point] above. Specifically the invocation in doc-tools/src/Text/Transf.hs has to work. It used to invoke music2ly etc which no longer exist. To make it work again:
+    - [ ] Add something to Transf.hs to turn E into "main = Music.IO.defaultMain (E)"
+    - [ ] Define Music.IO.defaultMain to invoke the new export and expose a CLI similar to what's expected in Transf.hs (dynamically dispatching on output format etc).
 
 - Add more examples/tests
 
-- Use Records (e.g. Vinyl) instead of transformers
+- Use Records (e.g. Vinyl) instead of Note transformers (e.g. Music.Score.DynamicT)
   - See `sketch`
   - Check compatibility with current HasPitch/HasPitches etc and new GHC record proposals
 
@@ -97,10 +101,12 @@
   - Graphical backends
     - Piano roll
 
+
+
 - [entrypoint] Decide on top-level interface
   - By default recommend *no IO*
 
-  - All data is is in the DSL/Haskell code. For *import formats* (such as Sibelius), we'll generate either 1) Haskell code or 2) TIDL serialized data, which can be automatically converted to Haskell code.
+  - All data is is in the DSL/Haskell code. For *import formats* (such as Sibelius), we'll generate either 1) Haskell code or 2) TIDL serialized data, which can be automatically converted to Haskell code as per TIDL semantics.
 
   - Normal GHCI can *evaluate/normalize* music expression and print the result as text using `Show`. Add more type classes and provide a GHCI alternative that also allow rendering (e.g. via MIDI and Lilypond).
 

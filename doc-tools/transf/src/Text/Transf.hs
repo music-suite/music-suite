@@ -370,11 +370,13 @@ musicT opts = transform "music" $ \input -> do
 
     currentFile <- liftIO $ tryMaybe $ Prelude.readFile (name++".music")
     unless (currentFile == Just input) $ do
-      writeFile (name++".music") input
-      --liftIO $ void $ readProcess "music2ly"   ["--prelude", prel, "-o", name++".ly",  name++".music"] ""
+      writeFile (name++".hs") input
+      -- liftIO $ void $ readProcess "music2ly"   ["--prelude", prel, "-o", name++".ly",  name++".music"] ""
       -- liftIO $ void $ readProcess "music2midi" ["--prelude", prel, "-o", name++".mid", name++".music"] ""
 
-      {-
+      -- TODO add defaultMain, using ${prel}
+      liftIO $ void $ readProcess "runhaskell" [name++".hs", "--", "-o", name++".ly"] ""
+
       let makeLy = do
           (exit, out, err) <- readProcessWithExitCode "lilypond" [
               "-f", format opts,
@@ -384,14 +386,17 @@ musicT opts = transform "music" $ \input -> do
           hPutStr stderr err
           return ()
 
+      let makePng = pure ()
+      {- TODO add 'convert' (from where?) to Nix environment
       let makePng = when (format opts == "png") $ void $ system $
               "convert -transparent white -resize "
                   ++ show (resize opts) ++"% "
                   ++ name ++".png "
                   ++ name ++ "x.png"
 
-      addPost (liftIO $ makeLy >> makePng)
       -}
+
+      addPost (liftIO $ makeLy >> makePng)
       pure ()
     -- let playText = ""
 
