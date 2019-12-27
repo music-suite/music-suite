@@ -21,9 +21,11 @@ Inside the build shell, the following commands can be used:
 ### Build and test everything
 
 ```
-cabal v2-update # TODO necessary?
-cabal --reject-unconstrained-dependencies=all v2-build all
-cabal --reject-unconstrained-dependencies=all v2-test all
+cabal update
+# TODO is update necessary with reject-unconstrained-dependencies?
+# TODO instead of flag, put this in repo-wide config file?
+cabal --reject-unconstrained-dependencies=all build all
+cabal --reject-unconstrained-dependencies=all test all
 ```
 
 ### Generate documentation
