@@ -18,19 +18,24 @@ nix-shell --pure
 
 Inside the build shell, the following commands can be used:
 
-### Build and test everything
+### Build everything
 
 ```
 cabal update
-# TODO is update necessary with reject-unconstrained-dependencies?
-# TODO instead of flag, put this in repo-wide config file?
-cabal --reject-unconstrained-dependencies=all build all
-cabal --reject-unconstrained-dependencies=all test all
+cabal build
+```
+
+### Test everything
+
+First build, then:
+
+```
+cabal test
 ```
 
 ### Generate documentation
 
-First run the "cabal ... build all" command, then:
+First build, then:
 
 ```
 (cd docs && make)

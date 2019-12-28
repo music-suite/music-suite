@@ -1,5 +1,7 @@
 packages: ./music-suite.cabal
           ./doc-tools/transf/transf.cabal
 
+reject-unconstrained-dependencies: all
+
 package music-suite
   optimization: False
