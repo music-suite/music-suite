@@ -96,8 +96,12 @@
 - New backends (ideas):
   - ABC notation
   - Vextab
-  - csound-expression
-  - scsynth
+  - Audio engines:
+    - csound-expression/temporal-media
+    - scsynth
+  - Other symbolic Haskell/Music libraries:
+    - Euterpea
+    - TidalCycles
   - Graphical backends
     - Piano roll
 
@@ -151,5 +155,7 @@
 - Get rid of Option (can use plain Maybe/First/Last now)
 
 - Fix lawless (HasPosition (Score a)) by adding default/empty position to class
+
+- Proper scale/chord type supporting all common use-cases
 
 - Get rid of duplication in music-suite.cabal
