@@ -9,4 +9,4 @@ jobs:
       - checkout
       # TODO is cabal-update needed
       # How reproducible is this build? (we have freeze and reject-unconstrainted, but Hackage revisions might still be a problem)
-      - run: nix-shell --pure --command "cabal update && cabal build && cabal test"
+      - run: nix-shell --pure --command "cabal update && cabal test"
