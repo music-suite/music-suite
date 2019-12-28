@@ -313,6 +313,8 @@ executable "music-suite-examples-part"
     hs-source-dirs:     examples
     main-is:            part.hs
 
+-- TODO add phrases.hs
+
 executable "music-suite-examples-simple"
     build-depends:      base,
                         music-suite

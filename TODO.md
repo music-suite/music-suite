@@ -154,6 +154,11 @@
 
 - Get rid of Option (can use plain Maybe/First/Last now)
 
+- Better syntax for entering pitch, maybe using a quasi-quoter
+  - See e.g. Mozart example
+  - See syntax sketches, also compare Lilypond
+  - OTOH the language "just basic Haskell" is maybe more important than simple syntax?
+
 - Fix lawless (HasPosition (Score a)) by adding default/empty position to class
 
 - Proper scale/chord type supporting all common use-cases
