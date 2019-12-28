@@ -7,4 +7,6 @@ jobs:
           LC_ALL: C.UTF-8
     steps:
       - checkout
-      - run: nix-shell --pure --command "cabal v2-update && cabal --reject-unconstrained-dependencies=all v2-build all && cabal --reject-unconstrained-dependencies=all v2-test all"
+      # TODO is cabal-update needed
+      # How reproducible is this build? (we have freeze and reject-unconstrainted, but Hackage revisions might still be a problem)
+      - run: nix-shell --pure --command "cabal update && cabal build && cabal test"
