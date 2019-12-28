@@ -65,7 +65,7 @@
     --   x `overlapsWithMemberOf` rs = forall (r `elem` rs) . not (x `C` r) && not (r `C` x)
   ```
 
-  - Get rid of divisor component in Division, just mark everything as "I", "I.1" etc.
+  - [ ] !! Get rid of divisor component in Division, just mark everything as "I", "I.1" etc.
     - Trivial poset (prefix on strings)
     - How many players are allocated for each note depend on context
     - Backends may forbid/reallocate concurrent notes of overlapping parts (e.g. "Sop 1" and "Sop 1.1")
