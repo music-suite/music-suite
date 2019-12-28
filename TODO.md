@@ -79,12 +79,12 @@
 
 - Finish/document new export code ("Export2")
   - Make Export2 support:
-    - Colored noteheads
+    - Colored noteheads?
     - Playing techinques: pizz, trem, harmonics, slide/gliss
     - Expression text (e.g. "dolce")
     - Lyrics
     - Free-form text
-    - Meta-data (does it work?)
+    - The stuff in Score.Meta (e.g. key/time signatures)
   - Add unit tests for all export formats/backends:
     - MIDI
     - Standard notation (common part of Lilypond/MusicXML)
