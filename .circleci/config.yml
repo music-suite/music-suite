@@ -7,6 +7,9 @@ jobs:
           LC_ALL: C.UTF-8
     steps:
       - checkout
-      # TODO is cabal-update needed
-      # How reproducible is this build? (we have freeze and reject-unconstrainted, but Hackage revisions might still be a problem)
+      # TODO this is not fully reproducible because of Hackage revisions.
+      # See
+      #     https://twitter.com/refold/status/955782113797857281
+      #     http://hackage.haskell.org/package/pantry-0.2.0.0/docs/Pantry.html#t:CabalFileInfo
+      #     https://www.reddit.com/r/haskell/comments/7pb5tl/til_stackage_can_be_broken_retroactively_due_to/
       - run: nix-shell --pure --command "cabal update && cabal test"
