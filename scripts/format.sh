@@ -1,4 +1,4 @@
-# Format /src with Ormulo
+# Format /src with Ormulo <https://github.com/tweag/ormolu>
 #
 # To use this, clone Ormulo 0.0.2.0 from source and build as per its README
 #
