@@ -164,3 +164,13 @@
 - Proper scale/chord type supporting all common use-cases
 
 - Get rid of duplication in music-suite.cabal
+
+- https://github.com/music-suite/music-score/issues/340
+
+- https://github.com/music-suite/music-score/issues/298
+
+- IDE allowing "preview on hover"
+  - Normal text editor
+  - When moving around in a single file (with/without a 'main' function) any hovered expression should
+    trigger a preview (visual/audial) in an editor window, as if the expression had been applied to
+    defaultMain (see above).
