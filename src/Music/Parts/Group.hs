@@ -1,32 +1,28 @@
-
 module Music.Parts.Group where
 
-import           Control.Applicative
-import           Control.Lens                    (toListOf, Lens, Lens', (^.))
-import           Data.Aeson                      (ToJSON (..), FromJSON(..))
+import Control.Applicative
+import Control.Lens (Lens, Lens', (^.), toListOf)
+import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson
-import           Data.Default
+import Data.Default
 import qualified Data.List
-import           Data.Maybe
-import           Data.Semigroup
-import           Data.Semigroup.Option.Instances
-import           Data.Traversable                (traverse)
-import           Data.Typeable
-import           Text.Numeral.Roman              (toRoman)
-
-import           Music.Parts.Division
-import           Music.Parts.Solo
-import           Music.Parts.Instrument
-import           Music.Parts.Part
-import           Music.Parts.Subpart
-
-import           Music.Parts.Instrument.Brass
-import           Music.Parts.Instrument.Keyboard
-import           Music.Parts.Instrument.Percussion
-import           Music.Parts.Instrument.Strings
-import           Music.Parts.Instrument.Vocal
-import           Music.Parts.Instrument.Woodwind
-
+import Data.Maybe
+import Data.Semigroup
+import Data.Semigroup.Option.Instances
+import Data.Traversable (traverse)
+import Data.Typeable
+import Music.Parts.Division
+import Music.Parts.Instrument
+import Music.Parts.Instrument.Brass
+import Music.Parts.Instrument.Keyboard
+import Music.Parts.Instrument.Percussion
+import Music.Parts.Instrument.Strings
+import Music.Parts.Instrument.Vocal
+import Music.Parts.Instrument.Woodwind
+import Music.Parts.Part
+import Music.Parts.Solo
+import Music.Parts.Subpart
+import Text.Numeral.Roman (toRoman)
 
 {-
     ## Terminology: Voice vs Part
@@ -102,10 +98,10 @@ type BarLines = Bool
 
 data GroupType
   = Invisible
-  | Bracket           -- ly: StaffGroup,  xml: GroupSymbol=bracket
-  | SubBracket        -- ly: PianoStaff?, xml: GroupSymbol=line
-  | PianoStaff        -- ly: PianoStaff,  xml: GroupSymbol=brace
-  | GrandStaff        -- ly: GrandStaff,  xml: GroupSymbol=brace
+  | Bracket -- ly: StaffGroup,  xml: GroupSymbol=bracket
+  | SubBracket -- ly: PianoStaff?, xml: GroupSymbol=line
+  | PianoStaff -- ly: PianoStaff,  xml: GroupSymbol=brace
+  | GrandStaff -- ly: GrandStaff,  xml: GroupSymbol=brace
   deriving (Eq, Ord, Show)
 
 data Group a
@@ -114,18 +110,21 @@ data Group a
   deriving (Eq, Ord, Show, Functor)
 
 groupDefault :: [(Instrument, a)] -> Group a
-groupDefault xs = Many Invisible False
-                    [Many Bracket True   $ fmap Single ww,
-                     Many Bracket True   $ fmap Single br,
-                     Many Bracket True   $ fmap Single pc,
-                     Many Invisible True $ fmap Single kb,
-                     Many Bracket False  $ fmap Single voc,
-                     Many Bracket True   $ fmap Single str
-                     ]
+groupDefault xs =
+  Many
+    Invisible
+    False
+    [ Many Bracket True $ fmap Single ww,
+      Many Bracket True $ fmap Single br,
+      Many Bracket True $ fmap Single pc,
+      Many Invisible True $ fmap Single kb,
+      Many Bracket False $ fmap Single voc,
+      Many Bracket True $ fmap Single str
+    ]
   where
-    ww  = filter (isWoodwindInstrument . fst) xs
-    br  = filter (isBrassInstrument . fst) xs
-    pc  = filter (isPercussionInstrument . fst) xs
-    kb  = filter (isKeyboardInstrument . fst) xs
+    ww = filter (isWoodwindInstrument . fst) xs
+    br = filter (isBrassInstrument . fst) xs
+    pc = filter (isPercussionInstrument . fst) xs
+    kb = filter (isKeyboardInstrument . fst) xs
     voc = filter (isVocalInstrument . fst) xs
     str = filter (isStringInstrument . fst) xs

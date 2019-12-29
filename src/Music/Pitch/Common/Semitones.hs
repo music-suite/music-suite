@@ -1,32 +1,31 @@
-
 -- | Semitones and enharmonic equivalence.
 module Music.Pitch.Common.Semitones
-(
-        -- * Types
-        -- ** Octaves
-        Octaves,
+  ( -- * Types
 
-        -- ** Semitones
-        Semitones,
-        HasSemitones(..),
-        semitone,
-        tone,
-        ditone,
-        tritone,
-        isSemitone,
-        isTone,
-        isTritone,
+    -- ** Octaves
+    Octaves,
 
-        -- * Enharmonic equivalence
-        (=:=),
-        (/:=),
-) where
+    -- ** Semitones
+    Semitones,
+    HasSemitones (..),
+    semitone,
+    tone,
+    ditone,
+    tritone,
+    isSemitone,
+    isTone,
+    isTritone,
+
+    -- * Enharmonic equivalence
+    (=:=),
+    (/:=),
+  )
+where
 
 import Music.Pitch.Common.Types
 
 -- |
 -- Class of intervals that has a number of 'Octaves'.
---
 class HasOctaves a where
   -- |
   -- Returns the number of octaves spanned by an interval.
@@ -39,11 +38,9 @@ class HasOctaves a where
   -- > octaves (perfect unison)  =  0
   -- > octaves (d5 ^* 4)         =  2
   -- > octaves (-_P8)            =  -1
-  --
   octaves :: a -> Octaves
 
-instance HasOctaves Octaves where { octaves = id }
-
+instance HasOctaves Octaves where octaves = id
 
 {-
 -- |
@@ -64,9 +61,7 @@ class HasSteps a where
 
 -- |
 -- Class of intervals that can be converted to a number of 'Semitones'.
---
 class HasSemitones a where
-
   -- |
   -- Returns the number of semitones spanned by an interval.
   --
@@ -81,11 +76,9 @@ class HasSemitones a where
   -- 6
   -- >>> semitones (-_P8)
   -- -12
-  --
   semitones :: a -> Semitones
 
-instance HasSemitones ChromaticSteps where { semitones = id }
-
+instance HasSemitones ChromaticSteps where semitones = id
 
 semitone, tone, ditone, tritone :: Semitones
 
@@ -93,29 +86,27 @@ semitone, tone, ditone, tritone :: Semitones
 semitone = 1
 
 -- | Precisely one whole tone, or two semitones.
-tone     = 2
+tone = 2
 
 -- | Precisely two whole tones, or four semitones.
-ditone   = 4
+ditone = 4
 
 -- | Precisely three whole tones, or six semitones.
-tritone  = 6
-
+tritone = 6
 
 isTone, isSemitone, isTritone :: HasSemitones a => a -> Bool
 
 -- | Returns true iff the given interval spans one semitone.
-isSemitone  = (== semitone) . abs . semitones
+isSemitone = (== semitone) . abs . semitones
 
 -- | Returns true iff the given interval spans one whole tone (two semitones).
-isTone      = (== tone)     . abs . semitones
+isTone = (== tone) . abs . semitones
 
 -- | Returns true iff the given interval spans three whole tones (six semitones).
-isTritone   = (== tritone)  . abs . semitones
-
-
+isTritone = (== tritone) . abs . semitones
 
 infix 4 =:=
+
 infix 4 /:=
 
 -- |
@@ -125,7 +116,6 @@ infix 4 /:=
 -- False
 -- >>> asInterval _A2 =:= m3
 -- True
---
 (=:=) :: HasSemitones a => a -> a -> Bool
 a =:= b = semitones a == semitones b
 
@@ -136,8 +126,5 @@ a =:= b = semitones a == semitones b
 -- True
 -- >>> asInterval _A2 /:= m3
 -- False
---
 (/:=) :: HasSemitones a => a -> a -> Bool
 a /:= b = semitones a /= semitones b
-
-

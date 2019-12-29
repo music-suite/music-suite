@@ -1,7 +1,10 @@
-
-{-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -10,11 +13,7 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : GHC
---
--------------------------------------------------------------------------------------
-
-module Data.Music.Lilypond.IO
-where
+module Data.Music.Lilypond.IO where
 
 import Data.Music.Lilypond
 
@@ -24,13 +23,13 @@ writeMusic = error "writeMusic: Not implemented"
 data Format = PDF | PNG | PS
 
 data EngraveOptions
-    = EngraveOptions {
-        format   :: Format,    
-        include  :: FilePath,
+  = EngraveOptions
+      { format :: Format,
+        include :: FilePath,
         initFile :: FilePath,
-        logFile  :: FilePath,
+        logFile :: FilePath,
         logLevel :: Int
-    }
+      }
 
 writeAndEngraveMusic :: FilePath -> EngraveOptions -> Music -> IO ()
 writeAndEngraveMusic = error "writeAndEngraveMusic: Not implemented"

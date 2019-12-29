@@ -1,5 +1,7 @@
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -10,19 +12,16 @@
 -- Portability : portable
 --
 -- Provides relative dynamics.
---
--------------------------------------------------------------------------------------
-
-module Music.Dynamics.Common (
-  Dynamics,
-)
+module Music.Dynamics.Common
+  ( Dynamics,
+  )
 where
 
-import Data.Maybe
-import Data.Either
-import Data.Semigroup
-import Control.Monad
 import Control.Applicative
+import Control.Monad
+import Data.Either
+import Data.Maybe
 import Data.Monoid.Average
+import Data.Semigroup
 
 type Dynamics = Average Double

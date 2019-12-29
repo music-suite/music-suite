@@ -1,14 +1,16 @@
-
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 ------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -19,26 +21,21 @@
 -- Portability : non-portable (TF,GNTD)
 --
 -- Provides miscellaneous instances.
---
--------------------------------------------------------------------------------------
+module Music.Prelude.Instances
+  (
+  )
+where
 
-module Music.Prelude.Instances () where
-
-import           Data.AffineSpace.Point
-import           Data.Typeable
-import           Control.Comonad (extract)
-
-import           Music.Dynamics
-import           Music.Parts
-import           Music.Pitch
-import           Music.Score            hiding (Fifths, Interval, Note, Pitch)
-
+import Control.Comonad (extract)
+import Data.AffineSpace.Point
+import Data.Typeable
+import Music.Dynamics
+import Music.Parts
+import Music.Pitch
+import Music.Score hiding (Fifths, Interval, Note, Pitch)
 -- import qualified Data.Music.Lilypond         as Lilypond
 -- import qualified Data.Music.MusicXml.Simple  as Xml
-import qualified Music.Score            as Score
-
-
-
+import qualified Music.Score as Score
 
 -- instance HasBackendNote Midi Semitones where
 --   exportNote b = exportNote b . fmap toInteger
@@ -55,7 +52,6 @@ import qualified Music.Score            as Score
 -- instance HasBackendNote SuperCollider Pitch where
 --   exportNote b = exportNote b . fmap (\p -> semitones (p .-. c))
 --   exportChord b = exportChord b . fmap (fmap (\p -> semitones (p .-. c)))
-
 
 -- instance HasBackendNote MusicXml Pitch where
 --   exportNote  _ (XmlContext d Nothing)    = Xml.rest (realToFrac d)
@@ -107,55 +103,70 @@ import qualified Music.Score            as Score
 --       | p^._instrument == celesta = 2
 --       | otherwise                 = 1
 
-
 instance HasDuration Pitch where
   _duration = const 1
+
 instance HasDuration a => HasDuration (PartT p a) where
   _duration = _duration . extract
+
 instance HasDuration a => HasDuration (ColorT a) where
   _duration = _duration . extract
+
 instance HasDuration a => HasDuration (TextT a) where
   _duration = _duration . extract
+
 instance HasDuration a => HasDuration (TremoloT a) where
   _duration = _duration . extract
+
 instance HasDuration a => HasDuration (HarmonicT a) where
   _duration = _duration . extract
+
 instance HasDuration a => HasDuration (SlideT a) where
   _duration = _duration . extract
+
 instance HasDuration a => HasDuration (ArticulationT b a) where
   _duration = _duration . extract
+
 instance HasDuration a => HasDuration (DynamicT b a) where
   _duration = _duration . extract
+
 instance HasDuration a => HasDuration (TieT a) where
   _duration = _duration . extract
 
-
 instance Splittable Pitch where
-  split _ x = (x,x)
+  split _ x = (x, x)
 
 instance Splittable a => Splittable (PartT p a) where
   split t = unzipR . fmap (split t)
+
 instance Splittable a => Splittable (ColorT a) where
   split t = unzipR . fmap (split t)
+
 instance Splittable a => Splittable (TextT a) where
   split t = unzipR . fmap (split t)
+
 instance Splittable a => Splittable (TremoloT a) where
   split t = unzipR . fmap (split t)
+
 instance Splittable a => Splittable (HarmonicT a) where
   split t = unzipR . fmap (split t)
+
 instance Splittable a => Splittable (SlideT a) where
   split t = unzipR . fmap (split t)
+
 instance Splittable a => Splittable (ArticulationT b a) where
   split t = unzipR . fmap (split t)
+
 instance Splittable a => Splittable (DynamicT b a) where
   split t = unzipR . fmap (split t)
+
 instance Splittable a => Splittable (TieT a) where
   split t = unzipR . fmap (split t)
 
-
 instance Reversible Pitch where
   rev = id
-instance Reversible (Score a ) where
+
+instance Reversible (Score a) where
   rev = revDefault
 
 unzipR x = (fmap fst x, fmap snd x)

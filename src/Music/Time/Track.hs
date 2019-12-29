@@ -1,47 +1,53 @@
+module Music.Time.Track
+  ( -- * Track type
+    Track,
 
-module Music.Time.Track (
+    -- * Construction
+    track,
+    placeds,
+  )
+where
 
-        -- * Track type
-
-        Track,
-
-        -- * Construction
-        track,
-        placeds,
-
-  ) where
-
-
-import           Control.Applicative
-import           Control.Lens             hiding (Indexable, Level, above,
-                                           below, index, inside, parts,
-                                           reversed, transform, (<|), (|>))
-import           Control.Monad
-import           Control.Monad.Compose
-import           Control.Monad.Plus
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.Foldable            (Foldable)
-import qualified Data.Foldable            as Foldable
-import           Data.Map                 (Map)
-import qualified Data.Map                 as Map
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Set                 (Set)
-import qualified Data.Set                 as Set
-import           Data.Traversable         (Traversable)
-import qualified Data.Traversable         as T
-import           Data.Typeable
-import           Data.VectorSpace
-import           Music.Time.Internal.Util
-
-import           Music.Time.Juxtapose
-import           Music.Time.Placed
+import Control.Applicative
+import Control.Lens hiding
+  ( (<|),
+    Indexable,
+    Level,
+    above,
+    below,
+    index,
+    inside,
+    parts,
+    reversed,
+    transform,
+    (|>),
+  )
+import Control.Monad
+import Control.Monad.Compose
+import Control.Monad.Plus
+import Data.AffineSpace
+import Data.AffineSpace.Point
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as Foldable
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Ratio
+import Data.Semigroup
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.Traversable (Traversable)
+import qualified Data.Traversable as T
+import Data.Typeable
+import Data.VectorSpace
+import Music.Time.Internal.Util
+import Music.Time.Juxtapose
+import Music.Time.Placed
 
 -- |
 -- A 'Track' is a parallel composition of values.
-newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
+newtype Track a = Track {getTrack :: TrackList (TrackEv a)}
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+
 -- {-# DEPRECATED Track "Use 'Chord'" #-}
 
 --
@@ -71,19 +77,27 @@ trackEv :: Iso (Placed a) (Placed b) (TrackEv a) (TrackEv b)
 trackEv = id
 
 instance Applicative Track where
-  pure  = return
+
+  pure = return
+
   (<*>) = ap
 
 instance Alternative Track where
+
   (<|>) = (<>)
+
   empty = mempty
 
 instance Monad Track where
+
   return = view _Unwrapped . return . return
+
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
 
 instance Wrapped (Track a) where
+
   type Unwrapped (Track a) = (TrackList (TrackEv a))
+
   _Wrapped' = iso getTrack Track
 
 instance Rewrapped (Track a) (Track b)

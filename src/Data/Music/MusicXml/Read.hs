@@ -1,5 +1,7 @@
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -8,10 +10,7 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : portable
---
--------------------------------------------------------------------------------------
-
-module Data.Music.MusicXml.Read (
-  ) where
-
-
+module Data.Music.MusicXml.Read
+  (
+  )
+where

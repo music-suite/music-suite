@@ -1,19 +1,20 @@
-
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TypeFamilies               #-}
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012-2014
 --
@@ -24,38 +25,36 @@
 -- Portability : non-portable (TF,GNTD)
 --
 -- Provides a basic way annotating scores.
---
--------------------------------------------------------------------------------------
+module Music.Score.Meta.Annotations
+  ( Annotation,
+    getAnnotation,
+    annotate,
+    annotateSpan,
+    showAnnotations,
+    showAnnotations',
+    withAnnotations,
+  )
+where
 
-module Music.Score.Meta.Annotations (
-        Annotation,
-        getAnnotation,
-        annotate,
-        annotateSpan,
-        showAnnotations,
-        showAnnotations',
-        withAnnotations,
-  ) where
-
-import           Control.Monad.Plus
+import Control.Monad.Plus
 import qualified Data.List
-import           Data.Semigroup
-import           Data.String
-import           Data.Typeable
+import Data.Semigroup
+import Data.String
+import Data.Typeable
 -- import           Data.Void
 
-import           Music.Score.Meta
-import           Music.Score.Part
-import           Music.Score.Text    (HasText, text)
-import           Music.Time
-import           Music.Time.Reactive
+import Music.Score.Meta
+import Music.Score.Part
+import Music.Score.Text (HasText, text)
+import Music.Time
+import Music.Time.Reactive
 
 -- |
 --   An annotation is a unique textual value attached to parts of a score.
 --   They are ignored by default, but can be collected with 'withAnnotations'.
---
-newtype Annotation = Annotation { getAnnotation_ :: [String] }
-    deriving (Semigroup, Monoid, Typeable)
+newtype Annotation = Annotation {getAnnotation_ :: [String]}
+  deriving (Semigroup, Monoid, Typeable)
+
 instance IsString Annotation where fromString = Annotation . return
 
 getAnnotation :: Annotation -> [String]
@@ -75,7 +74,7 @@ showAnnotations = showAnnotations' ":"
 
 -- | Show all annotations in the score using the given prefix.
 showAnnotations' :: (HasPart' a, Ord (Part a), HasText a) => String -> Score a -> Score a
-showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix ++ )) s)
+showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix ++)) s)
 
 -- | Handle the annotations in a score.
 withAnnotations :: ([String] -> Score a -> Score a) -> Score a -> Score a

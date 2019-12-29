@@ -1,28 +1,27 @@
-
 -- | Basic harmony.
-module Music.Pitch.Common.Harmony (
-        isDissonance,
-        isConsonance,
-        isPerfectConsonance,
-        isImperfectConsonance,
-        isMelodicDissonance,
-        isMelodicConsonance,
-  ) where
-
-import Music.Pitch.Common.Interval
-import Music.Pitch.Common.Number
-import Music.Pitch.Common.Quality
-import Music.Pitch.Literal      
+module Music.Pitch.Common.Harmony
+  ( isDissonance,
+    isConsonance,
+    isPerfectConsonance,
+    isImperfectConsonance,
+    isMelodicDissonance,
+    isMelodicConsonance,
+  )
+where
 
 import Data.Semigroup
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Music.Pitch.Common.Interval
+import Music.Pitch.Common.Number
+import Music.Pitch.Common.Quality
+import Music.Pitch.Literal
 
 {-
   TODO
   Generalize simple like this:
     > (number (asInterval (m9))-(fromIntegral $ signum (m9))) `mod` 7
-    
+
 -}
 
 -- | Whether the given interval is a (harmonic) dissonance.
@@ -58,7 +57,6 @@ isMelodicDissonance x = not $ isMelodicConsonance x
 -- | Whether an interval is melodic consonance.
 isMelodicConsonance :: Interval -> Bool
 isMelodicConsonance x = quality x `elem` [Perfect, Major, Minor]
-
 {-
 type Chord = Set Interval
 

@@ -1,86 +1,92 @@
-
 {-# LANGUAGE FlexibleContexts #-}
 
-module Music.Time.Score (
-        -- * Score type
-        Score,
+module Music.Time.Score
+  ( -- * Score type
+    Score,
 
-        -- * Query
+    -- * Query
 
-        -- * Construction
-        score,
-        events,
-        eras,
-        triples,
+    -- * Construction
+    score,
+    events,
+    eras,
+    triples,
 
-        -- * Traversal
-        mapWithSpan,
-        filterWithSpan,
-        mapFilterWithSpan,
-        mapTriples,
-        filterTriples,
-        mapFilterTriples,
+    -- * Traversal
+    mapWithSpan,
+    filterWithSpan,
+    mapFilterWithSpan,
+    mapTriples,
+    filterTriples,
+    mapFilterTriples,
 
-        -- * Simultaneous
-        -- TODO check for overlapping values etc
-        -- simult,
-        hasOverlappingEvents,
-        simultaneous,
+    -- * Simultaneous
+    -- TODO check for overlapping values etc
+    -- simult,
+    hasOverlappingEvents,
+    simultaneous,
 
-        -- * Normalize
-        normalizeScore,
-        removeRests,
+    -- * Normalize
+    normalizeScore,
+    removeRests,
 
-        -- * Utility
-        printEras,
+    -- * Utility
+    printEras,
 
-        -- * Unsafe versions
-        eventsIgnoringMeta,
-        triplesIgnoringMeta,
+    -- * Unsafe versions
+    eventsIgnoringMeta,
+    triplesIgnoringMeta,
+  )
+where
 
-  ) where
-
-import           Control.Applicative
-import           Control.Comonad
-import           Control.Lens             hiding (Indexable, Level, above,
-                                           below, index, inside, parts,
-                                           reversed, transform, (<|), (|>))
-import           Control.Monad
-import           Control.Monad.Compose
-import           Control.Monad.Plus
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.Foldable            (Foldable)
-import qualified Data.Foldable            as Foldable
-import qualified Data.List                as List
-import qualified Data.List.NonEmpty       as NonEmpty
-import           Data.Map                 (Map)
-import qualified Data.Map                 as Map
-import qualified Data.Ord                 as Ord
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Semigroup           hiding ()
-import           Data.Set                 (Set)
-import qualified Data.Set                 as Set
-import           Data.String
-import           Data.Traversable         (Traversable)
-import qualified Data.Traversable         as T
-import           Data.Typeable
-import           Data.VectorSpace
-import           Data.VectorSpace         hiding (Sum (..))
-import           Data.Aeson                    (ToJSON (..), FromJSON(..))
-import qualified Data.Aeson                    as JSON
-
-import           Music.Dynamics.Literal
-import           Music.Pitch.Literal
-import           Music.Time.Event
-import           Music.Time.Internal.Util
-import           Music.Time.Juxtapose
-import           Music.Time.Meta
-import           Music.Time.Note
-import           Music.Time.Voice
-
-
+import Control.Applicative
+import Control.Comonad
+import Control.Lens hiding
+  ( (<|),
+    Indexable,
+    Level,
+    above,
+    below,
+    index,
+    inside,
+    parts,
+    reversed,
+    transform,
+    (|>),
+  )
+import Control.Monad
+import Control.Monad.Compose
+import Control.Monad.Plus
+import Data.Aeson (FromJSON (..), ToJSON (..))
+import qualified Data.Aeson as JSON
+import Data.AffineSpace
+import Data.AffineSpace.Point
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as Foldable
+import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import Data.Map (Map)
+import qualified Data.Map as Map
+import qualified Data.Ord as Ord
+import Data.Ratio
+import Data.Semigroup
+import Data.Semigroup hiding ()
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.String
+import Data.Traversable (Traversable)
+import qualified Data.Traversable as T
+import Data.Typeable
+import Data.VectorSpace
+import Data.VectorSpace hiding (Sum (..))
+import Music.Dynamics.Literal
+import Music.Pitch.Literal
+import Music.Time.Event
+import Music.Time.Internal.Util
+import Music.Time.Juxtapose
+import Music.Time.Meta
+import Music.Time.Note
+import Music.Time.Voice
 
 --   * 'empty' creates an empty score
 --
@@ -96,8 +102,8 @@ import           Music.Time.Voice
 --
 
 -- | A 'Score' is a sequential or parallel composition of values, and allows overlapping events
-newtype Score a = Score { getScore :: (Meta, Score' a) }
-    deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
+newtype Score a = Score {getScore :: (Meta, Score' a)}
+  deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable {-, Show, Eq, Ord-})
 
 --
 -- You typically create a 'Score' using 'score', 'events', 'voices', and 'phrases', or the 'Alternative' interface.
@@ -111,25 +117,35 @@ newtype Score a = Score { getScore :: (Meta, Score' a) }
 --
 
 instance Wrapped (Score a) where
+
   type Unwrapped (Score a) = (Meta, Score' a)
+
   _Wrapped' = iso getScore Score
 
-instance Rewrapped (Score a) (Score b) where
+instance Rewrapped (Score a) (Score b)
 
 instance Applicative Score where
+
   pure = return
+
   (<*>) = ap
 
 instance Monad Score where
+
   return = (^. _Unwrapped') . return . return
+
   xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
 
 instance Alternative Score where
+
   empty = mempty
+
   (<|>) = mappend
 
 instance MonadPlus Score where
+
   mzero = mempty
+
   mplus = mappend
 
 {-
@@ -145,40 +161,38 @@ instance TraversableWithIndex Span Score where
 
 instance ToJSON a => ToJSON (Score a) where
   -- TODO meta
-  toJSON x = JSON.object [ ("events", toJSON es) ]
+  toJSON x = JSON.object [("events", toJSON es)]
     where
-      es = x^.events
+      es = x ^. events
 
 instance FromJSON a => FromJSON (Score a) where
   -- TODO change to include meta
   parseJSON (JSON.Object x) = parseEL =<< (x JSON..: "events")
     where
-      parseEL (JSON.Array xs) = fmap ((^.score) . toList) $ traverse parseJSON xs
+      parseEL (JSON.Array xs) = fmap ((^. score) . toList) $ traverse parseJSON xs
       parseEL _ = empty
       toList = toListOf traverse
   parseJSON _ = empty
 
 instance Transformable (Score a) where
-  transform t (Score (m,x)) = Score (transform t m, transform t x)
+  transform t (Score (m, x)) = Score (transform t m, transform t x)
 
 -- instance Reversible a => Reversible (Score a) where
-  -- rev (Score (m,x)) = Score (rev m, rev x)
+-- rev (Score (m,x)) = Score (rev m, rev x)
 
 -- instance Splittable a => Splittable (Score a) where
-  -- split t (Score (m,x)) = (Score (m1,x1), Score (m2,x2))
-    -- where
-      -- (m1, m2) = split t m
-      -- (x1, x2) = split t x
+-- split t (Score (m,x)) = (Score (m1,x1), Score (m2,x2))
+-- where
+-- (m1, m2) = split t m
+-- (x1, x2) = split t x
 
 -- TODO move these two "implementations" to Score'
 instance HasPosition (Score a) where
   _position = _position . snd . view _Wrapped' {-. normalizeScore'-}
-  -- TODO clean up in terms of AddMeta and optimize
+        -- TODO clean up in terms of AddMeta and optimize
 
 instance HasDuration (Score a) where
-  _duration x = (^.offset) x .-. (^.onset) x
-
-
+  _duration x = (^. offset) x .-. (^. onset) x
 
 -- Lifted instances
 
@@ -196,16 +210,24 @@ instance IsDynamics a => IsDynamics (Score a) where
 
 -- Bogus instance, so we can use [c..g] expressions
 instance Enum a => Enum (Score a) where
+
   toEnum = return . toEnum
+
   fromEnum = list 0 (fromEnum . head) . Foldable.toList
 
 instance Num a => Num (Score a) where
+
   fromInteger = return . fromInteger
-  abs    = fmap abs
+
+  abs = fmap abs
+
   signum = fmap signum
-  (+)    = liftA2 (+)
-  (-)    = liftA2 (-)
-  (*)    = liftA2 (*)
+
+  (+) = liftA2 (+)
+
+  (-) = liftA2 (-)
+
+  (*) = liftA2 (*)
 
 {-
 -- Bogus instances, so we can use c^*2 etc.
@@ -222,38 +244,42 @@ instance VectorSpace (Score a) where
 instance HasMeta (Score a) where
   meta = _Wrapped . _1
 
-
-
-
-
-
-
-newtype Score' a = Score' { getScore' :: [Event a] }
-  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+newtype Score' a = Score' {getScore' :: [Event a]}
+  deriving ({-Eq, -} {-Ord, -} {-Show, -} Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
 instance (Show a, Transformable a) => Show (Score a) where
-  show x = show (x^.events) ++ "^.score"
+  show x = show (x ^. events) ++ "^.score"
 
 instance Wrapped (Score' a) where
+
   type Unwrapped (Score' a) = [Event a]
+
   _Wrapped' = iso getScore' Score'
 
 instance Rewrapped (Score' a) (Score' b)
 
 instance Applicative Score' where
-  pure  = return
+
+  pure = return
+
   (<*>) = ap
 
 instance Monad Score' where
+
   return = (^. _Unwrapped) . pure . pure
+
   xs >>= f = (^. _Unwrapped) $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
 
 instance Alternative Score' where
+
   empty = mempty
+
   (<|>) = mappend
 
 instance MonadPlus Score' where
+
   mzero = mempty
+
   mplus = mappend
 
 instance Transformable (Score' a) where
@@ -263,15 +289,15 @@ instance Transformable (Score' a) where
 --   rev (Score' xs) = Score' (fmap rev xs)
 
 instance HasPosition (Score' a) where
-  _era x = (f x, g x)^.from onsetAndOffset
+  _era x = (f x, g x) ^. from onsetAndOffset
     where
-      f = safeMinimum . fmap ((^.onset)  . normalizeSpan) . toListOf (_Wrapped . each . era)
-      g = safeMaximum . fmap ((^.offset) . normalizeSpan) . toListOf (_Wrapped . each . era)
+      f = safeMinimum . fmap ((^. onset) . normalizeSpan) . toListOf (_Wrapped . each . era)
+      g = safeMaximum . fmap ((^. offset) . normalizeSpan) . toListOf (_Wrapped . each . era)
       safeMinimum xs = if null xs then 0 else minimum xs
       safeMaximum xs = if null xs then 0 else maximum xs
 
 instance HasDuration (Score' a) where
-  _duration x = (^.offset) x .-. (^.onset) x
+  _duration x = (^. offset) x .-. (^. onset) x
 
 -- | Create a score from a list of events.
 score :: Getter [Event a] (Score a)
@@ -283,7 +309,7 @@ events :: Lens (Score a) (Score b) [Event a] [Event b]
 events = _Wrapped . _2 . _Wrapped . sorted
   where
     -- TODO should not have to sort...
-    sorted = iso (List.sortBy (Ord.comparing (^.onset))) (List.sortBy (Ord.comparing (^.onset)))
+    sorted = iso (List.sortBy (Ord.comparing (^. onset))) (List.sortBy (Ord.comparing (^. onset)))
 {-# INLINE events #-}
 
 --
@@ -323,7 +349,7 @@ events = _Wrapped . _2 . _Wrapped . sorted
 eventsIgnoringMeta :: Iso (Score a) (Score b) [Event a] [Event b]
 eventsIgnoringMeta = _Wrapped . noMeta . _Wrapped . sorted
   where
-    sorted = iso (List.sortBy (Ord.comparing (^.onset))) (List.sortBy (Ord.comparing (^.onset)))
+    sorted = iso (List.sortBy (Ord.comparing (^. onset))) (List.sortBy (Ord.comparing (^. onset)))
     noMeta = iso extract return
 
 -- | A score is a list of (time-duration-value triples) up to meta-data.
@@ -334,29 +360,27 @@ triplesIgnoringMeta = iso _getScore _score
     _score :: [(Time, Duration, a)] -> Score a
     _score = mconcat . fmap (uncurry3 event)
       where
-        event t d x   = (delay (t .-. 0) . stretch d) (return x)
-
-    _getScore :: {-Transformable a => -}Score a -> [(Time, Duration, a)]
+        event t d x = (delay (t .-. 0) . stretch d) (return x)
+    _getScore {-Transformable a => -} :: Score a -> [(Time, Duration, a)]
     _getScore =
-      fmap (\(view onsetAndDuration -> (t,d),x) -> (t,d,x)) .
-      List.sortBy (Ord.comparing fst) .
-      Foldable.toList .
-      fmap (view $ from event) .
-      reifyScore
+      fmap (\(view onsetAndDuration -> (t, d), x) -> (t, d, x))
+        . List.sortBy (Ord.comparing fst)
+        . Foldable.toList
+        . fmap (view $ from event)
+        . reifyScore
 
 -- | Map with the associated time span.
 mapScore :: (Event a -> b) -> Score a -> Score b
-mapScore f = over (_Wrapped._2) (mapScore' f)
+mapScore f = over (_Wrapped . _2) (mapScore' f)
   where
-    mapScore' f = over (_Wrapped.traverse) (extend f)
+    mapScore' f = over (_Wrapped . traverse) (extend f)
 
 reifyScore :: Score a -> Score (Event a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
 -- | View a score as a list of time-duration-value triplets.
-triples :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+triples {-Transformable a => -} :: Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 triples = triplesIgnoringMeta
-
 
 -- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
@@ -375,7 +399,7 @@ mapTriples :: (Time -> Duration -> a -> b) -> Score a -> Score b
 mapTriples f = mapWithSpan (uncurry f . view onsetAndDuration)
 
 -- | Filter the values in a score.
-filterTriples   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
+filterTriples :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
 filterTriples f = mapFilterTriples (partial3 f)
 
 -- | Efficient combination of 'mapTriples' and 'filterTriples'.
@@ -399,7 +423,6 @@ removeRests = mcatMaybes
 
 -- |
 -- Print the span of each event, as given by 'eras'.
---
 printEras :: Score a -> IO ()
 printEras = mapM_ print . toListOf eras
 
@@ -408,7 +431,6 @@ printEras = mapM_ print . toListOf eras
 --
 -- >>> toListOf eras $ scat [c,d,e :: Score Integer]
 -- [0 <-> 1,1 <-> 2,2 <-> 3]
---
 eras :: Traversal' (Score a) Span
 eras = events . each . era
 
@@ -423,9 +445,9 @@ simultaneous' sc = (^. from triplesIgnoringMeta) vs
     -- es :: [Era]
     -- evs :: [[a]]
     -- vs :: [(Time, Duration, [a])]
-    es  = List.nub $ toListOf eras sc
+    es = List.nub $ toListOf eras sc
     evs = fmap (`chordEvents` sc) es
-    vs  = zipWith (\(view onsetAndDuration -> (t,d)) a -> (t,d,a)) es evs
+    vs = zipWith (\(view onsetAndDuration -> (t, d)) a -> (t, d, a)) es evs
 
 -- overSimult :: Transformable a => (Score [a] -> Score [b]) -> Score a -> Score b
 -- overSimult f = mscatter . f . simultaneous'
@@ -434,10 +456,8 @@ simultaneous' sc = (^. from triplesIgnoringMeta) vs
 simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
 simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 
-
-
 hasOverlappingEvents :: Score a -> Bool
-hasOverlappingEvents = anyDistinctOverlaps . toListOf (events.each.era)
+hasOverlappingEvents = anyDistinctOverlaps . toListOf (events . each . era)
 
 hasDuplicates :: Eq a => [a] -> Bool
 hasDuplicates xs = List.nub xs /= xs
@@ -446,6 +466,7 @@ anyDistinctOverlaps :: [Span] -> Bool
 anyDistinctOverlaps xs = hasDuplicates xs || anyOverlaps xs
   where
     anyOverlaps = foldr (||) False . combined overlaps
+
 -- If the span list has duplicates, we have overlaps.
 
 combined :: Eq a => (a -> a -> b) -> [a] -> [b]

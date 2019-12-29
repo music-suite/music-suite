@@ -1,7 +1,5 @@
-
-module Music.Time.Behavior (
-
-    -- * Behavior type
+module Music.Time.Behavior
+  ( -- * Behavior type
     Behavior,
 
     -- ** Examples
@@ -17,6 +15,7 @@ module Music.Time.Behavior (
     concatB,
 
     -- * Common behaviors
+
     -- ** Oscillators
     line,
     sawtooth,
@@ -28,28 +27,23 @@ module Music.Time.Behavior (
     impulse,
     turnOn,
     turnOff,
-
     (!),
+  )
+where
 
-  ) where
-
-import           Data.Map                      (Map)
-import qualified Data.Map                      as Map
-import           Data.Set                      (Set)
-import qualified Data.Set                      as Set
-import           Music.Time.Internal.Preliminaries
-
-import           Music.Dynamics.Literal
-import           Music.Pitch.Alterable
-import           Music.Pitch.Augmentable
-import           Music.Pitch.Literal
-
-import           Music.Time.Event
-import           Music.Time.Internal.Transform
-import           Music.Time.Juxtapose
-import           Music.Time.Score
-
-
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Music.Dynamics.Literal
+import Music.Pitch.Alterable
+import Music.Pitch.Augmentable
+import Music.Pitch.Literal
+import Music.Time.Event
+import Music.Time.Internal.Preliminaries
+import Music.Time.Internal.Transform
+import Music.Time.Juxtapose
+import Music.Time.Score
 
 -- Behavior is 'Representable':
 --
@@ -59,8 +53,7 @@ import           Music.Time.Score
 
 -- |
 -- A 'Behavior' is a value varying over time.
---
-newtype Behavior a  = Behavior { getBehavior :: Time -> a }
+newtype Behavior a = Behavior {getBehavior :: Time -> a}
   deriving (Functor, Applicative, Monad, Typeable)
 
 -- $semantics Behavior
@@ -68,9 +61,9 @@ newtype Behavior a  = Behavior { getBehavior :: Time -> a }
 -- @
 -- type Behavior a = 'Time' -> a
 -- @
---
 
 --
+
 -- $musicTimeBehaviorExamples
 --
 -- 'behavior' let us convert any function to a behavior using '^.' or 'view'.
@@ -94,12 +87,12 @@ newtype Behavior a  = Behavior { getBehavior :: Time -> a }
 -- @
 -- ('+')^.'behavior' '<*>' 10
 -- @
---
+
 instance Show (Behavior a) where
   show _ = "<<Behavior>>"
 
 -- instance Distributive Behavior where
-  -- distribute = Behavior . distribute . fmap getBehavior
+-- distribute = Behavior . distribute . fmap getBehavior
 
 -- instance Representable Behavior where
 --   type Rep Behavior = Time
@@ -113,15 +106,21 @@ instance Transformable (Behavior a) where
 
 instance Reversible (Behavior a) where
   rev = stretch (-1)
-  -- Or: alternative
-  -- rev = (stretch (-1) `whilst` undelaying 0.5)
-  -- (i.e. revDefault pretending that Behaviors have era (0 <-> 1))
+
+-- Or: alternative
+-- rev = (stretch (-1) `whilst` undelaying 0.5)
+-- (i.e. revDefault pretending that Behaviors have era (0 <-> 1))
 
 deriving instance Semigroup a => Semigroup (Behavior a)
+
 deriving instance Monoid a => Monoid (Behavior a)
+
 deriving instance Num a => Num (Behavior a)
+
 deriving instance Fractional a => Fractional (Behavior a)
+
 deriving instance Floating a => Floating (Behavior a)
+
 deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
 -- TODO bad
@@ -141,35 +140,52 @@ instance IsDynamics a => IsDynamics (Behavior a) where
   fromDynamics = pure . fromDynamics
 
 instance Alterable a => Alterable (Behavior a) where
+
   sharpen = fmap sharpen
+
   flatten = fmap flatten
 
 instance Augmentable a => Augmentable (Behavior a) where
+
   augment = fmap augment
+
   diminish = fmap diminish
 
 instance Eq a => Eq (Behavior a) where
   (==) = error "No overloading for behavior: (<=)"
 
 instance Ord a => Ord (Behavior a) where
+
   (<=) = error "No overloading for behavior: (<=)"
+
   (>=) = error "No overloading for behavior: (<=)"
-  (<)  = error "No overloading for behavior: (<=)"
-  (>)  = error "No overloading for behavior: (<=)"
-  max  = liftA2 max
-  min  = liftA2 min
+
+  (<) = error "No overloading for behavior: (<=)"
+
+  (>) = error "No overloading for behavior: (<=)"
+
+  max = liftA2 max
+
+  min = liftA2 min
 
 instance Enum a => Enum (Behavior a) where
+
   toEnum = pure . toEnum
+
   fromEnum = fromEnum . (! 0)
 
 instance VectorSpace a => VectorSpace (Behavior a) where
+
   type Scalar (Behavior a) = Behavior (Scalar a)
+
   (*^) = liftA2 (*^)
 
 instance AffineSpace a => AffineSpace (Behavior a) where
+
   type Diff (Behavior a) = Behavior (Diff a)
+
   (.-.) = liftA2 (.-.)
+
   (.+^) = liftA2 (.+^)
 
 -- |
@@ -181,7 +197,6 @@ instance AffineSpace a => AffineSpace (Behavior a) where
 -- @
 -- 'behavior' = 'tabulated'
 -- @
---
 behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
 behavior = iso Behavior getBehavior
 
@@ -192,7 +207,6 @@ behavior = iso Behavior getBehavior
 -- unbehavior    = from behavior
 -- x^.unbehavior = (x !)
 -- @
---
 unbehavior :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
 unbehavior = from behavior
 
@@ -201,9 +215,9 @@ unbehavior = from behavior
 --
 -- Should really have the type 'Behavior' 'Time', but is provided in a more general form
 -- for convenience.
---
 line :: Fractional a => Behavior a
 line = realToFrac ^. behavior
+
 --
 -- > f t = t
 --
@@ -211,53 +225,47 @@ line = realToFrac ^. behavior
 -- |
 -- A behavior that varies from 0 to 1 during the same time interval and is 0 before and 1 after
 -- that interval.
---
 unit :: Fractional a => Behavior a
 unit = switch 0 0 (switch 1 line 1)
+
 -- > f t | t < 0     = 0
 -- >     | t > 1     = 1
 -- >     | otherwise = t
 
 -- |
 -- A behavior that
---
 interval :: (Fractional a, Transformable a) => Time -> Time -> Event (Behavior a)
 interval t u = (t <-> u, line) ^. event
 
 -- |
 -- A behavior that
---
 sine :: Floating a => Behavior a
-sine = sin (line*tau)
+sine = sin (line * tau)
 
 -- |
 -- A behavior that
---
 cosine :: Floating a => Behavior a
-cosine = cos (line*tau)
+cosine = cos (line * tau)
 
 -- |
 -- A behavior that goes from 0 to 1 repeatedly with a period of 1.
---
 sawtooth :: RealFrac a => Behavior a
 sawtooth = line - fmap floor' line
 
 -- |
 -- A behavior that is 1 at time 0, and 0 at all other times.
---
 impulse :: Num a => Behavior a
 impulse = switch' 0 0 1 0
+
 -- > f t | t == 0    = 1
 -- >     | otherwise = 0
 
 -- |
 -- A behavior that goes from 0 to 1 at time 0.
---
-turnOn  = switch 0 0 1
+turnOn = switch 0 0 1
 
 -- |
 -- A behavior that goes from 1 to 0 at time 0.
---
 turnOff = switch 0 1 0
 
 --
@@ -269,9 +277,9 @@ turnOff = switch 0 1 0
 -- > focusOnFullRange :: Bounded Time => Behavior a -> Segment a
 -- > focusingOnFullRange :: Bounded Time => Iso' (Behavior a) (Segment a)
 --
+
 -- |
 -- Instantly switch from one behavior to another.
---
 switch :: Time -> Behavior a -> Behavior a -> Behavior a
 switch t rx ry = switch' t rx ry ry
 
@@ -285,7 +293,6 @@ trimAfter stop x = switch stop x mempty
 
 -- |
 -- Instantly switch from one behavior to another with an optinal intermediate value.
---
 switch' :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
 switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
   LT -> rx ! u
@@ -297,7 +304,7 @@ switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
 b ! t = getBehavior b t
 
 trimB :: Monoid a => Span -> Behavior a -> Behavior a
-trimB (view onsetAndOffset -> (on,off)) x = (\t -> if on <= t && t <= off then x ! t else mempty)^.behavior
+trimB (view onsetAndOffset -> (on, off)) x = (\t -> if on <= t && t <= off then x ! t else mempty) ^. behavior
 
 -- Treat each event as a segment in the range (0<->1) and compose.
 concatB :: Monoid a => Score (Behavior a) -> Behavior a
@@ -311,5 +318,6 @@ tau = 2 * pi
 floor' :: RealFrac a => a -> a
 floor' = fromIntegral . floor
 
-turnOn  :: Num a => Behavior a
+turnOn :: Num a => Behavior a
+
 turnOff :: Num a => Behavior a

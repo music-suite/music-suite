@@ -1,19 +1,20 @@
-
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TypeFamilies               #-}
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012-2014
 --
@@ -24,55 +25,51 @@
 -- Portability : non-portable (TF,GNTD)
 --
 -- Provides various forms of title, subtitle etc. and related meta-data.
---
--------------------------------------------------------------------------------------
+module Music.Score.Meta.Title
+  ( -- * Title type
+    Title,
 
-module Music.Score.Meta.Title (
+    -- ** Creating and modifying
+    -- titleFromString,
+    denoteTitle,
+    getTitle,
+    getTitleAt,
 
-        -- * Title type
-        Title,
+    -- * Adding titles to scores
+    title,
+    titleDuring,
+    subtitle,
+    subtitleDuring,
+    subsubtitle,
+    subsubtitleDuring,
 
-        -- ** Creating and modifying
-        -- titleFromString,
-        denoteTitle,
-        getTitle,
-        getTitleAt,
+    -- * Extracting titles
+    withTitle,
+  )
+where
 
-        -- * Adding titles to scores
-        title,
-        titleDuring,
-        subtitle,
-        subtitleDuring,
-        subsubtitle,
-        subsubtitleDuring,
-
-        -- * Extracting titles
-        withTitle,
-  ) where
-
-import           Control.Lens              (view)
-import           Control.Monad.Plus
-import           Data.Foldable             (Foldable)
-import qualified Data.Foldable             as F
-import qualified Data.List                 as List
-import           Data.Map                  (Map)
-import qualified Data.Map                  as Map
-import           Data.Maybe
-import           Data.Semigroup
-import           Data.Set                  (Set)
-import qualified Data.Set                  as Set
-import           Data.String
-import           Data.Traversable          (Traversable)
-import qualified Data.Traversable          as T
-import           Data.Typeable
-
-import           Music.Pitch.Literal
-import           Music.Score.Meta
-import           Music.Score.Part
-import           Music.Score.Pitch
-import           Music.Score.Internal.Util
-import           Music.Time
-import           Music.Time.Reactive
+import Control.Lens (view)
+import Control.Monad.Plus
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as F
+import qualified Data.List as List
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Maybe
+import Data.Semigroup
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.String
+import Data.Traversable (Traversable)
+import qualified Data.Traversable as T
+import Data.Typeable
+import Music.Pitch.Literal
+import Music.Score.Internal.Util
+import Music.Score.Meta
+import Music.Score.Part
+import Music.Score.Pitch
+import Music.Time
+import Music.Time.Reactive
 
 -- |
 -- A title is a sequence of 'String' values, representing the name of a work or part of a work.
@@ -90,15 +87,14 @@ import           Music.Time.Reactive
 -- >
 -- > subtitle "Atto secundo"
 -- > ...
---
 newtype Title = Title (Int -> Option (Last String))
-    deriving (Typeable, Monoid, Semigroup)
+  deriving (Typeable, Monoid, Semigroup)
 
 instance IsString Title where
-    fromString x = Title $ \n -> if n == 0 then Option (Just (Last x)) else Option Nothing
+  fromString x = Title $ \n -> if n == 0 then Option (Just (Last x)) else Option Nothing
 
 instance Show Title where
-    show = List.intercalate " " . getTitle
+  show = List.intercalate " " . getTitle
 
 -- | Create a title from a string. See also 'fromString'.
 titleFromString :: String -> Title
@@ -110,9 +106,9 @@ denoteTitle (Title t) = Title (t . subtract 1)
 
 -- | Extract the title as a descending list of title levels (i.e. title, subtitle, subsubtitle...).
 getTitle :: Title -> [String]
-getTitle t = untilFail . fmap (getTitleAt t) $ [0..]
-    where
-        untilFail = fmap fromJust . takeWhile isJust
+getTitle t = untilFail . fmap (getTitleAt t) $ [0 ..]
+  where
+    untilFail = fmap fromJust . takeWhile isJust
 
 -- | Extract the title of the given level. Semantic function.
 getTitleAt :: Title -> Int -> Maybe String

@@ -1,19 +1,20 @@
-
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TypeFamilies               #-}
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012-2014
 --
@@ -24,55 +25,51 @@
 -- Portability : non-portable (TF,GNTD)
 --
 -- Provides fermatas.
---
--------------------------------------------------------------------------------------
+module Music.Score.Meta.Fermata
+  ( -- * Fermata type
+    FermataType (..),
+    Fermata,
 
-module Music.Score.Meta.Fermata (
-        -- * Fermata type
-        FermataType(..),
-        Fermata,
+    -- ** Adding fermatas to scores
+    fermata,
+    fermataDuring,
 
-        -- ** Adding fermatas to scores
-        fermata,
-        fermataDuring,
+    -- ** Extracting fermatas
+    withFermata,
+  )
+where
 
-        -- ** Extracting fermatas
-        withFermata,
-  ) where
-
-
-import           Control.Lens              (view)
-import           Control.Monad.Plus
-import           Data.Foldable             (Foldable)
-import qualified Data.Foldable             as F
-import qualified Data.List                 as List
-import           Data.Map                  (Map)
-import qualified Data.Map                  as Map
-import           Data.Maybe
-import           Data.Semigroup
-import           Data.Set                  (Set)
-import qualified Data.Set                  as Set
-import           Data.String
-import           Data.Traversable          (Traversable)
-import qualified Data.Traversable          as T
-import           Data.Typeable
-
-import           Music.Pitch.Literal
-import           Music.Score.Meta
-import           Music.Score.Part
-import           Music.Score.Pitch
-import           Music.Score.Internal.Util
-import           Music.Time
-import           Music.Time.Reactive
+import Control.Lens (view)
+import Control.Monad.Plus
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as F
+import qualified Data.List as List
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Maybe
+import Data.Semigroup
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.String
+import Data.Traversable (Traversable)
+import qualified Data.Traversable as T
+import Data.Typeable
+import Music.Pitch.Literal
+import Music.Score.Internal.Util
+import Music.Score.Meta
+import Music.Score.Part
+import Music.Score.Pitch
+import Music.Time
+import Music.Time.Reactive
 
 -- | Represents a fermata.
 --
 -- TODO where is the fermata added if the score contains multiple notes. Always the last?
 data Fermata = Fermata FermataType
-    deriving (Eq, Ord, Show, Typeable)
+  deriving (Eq, Ord, Show, Typeable)
 
 data FermataType = StandardFermata | LongFermata | VeryLongFermata
-    deriving (Eq, Ord, Show, Typeable)
+  deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a fermata over the whole score.
 fermata :: (HasMeta a, HasPosition a) => Fermata -> a -> a

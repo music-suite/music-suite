@@ -1,16 +1,17 @@
+module Data.AffineSpace.Point.Offsets
+  ( offsetPoints,
+    pointOffsets,
+    offsetVs,
+    distanceVs,
+  )
+where
 
-module Data.AffineSpace.Point.Offsets (
-      offsetPoints,
-      pointOffsets,
-      offsetVs,
-      distanceVs,
-      -- offsetted,
-  ) where
+-- offsetted,
 
 import Data.AffineSpace
-import Data.VectorSpace
-import Data.List
 import Data.AffineSpace.Point
+import Data.List
+import Data.VectorSpace
 
 -- | Lay out a series of vectors from a given point. Return all intermediate points.
 --
@@ -36,16 +37,14 @@ pointOffsets or = (zeroV :) . snd . mapAccumL g or
 
 -- |
 -- For all p
--- > offsetVs p . distanceVs p = id 
--- > distanceVs p . offsetVs p = id 
+-- > offsetVs p . distanceVs p = id
+-- > distanceVs p . offsetVs p = id
 offsetVs :: AffineSpace p => p -> [Diff p] -> [p]
 offsetVs p = tail . offsetPoints p
 
 distanceVs :: AffineSpace p => p -> [p] -> [Diff p]
 distanceVs p = tail . pointOffsets p
-
 {-
 offsetted :: AffineSpace p => p -> Iso' [Diff p] [p]
 offsetted = iso distanceVs offsetVs
 -}
-

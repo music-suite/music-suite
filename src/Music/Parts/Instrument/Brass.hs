@@ -1,18 +1,18 @@
-
-module Music.Parts.Instrument.Brass (
-        BrassInstrument,
-        brassInstrument,
-        isBrassInstrument,
-  ) where
+module Music.Parts.Instrument.Brass
+  ( BrassInstrument,
+    brassInstrument,
+    isBrassInstrument,
+  )
+where
 
 import Control.Lens
-import Music.Parts.Instrument
-import Data.Set (Set)
-import Music.Pitch.Common (Pitch, Interval)
-import Music.Pitch (Ambitus, Clef)
 import qualified Data.List
+import Data.Set (Set)
+import Music.Parts.Instrument
+import Music.Pitch (Ambitus, Clef)
+import Music.Pitch.Common (Interval, Pitch)
 
-newtype BrassInstrument = BrassInstrument { getBrassInstrument :: Instrument }
+newtype BrassInstrument = BrassInstrument {getBrassInstrument :: Instrument}
 
 brassInstrument :: Prism' Instrument BrassInstrument
 brassInstrument = prism' getBrassInstrument (fmap BrassInstrument . partial isBrassInstrument)
@@ -24,4 +24,4 @@ partial p x = if p x then Just x else Nothing
 isBrassInstrument :: Instrument -> Bool
 isBrassInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
-  Just i  -> Data.List.isPrefixOf "brass" i
+  Just i -> Data.List.isPrefixOf "brass" i

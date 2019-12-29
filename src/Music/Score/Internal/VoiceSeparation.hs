@@ -1,23 +1,23 @@
-
 {-# LANGUAGE PackageImports #-}
-module Music.Score.Internal.VoiceSeparation ()
 
+module Music.Score.Internal.VoiceSeparation
+  (
+  )
 where
 
-import Data.Set (Set)
-import qualified Data.Set as S
 -- import Math.Combinat.Partitions.Set ()
-import Control.Monad.Logic (Logic, observe, observeAll)
-import Control.Monad.Logic.Class (interleave, ifte)
+
 -- import BasePrelude
 import Control.Applicative
 import Control.Monad
-import Data.Foldable (asum)
-
+import Control.Monad.Logic (Logic, observe, observeAll)
+import Control.Monad.Logic.Class (ifte, interleave)
 import Control.Monad.Random (evalRand)
+import Data.Foldable (asum)
+import Data.Set (Set)
+import qualified Data.Set as S
 import System.Random (mkStdGen)
 import "random-shuffle" System.Random.Shuffle (shuffleM)
-
 
 {-
       We are looking for a partition of the set of notes *in each bar/staff* such that
@@ -34,7 +34,6 @@ import "random-shuffle" System.Random.Shuffle (shuffleM)
 
 -}
 
-
 {-
 Returns a set partition of the the given values.
 
@@ -44,7 +43,6 @@ Returns a set partition of the the given values.
 A partition with relatively high weight *should* be returned (no guarantees here).
 
 -}
-
 
 {-
 This is probably to general.
@@ -56,7 +54,6 @@ Yes we have lazy evalutation, but look at the numbers below.
 -}
 partitionWeighted :: Set a -> (Set a -> Bool) -> (Set a -> Double) -> Set (Set a)
 partitionWeighted = undefined
-
 
 {-
 When applied to (bar/part-wise) voice sep, k will almost always be in [1..4].
@@ -79,7 +76,6 @@ Possibly good strategy
 
 -}
 
-
 {-
 Partition a set such that each subset matches the predicate.
 
@@ -99,21 +95,16 @@ partitionSimplistic p = recur []
     recur doneSubsets remainingElements =
       case observe $ pickNewSubset p remainingElements of
         (newSubset, remainingElements) -> recur (newSubset : doneSubsets) remainingElements
-
-    -- | Choose one element and remove it from the list.
     choose :: [a] -> Logic (a, [a])
     choose [] = empty
-    choose xs = asum $ fmap g [0..length xs - 1]
+    choose xs = asum $ fmap g [0 .. length xs - 1]
       where
         g n = pure $ case rotate n xs of
           (a : as) -> (a, as)
-          []       -> error "Impossible"
+          [] -> error "Impossible"
         rotate n xs = drop n xs ++ take n xs
-
-    -- | Choose one element matching the given predicate and remove it from the list.
     chooseSuchThat :: (a -> Bool) -> [a] -> Logic (a, [a])
     chooseSuchThat p xs = mfilter (p . fst) $ choose xs
-
     aShuffle :: [a] -> [a]
     -- Unpredictable shuffle (based on seed)
     aShuffle xs = evalRand (shuffleM xs) (mkStdGen 12983)
@@ -121,10 +112,10 @@ partitionSimplistic p = recur []
     -- aShuffle = reverse
     -- aShuffle = rotate 12 where rotate n xs = drop n xs ++ take n xs
 
-    pickNewSubset
-      :: ([a] -> Bool)
-      -> [a]
-      -> Logic ([a], [a]) -- (picked subset, remaining)
+    pickNewSubset ::
+      ([a] -> Bool) ->
+      [a] ->
+      Logic ([a], [a]) -- (picked subset, remaining)
     pickNewSubset p initialSet = recur [] initialSet
       where
         recur alreadyPicked toConsider = do
@@ -133,10 +124,10 @@ partitionSimplistic p = recur []
 
           -- If its first argument succeeds at all, then the results will be fed into the success branch.
           -- Otherwise, the failure branch is taken.
-          ifte (chooseSuchThat (\picked -> p (picked:alreadyPicked)) $ aShuffle toConsider)
-              (\(picked, notPicked) -> recur (picked:alreadyPicked) notPicked)
-              (return (alreadyPicked, toConsider))
-
+          ifte
+            (chooseSuchThat (\picked -> p (picked : alreadyPicked)) $ aShuffle toConsider)
+            (\(picked, notPicked) -> recur (picked : alreadyPicked) notPicked)
+            (return (alreadyPicked, toConsider))
 
 -- For testing
 
@@ -145,17 +136,16 @@ partitionSimplistic p = recur []
 -- Name of that property?
 
 allEqual :: Eq a => [a] -> Bool
-allEqual []     = True
-allEqual (x:xs) = all (== x) xs
+allEqual [] = True
+allEqual (x : xs) = all (== x) xs
 
 -- allDistinct
 noDuplicates :: Eq a => [a] -> Bool
 noDuplicates [] = True
-noDuplicates (x:xs) = all (/= x) xs
+noDuplicates (x : xs) = all (/= x) xs
 
 testShuffle :: forall a. [a] -> [a]
 testShuffle xs = evalRand (shuffleM xs) (mkStdGen 1828372878)
-
 {-
 TODO test correctness, i.e. that
   concat (partitionSimplistic p xs) =:= xs

@@ -1,75 +1,67 @@
-
 {-# LANGUAGE FlexibleInstances #-}
 
 -- | Common (Western classical) pitches, intervals and related types.
 module Music.Pitch.Common.Types
-(
-        -- * Even octaves and steps
-        Octaves,
-        DiatonicSteps,
-        ChromaticSteps,
-        Semitones,
+  ( -- * Even octaves and steps
+    Octaves,
+    DiatonicSteps,
+    ChromaticSteps,
+    Semitones,
 
-        -- * Intervals
-        Number,
-        Quality(..),
-        QualityType(..),
-        IntervalBasis(..),
-        Interval(..),
+    -- * Intervals
+    Number,
+    Quality (..),
+    QualityType (..),
+    IntervalBasis (..),
+    Interval (..),
 
-        -- * Pitch
-        Name(..),
-        Accidental,
-        Pitch(..),
-) where
+    -- * Pitch
+    Name (..),
+    Accidental,
+    Pitch (..),
+  )
+where
 
-import Data.Typeable
 import Data.AdditiveGroup
 -- import Data.VectorSpace
 import Data.AffineSpace
-
+import Data.Typeable
 -- import Music.Pitch.Literal
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 
-{-|
-Number of chromatic steps.
-May be negative, indicating a downward interval.
--}
-newtype ChromaticSteps = ChromaticSteps { getChromaticSteps :: Int }
+-- |
+-- Number of chromatic steps.
+-- May be negative, indicating a downward interval.
+newtype ChromaticSteps = ChromaticSteps {getChromaticSteps :: Int}
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
-{-|
-Number of diatonic steps.
-May be negative, indicating a downward interval.
--}
-newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Int }
+-- |
+-- Number of diatonic steps.
+-- May be negative, indicating a downward interval.
+newtype DiatonicSteps = DiatonicSteps {getDiatonicSteps :: Int}
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
-{-|
-Number of octaves.
-May be negative, indicating a downward interval.
--}
-newtype Octaves = Octaves { getOctaves :: Integer }
+-- |
+-- Number of octaves.
+-- May be negative, indicating a downward interval.
+newtype Octaves = Octaves {getOctaves :: Integer}
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
-{-|
-Number of semitones.
-May be negative, indicating a downward interval.
--}
+-- |
+-- Number of semitones.
+-- May be negative, indicating a downward interval.
 type Semitones = ChromaticSteps
 
-{-|
-The /number/ component of an interval (fourth, fifth) etc.
-May be negative, indicating a downward interval.
--}
-newtype Number = Number { getNumber :: Integer }
+-- |
+-- The /number/ component of an interval (fourth, fifth) etc.
+-- May be negative, indicating a downward interval.
+newtype Number = Number {getNumber :: Integer}
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
-{-|
-The /quality/ component of an interval (minor, major, augmented).
-Generalized from single\/double augmented\/diminished to any number of steps.
--}
+-- |
+-- The /quality/ component of an interval (minor, major, augmented).
+-- Generalized from single\/double augmented\/diminished to any number of steps.
 data Quality
   = Augmented Integer
   | Major
@@ -77,6 +69,7 @@ data Quality
   | Minor
   | Diminished Integer
   deriving (Eq, Ord, Show)
+
 {-
 TODO we really want to use Positive instead of Integer
 Alternatively, we could do it as a recursive type
@@ -89,55 +82,53 @@ data Quality
   | Diminish Quality
 -}
 
-{-|
-The actual alteration implied by a quality is dependent on whether it is attached
-to a major\/minor vs. a perfect-style number. This type represents the two possibilities.
--}
+-- |
+-- The actual alteration implied by a quality is dependent on whether it is attached
+-- to a major\/minor vs. a perfect-style number. This type represents the two possibilities.
 data QualityType = PerfectType | MajorMinorType
   deriving (Eq, Ord, Read, Show)
 
-{-|
-Accidental, represented as number of alterations.
-Generalized from natural and single\/double sharp\/flat to any number of steps.
--}
-newtype Accidental = Accidental { getAccidental :: Integer }
+-- |
+-- Accidental, represented as number of alterations.
+-- Generalized from natural and single\/double sharp\/flat to any number of steps.
+newtype Accidental = Accidental {getAccidental :: Integer}
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
-{-|
-Pitch name component.
--}
+-- |
+-- Pitch name component.
 data Name = C | D | E | F | G | A | B
   deriving (Eq, Ord, Show, Enum)
 
-{-|
-This type represents standard basis for intervbals.
- -}
+-- |
+-- This type represents standard basis for intervbals.
 data IntervalBasis = Chromatic | Diatonic
   deriving (Eq, Ord, Show, Enum)
 
-{-|
-Interval type.
- -}
-newtype Interval = Interval { getInterval :: (ChromaticSteps, DiatonicSteps) }
+-- |
+-- Interval type.
+newtype Interval = Interval {getInterval :: (ChromaticSteps, DiatonicSteps)}
   deriving (Eq, Typeable)
 
-{-|
-Pitch type.
--}
-newtype Pitch = Pitch { getPitch :: Interval }
+-- |
+-- Pitch type.
+newtype Pitch = Pitch {getPitch :: Interval}
   deriving (Eq, Ord, Typeable)
 
 instance AdditiveGroup Interval where
-  zeroV   = basis_P1 where basis_P1 = Interval (0, 0)
+
+  zeroV = basis_P1 where basis_P1 = Interval (0, 0)
+
   (Interval (a1, d1)) ^+^ (Interval (a2, d2)) = Interval (a1 ^+^ a2, d1 ^+^ d2)
-  negateV (Interval (a, d)) = Interval (-a, -d)
+
+  negateV (Interval (a, d)) = Interval (- a, - d)
 
 instance AffineSpace Pitch where
-  type Diff Pitch     = Interval
+
+  type Diff Pitch = Interval
+
   Pitch a .-. Pitch b = a ^-^ b
-  Pitch a .+^ b       = Pitch (a ^+^ b)
 
-
+  Pitch a .+^ b = Pitch (a ^+^ b)
 
 instance Show Octaves where
   show = show . getOctaves
@@ -146,16 +137,19 @@ instance Show Number where
   show = show . getNumber
 
 instance Show Accidental where
-  show n | n == 0    = "natural"
-         | n == 1    = "sharp"
-         | n == (-1) = "flat"
-         | n == 2    = "doubleSharp"
-         | n == (-2) = "doubleFlat"
-         | n > 0     = "sharp * " ++ show (getAccidental n)
-         | n < 0     = "flat * " ++ show (negate $ getAccidental n)
+  show n
+    | n == 0 = "natural"
+    | n == 1 = "sharp"
+    | n == (-1) = "flat"
+    | n == 2 = "doubleSharp"
+    | n == (-2) = "doubleFlat"
+    | n > 0 = "sharp * " ++ show (getAccidental n)
+    | n < 0 = "flat * " ++ show (negate $ getAccidental n)
 
 instance Alterable Accidental where
+
   sharpen = succ
+
   flatten = pred
 
 -- -- | Magic instance that allow us to write @c sharp@ instead of @sharpen c@.
@@ -164,28 +158,29 @@ instance Alterable Accidental where
 --   fromPitch l (-1)  = flatten (fromPitch l)
 -- Requires FlexibleInstances
 
-{-| Lexicographical ordering, comparing the 'd2' component of the
-Interval first, as it's tied to the Number which is expected to be
-'bigger' than the Quality, assuming ordinary tuning systems
--}
+-- | Lexicographical ordering, comparing the 'd2' component of the
+-- Interval first, as it's tied to the Number which is expected to be
+-- 'bigger' than the Quality, assuming ordinary tuning systems
 instance Ord Interval where
   Interval a `compare` Interval b = swap a `compare` swap b
-    where swap (x,y) = (y,x)
+    where
+      swap (x, y) = (y, x)
 
 instance AdditiveGroup ChromaticSteps where
+
   zeroV = 0
+
   (^+^) = (+)
+
   negateV = negate
 
 instance AdditiveGroup DiatonicSteps where
+
   zeroV = 0
+
   (^+^) = (+)
+
   negateV = negate
-
-
-
-
-
 {-
 The number portion of an interval (i.e. second, third, etc).
 
@@ -283,7 +278,6 @@ interval, use the 'interval' constructor, the utility constructors 'major', 'min
 Perfect 5 > d5  == diminished fifth == diminish (perfect fifth)
 
 -}
-
 
 {-
 An accidental is either flat, natural or sharp.

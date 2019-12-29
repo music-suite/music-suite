@@ -1,9 +1,11 @@
-
-{-# LANGUAGE RankNTypes    #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
-{-# LANGUAGE ViewPatterns  #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012-2014
 --
@@ -12,26 +14,24 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
---
--------------------------------------------------------------------------------------
-
-module Music.Time.Internal.Util (
-  showRatio,
-  list,
-  single,
-  inspecting,
-  inspectingBy,
-  withPrevNext,
-  rotate,
-  tripped,
-  through,
-  uncurry3,
-  partial,
-  partial2,
-  partial3,
-  _zipList,
-  dependingOn,
-  ) where
+module Music.Time.Internal.Util
+  ( showRatio,
+    list,
+    single,
+    inspecting,
+    inspectingBy,
+    withPrevNext,
+    rotate,
+    tripped,
+    through,
+    uncurry3,
+    partial,
+    partial2,
+    partial3,
+    _zipList,
+    dependingOn,
+  )
+where
 
 {-
     Rules:
@@ -48,11 +48,11 @@ module Music.Time.Internal.Util (
 
 -}
 
-import           Control.Applicative
-import           Control.Lens
-import           Control.Monad.Plus
+import Control.Applicative
+import Control.Lens
+import Control.Monad.Plus
 import qualified Data.Char
-import           Data.Functor.Contravariant (Equivalence (..), contramap)
+import Data.Functor.Contravariant (Equivalence (..), contramap)
 import qualified Data.List
 import qualified Data.Monoid
 import qualified Data.Ratio
@@ -62,8 +62,8 @@ import qualified Data.Ratio
 -- > depends : base
 divideList :: Int -> [a] -> [[a]]
 divideList n xs
-    | length xs <= n = [xs]
-    | otherwise = [take n xs] ++ (divideList n $ drop n xs)
+  | length xs <= n = [xs]
+  | otherwise = [take n xs] ++ (divideList n $ drop n xs)
 
 -- | Group a list into sublists whereever a predicate holds. The matched element
 --   is the first in the sublist.
@@ -78,14 +78,13 @@ divideList n xs
 -- > depends : base
 splitWhile :: (a -> Bool) -> [a] -> [[a]]
 splitWhile p xs = case splitWhile' p xs of
-    []:xss -> xss
-    xss    -> xss
-    where
-        splitWhile' p []     = [[]]
-        splitWhile' p (x:xs) = case splitWhile' p xs of
-            (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss
-            []       -> error "splitWhile"
-
+  [] : xss -> xss
+  xss -> xss
+  where
+    splitWhile' p [] = [[]]
+    splitWhile' p (x : xs) = case splitWhile' p xs of
+      (xs : xss) -> if p x then [] : (x : xs) : xss else (x : xs) : xss
+      [] -> error "splitWhile"
 
 -- | Break up a list into parts of maximum length n, inserting the given list as separator.
 --   Useful for breaking up strings, as in @breakList 80 "\n" str@.
@@ -100,17 +99,17 @@ breakList n z = Data.Monoid.mconcat . Data.List.intersperse z . divideList n
 -- > depends : base
 mapIndexed :: (Int -> a -> b) -> [a] -> [b]
 mapIndexed f as = map (uncurry f) (zip is as)
-    where
-        n  = length as - 1
-        is = [0..n]
+  where
+    n = length as - 1
+    is = [0 .. n]
 
 -- test
 
 -- | Duplicate an element.
 -- > category: Combinator, Tuple
 -- > depends: base
-dup :: a -> (a,a)
-dup x = (x,x)
+dup :: a -> (a, a)
+dup x = (x, x)
 
 -- | Unfold a partial function. This is a simpler version of 'Data.List.unfoldr'.
 -- > category: Function, List
@@ -147,13 +146,14 @@ mapL f = mapFTL id id f
 -- > depends: base
 mapFTL :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
 mapFTL f g h = go
-    where
-        go []    = []
-        go [a]   = [f a]
-        go [a,b] = [f a, h b]
-        go xs    = [f $ head xs]          ++
-                   map g (tail $ init xs) ++
-                   [h $ last xs]
+  where
+    go [] = []
+    go [a] = [f a]
+    go [a, b] = [f a, h b]
+    go xs =
+      [f $ head xs]
+        ++ map g (tail $ init xs)
+        ++ [h $ last xs]
 
 -- |
 -- Extract the first consecutive sublist for which the predicate returns true, or
@@ -162,7 +162,6 @@ mapFTL f g h = go
 -- > depends: base
 filterOnce :: (a -> Bool) -> [a] -> [a]
 filterOnce p = Data.List.takeWhile p . Data.List.dropWhile (not . p)
-
 
 -- | Returns all rotations of the given list. Given an infinite list, returns an infinite
 -- list of rotated infinite lists.
@@ -175,8 +174,8 @@ rots xs = init (zipWith (++) (Data.List.tails xs) (Data.List.inits xs))
 -- > category: List
 -- > depends: base
 rotl :: [a] -> [a]
-rotl []     = []
-rotl (x:xs) = xs ++ [x]
+rotl [] = []
+rotl (x : xs) = xs ++ [x]
 
 -- |
 -- > category: List
@@ -190,12 +189,11 @@ rotr xs = last xs : init xs
 -- > depends: base
 rotated :: Int -> [a] -> [a]
 rotated = go
-    where
-        go n as
-            | n >= 0 = iterate rotr as !! n
-            | n <  0 = iterate rotl as !! abs n
-            | otherwise = error "Impossible"
-
+  where
+    go n as
+      | n >= 0 = iterate rotr as !! n
+      | n < 0 = iterate rotl as !! abs n
+      | otherwise = error "Impossible"
 
 curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
 curry3 = curry . curry . (. tripl)
@@ -203,22 +201,25 @@ curry3 = curry . curry . (. tripl)
 uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 uncurry3 = (. untripl) . uncurry . uncurry
 
-untripl :: (a,b,c) -> ((a,b),c)
-untripl (a,b,c) = ((a,b),c)
+untripl :: (a, b, c) -> ((a, b), c)
+untripl (a, b, c) = ((a, b), c)
 
-tripl :: ((a,b),c) -> (a,b,c)
-tripl ((a,b),c) = (a,b,c)
+tripl :: ((a, b), c) -> (a, b, c)
+tripl ((a, b), c) = (a, b, c)
 
-tripr :: (a,(b,c)) -> (a,b,c)
-tripr (a,(b,c)) = (a,b,c)
-
+tripr :: (a, (b, c)) -> (a, b, c)
+tripr (a, (b, c)) = (a, b, c)
 
 -- TODO mo
 partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
-partial2 :: (a -> b      -> Bool) -> a -> b      -> Maybe b
+
+partial2 :: (a -> b -> Bool) -> a -> b -> Maybe b
+
 partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
-partial2 f = curry  (fmap snd  . partial (uncurry f))
+
+partial2 f = curry (fmap snd . partial (uncurry f))
+
 partial3 f = curry3 (fmap (view _3) . partial (uncurry3 f))
 
 -- | Case matching on lists.
@@ -238,19 +239,19 @@ merge = mergeBy compare
 -- > category: List
 -- > depends: base
 mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
-mergeBy f = mergeBy' $ (fmap.fmap) orderingToBool f
-    where
-        orderingToBool LT = True
-        orderingToBool EQ = True
-        orderingToBool GT = False
+mergeBy f = mergeBy' $ (fmap . fmap) orderingToBool f
+  where
+    orderingToBool LT = True
+    orderingToBool EQ = True
+    orderingToBool GT = False
 
 mergeBy' :: (a -> a -> Bool) -> [a] -> [a] -> [a]
-mergeBy' pred xs []         = xs
-mergeBy' pred [] ys         = ys
-mergeBy' pred (x:xs) (y:ys) =
-    case pred x y of
-        True  -> x: mergeBy' pred xs (y:ys)
-        False -> y: mergeBy' pred (x:xs) ys
+mergeBy' pred xs [] = xs
+mergeBy' pred [] ys = ys
+mergeBy' pred (x : xs) (y : ys) =
+  case pred x y of
+    True -> x : mergeBy' pred xs (y : ys)
+    False -> y : mergeBy' pred (x : xs) ys
 
 -- | Compose all functions.
 -- > category: Function
@@ -271,15 +272,14 @@ showRatio :: (Integral a, Show a) => Data.Ratio.Ratio a -> String
 showRatio (realToFrac -> (unRatio -> (x, 1))) = show x
 showRatio (realToFrac -> (unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
 
-
 -- Replace all contigous ranges of equal values with [Just x, Nothing, Nothing ...]
 -- > category: List
 -- > depends: base
 retainUpdates :: Eq a => [a] -> [Maybe a]
-retainUpdates = snd . Data.List.mapAccumL g Nothing where
-    g Nothing  x = (Just x, Just x)
+retainUpdates = snd . Data.List.mapAccumL g Nothing
+  where
+    g Nothing x = (Just x, Just x)
     g (Just p) x = (Just x, if p == x then Nothing else Just x)
-
 
 -- Generic version of 'replicate'.
 -- > category: List
@@ -311,10 +311,10 @@ swap (x, y) = (y, x)
 -- > category: List
 -- > depends: base
 withNext :: [a] -> [(a, Maybe a)]
-withNext = fmap (\(p,c,n) -> (c,n)) . withPrevNext
+withNext = fmap (\(p, c, n) -> (c, n)) . withPrevNext
 
 withPrev :: [a] -> [(Maybe a, a)]
-withPrev = fmap (\(p,c,n) -> (p,c)) . withPrevNext
+withPrev = fmap (\(p, c, n) -> (p, c)) . withPrevNext
 
 -- withNext = go
 --     where
@@ -350,19 +350,14 @@ rotate n xs = drop n' xs ++ take n' xs
 
 --------
 
-
-
-
-
-
-
 toDouble :: Real a => a -> Double
 toDouble = realToFrac
 
-through :: Applicative f =>
-  Lens' s a
-  -> Lens s t a b
-  -> Lens (f s) (f t) (f a) (f b)
+through ::
+  Applicative f =>
+  Lens' s a ->
+  Lens s t a b ->
+  Lens (f s) (f t) (f a) (f b)
 through lens1 lens2 = lens getter (flip setter)
   where
     getter = fmap (view lens1)
@@ -372,11 +367,10 @@ through lens1 lens2 = lens getter (flip setter)
 _zipList :: Iso [a] [b] (ZipList a) (ZipList b)
 _zipList = iso ZipList getZipList
 
-
 single :: Prism' [a] a
 single = prism' return $ \xs -> case xs of
   [x] -> Just x
-  _   -> Nothing
+  _ -> Nothing
 {-# INLINE single #-}
 
 tripped :: Iso ((a, b), c) ((d, e), f) (a, b, c) (d, e, f)
@@ -393,11 +387,14 @@ inspecting f x y = f x == f y
 
 inspectingBy :: (b -> a) -> (a -> a -> Bool) -> (b -> b -> Bool)
 inspectingBy f e = getEquivalence $ contramap f $ Equivalence e
+
 -- inspectingBy f p x y = f x `p` f y
 
-dependingOn :: Lens s t (x,a) (x,b) -> (x -> Lens a b c d) -> Lens s t c d
-dependingOn l depending f = l (\ (x,a) -> (x,) <$> depending x f a)
+dependingOn :: Lens s t (x, a) (x, b) -> (x -> Lens a b c d) -> Lens s t c d
+dependingOn l depending f = l (\(x, a) -> (x,) <$> depending x f a)
 
 mapF :: forall b. (b -> b) -> [b] -> [b]
+
 mapT :: forall b. (b -> b) -> [b] -> [b]
+
 mapL :: forall b. (b -> b) -> [b] -> [b]

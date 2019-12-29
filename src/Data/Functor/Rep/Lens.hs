@@ -1,4 +1,3 @@
-
 module Data.Functor.Rep.Lens where
 
 import Control.Lens hiding (index)

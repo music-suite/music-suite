@@ -1,27 +1,27 @@
+module Music.Time.Aligned
+  ( -- * Alignable class
+    Alignable (..),
 
-module Music.Time.Aligned (
-      -- * Alignable class
-      Alignable(..),
-      -- * Aligned values
-      Aligned,
-      aligned,
-      realign,
-      renderAligned,
-      renderAlignedVoice,
-      renderAlignedNote,
-      renderAlignedDuration,
-  ) where
+    -- * Aligned values
+    Aligned,
+    aligned,
+    realign,
+    renderAligned,
+    renderAlignedVoice,
+    renderAlignedNote,
+    renderAlignedDuration,
+  )
+where
 
 import qualified Data.Aeson as JSON
-import           Music.Time.Internal.Preliminaries
-import           Music.Dynamics.Literal
-import           Music.Pitch.Literal
-
-import           Music.Time.Event
-import           Music.Time.Juxtapose
-import           Music.Time.Note
-import           Music.Time.Score
-import           Music.Time.Voice
+import Music.Dynamics.Literal
+import Music.Pitch.Literal
+import Music.Time.Event
+import Music.Time.Internal.Preliminaries
+import Music.Time.Juxtapose
+import Music.Time.Note
+import Music.Time.Score
+import Music.Time.Voice
 
 -- TODO should this be a Setter or a Lens instead?
 class Alignable a where
@@ -41,11 +41,13 @@ instance Alignable (Aligned a) where
 --
 -- This is analogous to alignment in a graphical program. To align something at onset, midpoint
 -- or offset, use 0, 0.5 or 1 as the local duration value.
-newtype Aligned v = Aligned { getAligned :: ((Time, Alignment), v) }
+newtype Aligned v = Aligned {getAligned :: ((Time, Alignment), v)}
   deriving (Functor, Eq, Ord, Foldable, Traversable)
 
 instance Wrapped (Aligned v) where
+
   type Unwrapped (Aligned v) = ((Time, Alignment), v)
+
   _Wrapped' = iso getAligned Aligned
 
 instance Rewrapped (Aligned a) (Aligned b)
@@ -55,36 +57,35 @@ aligned :: Time -> Alignment -> v -> Aligned v
 aligned t d a = Aligned ((t, d), a)
 
 instance Show a => Show (Aligned a) where
-  show (Aligned ((t,d),v)) = "aligned ("++show t++") ("++show d++") ("++ show v++")"
+  show (Aligned ((t, d), v)) = "aligned (" ++ show t ++ ") (" ++ show d ++ ") (" ++ show v ++ ")"
 
 instance ToJSON a => ToJSON (Aligned a) where
-  toJSON (Aligned ((t,d),v)) = JSON.object [ ("alignment", toJSON d), ("origin", toJSON t), ("value", toJSON v) ]
+  toJSON (Aligned ((t, d), v)) = JSON.object [("alignment", toJSON d), ("origin", toJSON t), ("value", toJSON v)]
 
 instance Transformable v => Transformable (Aligned v) where
   transform s (Aligned ((t, d), v)) = Aligned ((transform s t, d), transform s v)
 
 instance (HasDuration v, Transformable v) => HasDuration (Aligned v) where
-  _duration (Aligned (_, v)) = v^.duration
+  _duration (Aligned (_, v)) = v ^. duration
 
 instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
   -- _position (Aligned (position, alignment, v)) = alerp (position .-^ (size * alignment)) (position .+^ (size * (1-alignment)))
   _era (Aligned ((position, alignment), v)) =
-    (position .-^ (size * alignment)) <-> (position .+^ (size * (1-alignment)))
+    (position .-^ (size * alignment)) <-> (position .+^ (size * (1 - alignment)))
     where
-      size = v^.duration
+      size = v ^. duration
 
--- | Change the alignment of a value without moving it.
+-- |  Change the alignment of a value without moving it.
 --
--- @
--- x^.'era' = ('realign' l x)^.'era'
--- @
+--  @
+--  x^.'era' = ('realign' l x)^.'era'
+--  @
 realign :: (HasDuration a, Transformable a) => Alignment -> Aligned a -> Aligned a
-realign l a@(Aligned ((t,_),x)) = Aligned ((a^.position l,l),x)
+realign l a@(Aligned ((t, _), x)) = Aligned ((a ^. position l, l), x)
 
 -- | Render an aligned value. The given span represents the actual span of the aligned value.
 renderAligned :: (HasDuration a, Transformable a) => (Span -> a -> b) -> Aligned a -> b
 renderAligned f a@(Aligned (_, v)) = f (_era a) v
-
 
 -- Somewhat suspect, see below for clarity...
 
@@ -99,7 +100,6 @@ durationToSpanInEra = const
 
 -- TODO compare placeAt etc.
 
-
 -- | Convert an aligned voice to a score.
 renderAlignedVoice :: Aligned (Voice a) -> Score a
 renderAlignedVoice = renderAligned voiceToScoreInEra
@@ -111,8 +111,3 @@ renderAlignedNote = renderAligned noteToEventInEra
 -- | Convert an aligned duration to a span.
 renderAlignedDuration :: Aligned Duration -> Span
 renderAlignedDuration = renderAligned durationToSpanInEra
-
-
-
-
-

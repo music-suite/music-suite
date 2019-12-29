@@ -1,27 +1,26 @@
-
 -- | A type to represent (recursive) subdivisions of a part.
-module Music.Parts.Subpart (
-          Subpart(..),
-          containsSubpart,
-          properlyContainsSubpart,
-          isSubpartOf,
-          isProperSubpartOf,
-  ) where
+module Music.Parts.Subpart
+  ( Subpart (..),
+    containsSubpart,
+    properlyContainsSubpart,
+    isSubpartOf,
+    isProperSubpartOf,
+  )
+where
 
-import           Control.Applicative
-import           Control.Lens                    (toListOf, Wrapped(..), Rewrapped(..), iso)
-import           Data.Aeson                      (ToJSON (..), FromJSON(..))
+import Control.Applicative
+import Control.Lens (Rewrapped (..), Wrapped (..), iso, toListOf)
+import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson
-import           Data.Default
+import Data.Default
 import qualified Data.List
-import           Data.Maybe
-import           Data.Semigroup
-import           Data.Semigroup.Option.Instances
-import           Data.Traversable                (traverse)
-import           Data.Typeable
-import           Text.Numeral.Roman              (toRoman)
-
+import Data.Maybe
+import Data.Semigroup
+import Data.Semigroup.Option.Instances
+import Data.Traversable (traverse)
+import Data.Typeable
 import Music.Parts.Division
+import Text.Numeral.Roman (toRoman)
 
 -- |
 -- A subpart is a potentially infinite sequence of divisions, each typically
@@ -29,12 +28,13 @@ import Music.Parts.Division
 --
 -- The empty subpart (also known as 'mempty') represents all the players of the group,
 -- or in the context of 'Part', all players of the given instrument.
---
 newtype Subpart = Subpart [Division]
-    deriving (Eq, Ord, Default, Semigroup, Monoid)
+  deriving (Eq, Ord, Default, Semigroup, Monoid)
 
 instance Wrapped Subpart where
+
   type Unwrapped Subpart = [Division]
+
   _Wrapped' = iso getSubpart Subpart
     where
       getSubpart (Subpart x) = x
@@ -60,8 +60,8 @@ or similar
 instance Show Subpart where
   show (Subpart ps) = Data.List.intercalate "." $ mapFR showDivisionR showDivision $ ps
     where
-      mapFR f g []     = []
-      mapFR f g (x:xs) = f x : fmap g xs
+      mapFR f g [] = []
+      mapFR f g (x : xs) = f x : fmap g xs
 
 containsSubpart :: Subpart -> Subpart -> Bool
 containsSubpart = flip isSubpartOf

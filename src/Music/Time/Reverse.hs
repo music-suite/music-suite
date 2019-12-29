@@ -1,41 +1,50 @@
+module Music.Time.Reverse
+  ( module Music.Time.Position,
 
-module Music.Time.Reverse (
-        module Music.Time.Position,
+    -- * The Reversible class
+    Reversible (..),
 
-        -- * The Reversible class
-        Reversible(..),
+    -- * Reversing
+    reversed,
+    revDefault,
 
-        -- * Reversing
-        reversed,
-        revDefault,
+    -- * Utility
+    NoReverse (..),
+  )
+where
 
-        -- * Utility
-        NoReverse(..),
-  ) where
-
-import           Control.Lens           hiding (Indexable, Level, above, below,
-                                         index, inside, parts, reversed,
-                                         transform, (<|), (|>))
-import           Data.AffineSpace
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.AffineSpace.Point
-import           Data.Map               (Map)
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
-import qualified Data.Map               as Map
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Semigroup         hiding ()
-import           Data.Sequence          (Seq)
-import qualified Data.Sequence          as Seq
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
-import           Data.Typeable
-import           Data.VectorSpace
-import           Data.VectorSpace       hiding (Sum (..))
-
-import           Music.Time.Position
+import Control.Lens hiding
+  ( (<|),
+    Indexable,
+    Level,
+    above,
+    below,
+    index,
+    inside,
+    parts,
+    reversed,
+    transform,
+    (|>),
+  )
+import Data.AffineSpace
+import Data.AffineSpace
+import Data.AffineSpace.Point
+import Data.AffineSpace.Point
+import Data.Map (Map)
+import Data.Map (Map)
+import qualified Data.Map as Map
+import qualified Data.Map as Map
+import Data.Ratio
+import Data.Semigroup
+import Data.Semigroup hiding ()
+import Data.Sequence (Seq)
+import qualified Data.Sequence as Seq
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.Typeable
+import Data.VectorSpace
+import Data.VectorSpace hiding (Sum (..))
+import Music.Time.Position
 
 -- |
 -- Class of values that can be reversed (retrograded).
@@ -72,9 +81,7 @@ import           Music.Time.Position
 -- @
 -- 'rev' = 'over' 'onsetAndOffset' 'swap'
 -- @
---
 class Transformable a => Reversible a where
-
   -- | Reverse (retrograde) the given value.
   rev :: a -> a
 
@@ -133,11 +140,10 @@ instance Reversible Span where
   rev = revDefault
 
 instance Reversible a => Reversible (b, a) where
-  rev (s,a) = (s, rev a)
+  rev (s, a) = (s, rev a)
 
 -- |
 -- A default implementation of 'rev'
---
 revDefault :: (HasPosition a, Transformable a) => a -> a
 revDefault x = stretch (-1) x
 
@@ -145,7 +151,7 @@ revDefault x = stretch (-1) x
 -- revDefault x = (stretch (-1) `whilst` undelaying (_position x 0.5 .-. 0)) x
 --   where f `whilst` t = over (transformed t) f
 
-newtype NoReverse a = NoReverse { getNoReverse :: a }
+newtype NoReverse a = NoReverse {getNoReverse :: a}
   deriving (Typeable, Eq, Ord, Show)
 
 instance Transformable (NoReverse a) where
@@ -159,7 +165,5 @@ instance Reversible (NoReverse a) where
 --
 -- >>> [1,2,3] & reversed %~ Data.List.sort
 -- [3,2,1]
---
 reversed :: Reversible a => Iso' a a
 reversed = iso rev rev
-

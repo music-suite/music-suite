@@ -1,30 +1,26 @@
-
-module Music.Parts.Instrument.Strings (
-        StringInstrument,
-        stringInstrument,
-        isStringInstrument,
-
-        StringTuning,
-        standardTuning,
-        allowedTunings,
-
-        isAllowedTuning,
-        isStandardTuning,
-        isNonStandardTuning,
-
-        HarmonicPosition,
-
-        naturalHarmonicPositions,
-  ) where
+module Music.Parts.Instrument.Strings
+  ( StringInstrument,
+    stringInstrument,
+    isStringInstrument,
+    StringTuning,
+    standardTuning,
+    allowedTunings,
+    isAllowedTuning,
+    isStandardTuning,
+    isNonStandardTuning,
+    HarmonicPosition,
+    naturalHarmonicPositions,
+  )
+where
 
 import Control.Lens
 import Data.List (isPrefixOf)
-import Music.Parts.Instrument
 import Data.Set (Set)
-import Music.Pitch.Common (Pitch, Interval)
+import Music.Parts.Instrument
 import Music.Pitch (Ambitus, Clef)
+import Music.Pitch.Common (Interval, Pitch)
 
-newtype StringInstrument = StringInstrument { getStringInstrument :: Instrument}
+newtype StringInstrument = StringInstrument {getStringInstrument :: Instrument}
 
 stringInstrument :: Prism' Instrument StringInstrument
 stringInstrument = prism' getStringInstrument (fmap StringInstrument . partial isStringInstrument)
@@ -35,7 +31,7 @@ partial p x = if p x then Just x else Nothing
 isStringInstrument :: Instrument -> Bool
 isStringInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
-  Just i  -> Data.List.isPrefixOf "strings" i
+  Just i -> Data.List.isPrefixOf "strings" i
 
 type StringTuning = [Pitch]
 
@@ -53,7 +49,6 @@ isStandardTuning = error "No isStandardTuning"
 
 isNonStandardTuning :: StringInstrument -> StringTuning -> Bool
 isNonStandardTuning = error "No isNonStandardTuning"
-
 
 type HarmonicPosition = Integer
 

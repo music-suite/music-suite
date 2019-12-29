@@ -1,70 +1,67 @@
-
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- |
 -- Provides a way to annotate data-types with 'Transformable' meta-data.
 -- Inspired by Clojure meta-data and Diagrams styles.
---
-module Music.Time.Meta (
-        -- * Attributes
-        AttributeClass,
-        TAttributeClass,
+module Music.Time.Meta
+  ( -- * Attributes
+    AttributeClass,
+    TAttributeClass,
+    Attribute,
 
-        Attribute,
+    -- ** Creating attributes
+    wrapAttr,
+    wrapTAttr,
+    unwrapAttr,
+    -- unwrapTAttr,
 
-        -- ** Creating attributes
-        wrapAttr,
-        wrapTAttr,
-        unwrapAttr,
-        -- unwrapTAttr,
+    -- * Meta-data
+    Meta,
 
-        -- * Meta-data
-        Meta,
+    -- ** Creating meta-data
+    wrapMeta,
+    wrapTMeta,
+    unwrapMeta,
 
-        -- ** Creating meta-data
-        wrapMeta,
-        wrapTMeta,
-        unwrapMeta,
+    -- ** The HasMeta class
+    HasMeta (..),
+    getMeta,
+    mapMeta,
+    setMeta,
+    metaTypes,
+    applyMeta,
+    setMetaAttr,
+    setMetaTAttr,
+    preserveMeta,
+    preserveMetaF,
 
-        -- ** The HasMeta class
-        HasMeta(..),
-        getMeta,
-        mapMeta,
-        setMeta,
-        metaTypes,
-        applyMeta,
-        setMetaAttr,
-        setMetaTAttr,
-        preserveMeta,
-        preserveMetaF,
+    -- ** Add meta-data to arbitrary types
+    AddMeta,
+    annotated,
+    unannotated,
+    annotatedIgnoringMeta,
+  )
+where
 
-        -- ** Add meta-data to arbitrary types
-        AddMeta,
-        annotated,
-        unannotated,
-        annotatedIgnoringMeta
-  ) where
-
-import           Control.Applicative
-import           Control.Comonad
-import           Control.Lens             hiding (transform)
-import           Control.Monad.Plus
-import           Data.Foldable            (Foldable)
-import qualified Data.Foldable            as F
-import           Data.Functor.Couple
-import qualified Data.List                as List
-import           Data.Map                 (Map)
-import qualified Data.Map                 as Map
-import           Data.Maybe
-import           Data.Semigroup
-import           Data.Set                 (Set)
-import qualified Data.Set                 as Set
-import           Data.String
-import           Data.Typeable
-
-import           Music.Time.Internal.Util
-import           Music.Time.Juxtapose
+import Control.Applicative
+import Control.Comonad
+import Control.Lens hiding (transform)
+import Control.Monad.Plus
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as F
+import Data.Functor.Couple
+import qualified Data.List as List
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Maybe
+import Data.Semigroup
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.String
+import Data.Typeable
+import Music.Time.Internal.Util
+import Music.Time.Juxtapose
 
 -- | Class of values that can be wrapped.
 type AttributeClass a = (Typeable a, Monoid a, Semigroup a)
@@ -74,8 +71,8 @@ type TAttributeClass a = (Transformable a, AttributeClass a)
 
 -- | An existential wrapper type to hold attributes.
 data Attribute :: * where
-  Attribute  :: AttributeClass a => a -> Attribute
-  TAttribute :: TAttributeClass a  => a -> Attribute
+  Attribute :: AttributeClass a => a -> Attribute
+  TAttribute :: TAttributeClass a => a -> Attribute
 
 -- | Wrap up an attribute.
 wrapAttr :: AttributeClass a => a -> Attribute
@@ -88,15 +85,15 @@ wrapTAttr = TAttribute
 -- | Convert something from an attribute.
 --   Also works with transformable attributes
 unwrapAttr :: AttributeClass a => Attribute -> Maybe a
-unwrapAttr (Attribute a)  = cast a
+unwrapAttr (Attribute a) = cast a
 unwrapAttr (TAttribute a) = cast a
 
 instance Semigroup Attribute where
   (Attribute a1) <> a2 = case unwrapAttr a2 of
-    Nothing  -> error "Attribute.(<>) mismatch"
+    Nothing -> error "Attribute.(<>) mismatch"
     Just a2' -> Attribute (a1 <> a2')
   (TAttribute a1) <> a2 = case unwrapAttr a2 of
-    Nothing  -> error "Attribute.(<>) mismatch"
+    Nothing -> error "Attribute.(<>) mismatch"
     Just a2' -> TAttribute (a1 <> a2')
 
 instance Transformable Attribute where
@@ -107,7 +104,7 @@ instance Reversible Attribute where
   rev = id
 
 -- Meta is Transformable because the contents of the map is transformable
-newtype Meta = Meta { _getMeta :: Map String Attribute }
+newtype Meta = Meta {_getMeta :: Map String Attribute}
   deriving (Transformable, Reversible)
 
 instance Semigroup Meta where
@@ -118,7 +115,9 @@ instance Semigroup Meta where
 --   same type they are combined according to their semigroup
 --   structure.
 instance Monoid Meta where
+
   mempty = Meta Map.empty
+
   mappend = (<>)
 
 -- | Convert something to meta-data.
@@ -130,8 +129,9 @@ wrapTMeta a = Meta $ Map.singleton key $ wrapTAttr a
 -- | Convert something from meta-data.
 unwrapMeta :: forall a. AttributeClass a => Meta -> Maybe a
 unwrapMeta (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
--- Note: unwrapAttr should never fail
   where
+    -- Note: unwrapAttr should never fail
+
     key = show . typeOf $ (undefined :: a)
 
 -- | Convert something from meta-data.
@@ -140,7 +140,6 @@ wrapMeta :: forall a. AttributeClass a => a -> Meta
 wrapMeta a = Meta $ Map.singleton key $ wrapAttr a
   where
     key = show $ typeOf (undefined :: a)
-
 
 -- | Type class for things which have meta-data.
 class HasMeta a where
@@ -156,7 +155,7 @@ instance HasMeta Meta where
 instance HasMeta a => HasMeta (Maybe a) where
   meta = lens viewM $ flip setM
     where
-      viewM Nothing  = mempty
+      viewM Nothing = mempty
       viewM (Just x) = view meta x
       setM m = fmap (set meta m)
 
@@ -181,7 +180,7 @@ mapMeta = over meta
 -- | Show the types of meta-data attachd to this value.
 --   Useful for debugging.
 metaTypes :: HasMeta a => a -> [String]
-metaTypes x = Map.keys $ _getMeta $ x^.meta
+metaTypes x = Map.keys $ _getMeta $ x ^. meta
 
 -- | Apply meta-information by combining it with existing meta-information.
 applyMeta :: HasMeta a => Meta -> a -> a
@@ -217,13 +216,33 @@ preserveMetaF f x = let m = view meta x in fmap (set meta m) (f x)
 --
 -- You can access the meta-data using 'meta', and the annotated value using 'annotated'.
 --
-newtype AddMeta a = AddMeta { getAddMeta :: Meta `Twain` a }
-  deriving (Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad,
-            Semigroup, Monoid, Num, Fractional, Floating, Enum, Bounded,
-            Integral, Real, RealFrac, Eq, Ord)
+newtype AddMeta a = AddMeta {getAddMeta :: Meta `Twain` a}
+  deriving
+    ( Show,
+      Functor,
+      Foldable,
+      Typeable,
+      Applicative,
+      Monad,
+      Comonad,
+      Semigroup,
+      Monoid,
+      Num,
+      Fractional,
+      Floating,
+      Enum,
+      Bounded,
+      Integral,
+      Real,
+      RealFrac,
+      Eq,
+      Ord
+    )
 
 instance Wrapped (AddMeta a) where
+
   type Unwrapped (AddMeta a) = Twain Meta a
+
   _Wrapped' = iso getAddMeta AddMeta
 
 instance Rewrapped (AddMeta a) (AddMeta b)
@@ -239,7 +258,7 @@ instance Traversable AddMeta where
 --   eq1 = (==)
 
 -- instance FunctorWithIndex i AddMeta where
-  -- imap f = over annotated $ imap f
+-- imap f = over annotated $ imap f
 --
 -- instance FoldableWithIndex Span Score where
 --   ifoldMap f (Score (m,x)) = ifoldMap f x
@@ -259,9 +278,10 @@ instance Splittable a => Splittable (AddMeta a) where
       unzipR :: Functor f => f (a, b) -> (f a, f b)
       unzipR x = (fmap fst x, fmap snd x)
 
-
 instance HasPosition a => HasPosition (AddMeta a) where
+
   _era = _era . extract
+
   _position = _position . extract
 
 instance HasDuration a => HasDuration (AddMeta a) where
@@ -273,7 +293,6 @@ instance HasDuration a => HasDuration (AddMeta a) where
 -- @
 -- over annotated = fmap
 -- @
---
 annotated :: Lens (AddMeta a) (AddMeta b) a b
 annotated = annotatedIgnoringMeta
 
@@ -283,7 +302,6 @@ annotated = annotatedIgnoringMeta
 -- @
 -- view fromAnnotated = pure
 -- @
---
 unannotated :: Getter a (AddMeta a)
 unannotated = from annotatedIgnoringMeta
 
@@ -296,16 +314,13 @@ unannotated = from annotatedIgnoringMeta
 -- @
 -- over annotated = fmap
 -- @
---
 annotatedIgnoringMeta :: Iso (AddMeta a) (AddMeta b) a b
 annotatedIgnoringMeta = _Wrapped . extracted
-
 
 -- Nice generalizations
 -- TODO move
 
 extracted :: (Applicative m, Comonad m) => Iso (m a) (m b) a b
 extracted = iso extract pure
-
 -- extractedRep :: (Representable m, w ~ Rep m, Monoid w) => Iso (m a) (m b) a b
 -- extractedRep = iso extractRep pureRep

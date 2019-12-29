@@ -1,45 +1,46 @@
+module Music.Time.Transform
+  ( module Music.Time.Types,
 
-module Music.Time.Transform (
+    -- * The Transformable class
+    Transformable (..),
+    transformed,
 
-        module Music.Time.Types,
+    -- * Specific transformations
 
-        -- * The Transformable class
-        Transformable(..),
-        transformed,
+    -- ** Transformations
+    delaying,
+    undelaying,
+    stretching,
+    compressing,
 
-        -- * Specific transformations
-        -- ** Transformations
-        delaying,
-        undelaying,
-        stretching,
-        compressing,
+    -- ** Transforming values
+    delay,
+    undelay,
+    stretch,
+    compress,
+    (|*),
+    (*|),
+    (|/),
+  )
+where
 
-        -- ** Transforming values
-        delay,
-        undelay,
-        stretch,
-        compress,
-        (|*),
-        (*|),
-        (|/),
-
-  ) where
-
-import           Music.Time.Internal.Transform
-import           Music.Time.Types
+import Music.Time.Internal.Transform
+import Music.Time.Types
 
 infixl 7 |*
+
 infixr 7 *|
+
 infixr 7 |/
 
--- | Infix version of 'stretch'.
+-- |  Infix version of 'stretch'.
 (|*) :: forall a. Transformable a => a -> Duration -> a
 x |* d = stretch d x
 
--- | Infix version of 'stretch'.
+-- |  Infix version of 'stretch'.
 (*|) :: forall a. Transformable a => Duration -> a -> a
 d *| x = stretch d x
 
--- | Infix version of 'compress'.
+-- |  Infix version of 'compress'.
 (|/) :: forall a. Transformable a => a -> Duration -> a
 x |/ d = compress d x

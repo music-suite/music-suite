@@ -1,19 +1,20 @@
-
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TypeFamilies               #-}
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012-2014
 --
@@ -26,50 +27,46 @@
 -- Provides tempo meta-data.
 --
 -- /Warning/ This is not supported by any backends yet.
---
--------------------------------------------------------------------------------------
+module Music.Score.Meta.RehearsalMark
+  ( -- * Rehearsal mark type
+    RehearsalMark,
 
-module Music.Score.Meta.RehearsalMark (
-        -- * Rehearsal mark type
-        RehearsalMark,
+    -- * Adding rehearsal marks to scores
+    rehearsalMark,
+    rehearsalMarkDuring,
 
-        -- * Adding rehearsal marks to scores
-        rehearsalMark,
-        rehearsalMarkDuring,
+    -- * Extracting rehearsal marks
+    withRehearsalMark,
+  )
+where
 
-        -- * Extracting rehearsal marks
-        withRehearsalMark,
-  ) where
-
-
-import           Control.Lens              (view)
-import           Control.Monad.Plus
-import           Data.Foldable             (Foldable)
-import qualified Data.Foldable             as F
-import qualified Data.List                 as List
-import           Data.Map                  (Map)
-import qualified Data.Map                  as Map
-import           Data.Maybe
-import           Data.Semigroup
-import           Data.Set                  (Set)
-import qualified Data.Set                  as Set
-import           Data.String
-import           Data.Traversable          (Traversable)
-import qualified Data.Traversable          as T
-import           Data.Typeable
-
-import           Music.Pitch.Literal
-import           Music.Score.Meta
-import           Music.Score.Part
-import           Music.Score.Pitch
-import           Music.Score.Internal.Util
-import           Music.Time
-import           Music.Time.Reactive
+import Control.Lens (view)
+import Control.Monad.Plus
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as F
+import qualified Data.List as List
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Maybe
+import Data.Semigroup
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.String
+import Data.Traversable (Traversable)
+import qualified Data.Traversable as T
+import Data.Typeable
+import Music.Pitch.Literal
+import Music.Score.Internal.Util
+import Music.Score.Meta
+import Music.Score.Part
+import Music.Score.Pitch
+import Music.Time
+import Music.Time.Reactive
 
 -- | Represents a rehearsal mark.
---
 data RehearsalMark = RehearsalMark (Maybe String) Int
-    deriving (Eq, Ord, Typeable)
+  deriving (Eq, Ord, Typeable)
+
 -- name level(0=standard)
 
 {-
@@ -78,15 +75,16 @@ instance Default RehearsalMark where
 -}
 
 instance Semigroup RehearsalMark where
-    RehearsalMark n1 l1 <> RehearsalMark n2 l2 = RehearsalMark (n1 <> n2) (l1 `max` l2)
+  RehearsalMark n1 l1 <> RehearsalMark n2 l2 = RehearsalMark (n1 <> n2) (l1 `max` l2)
 
 instance Monoid RehearsalMark where
-    mempty  = RehearsalMark Nothing 0
-    mappend = (<>)
+
+  mempty = RehearsalMark Nothing 0
+
+  mappend = (<>)
 
 instance Show RehearsalMark where
-    show (RehearsalMark name level) = "A" -- TODo
-
+  show (RehearsalMark name level) = "A" -- TODo
 
 -- metronome :: Duration -> Bpm -> Tempo
 -- metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)

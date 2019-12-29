@@ -1,5 +1,7 @@
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -10,27 +12,23 @@
 -- Portability : portable
 --
 -- Provides abstract musical articulations.
---
--------------------------------------------------------------------------------------
-
-module Music.Articulation (
-  Articulation,
-)
+module Music.Articulation
+  ( Articulation,
+  )
 where
 
-import Data.Maybe
-import Data.Either
-import Data.Semigroup
-import Control.Monad
 import Control.Applicative
+import Control.Monad
+import Data.Either
+import Data.Maybe
 import Data.Monoid.Average
+import Data.Semigroup
 
 type Articulation = (Average Double, Average Double)
-
 {-
 
   References
-    
+
     Keller: Phrasing and Articulation: A Contribution to a Rhetoric of Music
 
       Keller distinguishes between articulation and phrasing:
@@ -39,9 +37,9 @@ type Articulation = (Average Double, Average Double)
         - Articulation is "everything else", the individual interpretation of
           the melodic line.
         - Keller consider phrasing objective. (It is at least non-deterministic!)
-    
+
     http://www.speech.kth.se/publications/masterprojects/2004/Jerkert.pdf
-    
+
       - Articulation is a *local* alteration of other properties
         - There are multiple interacting hierarchical relationships
         - Articulation has to do with *emphasis*: alteration of properties leads
@@ -57,7 +55,7 @@ type Articulation = (Average Double, Average Double)
           - Vibrato, local adjustments (i.e. brighter notes)
         - Timbre
           - Dryness/spectral richness (i.e. more overtones)
-    
+
     http://www.jbiomech.com/article/S0021-9290%2898%2900113-4/abstract
 -}
 
@@ -114,7 +112,7 @@ From music21:
   Unstress
   UpBow
   WindIndication
-  WoodwindIndication 
+  WoodwindIndication
 
 
 
@@ -150,7 +148,7 @@ From music21:
   IndeterminantSlide
 
 
-  
+
   Doit (grace?)
   Falloff?
   StringFingering
@@ -189,6 +187,5 @@ From music21:
 
   BreathMark
   Caesura
-  
--}
 
+-}

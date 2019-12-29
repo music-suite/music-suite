@@ -1,5 +1,7 @@
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -13,125 +15,106 @@
 -- You may want to use the "Data.Music.MusicXml.Simple" module to generate the representation.
 --
 -- For an introduction to MusicXML, see <http://www.makemusic.com/musicxml/tutorial>.
---
--------------------------------------------------------------------------------------
+module Data.Music.MusicXml
+  ( -- * Score
+    Score (..),
+    ScoreHeader (..),
+    Identification (..),
+    Creator (..),
+    Defaults (..),
+    ScoreAttrs (..),
+    PartAttrs (..),
+    MeasureAttrs (..),
 
-module Data.Music.MusicXml (
+    -- ** Part list
+    PartList (..),
+    PartListElem (..),
 
-        -- * Score
-        Score(..),
-        ScoreHeader(..),
-        Identification(..),
-        Creator(..),
-        Defaults(..),
-        ScoreAttrs(..),
-        PartAttrs(..),
-        MeasureAttrs(..),
+    -- * Music
+    Music (..),
+    MusicElem (..),
 
-        -- ** Part list
-        PartList(..),
-        PartListElem(..),
+    -- ** Attributes
+    Attributes (..),
+    TimeSignature (..),
+    ClefSign (..),
 
-        -- * Music
-        Music(..),
-        MusicElem(..),
+    -- ** Notes
+    Note (..),
+    FullNote (..),
+    IsChord,
+    noChord,
+    Tie (..),
+    noTies,
+    NoteProps (..),
+    HasNoteProps (..),
 
-        -- ** Attributes
-        Attributes(..),
-        TimeSignature(..),
-        ClefSign(..),
+    -- ** Notations
+    Notation (..),
+    Articulation (..),
+    Ornament (..),
+    Technical (..),
 
-        -- ** Notes
-        Note(..),
-        FullNote(..),
-        IsChord,
-        noChord,
-        Tie(..),
-        noTies,
-        NoteProps(..),
-        HasNoteProps(..),
+    -- ** Directions
+    Direction (..),
 
-        -- ** Notations
-        Notation(..),
-        Articulation(..),
-        Ornament(..),
-        Technical(..),
+    -- ** Lyrics
+    Lyric (..),
 
-        -- ** Directions
-        Direction(..),
+    -- * Basic types
 
-        -- ** Lyrics
-        Lyric(..),
+    -- ** Pitch
+    Pitch (..),
+    DisplayPitch (..),
+    PitchClass,
+    Semitones (..),
+    noSemitones,
+    Octaves (..),
+    Fifths (..),
+    Line (..),
+    Mode (..),
+    Accidental (..),
 
+    -- ** Time
+    Duration (..),
+    NoteType (..),
+    Divs (..),
+    NoteVal (..),
+    NoteSize (..),
+    Beat (..),
+    BeatType (..),
 
+    -- ** Dynamics
+    Dynamics,
+    -----------------------------------------------------------------------------
 
+    -- ** Misc
+    StemDirection (..),
+    NoteHead (..),
+    LineType (..),
+    Level (..),
+    BeamType (..),
+    StartStop (..),
+    StartStopChange (..),
+    StartStopContinue (..),
+    StartStopContinueChange (..),
+    -----------------------------------------------------------------------------
 
-        -- * Basic types
+    -- * Import and export functions
+    -----------------------------------------------------------------------------
+    toXml,
+    showXml,
+  )
+where
 
-        -- ** Pitch
-        Pitch(..),
-        DisplayPitch(..),
-        PitchClass,
-        Semitones(..),
-        noSemitones,
-
-        Octaves(..),
-        Fifths(..),
-        Line(..),
-
-        Mode(..),
-        Accidental(..),
-
-        -- ** Time
-        Duration(..),
-        NoteType(..),
-
-        Divs(..),
-        NoteVal(..),
-        NoteSize(..),
-
-        Beat(..),
-        BeatType(..),
-
-
-        -- ** Dynamics
-        Dynamics,
-
-
-        -----------------------------------------------------------------------------
-        -- ** Misc
-
-        StemDirection(..),
-        NoteHead(..),
-        LineType(..),
-
-        Level(..),
-        BeamType(..),
-        StartStop(..),
-        StartStopChange(..),
-        StartStopContinue(..),
-        StartStopContinueChange(..),
-        
-        
-        -----------------------------------------------------------------------------
-        -- * Import and export functions
-        -----------------------------------------------------------------------------
-
-        toXml,
-        showXml
-
-  ) where
-
-import Text.XML.Light hiding (Line)
-
+import Data.Music.MusicXml.Dynamics
+import Data.Music.MusicXml.Pitch
+import Data.Music.MusicXml.Read
 import Data.Music.MusicXml.Score
 import Data.Music.MusicXml.Time
-import Data.Music.MusicXml.Pitch
-import Data.Music.MusicXml.Dynamics
-import Data.Music.MusicXml.Read
 import Data.Music.MusicXml.Write
-
 import Data.Music.MusicXml.Write.Score
+import Text.XML.Light hiding (Line)
 
 -- --------------------------------------------------------------------------------
 -- Import and export functions
@@ -151,5 +134,4 @@ toXml = fromSingle . write
 
 fromSingle :: [a] -> a
 fromSingle [x] = x
-fromSingle _   = error "fromSingle: non-single list"
-
+fromSingle _ = error "fromSingle: non-single list"

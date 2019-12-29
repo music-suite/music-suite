@@ -1,11 +1,12 @@
-
-{-# LANGUAGE
-    GeneralizedNewtypeDeriving,
-    StandaloneDeriving,
-    TypeSynonymInstances,
-    FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 -------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -14,101 +15,140 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : portable
---
--------------------------------------------------------------------------------------
+module Data.Music.MusicXml.Pitch
+  ( Pitch (..),
+    DisplayPitch (..),
+    PitchClass (..),
+    Semitones (..),
+    noSemitones,
+    Octaves (..),
+    Fifths (..),
+    Line (..),
+    Mode (..),
+    Accidental (..),
+  )
+where
 
-module Data.Music.MusicXml.Pitch (
-
-        Pitch(..),
-        DisplayPitch(..),
-        PitchClass(..),
-        Semitones(..),
-        noSemitones,
-
-        Octaves(..),
-        Fifths(..),
-        Line(..),
-
-        Mode(..),
-        Accidental(..)
-
-  ) where
-
-import Music.Pitch.Literal
 import Data.AffineSpace ((.-.))
-import Music.Pitch (name, accidental, octaves)
+import Music.Pitch (accidental, name, octaves)
+import Music.Pitch.Literal
 
-type Pitch        = (PitchClass, Maybe Semitones, Octaves)
+type Pitch = (PitchClass, Maybe Semitones, Octaves)
+
 type DisplayPitch = (PitchClass, Octaves)
 
-data Mode         = Major | Minor
-                  | Dorian | Phrygian | Lydian | Mixolydian
-                  | Aeolian | Ionian | Locrian | NoMode
+data Mode
+  = Major
+  | Minor
+  | Dorian
+  | Phrygian
+  | Lydian
+  | Mixolydian
+  | Aeolian
+  | Ionian
+  | Locrian
+  | NoMode
 
-data Accidental   = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
+data Accidental = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
 
-data PitchClass   = C | D | E | F | G | A | B
+data PitchClass = C | D | E | F | G | A | B
 
-newtype Semitones = Semitones { getSemitones :: Double }    -- ^ Semitones, i.e 100 cent
-newtype Octaves   = Octaves { getOctaves :: Int }           -- ^ Octaves, i.e. 1200 cent
-newtype Fifths    = Fifths { getFifths :: Int }             -- ^ Number of fifths upwards relative to C (i.e. F is -1, G is 1)
-newtype Line      = Line { getLine :: Int }                 -- ^ Line number, from bottom (i.e. 1-5)
+newtype Semitones
+  = -- | Semitones, i.e 100 cent
+    Semitones {getSemitones :: Double}
 
+newtype Octaves
+  = -- | Octaves, i.e. 1200 cent
+    Octaves {getOctaves :: Int}
+
+newtype Fifths
+  = -- | Number of fifths upwards relative to C (i.e. F is -1, G is 1)
+    Fifths {getFifths :: Int}
+
+newtype Line
+  = -- | Line number, from bottom (i.e. 1-5)
+    Line {getLine :: Int}
 
 noSemitones :: Maybe Semitones
 noSemitones = Nothing
 
-deriving instance Eq   PitchClass
-deriving instance Ord  PitchClass
+deriving instance Eq PitchClass
+
+deriving instance Ord PitchClass
+
 deriving instance Enum PitchClass
+
 deriving instance Show PitchClass
 
-deriving instance Eq   Accidental
-deriving instance Ord  Accidental
+deriving instance Eq Accidental
+
+deriving instance Ord Accidental
+
 deriving instance Enum Accidental
 
-deriving instance Eq   Mode
-deriving instance Ord  Mode
+deriving instance Eq Mode
+
+deriving instance Ord Mode
+
 deriving instance Enum Mode
+
 deriving instance Show Mode
 
-deriving instance Eq   Semitones
-deriving instance Ord  Semitones
-deriving instance Num  Semitones
+deriving instance Eq Semitones
+
+deriving instance Ord Semitones
+
+deriving instance Num Semitones
+
 deriving instance Enum Semitones
+
 deriving instance Fractional Semitones
 
-deriving instance Eq   Octaves
-deriving instance Ord  Octaves
-deriving instance Num  Octaves
+deriving instance Eq Octaves
+
+deriving instance Ord Octaves
+
+deriving instance Num Octaves
+
 deriving instance Enum Octaves
+
 deriving instance Real Octaves
+
 deriving instance Integral Octaves
 
-deriving instance Eq   Fifths
-deriving instance Ord  Fifths
-deriving instance Num  Fifths
+deriving instance Eq Fifths
+
+deriving instance Ord Fifths
+
+deriving instance Num Fifths
+
 deriving instance Enum Fifths
 
-deriving instance Eq   Line
-deriving instance Ord  Line
-deriving instance Num  Line
+deriving instance Eq Line
+
+deriving instance Ord Line
+
+deriving instance Num Line
+
 deriving instance Enum Line
 
 instance IsPitch Pitch where
-    fromPitch p = let i = p .-. c in
-      ( toEnum $ fromEnum $ name p
-      , Just $ fromIntegral $ accidental p
-      , fromIntegral $ octaves i + 4
-      )
-      -- Add 4 so that c ~ C4, c' ~ C5 etc
+  fromPitch p =
+    let i = p .-. c
+     in ( toEnum $ fromEnum $ name p,
+          Just $ fromIntegral $ accidental p,
+          fromIntegral $ octaves i + 4
+        )
+
+-- Add 4 so that c ~ C4, c' ~ C5 etc
 
 instance IsPitch DisplayPitch where
-    fromPitch p = let i = p .-. c in
-      ( toEnum $ fromEnum $ name p
-      , fromIntegral $ octaves i + 4
-      )
-      -- Add 4 so that c ~ C4, c' ~ C5 etc
+  fromPitch p =
+    let i = p .-. c
+     in ( toEnum $ fromEnum $ name p,
+          fromIntegral $ octaves i + 4
+        )
+-- Add 4 so that c ~ C4, c' ~ C5 etc
 
 {-
 instance IsPitch Fifths where

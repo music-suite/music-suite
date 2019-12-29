@@ -1,17 +1,19 @@
-
 -- | Pitch class theory (also known as Musical Set Theory).
 module Music.Pitch.Class where
 
 -- TODO
-import Music.Prelude
+
 -- import TypeUnary.Nat
+
+import qualified Data.List as List
 import Data.Modular
 import Data.Set (Set)
 import qualified Data.Set as Set
-import qualified Data.List as List
+import Music.Prelude
 
 -- newtype Modulo
-type PitchClass    = Semitones `Mod` 12
+type PitchClass = Semitones `Mod` 12
+
 type IntervalClass = Semitones `Mod` 6
 
 pitchClassToPitch :: PitchClass -> Pitch
@@ -24,13 +26,12 @@ type PitchSet = [PitchClass]
 
 empt, full :: PitchSet
 empt = mempty
-full = [0..11]
-complement = (List.\\) full
+full = [0 .. 11]
 
+complement = (List.\\) full
 
 -- showPitchSet :: PitchSet -> Score
 showPitchSet = asScore . scat . map (fromPitch' . pure . pitchClassToPitch) . List.nub
 
 -- showPitchSetV :: PitchSet -> IO ()
 showPitchSetV = asScore . pcat . map (fromPitch' . pure . pitchClassToPitch) . List.nub
-

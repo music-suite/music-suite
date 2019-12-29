@@ -1,12 +1,13 @@
-
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wwarn #-}
 
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies               #-}
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012-2014
 --
@@ -15,73 +16,76 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
---
--------------------------------------------------------------------------------------
+module Music.Score.Internal.Export
+  ( extractTimeSignatures,
+  )
+where
 
-module Music.Score.Internal.Export (
-        extractTimeSignatures,
-        -- voiceToBars',
-        -- -- separateBars,
-        -- spellPitch,
-        -- MVoice,
-        -- -- toMVoice,
-        -- unvoice,
-        -- openCommand
-          ) where
+-- voiceToBars',
+-- -- separateBars,
+-- spellPitch,
+-- MVoice,
+-- -- toMVoice,
+-- unvoice,
+-- openCommand
 
-import           Prelude                  hiding (concat, concatMap, foldl,
-                                           foldr, mapM, maximum, minimum, sum)
-
-import           Control.Applicative
-import           Control.Lens
-import           Control.Monad            hiding (mapM)
-import           Control.Monad.Plus
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.Basis
-import           Data.Either
-import           Data.Foldable
-import           Data.Function            (on)
-import           Data.Maybe
-import           Data.Ord                 (comparing)
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.String
-import           Data.Traversable
-import           Data.Typeable
-import           Data.VectorSpace
-
-import           Music.Score.Articulation
-import           Music.Time.Internal.Convert
-import           Music.Score.Dynamics
-import           Music.Score.Part
-import           Music.Score.Pitch
-import           Music.Score.Internal.Quantize
-import           Music.Score.Ties
-import           Music.Score.Meta.Time
-import           Music.Time
-
-import qualified Codec.Midi               as Midi
-import qualified Data.List                as List
-import qualified Data.Map                 as Map
-import qualified System.Info              as Info
-import qualified Text.Pretty              as Pretty
-
-import           Control.Exception
-import           Music.Dynamics.Literal
-import           Music.Pitch.Literal
-import           Music.Score.Internal.Util
-import           System.IO.Unsafe
-import           System.Process
+import qualified Codec.Midi as Midi
+import Control.Applicative
+import Control.Exception
+import Control.Lens
+import Control.Monad hiding (mapM)
+import Control.Monad.Plus
+import Data.AffineSpace
+import Data.AffineSpace.Point
+import Data.Basis
+import Data.Either
+import Data.Foldable
+import Data.Function (on)
+import qualified Data.List as List
+import qualified Data.Map as Map
+import Data.Maybe
+import Data.Ord (comparing)
+import Data.Ratio
+import Data.Semigroup
+import Data.String
+import Data.Traversable
+import Data.Typeable
+import Data.VectorSpace
+import Music.Dynamics.Literal
+import Music.Pitch.Literal
+import Music.Score.Articulation
+import Music.Score.Dynamics
+import Music.Score.Internal.Quantize
+import Music.Score.Internal.Util
+import Music.Score.Meta.Time
+import Music.Score.Part
+import Music.Score.Pitch
+import Music.Score.Ties
+import Music.Time
+import Music.Time.Internal.Convert
+import System.IO.Unsafe
+import qualified System.Info as Info
+import System.Process
+import qualified Text.Pretty as Pretty
+import Prelude hiding
+  ( concat,
+    concatMap,
+    foldl,
+    foldr,
+    mapM,
+    maximum,
+    minimum,
+    sum,
+  )
 
 extractTimeSignatures :: Score a -> ([Maybe TimeSignature], [Duration])
 extractTimeSignatures score = (barTimeSignatures, barDurations)
   where
     defaultTimeSignature = time 4 4
-    timeSignatures = fmap swap
-      $ view pairs . fuse . reactiveToVoice' (0 <-> (score^.offset))
-      $ getTimeSignatures defaultTimeSignature score
-
+    timeSignatures =
+      fmap swap
+        $ view pairs . fuse . reactiveToVoice' (0 <-> (score ^. offset))
+        $ getTimeSignatures defaultTimeSignature score
     -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
     barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
     barDurations = getBarDurations timeSignatures

@@ -1,9 +1,11 @@
-
-{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeFamilies #-}
 
 ------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -14,33 +16,29 @@
 -- Portability : non-portable (TF,GNTD)
 --
 -- Standard music representation.
---
--------------------------------------------------------------------------------------
+module Music.Prelude.Standard
+  ( module Music.Pitch,
+    module Music.Dynamics,
+    module Music.Articulation,
+    module Music.Parts,
+    module Music.Score,
+    Music,
+    StandardNote,
+    asScore,
+    asVoice,
+    asTrack,
+    asNote,
+    fromPitch'',
+  )
+where
 
-module Music.Prelude.Standard (
-        module Music.Pitch,
-        module Music.Dynamics,
-        module Music.Articulation,
-        module Music.Parts,
-        module Music.Score,
-        Music,
-        StandardNote,
-        asScore,
-        asVoice,
-        asTrack,
-        asNote,
-        fromPitch'',
-  ) where
-
-import           Data.Typeable
-
-import           Music.Pitch
-import           Music.Dynamics
-import           Music.Articulation
-import           Music.Parts
-import           Music.Score             hiding (Clef(..), Fifths, Interval, Part, Pitch, Dynamics, Articulation)
-
-import           Music.Prelude.Instances ()
+import Data.Typeable
+import Music.Articulation
+import Music.Dynamics
+import Music.Parts
+import Music.Pitch
+import Music.Prelude.Instances ()
+import Music.Score hiding (Articulation, Clef (..), Dynamics, Fifths, Interval, Part, Pitch)
 
 asNote :: StandardNote -> StandardNote
 asNote = id
@@ -62,20 +60,28 @@ asTrack = id
 --     show _ = ""
 
 type StandardNote =
-  (PartT Part
-    (ColorT
-      (TextT
-        (TremoloT
-          (HarmonicT
-            (SlideT
-              (ArticulationT Articulation
-                (DynamicT Dynamics
-                  [TieT
-                    Pitch]))))))))
+  ( PartT Part
+      ( ColorT
+          ( TextT
+              ( TremoloT
+                  ( HarmonicT
+                      ( SlideT
+                          ( ArticulationT Articulation
+                              ( DynamicT Dynamics
+                                  [ TieT
+                                      Pitch
+                                  ]
+                              )
+                          )
+                      )
+                  )
+              )
+          )
+      )
+  )
 
 type Music = Score StandardNote
 
 fromPitch'' :: IsPitch a => Pitch -> a
 fromPitch'' = fromPitch
-
-{-# DEPRECATED fromPitch'' "Use fromPitch (no primes!)"#-}
+{-# DEPRECATED fromPitch'' "Use fromPitch (no primes!)" #-}

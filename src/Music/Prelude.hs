@@ -1,5 +1,7 @@
-
 ------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012-2014
 --
@@ -12,14 +14,11 @@
 -- The Music Suite comes with many standard preludes.
 --
 -- This module reexports "Music.Prelude.Standard" for convenience.
---
--------------------------------------------------------------------------------------
+module Music.Prelude
+  ( module Music.Prelude.Standard,
+    module Music.Prelude.Inspectable,
+  )
+where
 
-module Music.Prelude (
-        module Music.Prelude.Standard,
-        module Music.Prelude.Inspectable
-  ) where
-
-import Music.Prelude.Standard
 import Music.Prelude.Inspectable
-
+import Music.Prelude.Standard

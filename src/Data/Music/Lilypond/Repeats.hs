@@ -1,7 +1,9 @@
-
 {-# LANGUAGE OverloadedStrings #-}
 
 -------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -10,9 +12,7 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : GHC
---
--------------------------------------------------------------------------------------
-
-module Data.Music.Lilypond.Repeats (
-  ) where
-
+module Data.Music.Lilypond.Repeats
+  (
+  )
+where

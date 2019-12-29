@@ -1,20 +1,21 @@
-
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012-2014
 --
@@ -25,65 +26,62 @@
 -- Portability : non-portable (TF,GNTD)
 --
 -- Provides tempo meta-data.
---
--------------------------------------------------------------------------------------
+module Music.Score.Meta.Tempo
+  ( -- * Tempo type
+    Bpm,
+    NoteValue,
+    Tempo,
+    metronome,
+    tempoNoteValue,
+    tempoBeatsPerMinute,
+    getTempo,
+    tempoToDuration,
 
-module Music.Score.Meta.Tempo (
-        -- * Tempo type
-        Bpm,
-        NoteValue,
-        Tempo,
-        metronome,
-        tempoNoteValue,
-        tempoBeatsPerMinute,
-        getTempo,
-        tempoToDuration,
+    -- * Adding tempo to scores
+    tempo,
+    tempoDuring,
 
-        -- * Adding tempo to scores
-        tempo,
-        tempoDuring,
+    -- ** Common tempi
+    presto,
+    allegro,
+    allegretto,
+    moderato,
+    andante,
+    adagio,
+    largo,
+    lento,
 
-        -- ** Common tempi
-        presto,
-        allegro,
-        allegretto,
-        moderato,
-        andante,
-        adagio,
-        largo,
-        lento,
+    -- * Extracting tempo
+    renderTempo,
+  )
+where
 
-        -- * Extracting tempo
-        renderTempo,
-  ) where
+import Control.Lens
+import Control.Monad.Plus
+import Data.AffineSpace
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as F
+import qualified Data.List as List
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Maybe
+import Data.Semigroup
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.String
+import Data.Traversable (Traversable)
+import qualified Data.Traversable as T
+import Data.Typeable
+import Data.VectorSpace
+import Music.Pitch.Literal
+import Music.Score.Internal.Util
+import Music.Score.Meta
+import Music.Score.Part
+import Music.Score.Pitch
+import Music.Time hiding (time)
 
+type Bpm = Duration
 
-import           Control.Lens
-import           Control.Monad.Plus
-import           Data.AffineSpace
-import           Data.Foldable             (Foldable)
-import qualified Data.Foldable             as F
-import qualified Data.List                 as List
-import           Data.Map                  (Map)
-import qualified Data.Map                  as Map
-import           Data.Maybe
-import           Data.Semigroup
-import           Data.Set                  (Set)
-import qualified Data.Set                  as Set
-import           Data.String
-import           Data.Traversable          (Traversable)
-import qualified Data.Traversable          as T
-import           Data.Typeable
-import           Data.VectorSpace
-
-import           Music.Pitch.Literal
-import           Music.Score.Meta
-import           Music.Score.Part
-import           Music.Score.Pitch
-import           Music.Score.Internal.Util
-import           Music.Time                hiding (time)
-
-type Bpm       = Duration
 type NoteValue = Duration
 
 -- | Represents musical tempo as a scaling factor with an optional name and/or beat duration.
@@ -97,25 +95,31 @@ type NoteValue = Duration
 --
 -- > tempoToDuration (metronome (1/4) 120) == tempoToDuration (metronome (1/2) 60)
 -- > metronome (1/4) 120                   /=                  metronome (1/2) 60
-
 data Tempo = Tempo (Maybe String) (Maybe Duration) Duration
-    deriving (Eq, Ord, Typeable)
+  deriving (Eq, Ord, Typeable)
+
 -- The internal representation is actually: maybeName maybeDisplayNoteValue scalingFactor
 
 instance Num Tempo where
-    (+) = error "Num Tempo: No implementation"
-    (-) = error "Num Tempo: No implementation"
-    (*) = error "Num Tempo: No implementation"
-    abs = error "Num Tempo: No implementation"
-    signum = error "Num Tempo: No implementation"
-    fromInteger = Tempo Nothing Nothing . fromInteger
+
+  (+) = error "Num Tempo: No implementation"
+
+  (-) = error "Num Tempo: No implementation"
+
+  (*) = error "Num Tempo: No implementation"
+
+  abs = error "Num Tempo: No implementation"
+
+  signum = error "Num Tempo: No implementation"
+
+  fromInteger = Tempo Nothing Nothing . fromInteger
 
 instance Show Tempo where
-    show (getTempo -> (nv, bpm)) = "metronome " ++ showR nv ++ " " ++ showR bpm
-        where
-            showR = showR' . realToFrac
-            showR' ((unRatio -> (x, 1))) = show x
-            showR' ((unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
+  show (getTempo -> (nv, bpm)) = "metronome " ++ showR nv ++ " " ++ showR bpm
+    where
+      showR = showR' . realToFrac
+      showR' ((unRatio -> (x, 1))) = show x
+      showR' ((unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
 
 {-
 instance Default Tempo where
@@ -123,21 +127,22 @@ instance Default Tempo where
 -}
 
 instance Semigroup Tempo where
-    (<>) = mappend
+  (<>) = mappend
 
 instance Monoid Tempo where
-    mempty = metronome (1/4) 120
-    a `mappend` b
-      | a == mempty = b
-      | b == mempty = a
-      | otherwise   = a
+
+  mempty = metronome (1 / 4) 120
+
+  a `mappend` b
+    | a == mempty = b
+    | b == mempty = a
+    | otherwise = a
 
 -- | Create a tempo from a duration and a number of beats per minute.
 --
 --   For example @metronome (1/2) 48@ means 48 half notes per minute.
 metronome :: Duration -> Bpm -> Tempo
 metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
-
 
 -- TODO use lenses
 --
@@ -153,7 +158,6 @@ metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
 --     g (Tempo n nv d)    = nv
 --     s (Tempo n _  d) nv = Tempo n nv d
 
-
 -- | Get the note value indicated by a tempo.
 tempoNoteValue :: Tempo -> Maybe NoteValue
 tempoNoteValue (Tempo n nv d) = nv
@@ -167,16 +171,14 @@ tempoBeatsPerMinute = snd . getTempo
 -- Typically used with the @ViewPatterns@ extension, as in
 --
 -- > foo (getTempo -> (nv, bpm)) = ...
---
 getTempo :: Tempo -> (NoteValue, Bpm)
-getTempo (Tempo _ Nothing x)   = (1, (60 * recip x) / 1) -- assume whole note
+getTempo (Tempo _ Nothing x) = (1, (60 * recip x) / 1) -- assume whole note
 getTempo (Tempo _ (Just nv) x) = (nv, (60 * recip x) / nv)
 
 -- | Convert a tempo to a duration suitable for converting written to sounding durations.
 --
 -- > stretch (tempoToDuration t) notation = sounding
 -- > compress (tempoToDuration t) sounding = notation
---
 tempoToDuration :: Tempo -> Duration
 tempoToDuration (Tempo _ _ x) = x
 
@@ -188,16 +190,13 @@ tempo c x = tempoDuring (_era x) c x
 tempoDuring :: HasMeta a => Span -> Tempo -> a -> a
 tempoDuring s c = addMetaNote $ view event (s, c)
 
-
 -- TODO move
 inSpan :: Span -> Time -> Bool
-inSpan (view onsetAndOffset -> (t,u)) x = t <= x && x <= u
-
+inSpan (view onsetAndOffset -> (t, u)) x = t <= x && x <= u
 
 -- | Extract all tempi from the given score, using the given default tempo.
 -- withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a
 -- withTempo f = withMeta (f . fromMaybe def . fmap getFirst . getOption)
-
 renderTempo :: Score a -> Score a
 renderTempo = error "renderTempo: Not implemented"
 
@@ -327,12 +326,19 @@ frl xs  = (head xs, (tail.init) xs, last xs)
 -}
 
 presto :: Tempo
+
 allegro :: Tempo
+
 allegretto :: Tempo
+
 moderato :: Tempo
+
 andante :: Tempo
+
 adagio :: Tempo
+
 largo :: Tempo
+
 lento :: Tempo
 
 -- presto     = metronome (1/4) 125
@@ -344,11 +350,18 @@ lento :: Tempo
 -- largo      = metronome (1/4) 55
 -- lento      = metronome (1/4) 45
 
-presto      = metronome (1/4) 140
-allegro     = metronome (1/4) 128
-allegretto  = metronome (1/4) 118
-moderato    = metronome (1/4) 98
-andante     = metronome (1/4) 84
-adagio      = metronome (1/4) 64
-largo       = metronome (1/4) 48
-lento       = metronome (1/4) 42
+presto = metronome (1 / 4) 140
+
+allegro = metronome (1 / 4) 128
+
+allegretto = metronome (1 / 4) 118
+
+moderato = metronome (1 / 4) 98
+
+andante = metronome (1 / 4) 84
+
+adagio = metronome (1 / 4) 64
+
+largo = metronome (1 / 4) 48
+
+lento = metronome (1 / 4) 42

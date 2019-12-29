@@ -1,67 +1,64 @@
-
 {-# LANGUAGE FlexibleContexts #-}
 
 -- | Common pitch.
 module Music.Pitch.Common.Pitch
-(
-        -- * Accidentals
-        Accidental,
-        natural,
-        flat,
-        sharp,
-        doubleFlat,
-        doubleSharp,
+  ( -- * Accidentals
+    Accidental,
+    natural,
+    flat,
+    sharp,
+    doubleFlat,
+    doubleSharp,
 
-        -- ** Inspecting accidentals
-        isNatural,
-        isFlattened,
-        isSharpened,
-        isStandardAccidental,
+    -- ** Inspecting accidentals
+    isNatural,
+    isFlattened,
+    isSharpened,
+    isStandardAccidental,
 
-        -- ** Name
-        Name(..),
+    -- ** Name
+    Name (..),
 
-        -- * Pitch
-        Pitch,
-        mkPitch,
-        name,
-        accidental,
+    -- * Pitch
+    Pitch,
+    mkPitch,
+    name,
+    accidental,
 
-        -- ** Diatonic and chromatic pitch
-        upDiatonicP,
-        downDiatonicP,
-        upChromaticP,
-        downChromaticP,
-        invertDiatonicallyP,
-        invertChromaticallyP,
-) where
+    -- ** Diatonic and chromatic pitch
+    upDiatonicP,
+    downDiatonicP,
+    upChromaticP,
+    downChromaticP,
+    invertDiatonicallyP,
+    invertChromaticallyP,
+  )
+where
 
-import           Control.Applicative
-import           Control.Monad
-import           Control.Lens hiding (simple)
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import qualified Data.Char                    as Char
-import           Data.Either
-import qualified Data.List                    as List
-import           Data.Maybe
-import           Data.Semigroup
-import           Data.Typeable
-import           Data.Fixed (HasResolution(..), Fixed(..))
-import           Data.Ratio
-import           Data.VectorSpace
-import           Data.Aeson                    (ToJSON (..), FromJSON(..))
+import Control.Applicative
+import Control.Lens hiding (simple)
+import Control.Monad
+import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson
-
-import           Music.Pitch.Absolute
-import           Music.Pitch.Alterable
-import           Music.Pitch.Augmentable
-import           Music.Pitch.Common.Types
-import           Music.Pitch.Common.Number
-import           Music.Pitch.Common.Interval
-import           Music.Pitch.Common.Semitones
-import           Music.Pitch.Literal
-
+import Data.AffineSpace
+import Data.AffineSpace.Point
+import qualified Data.Char as Char
+import Data.Either
+import Data.Fixed (Fixed (..), HasResolution (..))
+import qualified Data.List as List
+import Data.Maybe
+import Data.Ratio
+import Data.Semigroup
+import Data.Typeable
+import Data.VectorSpace
+import Music.Pitch.Absolute
+import Music.Pitch.Alterable
+import Music.Pitch.Augmentable
+import Music.Pitch.Common.Interval
+import Music.Pitch.Common.Number
+import Music.Pitch.Common.Semitones
+import Music.Pitch.Common.Types
+import Music.Pitch.Literal
 
 sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
 
@@ -69,21 +66,21 @@ sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
 doubleSharp = 2
 
 -- | The sharp accidental.
-sharp       = 1
+sharp = 1
 
 -- | The natural accidental.
-natural     = 0
+natural = 0
 
 -- | The flat accidental.
-flat        = -1
+flat = -1
 
 -- | The double flat accidental.
-doubleFlat  = -2
+doubleFlat = -2
 
 isNatural, isSharpened, isFlattened :: Accidental -> Bool
 
 -- | Returns whether this is a natural accidental.
-isNatural   = (== 0)
+isNatural = (== 0)
 
 -- | Returns whether this is a sharp, double sharp etc.
 isSharpened = (> 0)
@@ -91,13 +88,12 @@ isSharpened = (> 0)
 -- | Returns whether this is a flat, double flat etc.
 isFlattened = (< 0)
 
-
 -- | Returns whether this is a standard accidental, i.e.
 --   either a double flat, flat, natural, sharp or double sharp.
 isStandardAccidental :: Accidental -> Bool
 isStandardAccidental a = abs a < 2
--- was: isStandard
 
+-- was: isStandard
 
 -- instance IsPitch Pitch where
 --   fromPitch (PitchL (c, a, o)) =
@@ -107,11 +103,15 @@ isStandardAccidental a = abs a < 2
 --       qual (Just n) = round n
 
 instance Enum Pitch where
-  toEnum = Pitch . (\a b -> (fromIntegral a, fromIntegral b)^.interval') 0 . fromIntegral
+
+  toEnum = Pitch . (\a b -> (fromIntegral a, fromIntegral b) ^. interval') 0 . fromIntegral
+
   fromEnum = fromIntegral . pred . number . (.-. middleC)
 
 instance Alterable Pitch where
+
   sharpen (Pitch a) = Pitch (augment a)
+
   flatten (Pitch a) = Pitch (diminish a)
 
 instance Show Pitch where
@@ -119,37 +119,43 @@ instance Show Pitch where
     where
       showName = fmap Char.toLower . show
       showOctave n
-        | n > 0     = replicate (fromIntegral n) '\''
+        | n > 0 = replicate (fromIntegral n) '\''
         | otherwise = replicate (negate $ fromIntegral n) '_'
       showAccidental n
-        | n > 0     = replicate (fromIntegral n) 's'
+        | n > 0 = replicate (fromIntegral n) 's'
         | otherwise = replicate (negate $ fromIntegral n) 'b'
 
 instance Num Pitch where
+
   Pitch a + Pitch b = Pitch (a + b)
-  negate (Pitch a)  = Pitch (negate a)
-  abs (Pitch a)     = Pitch (abs a)
-  (*)           = error  "Music.Pitch.Common.Pitch: no overloading for (*)"
-  signum        = error "Music.Pitch.Common.Pitch: no overloading for signum"
-  fromInteger   = toEnum . fromInteger
+
+  negate (Pitch a) = Pitch (negate a)
+
+  abs (Pitch a) = Pitch (abs a)
+
+  (*) = error "Music.Pitch.Common.Pitch: no overloading for (*)"
+
+  signum = error "Music.Pitch.Common.Pitch: no overloading for signum"
+
+  fromInteger = toEnum . fromInteger
 
 instance ToJSON Pitch where
   toJSON = toJSON . (.-. middleC)
 
 instance IsPitch Int where
-    fromPitch x = fromIntegral (fromPitch x :: Integer)
+  fromPitch x = fromIntegral (fromPitch x :: Integer)
 
 instance IsPitch Word where
-    fromPitch x = fromIntegral (fromPitch x :: Integer)
+  fromPitch x = fromIntegral (fromPitch x :: Integer)
 
 instance IsPitch Float where
-    fromPitch x = realToFrac (fromPitch x :: Double)
+  fromPitch x = realToFrac (fromPitch x :: Double)
 
 instance HasResolution a => IsPitch (Fixed a) where
-    fromPitch x = realToFrac (fromPitch x :: Double)
+  fromPitch x = realToFrac (fromPitch x :: Double)
 
 instance Integral a => IsPitch (Ratio a) where
-    fromPitch x = realToFrac (fromPitch x :: Double)
+  fromPitch x = realToFrac (fromPitch x :: Double)
 
 instance IsPitch Double where
   fromPitch p = fromIntegral . semitones $ (p .-. c)
@@ -168,9 +174,8 @@ instance FromJSON Pitch where
 
 -- |
 -- Creates a pitch from name accidental.
---
 mkPitch :: Name -> Accidental -> Pitch
-mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (fromIntegral acc) (fromEnum name)
+mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b) ^. interval') (fromIntegral acc) (fromEnum name)
 
 -- TODO name
 -- TODO use this to define pitch-class equivalence
@@ -187,12 +192,11 @@ toFirstOctave p = case (name p, accidental p) of
 -- @
 -- semitones ('a\'' .-. 'c')
 -- @
---
 name :: Pitch -> Name
 name x
-  | i == 7           = toEnum 0 -- Arises for flat C etc.
+  | i == 7 = toEnum 0 -- Arises for flat C etc.
   | 0 <= i && i <= 6 = toEnum i
-  | otherwise        = error $ "Pitch.name: Bad value " ++ show i
+  | otherwise = error $ "Pitch.name: Bad value " ++ show i
   where
     i = (fromIntegral . pred . number . simple . getPitch) x
 
@@ -200,11 +204,10 @@ name x
 -- Returns the accidental of a pitch.
 --
 -- See also 'octaves', and 'steps' and 'semitones'.
---
 accidental :: Pitch -> Accidental
 accidental = fromIntegral . intervalDiff . simple . getPitch
   where
-    intervalDiff = view (from interval'._1)
+    intervalDiff = view (from interval' . _1)
 
 upChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
 upChromaticP origin n = relative origin $ (_alteration +~ n)

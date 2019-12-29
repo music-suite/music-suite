@@ -1,5 +1,7 @@
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -10,13 +12,11 @@
 -- Portability : portable
 --
 -- Provides overloaded pitch and interval literals.
---
--------------------------------------------------------------------------------------
+module Music.Pitch.Literal
+  ( module Music.Pitch.Literal.Pitch,
+    module Music.Pitch.Literal.Interval,
+  )
+where
 
-module Music.Pitch.Literal (
-        module Music.Pitch.Literal.Pitch,
-        module Music.Pitch.Literal.Interval
-  ) where
-
-import Music.Pitch.Literal.Pitch
 import Music.Pitch.Literal.Interval
+import Music.Pitch.Literal.Pitch

@@ -1,19 +1,20 @@
-
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TypeFamilies               #-}
+-------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
+
 -- |
 -- Copyright   : (c) Hans Hoglund 2012-2014
 --
@@ -24,56 +25,51 @@
 -- Portability : non-portable (TF,GNTD)
 --
 -- Provides meta-data attribution for composer, lyricist etc.
---
--------------------------------------------------------------------------------------
+module Music.Score.Meta.Attribution
+  ( -- * Attribution type
+    Attribution,
+    attribution,
+    attributions,
+    getAttribution,
 
-module Music.Score.Meta.Attribution (
+    -- ** Adding attribution to scores
+    attribute,
+    attributeDuring,
+    composer,
+    composerDuring,
+    lyricist,
+    lyricistDuring,
+    arranger,
+    arrangerDuring,
 
-        -- * Attribution type
-        Attribution,
-        attribution,
-        attributions,
-        getAttribution,
+    -- ** Extracting attribution
+    withAttribution,
+    withAttribution',
+  )
+where
 
-        -- ** Adding attribution to scores
-        attribute,
-        attributeDuring,
-        composer,
-        composerDuring,
-        lyricist,
-        lyricistDuring,
-        arranger,
-        arrangerDuring,
-
-        -- ** Extracting attribution
-        withAttribution,
-        withAttribution',
-  ) where
-
-import           Control.Lens              (view)
-import           Control.Monad.Plus
-import           Data.Foldable             (Foldable)
-import qualified Data.Foldable             as F
-import qualified Data.List                 as List
-import           Data.Map                  (Map)
-import qualified Data.Map                  as Map
-import           Data.Maybe
-import           Data.Semigroup
-import           Data.Set                  (Set)
-import qualified Data.Set                  as Set
-import           Data.String
-import           Data.Traversable          (Traversable)
-import qualified Data.Traversable          as T
-import           Data.Typeable
-
-import           Music.Pitch.Literal
-import           Music.Score.Meta
-import           Music.Score.Part
-import           Music.Score.Pitch
-import           Music.Score.Internal.Util
-import           Music.Time
-import           Music.Time.Reactive
-
+import Control.Lens (view)
+import Control.Monad.Plus
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as F
+import qualified Data.List as List
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Maybe
+import Data.Semigroup
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.String
+import Data.Traversable (Traversable)
+import qualified Data.Traversable as T
+import Data.Typeable
+import Music.Pitch.Literal
+import Music.Score.Internal.Util
+import Music.Score.Meta
+import Music.Score.Part
+import Music.Score.Pitch
+import Music.Time
+import Music.Time.Reactive
 
 -- |
 -- An attributions is a simple map from keys to values used to gather information such as
@@ -96,12 +92,11 @@ import           Music.Time.Reactive
 -- > year
 -- > copyright
 -- > information
---
 newtype Attribution = Attribution (Map String (Option (Last String)))
-    deriving (Typeable, Monoid, Semigroup)
+  deriving (Typeable, Monoid, Semigroup)
 
 instance Show Attribution where
-    show (Attribution a) = "attributions " ++ show (Map.toList (fmap (fromJust . fmap getLast . getOption) $ a))
+  show (Attribution a) = "attributions " ++ show (Map.toList (fmap (fromJust . fmap getLast . getOption) $ a))
 
 -- | Make an 'Attribution' from keys and values.
 attributions :: [(String, String)] -> Attribution
@@ -114,7 +109,6 @@ attribution k v = Attribution . fmap (Option . Just . Last) $ Map.singleton k v
 -- | Extract an the given attributions value. Semantic function.
 getAttribution :: Attribution -> String -> Maybe String
 getAttribution (Attribution a) k = join $ k `Map.lookup` (fmap (fmap getLast . getOption) $ a)
-
 
 -- | Set the given attribution in the given score.
 attribute :: (HasMeta a, HasPosition a) => Attribution -> a -> a
