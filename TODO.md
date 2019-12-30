@@ -18,6 +18,8 @@
   - Later: Maybe use approximate image diffs (comparing the entire rendering pipeline to musicxml2ly on the original XML files) instead
   - Run as part of CI builds
 
+- Fix compiler warnings
+
 - Get rid of all CPP
 
 - Port issues from the old tracker

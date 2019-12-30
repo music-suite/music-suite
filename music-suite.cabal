@@ -222,6 +222,15 @@ library
                         TypeOperators,
                         ViewPatterns,
                         OverloadedStrings
+  ghc-options:
+    -Wall
+    -Wcompat
+    -Wincomplete-record-updates
+    -Wincomplete-uni-patterns
+    -Wredundant-constraints
+    -Wno-unused-top-binds
+    -Wno-name-shadowing
+    -- TODO: -Werror
 
 test-suite "music-suite-test-umts"
     build-depends:      base,
