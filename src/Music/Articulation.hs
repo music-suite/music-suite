@@ -45,14 +45,14 @@ type Articulation = (Average Double, Average Double)
         - Articulation has to do with *emphasis*: alteration of properties leads
           to more or less emphasis (compare Laws of Perception)
       - Most common:
-        - Time
+        - Time (common: stacatissimo, staccato, portato, legato)
           - "articulation ratio", i.e. duration/IOI
           - "relative IOI", i.e. prolongation of a note
-        - Dynamics
+        - Dynamics (common: accent, marcato)
           - fp/sharp attacks etc (i.e. in wind, string)
           - Relative level (i.e. in piano music)
         - Pitch
-          - Vibrato, local adjustments (i.e. brighter notes)
+          - Vibrato, local adjustments (i.e. brighter notes), "slide-in"
         - Timbre
           - Dryness/spectral richness (i.e. more overtones)
 

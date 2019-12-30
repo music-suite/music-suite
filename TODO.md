@@ -164,6 +164,7 @@
 - Fix lawless (HasPosition (Score a)) by adding default/empty position to class
 
 - Proper scale/chord type supporting all common use-cases
+  - Making (infinite) octave-repeating scales from pitches/intervals
 
 - Get rid of duplication in music-suite.cabal
 
