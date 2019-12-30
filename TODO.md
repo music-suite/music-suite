@@ -81,14 +81,29 @@
         [Vln], Vln solo -> Vln solo -- no overlap
       ```
 
+- Regression test:
+  - Quantization
+  - Voice separation
+
 - Finish/document new export code ("Export2")
   - Make Export2 support:
     - Colored noteheads?
-    - Playing techinques: pizz, trem, harmonics, slide/gliss
+        To be added to Asp1.
+        Could be part of pitch type.
+    - Playing techinques: pizz, trem, harmonics, gliss
+      - Gliss should be added to Asp1 (part of pitch).
+      - Tremolo to be added to Asp1 (new layer: LocalTime or similar)
+      - Everything else to be added to part as a "technique" component
+        - Note "tremolo as fast as possible" could be seen as a pure coloristic effects: fit in part
     - Expression text (e.g. "dolce")
     - Lyrics
-    - Free-form text
+    - Free-form text?
     - The stuff in Score.Meta (e.g. key/time signatures)
+      - A lot of this is already handled, needs proper testing
+    - More advanced articulation?
+      - Loudness dimension
+      - Time dimension
+      - Pitch dimension (e.g. bends)
   - Add unit tests for all export formats/backends:
     - MIDI
     - Standard notation (common part of Lilypond/MusicXML)
