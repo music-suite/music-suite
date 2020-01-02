@@ -8,7 +8,7 @@ See <http://music-suite.github.io>.
 
 ## Set up build environment
 
-Install Nix (2.3.1 is tested, others might work).
+Install Nix (2.3.1 is tested).
 
 Enter build environment using:
 
@@ -42,3 +42,5 @@ First build, then:
 ```
 
 The output appears in `docs/build`. You can point a HTTP server to this directory.
+
+
