@@ -1,0 +1,101 @@
+
+
+2pi fl
+1pi 2fl
+3fl
+
+ebcl cl bascl
+ebcl 2cl
+3cl
+
+3bsn
+2bsn cbsn
+
+HIGH configuration:
+  (2pi 2ebkl) (fl cl 2ob) (ca 3bsn)
+
+
+------
+Tot winds: 12+12?
+
+--------
+
+How to divide best?
+4 soli altri (a1-8)
+4 soli altri (a1-8)
+4 soli altri
+
+Max without soli:
+12+10+8+6+4 = 40 (div a 2/3/4/1-4 or 14 soli, 2/3/1-4 or 14 soli, 2/3/1-4 or 10 soli, 2/3/1-4 or 8 soli 2/3/1-4 or 6 soli)
+
+
+Compare
+  Atmospheres: 4444 6441 (31 winds) pno str[14+14+10+10+8 = 56]
+  Metastasis (rev): [12+12+8+8+6 = 46]
+
+
+
+Aurora    1111 etc?
+BCMG      1111 0000 3  2  2  2  2  3p pno
+LContO    ?
+LondSinf  1111 1111 ?????
+NewLondO  ?
+OAE       3233 2230 8  7  5  5  2  t p 2kb lute recorder
+
+ASMF      2222 4210 8  8  5  5  2  t pno
+Birm Roy Ballet
+Brigt phi 2222 4321 etc
+Britten s 2222 2201 8  8  4  4  2  hrp pno hrpsc
+EngNaBall
+SCO       2222 3200 5  4  3  2  2   t? p?
+SymfCymr  2222 2200 etc             t
+SBSinf    2222 2200 5  5  4  4  2   t/p
+
+Bath phil 2222 4231 5  5  5  4  2  t 3p hrp
+CoLSinf   2222 4231 5  5  4  4  2  hrp pno org/hrpsc
+Bornemout 2231 4231 10 10 5  5  5  t 1p hrp
+LChambO   2222 4331  ? 
+Ulster    2320 4231 12 9  7  6  4   t p
+HalleOrch 4444 5331 14 12 8  8  6  t 3p hrp
+...
+CoBirmih  3331 4331 12 12 10 8  8  t p hrp
+ScottishO 2222 4231 10 7  6  5  3   t p hrp
+ENO       3423 4221 10 9  8  5  5  t 2p hrp
+WNO       2222 4231 8  8  6  5  3   t
+RLiverpP  3322 5331 14 12 8  9  6   t 2p
+...
+Philh     3333 5321 12 11 8  9  6   ??
+LSO:      3333 4331 19 16 12 10 8  t ...?
+LPO:      3333 4331 13 10 8  8  5  t ...?
+BBCPO:    3333 4331 15 13 11 9  6  t 3p hrp (Manchester)
+BBCSO:    4343 6431 15 15 12 9  5  t 3p hrp (London)
+BBCSSO:   3333 4331 12 10 8  6  4  t 2p     (Glasgow)
+BBCNOW:   4444 5331 12 10 10 8  6  t 2p hrp (Cardiff)
+BBCCO:    2222 4331 8  8  7  6  4  t 20 hrp (London)
+RPO:      2222 4331 10 10 8  6  4  t 2p     (London)
+
+Dalasinf  2222 2200 4  4  3  2  2  t
+Helsingb  2222 4231 10 8  7  6  5  t  
+Gävle     ?
+UKO       2222 2200 7  6  5  4  2  t p
+...
+KFilh     5444 7441 18 17 12 13 8  t 3p hrp pno (2pic,1eb,1bcl,cbsn)
+Hovk      4444 7651 18 14 10 8  8  2t 4p hrp
+Radiosymf 3444 6341 17 15 10 11 8  t 3p hrp  
+Göteborg  4444 6441 16 16 13 12 9  t 4p pno/cel hrp
+MSO       4433 5341 10 10 8  8  6  t 2p hrp
+Norrk     3333 ??
+
+NZ
+NZSO      2322 3421 14 13 11 9  7  2t 3p hrp
+Melbo     4444 5431 15 12 9  9  7  t  3p hrp
+
+CapeTowPO 2232 4331 6  6  6 ?
+
+NYP       5555 5441 14 12 12 12 8 2t 3p pno hrpsc org
+BerlP     5555 7551 23 20 16 14 11 2t 4p hrp
+
+
+TODO check out Birm cont group commissions
+Email all orch about jobs as music librarian/reh pianist whatever
+SBSinf emerging comp

@@ -1,0 +1,354 @@
+{-# LANGUAGE TypeFamilies, ConstraintKinds, FlexibleContexts, FlexibleInstances, TypeFamilies, DeriveFunctor,
+  GeneralizedNewtypeDeriving, ViewPatterns, MultiParamTypeClasses, RankNTypes, ConstraintKinds, StandaloneDeriving,
+  DeriveTraversable, DeriveDataTypeable, TupleSections #-}
+
+{-
+Voice combinators (create basic voices, combine, transform)
+  Monoid
+  Time and pitch tranformations
+  Notably: split/chunks/mconcat
+  
+  Infinite voice
+  Sequence, parallel and random
+    Maybe create a big tree of "alternative" and traverse in various ways to get seq/par structure
+-}
+import Music.Prelude
+import Util
+import Data.AffineSpace
+import Music.Time.Internal.Util (rotate)
+import Data.Tree(Tree)
+import qualified Data.Tree
+import qualified Data.List
+
+
+
+
+
+
+
+
+-- Some melodies
+fiskeskar :: Melody
+fiskeskar = [((1/8),Just d)^.note,((1/8),Just a)^.note,((1/8),Just a)^.note,((1/8),Just g)^.note,((1/8),Just a)^.note,((1/8),Just f)^.note,((1/4),Just e)^.note,((1/8),Just e)^.note,((1/8),Just g)^.note,((1/8),Just a)^.note,((1/8),Just f)^.note,((1/8),Just e)^.note,((1/16),Just e)^.note,((1/16),Just f)^.note,((1/4),Just d)^.note,((1/8),Just d)^.note,((1/8),Just a)^.note,((1/8),Just a)^.note,((1/8),Just g)^.note,((1/8),Just a)^.note,((1/8),Just f)^.note,((1/4),Just e)^.note,((1/8),Just e)^.note,((1/8),Just g)^.note,((1/8),Just a)^.note,((1/8),Just f)^.note,((1/8),Just e)^.note,((1/16),Just e)^.note,((1/16),Just f)^.note,((1/4),Just d)^.note,((1/8),Just f)^.note,((1/8),Just d)^.note,((1/8),Just e)^.note,((1/8),Just f)^.note,((1/8),Just g)^.note,((1/8),Just f)^.note,((1/4),Just e)^.note,((1/8),Just f)^.note,((1/8),Just d)^.note,((1/8),Just e)^.note,((1/8),Just f)^.note,((1/8),Just g)^.note,((1/32),Just g)^.note,((1/32),Just f)^.note,((1/32),Just g)^.note,((1/32),Just f)^.note,((1/4),Just e)^.note,((1/8),Just e)^.note,((1/8),Just g)^.note,((1/8),Just a)^.note,((1/8),Just f)^.note,((1/4),Just e)^.note,((1/4),Just d)^.note]^.voice
+
+silent :: Melody
+silent     = [((3/16),Just g)^.note,((1/16),Just a)^.note,((1/8),Just g)^.note,((3/8),Just e)^.note,((3/16),Just g)^.note,((1/16),Just a)^.note,((1/8),Just g)^.note,((3/8),Just e)^.note,((1/4),Just d')^.note,((1/8),Just d')^.note,((3/8),Just b)^.note,((1/4),Just c')^.note,((1/8),Just c')^.note,((3/8),Just g)^.note,((1/4),Just a)^.note,((1/8),Just a)^.note,((3/16),Just c')^.note,((1/16),Just b)^.note,((1/8),Just a)^.note,((3/16),Just g)^.note,((1/16),Just a)^.note,((1/8),Just g)^.note,((3/8),Just e)^.note,((1/4),Just a)^.note,((1/8),Just a)^.note,((3/16),Just c')^.note,((1/16),Just b)^.note,((1/8),Just a)^.note,((3/16),Just g)^.note,((1/16),Just a)^.note,((1/8),Just g)^.note,((3/8),Just e)^.note,((1/4),Just d')^.note,((1/8),Just d')^.note,((3/16),Just f')^.note,((1/16),Just d')^.note,((1/8),Just b)^.note,((3/8),Just c')^.note,((3/8),Just e')^.note,((3/16),Just c')^.note,((1/16),Just g)^.note,((1/8),Just e)^.note,((3/16),Just g)^.note,((1/16),Just f)^.note,((1/8),Just d)^.note,((3/4),Just c)^.note]^.voice
+silentBass = [((3/4),Just c_)^.note,((3/4),Just c_)^.note,((3/4),Just g_)^.note,((3/4),Just c_)^.note,((3/4),Just f__)^.note,((3/4),Just c_)^.note,((3/4),Just f__)^.note,((3/4),Just c_)^.note,((3/4),Just g_)^.note,((3/4),Just c_)^.note,((3/4),Just g_)^.note,((3/4),Just c_)^.note]^.voice
+
+-- Just repeats with a strange offset (as we begin and end on tonic)
+-- Example of why melodies as sequences doesn't really make sense (we can't just move the pickup to the position of the final tonic)
+fs1 = beginning 20 $ mconcat $ stitchTogether fiskeskar
+-- Split off part at beginning, transform before stitching back together 
+fs2 = (rev $ beginning 2.5 $ fiskeskar) `stitch` fiskeskar
+-- Expand chunks, gradually increasing
+fs3 = simplifyPitches $ beginning 40 $ mconcat $ zipWith (\n -> over pitches (relative d  (^*n))) [1..] (chunks 4.25 $ cycleV fiskeskar)
+fs4 = simplifyPitches $ beginning 40 $ mconcat $ zipWith (\n -> over pitches (relative a  (^*n))) [1..] (chunks 4.25 $ cycleV fiskeskar)
+fs5 = simplifyPitches $ beginning 40 $ mconcat $ zipWith (\n -> over pitches (relative f  (^*n))) [1..] (chunks 4.25 $ cycleV fiskeskar)
+fs6 = simplifyPitches $ beginning 40 $ mconcat $ zipWith (\n -> over pitches (relative fs (^*n))) [1..] (chunks 4.25 $ cycleV fiskeskar)
+
+-- Expand into itself at various points
+fs7  = expandInto (4+3/8) fiskeskar (fiskeskar)
+fs8  = expandInto (5+2/4) fiskeskar (fiskeskar|/3) -- mad!
+fs9  = expandInto (2+1/4) fiskeskar (between (2/4) (5/4) fiskeskar)
+fs10 = expandInto (5+1/4) fiskeskar (between (0/4) (3/4) fiskeskar)
+
+{-
+All rather chaotic! Stitch is interesting, but not that intuitive!
+How does join happen? Pitches are aligned, but durations are not
+-}
+
+
+interleave :: Voice a -> Voice a -> Voice a
+interleave v1 v2 = ((v1^.notes) `merge` (v2^.notes))^.voice
+  where
+    merge [] xs = []
+    merge xs [] = []
+    merge (x:xs) (y:ys) = x:y:merge xs ys
+
+ausfaltung :: Interval -> Melody -> Melody
+ausfaltung i v = interleave v (up i v)
+
+-- Uses of stichTogether
+v1 :: Melody
+v1 = 
+  simplifyPitches $ 
+  (!! 4) $ -- generations grow quickly
+  (stitchTogether $ octavesDown 2 [c,d,fs,b_,cs]^.voice |/4)
+
+
+
+{-
+TODO generalization of Pattern, new Scales/Chords and the harmonic Fields found in previous sketches
+-}
+type Points a = ([Diff a], a, Diff a, [Diff a])
+
+
+
+{-
+>>> [_M2,_M2,_M2]^.vectorsPoints  (c::Pitch)
+[d,e,fs]
+
+>>> [d,e,fs]^.pointsVectors (c::Pitch)
+[_M2,_M2,_M2]
+
+>>> [1,2,2]^.vectorsPoints  (2::Time)
+[3,5,7]
+
+>>> [3,5,7]^.pointsVectors (2::Time)
+[1,2,2]
+-}
+vectorsPoints :: AffineSpace a => a -> Iso [Diff a] [Diff a] [a] [a]
+vectorsPoints o = iso (points o) (vectors o)
+  where
+    points o  = tail . offsetPoints o
+    vectors o = tail . pointOffsets o
+    
+pointsVectors :: AffineSpace a => a -> Iso [a] [a] [Diff a] [Diff a]
+pointsVectors o = from (vectorsPoints o)
+
+
+type Mel2 = (Pitch, Voice Interval)
+
+-- http://people.bu.edu/jyust/mcm09_revised.pdf
+
+-- Trees!
+-- Notion of "stress" points that can be moved around or affixed to a bar hierharchy
+type MelT = Tree Interval
+
+{-
+Represent melody as a tree of aligned voices phrases/groups etc.
+When "rendered", each phrase is aligned to some grid, offset to avoid overlaps.
+I.e. it becomes possible to cut out notes.
+  (More general operations here: cut notes with stretch etc)
+-}
+-- (((((eb d) d)
+--    ((eb d) d))
+--    ((eb d) (d bb2)3))
+--  ((((bb a) g)
+--    ((g  f) eb))
+--   (((eb d) (c c2)3))))
+-- ==>
+-- (((((-m2)P1)m2
+--    ((-m2)P1))m2
+--    ((-m2)P1(M6)))P1
+--  ((((-m2)-M2)P1
+--    ((-M2)-m2))P1
+--   (((-m2)-M2(P1)))))
+-- 
+-- 
+-- (1   (2 3))
+-- ==>
+--    1 1 (1)   
+-- 
+-- ((0 1) (2 3))
+-- ==>
+--   (1) 1 (1)
+-- 
+-- 
+-- ((1 2) (((3 4) (5 6)) (7 (8 9))))
+--  ( (1) 1 ( ((1)1(1))1     (1(1))))  
+-- renderMelT :: MelT -> Melody
+-- renderMelT ()
+
+
+--  Schenkerian stuff 
+
+-- Contours
+
+-- Overlapping scales (i.e. diatonic/chromatic) with inflictions
+-- TODO proper scale support!
+
+-- Phrases, question/answer etc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Melody as vector
+melodicAmbitus :: (HasPitch' a, PitchOf a ~ Pitch) => Voice a -> Ambitus Pitch
+melodicAmbitus ys = 
+  let xs = fmap (^.pitch) ys in case (headV xs, lastV xs) of
+  (Just a, Just b) -> (a `min` b, a `max` b)^.ambitus
+  _                -> error "melodicAmbitus: Empty voice"
+
+
+
+
+
+
+
+
+
+
+-- Les Miz encodings
+
+-- 3. The Docks
+llRh1  = [2,2,     2,2,     1,1,1,1, 4]^.rhythm |/ 16
+llRh2  = [1,1,1,1, 1,1,1,1, 1,1,1,1, 4]^.rhythm |/ 16
+llPat1 = [0,5,0,5,0,1,2,4,5]
+llPat2 = [0,1,2,3,0,1,2,3,0,1,2,4,5]
+llPitches1 = [c',bb,a,  g, g,g]
+llPitches2 = [c',bb,ab, g, f,eb]
+llPitches3 = [c',db',c',db',c',db']
+
+-- Repeat twice
+ll :: Melody
+ll =  mconcat $ fmap (\(a,b,c) -> mel a b c) [
+  (llRh1, llPat1, llPitches1), --  I smell women / Smell 'em in the air
+  (llRh2, llPat2, llPitches1), --  Think I'll drop my anchor / In that harbor over there
+  (llRh1, llPat1, llPitches2), --  Lovely ladies / Smell 'em through the smoke
+  (llRh2, llPat2, llPitches2), --  Seven months at sea / And now I'm hungry for a poke
+  (llRh1, llPat1, llPitches3)  --  Even stokers need a little stoke!
+  ]
+
+
+
+
+
+
+
+
+
+
+
+stitchTogether :: (HasPitches' a, Transposable a) => Voice a -> [Voice a]
+stitchTogether = Data.List.unfoldr (\v -> let v2 = stitch v v in Just (v2,v2))
+{-
+stitchItselfN :: Transposable a => Int -> Voice a -> Voice a
+stitchItselfN 0 v = v
+stitchItselfN n v = stitch v (stitchItselfN (n - 1) v)
+
+-- TODO blocks
+stitchItself :: Transposable a => Voice a -> Voice a
+stitchItself v = stitch v (stitchItself v)
+-}
+
+-- subj = [c,eb,d,g,fs]
+
+
+
+{-
+  Note: stitch should really have the constraint (HasPitch' a, Transposable a) and be implemented using ^.pitch instead of ^?!pitches
+  Not practical as long as [] is in StandardNote!
+-}
+-- Join two voices together so that one note overlaps. The second voice is transposed to achieve this.
+-- Duration is taken from the first voice.
+stitch :: (HasPitches' a, Transposable a) => Voice a -> Voice a -> Voice a
+stitch = stitchWith (\a b -> [a]^.voice)
+
+-- Join two voices together so that one note overlaps. The second voice is transposed to achieve this.
+-- Duration is taken from the second voice.
+stitchLast :: (HasPitches' a, Transposable a) => Voice a -> Voice a -> Voice a
+stitchLast = stitchWith (\a b -> [b]^.voice)
+
+stitchWith :: (HasPitches' a, Transposable a) => (Note a -> Note a -> Voice a) -> Voice a -> Voice a -> Voice a
+stitchWith f a b
+  | nullOf notes a = b
+  | nullOf notes b = a
+  -- | otherwise      = a <> up diff b
+  | otherwise      = initV a <> f (lastV a) (headV (up diff b)) <> tailV (up diff b)
+  where
+    headV = (^?!notes._head)
+    lastV = (^?!notes._last)
+    initV = over notes init
+    tailV = over notes tail
+    lastPitch a = lastV a^?!pitches
+    headPitch b = headV b^?!pitches
+    diff = (lastPitch a .-. headPitch b)
+
+
+
+type VS a = [Placed (Voice a)]
+
+-- Render each phrase at the first time that does not overlap with a previous phrase
+-- renderVS :: [Time] -> VS a -> Placed (Voice a)
+
+-- renderVS _ []      = mempty
+-- renderVS [] _      = mempty
+-- renderVS (t:ts) (v:vs) = delay (t.-.0) v
+
+{-
+  Functor, Applicative, Monad
+  Monoid
+  Transformable
+  HasDuration
+  TODO HasMeta
+-}
+nullV           :: Voice a -> Bool
+headV           :: Voice a -> Maybe a             -- Bad?
+lastV           :: Voice a -> Maybe a             -- Bad?
+cycleV          :: Voice a -> Voice a
+takeV           :: Int     -> Voice a -> Voice a
+dropV           :: Int     -> Voice a -> Voice a
+rotateR         :: Int     -> Rhythm  -> Rhythm
+melodyAsRhythm  :: Lens' Melody Rhythm
+
+cycleV          = over notes cycle
+nullV           = nullOf notes
+headV           = preview (notes._head.from note._2)
+lastV           = preview (notes._last.from note._2)
+takeV n         = over notes (take n)
+dropV n         = over notes (drop n)
+rotateR n       = over notes (rotate n)
+setR            = zipVoiceWith' (const) (flip const)
+getR            = fmap (const ())
+melodyAsRhythm  = lens getR (flip setR)
+
+rotateRhythm :: Int -> Melody -> Melody
+rotateRhythm n = over melodyAsRhythm (rotateR n)
+
+transposeSingleNote :: Int -> Interval -> Melody -> Melody
+transposeSingleNote n i = over (notes . element n) (up i)
+
+
+{-
+Surprisingly effective for a "stupid" combinator.
+-}
+addLeading :: Interval -> Melody -> Melody
+addLeading i = over notes (>>= \n -> [0.75*|n,0.25*|down i n])
+addLeadingD :: Int -> Melody -> Melody
+addLeadingD i = over notes (>>= \n -> [0.75*|n,0.25*|downDiatonic c (fromIntegral i) n])
+
+
+{-
+  Variants of intersperse/intercalate (related to phrasewise model as per above)
+-}
+
+-- Expand notes/adjacent notes to longer sequences
+expandInto :: (HasPitches' a, Transposable a, Splittable a, Transformable a) => Duration -> Voice a -> Voice a -> Voice a
+expandInto d v w = va `stitch` w `stitch` vb
+  where
+    (va,vb) = split d v
+
+between a b = beginning (b-a) . ending a
+
+instance Inspectable [Aligned Melody] where
+  inspectableToMusic = inspectableToMusic . ucat . fmap (preserveMeta $ asScore . fmap fromPitch''. mcatMaybes . renderAlignedVoice)
+
+-- TODO actually add these
+instance HasMeta a => HasMeta (Aligned a) where
+  meta = undefined
+instance HasMeta (Voice a) where
+  meta = undefined
+
+
+
+
+mel :: Rhythm -> [Int] -> [Pitch] -> Melody
+mel rh ns ps = fmap (\(i,_) -> Just $ ps!!(ns!!i)) $ withIndexV rh
+-- TODO
+
+withIndexV :: Voice a -> Voice (Int, a)
+withIndexV v = fmap swap $ zipVoiceNoScale v (fmap pure [0..]^.voice)
+  where swap (a,b) = (b,a)

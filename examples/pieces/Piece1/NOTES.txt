@@ -1,0 +1,27 @@
+
+The idea of creating a "block" score of (hc, register, instruments, dynamic) and rendering into the full score
+
+The 48 chords:
+- Deconstruction of the full PC-set/CoF
+- Movement around CF/cantus firmus
+- Moving from HC1 (c) to HC2 (f#) via HC3 and 4 (eb and a respectively)
+- Eventually *removed* and replaced with something using overlapping (i.e. the block score)
+- Note: I use serial techinique as a way to guide the general harmonic/textural development of the piece
+  (partly in counterpoint with dynamics and dramatic structure), *not* as a way of generating gestures etc
+  (instead these are generated locally based on harmonic *context*).
+
+Harmonic *traction*:
+  The *line* (the 48 "chords")
+  Overlapping local harmonic contexts (fade in and out)
+  Both *illustrated* by harmony, melody and texture and *dramatized* by dynamics, timbre, spacing etc
+
+
+Melody/motives:
+- Motivic passages extracted from Guido's Hexachord (also used in FSI) (particulartly: [f,e] and [d,f,a,c,e,g])
+- Truncation and inversions/voicings of the hexachords
+- Register and dynamics (like Atmospheres but using overlapping diatonic rather than chromatic clusters!)
+- The slow melodies are used only at structurally significant moments
+  - All other melodies are short and texture-like/micropolyphinic
+  - In a way the slow cantabile passages "emerge" from the texture (a la Harmonilehre)
+  - We could be talking about 3 levels of melody: The structural/chordal melody, actual slow melody and fast melody (texture)
+

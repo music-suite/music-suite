@@ -1,0 +1,22 @@
+Ways to create tension:
+  "Strange" stackings:
+    Small intervals at bottom ()
+    Small interval groups separated by wide leaps (anti registral unity)
+  Inversly, normal chord rules:
+    Few (P8^*n) compounds (usually 1 or 2)
+    
+    Larger intervals at bottom (harmonic balance)
+    Dissonances separated by octaves (why?)
+    Even size of intervals - equivalently even distribution through register (registral unity)
+
+
+TODO
+
+  Think *even more* about register etc
+
+  Think about the notes in the form score (I think in general overlapping form-level notes should not overlap in register)
+    In a sense we divide up the horizontal-vertical (i.e. pitch-time) space and assign a hexachord to each field!
+  Figure out whether the 4 sections should really be of equal length!
+  
+    
+  Break away from the nested recursive scheme (but still use it somehow!)

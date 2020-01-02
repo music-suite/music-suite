@@ -1,0 +1,28 @@
+
+Vivier-inspired
+
+Use 1,2 or 3 melodic lines (possibly DIFFERENT SECTIONS/VERSIONS OF A SINGLE INFINITE LINE)
+  (Generate line using self-similar techniques of Hudak)
+  Phrasing?
+  "Text?", (conceptually)
+
+For each line, somehow generate chords/blocks (similar to the modulation technique used by Vivier),
+so each line becomes a homophonic block.
+
+These lines are distributed through the orchestra.
+  Determine orchestration or line-material first?
+  Ways to orchestrate such blocks (homogenous/unhomogenous ensembles)
+  Some lines may not be heard all the time (maybe generate like that and "edit" out stuff, eventuallly
+  making it fit the orchestra)
+
+POSSIBLY VERY GOOD IDEA
+  Thin out to a single line
+  Then make them move more independently, in pitch and time
+  Eventually they become a new polyphonic structure
+  
+  Conversely, turn polyphony into homophony by gradually making pitch and time relations the same
+
+  Relation to Weaving/Threads?
+
+Orch: 3333 6431 timp 2perc str[12/10/8/6/4]
+

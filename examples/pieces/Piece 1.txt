@@ -1,0 +1,11 @@
+XXXXXX Old, see comments in hs file
+
+Large-scale dissonance
+Built on simple textures (stacked fifths, fourths, thirds etc)
+Local dissonance, phased
+  Phasing: Harmonic frequency ("harmonic rhythm") and phase
+Fade-out, fade in
+Overlap
+
+Scales moving in various directions
+Randomized textures (interpolate 2-3 different harmonic notes in addition to non-chord notes)

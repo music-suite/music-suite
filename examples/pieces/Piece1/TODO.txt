@@ -1,0 +1,245 @@
+
+DONE
+  Write down suggestions for more textures (see below)
+  Choose do's and dont's
+  Harvest previous study sketches
+  Work in large chunks (1 hour or so) before seriously reviewing results
+
+  Refer to last printout comments
+  Try to develop horn textures (adding more brass or winds as needed)
+  Adapt strings, add winds, percussion and soloistic textures
+
+  Check (briefly) general ranges, registers etc (the 4th and 6th-based voicings are underused, currenly it's mostly
+  octave variations of the 2nd/3rd/5th-based voicings)
+  Consider rewriting one of the climaxes (i.e. last winds) using the 4th-based voicing
+  String drones backing that climax could also use 4th voicing!
+  Registers in the middle and climactic sections are wierd (strings/winds too close, missing tenor etc)
+
+
+  Prolong string tremolo over drones
+  Add more WW and trumpet stuff earlier
+    We are losing the fast figure on p38 etc. Add soft DT WWs here!
+  Timpani track (from paper sketch)
+  Glsp/vib/hrp track from paper sketch
+    Retain first and 151 more or less as is
+  Fix slow wind pattern at end
+  3) Do something about the strings (no more 3-quaver patterns!) before climax
+    Gradually add longer quaver patterns (and more notes/manually add leading notes?)
+      In 2,3,5,7 etc
+    ?
+  4) Vary the drone durations in lower strings (see new abstraction above!)
+  Considering reintroducing fast phasing in beginning
+
+
+TODO (PRE EXPORT) (Sun)
+  1) Work on agile winds (esp first introduction)
+    OK Interleave with the scale DTed pattern?
+    Interplay with percussion
+    Do not use the same frequency etc all the time
+  2) Horns
+    
+    XXX THe high chords in middle -> trumpets/clarinets
+    Use chords/drones elsewhere!
+    
+    Slow down close to climax
+    Use 3-based phasing somewhere
+
+  Misc fine tuning of registers and patterns
+
+  X m286 harp pattern
+  X m471 harp gliss or similar to mask switch
+  X pp 65-70 trombone 3 doubles bass line (obl)
+  X pp 71onw: doubleBass doubles tuba line
+  X pp 84-84 sustain strings (some), gradually remove (with "dim"): 1) trumpets 2) horns
+  X Misspelled gb/gs in final subjects
+  X Harp bisb notation!
+  X Percussion and timp from paper sketch
+    Perc: From 281 onwards double VI and II in 2 sus cym (i.e. follow phasing)
+  X Add timpani echo rolls (see paper sketch)
+  X Add mallets note in vibra part!
+  X Add "bells up" on horn climax!
+ 
+
+TODO (POST EXPORT, Mon?, Tues)
+
+  Horn and woodwind patterns!
+
+
+
+  Bass line in main subject wrong: should be [e f a g]
+    This forms a good repeating pattern with the upper part!
+      [f e c d e f a g] etc.
+      Use this to vary the main subjects (every other or so)
+        4.5
+        6
+        5
+        5
+      Use as basis for variations of perc. pattern!
+  
+  Replace 6-part voicings at K and similar passages:
+    [v1.1 v1.2 v2.1 v2.2 vla vc1] vc2 doubling basses (alternating with vc1)
+
+  Revise ending again!
+    Possibly: move string final resolution earlier, fade out after 6-8 bars (as written),
+    then BRING BACK once or twice before fading out altogether.
+  
+  m261 Brass chord pitches
+  Fix string registers!
+    Notes out of range in string chords leading up to climax
+
+  Many db bass drones too high!
+  Add more stuff for harp and other pluck/perc
+    At end, slow phased crotale rising figures + harp slow chords (even cymbals?)
+    More perc and harp and end
+    Improve harp gliss etc at end
+
+
+  pp 14-18 CAREFULLY double bassoon with DTd trombone/tuba
+  pp 36-38 CAREFULLY add strindberg pattern and/or tremolo
+  pp 70-71 trumpets and tromb1 plays a pseudo-theme entry in a different key (based on the long chord
+    they subsequently play at p72)
+  pp 62-64 trumpets trombone 1 doubles horns
+
+  At end when winds enter, make strings and horns more similar!
+  Double-check breathing/stamina issues in all winds (esp horns!)
+  Strings balanace issues
+  Articulation etc
+  Dynamics phasing in strings, beginning (and elsewhere, i.e. brass chords at end)
+
+  Generally make things more smooth and idiomatic
+  Strings p19: In melody remove f, and prolong first c (eventually stopping on pedal d). Sim. for the bass line.
+
+  Finalize reh marks.
+  Mail players to check parts!
+  Looking through the parts:
+    Flute: Jack
+    Oboe/CA: ?
+    Clarinet: <the player>
+    Bassoon: ?
+    Trumpet: Chloe
+    Trombone: ?
+    Tuba: <guy who i asked for way to basement>
+    Perc: Dori
+    Harp: Caolan
+    Violin/Viola: Luiza (Gaia?)
+    Cello: ?
+    Bass: <girl in conducting, Emil, Ville?>
+
+  Follow CHECKLIST.txt
+
+----------
+----------
+
+
+  TODO TODO TODO harvest previous sketches even more!
+
+  TODO TODO TODO more woodwind stuff!
+  GOOD Woodwind: Long notes (occassionally!)
+  GOOD Woodwind: In general, just phased melodic patterns (simple fast, longer (unfolding) fast, and slow)
+  MAYBE Woodwind: repeated notes, possibly with phasing (a la Holst: Planets 2nd movement)
+  MAYBE Woodwind: simple phased alteration of notes in a chord (quasi-micropolyphonic)
+
+  TODO TODO Using horns more slowly (less phasing, more drones)
+  
+  MAYBE Brass 2- or 3-note trem (trumpet/flug, horns, a la Petrouchka opening etc)
+  MAYBE Brass repeated notes (in 2,3 etc) simple and effective
+  MAYBE Brass repeated notes with longer swells incorporated
+  MAYBE Brass long note moving into repeated pattern with cresc
+  MAYBE Brass accented two-note figure (a la Reminisceners)
+  MAYBE Brass long stopped horn pedals (in 2 and 4!)
+  GOOD Brass rhytmised horn pedals (off-beat rhythm, a la Thaikovsky: Pathetique 4th movement)
+  MAYBE Brass long open horn pedals
+    MAYBE Brass Faking 6 horns
+      Bassoons (mid-high)
+      Flutes
+      Clarinets (not above _p, mid)
+      Trombones, brass chorus (ppp)
+      Trombone with bucket mute
+      Flugels (obviously!)
+      High reg tuba
+  MAYBE Brass Repeated articulated notes in trombs  
+  GOOD  Brass Horns cuivre (unis?), very bright line (trumpet-like sound)
+  GOOD  Brass Horns with other sounds in the middle (playing drones rather than phasing)
+  GOOD  Brass Stopped horns (single phrases or muted?)      
+  MAYBE Brass Experiment with more varied horn textures in general!
+    Which?
+
+  MAYBE Timp rolls (soft)
+  MAYBE Timp Low (i.e. resonant muffled timpani sounds!)
+  MAYBE Timp stacc, high, dry (close to edge?)
+  MAYBE Timp repeated two-note pattern with cresc/dim (fixed interval, i.e. fourths, tritone, fifth etc)
+  MAYBE Timp roll
+  MAYBE Timp single accented (dry/resonant)
+
+  GOOD  Strings traditional accomp figures (arpeggio, alberti, partitioned arpegio a la Bach C Major prel)
+    See also Wagner: Valkyrie/Tristan
+  MAYBE Strings rising scales (possibly landing on higher note a la Tristan overture)
+  MAYBE Strings accentuated chords (triple stops etc)
+  OK    Strings phasing (a la opening drones), using (1/3)-based rhythms rather than (1/2)
+  MAYBE Strings trem sul tasto (see Adams: Shaker Loops)
+  MAYBE Strings trem sul pont (see Adams: Shaker Loops)
+  MAYBE Strings harmonics
+  MAYBE Strings half-harm trill (as in Cirque Glacier)
+  MAYBE Strings muted?
+  MAYBE String trills (simple!) - needs to be mixed with something to avoid banality
+  GOOD  Strings 2- or 3-note repeating patterns with leading/chromatic (small) notes inserted
+  GOOD  Strings repeating pattern over all strings (3 or 4 notes!) a la Strindberg (also in Ravel, Wagner etc)
+
+
+  Trumpets?
+  Trombones?
+  Flute,Oboe,CA,Clarinet,Bassoon
+  
+  More elaborate woodwind patterns (longer variants of the "agile" structure)
+    How?
+      Add longer notes
+      Start *varying* register
+      Do something closer to classical dove-tailing
+  
+    
+  What more for harp? Look at some repertory scores (Wagner, Strav, Debussy, Ravel)
+  Occassionally replace horn texture by:
+    Harp chords 
+    Harp+strings(?)
+    Similar texture in clarinets (plus what?)
+    Harp+celesta texture
+    Low flutes+high oboe/cl (very soft!)
+    Strings mixed with something?
+    Trombones (careful! only accompanying something relatively loud!)
+    Flugels?
+  
+------
+  
+Chamber (soloists vs single section etc) vs. partial tutti (two sections or more) vs. full tutti (all sections!)
+  Beginning (string tutti) and first subject presentation at m66
+  Reduce until wind presentation in m151
+  Also quite soloistic around 200 (but never that much! The basic idea of the piece is sound mass)
+  Tutti-style passages: leading up to m321 and onwards
+
+Very important to leave breaks in all texture (for breathing/phrasing and also to make it transparent so that
+the *other* textures can shine through!)
+
+Woodwind registers!
+  Note: In this piece we don't use a lot of doubling instruments. Hence
+    Homogenous   close spaced chords -> easy
+    Homogenous   wide  space  chords -> difficult
+    Heterogenous wide  space  chords -> easy
+    
+  
+  Flute: Airy low, rich mid, piercing hi (as in classical orchestration)
+  Clarinet: Chalmeaux, weak middle, clarino (swith to BCl to use lower clarino?)
+  Ob: Rough low, bright mid, soft high
+  E-Hn: *Dark* low reg, singing high
+
+Keep it simple for this piece!
+  The harmonic traction and themes etc is sophisticated enough
+  No need to make a "sound" piece
+In constrast to much new music, this piece has expressive harmony! Use that!
+Go back to "sound" and "continousness" later!
+  
+
+
+------
+
+
+

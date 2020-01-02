@@ -1,0 +1,47 @@
+
+"Choreographic" string section – lots of divisi, relatively few notes
+        Similar thing with woodwind/horns vs trumpets etc?
+Piece based on "reactions" in different sections, using an FRP network or similar underneath
+
+Floaters (in all sections at various points in the piece...)
+  This is a more pure "drone/texture piece" than Interludes
+  Important:  
+    A "floater" is [Aligned Note]
+    Consider a more general [Aligned Voice]
+      This is essentially back to the canons of Passages/Interludes, but with the better understanding of larger voices,
+      and the sonic possibilities of a large orchestra.
+    Use more doublings, i.e.
+      3(II=afl,III=picc),3(II=Ob d'Amore, III=CA)3(II=bcl,III=bcl),3(3=Cbsn)
+      43(all doubling Flug,III=picc tpt)3(III=bastbn)1
+      2perc [] timp str
+    
+  Ex:
+    4 vln solo
+    8 vln solo
+    4 vc (on specific string?) solo
+    4 vla solo
+    4 vln solo trem.
+    vln a4
+    str a4, 8, 16, 32, 64 etc
+    
+    fl, afl, baskl
+    afl, ob d'amore (or CA)
+    
+    
+
+Formalized thematic transformations (start with something simple, a very small Category "the category of melodic transformations" etc)
+"Tiles" idea (piano pieces?)
+Orchestral piece based on string section glissandi (phased/alternating durations and registers and "resting points") througout
+        Winds and percussion for sustained notes, colour and rhythmizations (microtonal to follow the free pitch of the strings?)
+
+*Actual* soundscape for orchestra (with recorded sound, i.e. 4-8 speakers *around* the orchestra) using prerecorded sound together w. orch
+Simple, not too syncronized approach (i.e. no clicks)
+
+*Loops* for orchestra/large ensemble. 15 or so parts, everyone has an *individual* part played in some tempo (can be looped). For each performance,
+conductor decides everyone's starting point and duration of the piece (include suggestions!). Do it so that wraparound (in all parts) is *long*, say over 24 hours.
+
+Piece for string section placed around audience (too non-standard for now)
+
+Hocket/stereo idea again. Esp string sections I and II playing hockets, augmented by specially placed perc etc.
+
+

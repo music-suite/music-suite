@@ -1,0 +1,16 @@
+
+836  mkdir private/studies/RepFuctVariation
+837  mkdir private/studies/CrawfordSeeger
+838  cp -R private/studies/_template/ private/studies/SustainPunctuated
+839  cp -R private/studies/_template/ private/studies/TreeOfRhythms
+840  cp -R private/studies/_template/ private/studies/Floaters
+841  cp -R private/studies/_template/ private/studies/Ostinati
+842  cp -R private/studies/_template/ private/studies/FixedPitches
+843  cp -R private/studies/_template/ private/studies/Z_FloatersScales
+844  cp -R private/studies/_template/ private/studies/Z_Shepherd
+845  cp -R private/studies/_template/ private/studies/Z_HarmonicElaborations
+846  cp -R private/studies/_template/ private/studies/Z_ChordToTexture
+847  cp -R private/studies/_template/ private/studies/Z_MelodicContour
+848  cp -R private/studies/_template/ private/studies/Z_Klangfarben
+849  cp -R private/studies/_template/ private/studies/Z_ChordSpaces
+850  cp -R private/studies/_template/ private/studies/Z_SampleReactive

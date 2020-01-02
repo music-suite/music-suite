@@ -1,0 +1,1 @@
+>>> openMusicXml $ quantizeScore (1/8) $ pcat $ zipWith delay (iterate (+ 10) 0) $ fmap (\x -> renderFloater $ makeFloater (randShape|*x) (replicate 11 c^.chord)) [2,3,3.5,4.5]
