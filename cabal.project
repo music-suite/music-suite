@@ -2,6 +2,7 @@ packages: ./music-suite.cabal
           ./doc-tools/transf/transf.cabal
 
 reject-unconstrained-dependencies: all
+index-state: 2020-01-02T22:29:42Z
 
 package music-suite
   optimization: False
