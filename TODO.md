@@ -191,3 +191,14 @@
   - When moving around in a single file (with/without a 'main' function) any hovered expression should
     trigger a preview (visual/audial) in an editor window, as if the expression had been applied to
     defaultMain (see above).
+
+- For each part we want to know:
+        - Classification:
+            - Type: (i.e. woodwind)
+            - Family: (i.e. saxophone)
+            - Range: (i.e. tenor)
+        - Range (i.e. [c_:e'])
+        - Transposition:
+            sounding = written .+^ transp
+        - Suggested clefs
+

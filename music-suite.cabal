@@ -357,3 +357,10 @@ executable "music-suite-examples-voices"
                         music-suite
     hs-source-dirs:     examples
     main-is:            voices.hs
+
+-- executable "music-suite-examples-winds-phrasing"
+--     build-depends:      base,
+--                         lens,
+--                         music-suite
+--     hs-source-dirs:     examples/WindsPhrasing
+--     main-is:            Score.hs
