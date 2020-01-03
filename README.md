@@ -27,20 +27,22 @@ cabal build
 
 ### Test everything
 
-First build, then:
-
 ```
 cabal test
 ```
 
 ### Generate documentation
 
-First build, then:
+#### Reference docs
 
 ```
-(cd docs && make)
+cabal build transf && (cd docs && make)
 ```
 
 The output appears in `docs/build`. You can point a HTTP server to this directory.
 
+#### API docs
 
+```
+cabal haddock
+```
