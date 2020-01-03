@@ -3,6 +3,8 @@
 
 **We use this file instead of an issue tracker, for now**
 
+- [ ] Secure Hackage
+
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
 
