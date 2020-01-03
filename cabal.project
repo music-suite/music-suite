@@ -1,19 +1,14 @@
-packages: ./music-suite.cabal
-          ./doc-tools/transf/transf.cabal
 
 reject-unconstrained-dependencies: all
-index-state: 2020-01-02T22:29:42Z
+index-state: 2020-01-02T22:25:18Z
 
-repository hackage.haskell.org
-  url: http://hackage.haskell.org/
-  -- secure: True
-  -- root-keys:
-  --   -- From https://github.com/haskell-infra/hackage-root-keys/commit/13adf8c888bd0624e68d9f9ec8e29e07499b6df4
-  --   0a5c7ea47cd1b15f01f5f51a33adda7e655bc0f0b0615baa8e271f4c3351e21d
-  --   1ea9ba32c526d1cc91ab5e5bd364ec5e9e8cb67179a471872f6e26f0ae773d42
-  --   51f0161b906011b52c6613376b1ae937670da69322113a246a09f807c62f6921
-  --   fe331502606802feac15e514d9b9ea83fee8b6ffef71335479a2e68d84adc6b0
-  -- key-threshold: 3
+
+-- No repos listed, so hackage.haskell.org with the default -- root keys is used.
+--
+-- See https://github.com/haskell/cabal/blob/a07ef25229217a289433087c241d89e1c08e65e0/cabal-install/Distribution/Client/Config.hs#L654
+
+packages: ./music-suite.cabal
+          ./doc-tools/transf/transf.cabal
 
 package music-suite
   optimization: False
