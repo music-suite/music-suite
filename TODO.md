@@ -3,8 +3,6 @@
 
 **We use this file instead of an issue tracker, for now**
 
-- [ ] Secure Hackage
-
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
 
@@ -58,30 +56,28 @@
 - Replace (Option :. Last) with Maybe now that Semigroup is a superclass of Monoid
 
 - Improve rcat: do not use Enum
-  - Instead define something akin to (HasPosition, Transformable), or Diagram's Juxtaposable:
+  - First: Make Common.Part use NonEmpty division list for Subpart (part I is the default for all instruments)
+  - This is a utility combinator. It should:
+    - Be a binary operator with a foldr variant (ract, </>)
+    - Work on anything with parts
+    - Only affect the subpart component. It does not matter what it does to the instrument component.
+    - If it binds to the left, it should set the part of the RHS to the max part of the LHS + 1
+      - Flipping RHS and LHS above would also work
+      - Examples:
+          - (c </> c </> c)
+              = (set part piano1 c <> set part piano2 c <> set part piano3 c)
+              as piano1 is the default part (mempty)
+                type Subpart Common.Part = NonEmptyList Integer
+                maxSubpart {piano1} = [1]
+                incrSubpart [1] = [2]
 
-  ```
-  data Includes :: Type -> Type -> Type where
-    C :: c -> c -> Includes c
-  class Disamb a where
-    disamb :: Set a -> a -> a
-    -- not (disamb rs x `overlapsWithMemberOf` rs)
-    -- not (x `overlapsWithMemberOf` rs) -> (disamb rs x = x)
-    -- where
-    --   x `overlapsWithMemberOf` rs = forall (r `elem` rs) . not (x `C` r) && not (r `C` x)
-  ```
+    - Note the meaning of maxSubpart for Common.Subpart (~ [Integer]):
+        maxSubpart = pure . maximum . fmap head
+    - In other words, the part component must allow the operations
+        maxSubpart :: Set a -> Subpart a
+        incrSubpart :: Subpart a -> Subpart a
+        subpart :: Lens' a (Subpart a)
 
-  - [ ] !! Get rid of divisor component in Division, just mark everything as "I", "I.1" etc.
-    - Trivial poset (prefix on strings)
-    - How many players are allocated for each note depend on context
-    - Backends may forbid/reallocate concurrent notes of overlapping parts (e.g. "Sop 1" and "Sop 1.1")
-    - The `</>` operator makes sure no overlapping notes have overlapping parts. For example:
-      ```
-        [Tpt, Cl] Tbn -> Tbn
-        [Pno I], Pno I -> Pno II
-        [Vln I, Vla], Vln I.1 -> Vln II
-        [Vln], Vln solo -> Vln solo -- no overlap
-      ```
 
 - Regression test:
   - Quantization
