@@ -433,7 +433,7 @@ TODO chord tremolo
 @[slide]
 @[glissando]
 
-```music+haskell
+```TODOmusic+haskell
 glissando $ scat [c,d]|/2
 ```
 
@@ -441,7 +441,7 @@ glissando $ scat [c,d]|/2
 
 Use the @[harmonic] function:
 
-```music+haskell
+```TODOmusic+haskell
 (harmonic 1 $ c|/2)
     </>
 (harmonic 2 $ c|/2)
@@ -460,7 +460,7 @@ TODO
 
 @[text]
 
-```music+haskell
+```TODOmusic+haskell
 text "pizz." $ c|/2
 ```
 
@@ -487,9 +487,19 @@ TODO how part separation works w.r.t. division etc
 
 Similar to chords, there is usually no need to handle rests explicitly.
 
-TODO add explicit rests etc
+TODO show with examples how rests are added from delay/transform etc.
+
+It is possible to add rests explicitly as follows.
 
 @[mcatMaybes]
+
+```TODOmusic+haskell
+times 4 (accentAll g|*2 |> rest |> scat [d,d]|/2)|/8
+```
+
+You can also remove rests explicitly:
+
+TODO explain how this works.
 
 ```music+haskell
 mcatMaybes $ times 4 (accentAll g|*2 |> rest |> scat [d,d]|/2)|/8
@@ -855,7 +865,7 @@ Annotations are simply textual values attached to a specific section of the scor
 Annotations are invisible by default. To show annotations in the generated output, use
 @[showAnnotations].
 
-```music+haskell
+```TODOmusic+haskell
 showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 ```
 
