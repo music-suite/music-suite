@@ -60,7 +60,8 @@
 
 - Improve rcat: do not use Enum
   - [X] Make Common.Part use NonEmpty division list for Subpart (part I is the default for all instruments)
-  - [ ] New type and impl of rcat and </>
+  - [X] New type and impl of rcat and </>
+  - [ ] Document, as per below:
     - This is a utility combinator. It should:
       - Be a binary operator with a foldr variant (ract, </>)
       - Work on anything with parts
