@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, InstanceSigs #-}
 
 module Music.Parts.Part
   ( Part,
@@ -154,15 +154,20 @@ distinctFrom (Part s1 i1 sp1) (Part s2 i2 sp2) = s1 /= s2 || i1 /= i2 || noneSub
 _solo :: Lens' Part Solo
 _solo f (Part s i u) = fmap (\s -> Part s i u) $ f s
 
-subpart :: Lens' Part Subpart
-subpart f (Part s i u) = fmap (\u -> Part s i u) $ f u
+
+instance HasSubpart Part where
+  type SubpartOf Part = Subpart
+  subpart :: Lens' Part Subpart
+  subpart f (Part s i u) = fmap (\u -> Part s i u) $ f u
+
+
 
 instrument :: Lens' Part Instrument
 instrument f (Part s i u) = fmap (\i -> Part s i u) $ f i
 
 -- | Divide a part into @n@ subparts.
 divide :: Int -> Part -> [Part]
-divide n (Part solo instr subp) = fmap (\x -> Part solo instr (subp <> Subpart [x])) $ divisions n
+divide n (Part solo instr subp) = fmap (\x -> Part solo instr (subp <> Subpart (pure x))) $ divisions n
 
 solo instr = Part Solo instr def
 

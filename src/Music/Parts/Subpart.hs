@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 -- | A type to represent (recursive) subdivisions of a part.
 module Music.Parts.Subpart
   ( Subpart (..),
@@ -5,14 +6,17 @@ module Music.Parts.Subpart
     properlyContainsSubpart,
     isSubpartOf,
     isProperSubpartOf,
+    BoundIncr(..),
+    HasSubpart(..),
   )
 where
 
 import Control.Applicative
-import Control.Lens (Rewrapped (..), Wrapped (..), iso, toListOf)
+import Control.Lens (Lens', Rewrapped (..), Wrapped (..), iso, toListOf)
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson
 import Data.Default
+import Data.Set (Set)
 import qualified Data.List
 import Data.Maybe
 import Data.Semigroup
@@ -20,7 +24,42 @@ import Data.Semigroup.Option.Instances
 import Data.Traversable (traverse)
 import Data.Typeable
 import Music.Parts.Division
+import Data.List.NonEmpty(NonEmpty)
+import qualified Data.List.NonEmpty as NonEmpty
 import Text.Numeral.Roman (toRoman)
+
+
+
+{-
+    - Note the meaning of maxSubpart for Common.Subpart (~ [Integer]):
+        maxSubpart = pure . maximum . fmap head
+    - In other words, the part component must allow the operations
+        maxSubpart :: Set a -> Subpart a
+        incrSubpart :: Subpart a -> Subpart a
+        subpart :: Lens' a (Subpart a)
+-}
+-- TODO laws
+-- TODO rename? (SubpartOf -> Subpart, Subpart -> DivisionList/Voice)
+class BoundIncr (SubpartOf a) => HasSubpart a where
+  type SubpartOf a
+  subpart :: Lens' a (SubpartOf a)
+
+-- TODO name
+-- TODO laws?
+class BoundIncr a where
+  maximum' :: NonEmpty a -> a
+  increment' :: a -> a
+
+instance BoundIncr Integer where
+  maximum' = maximum
+  increment' = succ
+
+instance BoundIncr Subpart where
+  maximum' = maximum . fmap firstComp
+  increment' (Subpart xs) = Subpart (fmap succ xs)
+
+firstComp :: Subpart -> Subpart
+firstComp (Subpart xs) = Subpart (pure $ NonEmpty.head xs)
 
 -- |
 -- A subpart is a potentially infinite sequence of divisions, each typically
@@ -28,9 +67,13 @@ import Text.Numeral.Roman (toRoman)
 --
 -- The empty subpart (also known as 'mempty') represents all the players of the group,
 -- or in the context of 'Part', all players of the given instrument.
-newtype Subpart = Subpart [Division]
-  deriving (Eq, Ord, Default, Semigroup, Monoid)
+newtype Subpart = Subpart (NonEmpty Division)
+  deriving (Eq, Ord, Semigroup)
 
+instance Default Subpart where
+  def = Subpart (pure 1)
+
+{-
 instance Wrapped Subpart where
 
   type Unwrapped Subpart = [Division]
@@ -40,6 +83,7 @@ instance Wrapped Subpart where
       getSubpart (Subpart x) = x
 
 instance Rewrapped Subpart Subpart
+-}
 
 instance ToJSON Subpart where
   toJSON (Subpart xs) = toJSON xs
@@ -60,8 +104,7 @@ or similar
 instance Show Subpart where
   show (Subpart ps) = Data.List.intercalate "." $ mapFR showDivisionR showDivision $ ps
     where
-      mapFR f g [] = []
-      mapFR f g (x : xs) = f x : fmap g xs
+      mapFR f g (x NonEmpty.:| xs) = f x : fmap g xs
 
 containsSubpart :: Subpart -> Subpart -> Bool
 containsSubpart = flip isSubpartOf
@@ -70,7 +113,7 @@ properlyContainsSubpart :: Subpart -> Subpart -> Bool
 properlyContainsSubpart = flip isProperSubpartOf
 
 isSubpartOf :: Subpart -> Subpart -> Bool
-Subpart x `isSubpartOf` Subpart y = y `Data.List.isPrefixOf` x
+Subpart x `isSubpartOf` Subpart y = NonEmpty.toList y `NonEmpty.isPrefixOf` x
 
 isProperSubpartOf :: Subpart -> Subpart -> Bool
 x `isProperSubpartOf` y = x `isSubpartOf` y && x /= y

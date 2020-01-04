@@ -6,7 +6,8 @@
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
 
-- Add more examples (e.g from Piece1, Piece2 etc)
+- [X] Add more examples (e.g from Piece1, Piece2 etc)
+  - [ ] Make them all compile (add to cabal file!)
 
 - Finish UMTS (Unofficial MusicXML Test Suite)
   - We have manual Haskell encodings of UMTS data which we used to test the export pipeline from StandardNotation.Work to Lilypond/XML
@@ -18,7 +19,7 @@
   - Later: Maybe use approximate image diffs (comparing the entire rendering pipeline to musicxml2ly on the original XML files) instead
   - Run as part of CI builds
 
-- Fix compiler warnings
+- Fix all compiler warnings
 
 - Get rid of all CPP
 
@@ -56,27 +57,28 @@
 - Replace (Option :. Last) with Maybe now that Semigroup is a superclass of Monoid
 
 - Improve rcat: do not use Enum
-  - First: Make Common.Part use NonEmpty division list for Subpart (part I is the default for all instruments)
-  - This is a utility combinator. It should:
-    - Be a binary operator with a foldr variant (ract, </>)
-    - Work on anything with parts
-    - Only affect the subpart component. It does not matter what it does to the instrument component.
-    - If it binds to the left, it should set the part of the RHS to the max part of the LHS + 1
-      - Flipping RHS and LHS above would also work
-      - Examples:
-          - (c </> c </> c)
-              = (set part piano1 c <> set part piano2 c <> set part piano3 c)
-              as piano1 is the default part (mempty)
-                type Subpart Common.Part = NonEmptyList Integer
-                maxSubpart {piano1} = [1]
-                incrSubpart [1] = [2]
+  - [X] Make Common.Part use NonEmpty division list for Subpart (part I is the default for all instruments)
+  - [ ] New type and impl of rcat and </>
+    - This is a utility combinator. It should:
+      - Be a binary operator with a foldr variant (ract, </>)
+      - Work on anything with parts
+      - Only affect the subpart component. It does not matter what it does to the instrument component.
+      - If it binds to the left, it should set the part of the RHS to the max part of the LHS + 1
+        - Flipping RHS and LHS above would also work
+        - Examples:
+            - (c </> c </> c)
+                = (set part piano1 c <> set part piano2 c <> set part piano3 c)
+                as piano1 is the default part (mempty)
+                  type Subpart Common.Part = NonEmptyList Integer
+                  maxSubpart {piano1} = [1]
+                  incrSubpart [1] = [2]
 
-    - Note the meaning of maxSubpart for Common.Subpart (~ [Integer]):
-        maxSubpart = pure . maximum . fmap head
-    - In other words, the part component must allow the operations
-        maxSubpart :: Set a -> Subpart a
-        incrSubpart :: Subpart a -> Subpart a
-        subpart :: Lens' a (Subpart a)
+      - Note the meaning of maxSubpart for Common.Subpart (~ [Integer]):
+          maxSubpart = pure . maximum . fmap head
+      - In other words, the part component must allow the operations
+          maxSubpart :: Set a -> Subpart a
+          incrSubpart :: Subpart a -> Subpart a
+          subpart :: Lens' a (Subpart a)
 
 
 - Regression test:
@@ -177,6 +179,8 @@
 
 - Proper scale/chord type supporting all common use-cases
   - Making (infinite) octave-repeating scales from pitches/intervals
+
+- Get rid of Prelude.StandardNote et al, use Asp1 (renamed!) instead
 
 - Get rid of duplication in music-suite.cabal
 

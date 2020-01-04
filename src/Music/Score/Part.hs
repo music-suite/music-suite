@@ -344,14 +344,9 @@ rcat = List.foldr (</>) mempty
 -- We want it to behave similarly to |>, e.g. to "move" the second operand so that
 -- it does not overlap with the first, before composing with <>.
 --
--- What does this move mean? We can describe a move as a function:
+-- What does this mean?
 --
---    [Part] -> Part -> Part
 --
--- Such that
---    forall xs x . move xs x `notElem` xs
--- and
---    forall xs x . move xs x == x iff (x `notElem` xs)
 --
 -- TODO
 --  * Break out the above into a separate class, instances for Integer and Common.Part
