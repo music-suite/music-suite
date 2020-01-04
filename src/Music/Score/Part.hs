@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Provides functions for manipulating parts.
 module Music.Score.Part
@@ -56,6 +57,7 @@ import Music.Score.Internal.Util (through)
 import Music.Score.Ties
 import Music.Time
 import Music.Time.Internal.Transform
+import Music.Parts.Subpart (BoundIncr(..), HasSubpart(..))
 
 -- |
 -- Parts type.
@@ -331,51 +333,23 @@ instance (HasParts a b) => HasParts (Voice a) (Voice b) where
       . _Wrapped -- this needed?
       . whilstLD parts
 
-infixr 6 </>
+infixl 6 </>
 
 -- |
 -- Concatenate parts.
-rcat :: (HasParts' a, Enum (Part a)) => [Score a] -> Score a
-rcat = List.foldr (</>) mempty
+rcat :: (Monoid a, HasParts' a, HasSubpart (Part a)) => [a] -> a
+rcat = List.foldl (</>) mempty
 
 -- |
--- TODO semantics of this?
---
--- We want it to behave similarly to |>, e.g. to "move" the second operand so that
--- it does not overlap with the first, before composing with <>.
---
--- What does this mean?
---
---
---
--- TODO
---  * Break out the above into a separate class, instances for Integer and Common.Part
---  * Stop using Enum
---  * Basic benchmark to make sure this is efficient for simple cases (e.g. doing lots
---    of composition in the 'default' part, e.g. Piano). Note for now these operators
---    are mainly useful for toy examples/testing.
-(</>) :: (HasParts' a, Enum (Part a)) => Score a -> Score a -> Score a
-a </> b = a <> moveParts offset b
+-- TODO document semantics, see TODO.md
+(</>) :: forall a . (Semigroup a, HasParts' a, HasSubpart (Part a)) => a -> a -> a
+a </> b = a <> next b
   where
-    -- max voice in a + 1
-    offset = succ $ maximum' 0 $ fmap fromEnum $ toListOf parts a
-    moveParts :: (Integral b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
-    moveParts x = parts %~ (successor x)
-    {-
-            -- |
-            -- Move top-part to the specific voice (other parts follow).
-            --
-            moveToPart :: (Enum b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
-            moveToPart v = moveParts (fromEnum v)
-    -}
+    subparts :: [SubpartOf (Part a)]
+    subparts = toListOf (parts . subpart) a
 
-    iterating :: (a -> a) -> (a -> a) -> Int -> a -> a
-    iterating f g n
-      | n < 0 = f . iterating f g (n + 1)
-      | n == 0 = id
-      | n > 0 = g . iterating f g (n - 1)
-      | otherwise = error "Impossible"
-    successor :: (Integral b, Enum a) => b -> a -> a
-    successor n = iterating pred succ (fromIntegral n)
-    maximum' :: (Ord a, Foldable t) => a -> t a -> a
-    maximum' z = option z getMax . foldMap (Option . Just . Max)
+    next :: a -> a
+    next = case subparts of
+      []       -> id
+      (x : xs) -> set (parts . subpart) (increment' (maximum' (x :| xs)))
+
