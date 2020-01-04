@@ -1,5 +1,5 @@
 
-
+SHELL=/usr/bin/env bash
 
 CSS	       =$(shell pwd)/templates/pandoc-bootstrap-template/template.css
 PANDOC_TEMPLATE=$(shell pwd)/templates/pandoc-bootstrap-template/template.html
