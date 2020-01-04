@@ -1,6 +1,6 @@
 
 {-# LANGUAGE
-    GeneralizedNewtypeDeriving #-}
+    GeneralizedNewtypeDeriving, QuasiQuotes #-}
 
 module Text.Transf (
         -- * Basic types
@@ -71,6 +71,8 @@ import qualified Data.List          as List
 import qualified Data.Char          as Char
 import qualified Data.Traversable   as Traversable
 -- import qualified Music.Prelude.Basic as Music
+import NeatInterpolation (text)
+import qualified Data.Text
 
 -- |
 -- A single line of text.
@@ -349,33 +351,50 @@ instance Default MusicOpts where def = MusicOpts {
 -- The expression must return a value of type @Score Note@. The "Music.Prelude.Basic"
 -- module is implicitly imported.
 --
+--
+--
+
+indent :: Int -> String -> String
+indent n = unlines . fmap (replicate n ' ' <>) . lines
+
+-- TODO actually write the Ly/XML/Midi files here with new 'defaultMain' instead
+-- of (pure ()). See TODO.md
+header :: String
+header = Data.Text.unpack [text|
+  -- WARNING! AUTO GENERATED! DO NOT EDIT!
+  --------------------------------------------------------------------------------
+  -- Header added by transf begins here
+  --------------------------------------------------------------------------------
+  {-# LANGUAGE TypeApplications #-}
+  {- cabal:
+      build-depends: base, music-suite
+  -}
+  import Music.Prelude
+  import Music.Score.Export2.StandardNotation (Asp1)
+  main :: IO ()
+  main = const (pure ()) $ id @(Score Asp1) $
+  --------------------------------------------------------------------------------
+  -- Header added by transf ends here
+  --------------------------------------------------------------------------------
+
+  --------------------------------------------------------------------------------
+  {-# LINE 1 "TODOgeneratedMusicFileHere" #-}
+  |]
+
 musicT :: MusicOpts -> Transform
 musicT opts = transform "music" $ \input -> do
     let prel = prelude opts
     let name = showHex (abs $ hash input) ""
 
-    {-
-    music <- eval input :: Context (Music.Score Music.BasicNote)
-
-    liftIO $ let handler ex = hPutStrLn stderr $ "transf (music+ly): " ++ show (ex::SomeException) ++ "\n" ++ show input
-        in handler `handle` (Music.writeLilypond (name++".ly") music)
-
-    liftIO $ Music.writeMidi (name++".mid") music
-    -- liftIO $ void $ readProcess "timidity" ["-Ow", name++".mid"] ""
--}
-
     -- Use music2... wrappers rather than hint
     -- Note that the use of readProcess will propagate error messages from stderr
     -- (including both parse and type errors).
 
-    currentFile <- liftIO $ tryMaybe $ Prelude.readFile (name++".music")
-    unless (currentFile == Just input) $ do
-      writeFile (name++".hs") input
-      -- liftIO $ void $ readProcess "music2ly"   ["--prelude", prel, "-o", name++".ly",  name++".music"] ""
-      -- liftIO $ void $ readProcess "music2midi" ["--prelude", prel, "-o", name++".mid", name++".music"] ""
-
-      -- TODO add defaultMain, using ${prel}
-      liftIO $ void $ readProcess "runhaskell" [name++".hs", "--", "-o", name++".ly"] ""
+    -- TODO add defaultMain, using ${prel}
+    -- TODO do not run Lilypond if not necessary (e.g. cache hash, including hash of transf, after successful run)
+    do
+      writeFile (name++".hs") (header <> indent 2 input)
+      liftIO $ void $ readProcess "cabal" ["exec", "runhaskell", name++".hs", "--", "-o", name++".ly"] ""
 
       let makeLy = do
           (exit, out, err) <- readProcessWithExitCode "lilypond" [
