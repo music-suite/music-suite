@@ -265,7 +265,7 @@ c__ |> c_ |> c |> c' |> c''
 Sharps and flats can be added by the functions @[sharp] and @[flat], which are written
 *postfix* thanks to some overloading magic.
 
-```music+haskell
+```TODOmusic+haskell
 c sharp |> d |> e flat
 ```
 

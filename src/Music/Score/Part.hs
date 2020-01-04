@@ -333,7 +333,7 @@ instance (HasParts a b) => HasParts (Voice a) (Voice b) where
       . _Wrapped -- this needed?
       . whilstLD parts
 
-infixl 6 </>
+infixl 5 </>
 
 -- |
 -- Concatenate parts.

@@ -365,7 +365,7 @@ header = Data.Text.unpack [text|
   --------------------------------------------------------------------------------
   -- Header added by transf begins here
   --------------------------------------------------------------------------------
-  {-# LANGUAGE TypeApplications #-}
+  {-# LANGUAGE TypeApplications, FlexibleContexts #-}
   {- cabal:
       build-depends: base, music-suite
   -}
