@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+
 -- | A type to represent (recursive) subdivisions of a part.
 module Music.Parts.Subpart
   ( Subpart (..),
@@ -6,8 +7,8 @@ module Music.Parts.Subpart
     properlyContainsSubpart,
     isSubpartOf,
     isProperSubpartOf,
-    BoundIncr(..),
-    HasSubpart(..),
+    BoundIncr (..),
+    HasSubpart (..),
   )
 where
 
@@ -16,19 +17,17 @@ import Control.Lens (Lens', Rewrapped (..), Wrapped (..), iso, toListOf)
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson
 import Data.Default
-import Data.Set (Set)
 import qualified Data.List
+import Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.Maybe
 import Data.Semigroup
 import Data.Semigroup.Option.Instances
+import Data.Set (Set)
 import Data.Traversable (traverse)
 import Data.Typeable
 import Music.Parts.Division
-import Data.List.NonEmpty(NonEmpty)
-import qualified Data.List.NonEmpty as NonEmpty
 import Text.Numeral.Roman (toRoman)
-
-
 
 {-
     - Note the meaning of maxSubpart for Common.Subpart (~ [Integer]):
@@ -41,21 +40,29 @@ import Text.Numeral.Roman (toRoman)
 -- TODO laws
 -- TODO rename? (SubpartOf -> Subpart, Subpart -> DivisionList/Voice)
 class BoundIncr (SubpartOf a) => HasSubpart a where
+
   type SubpartOf a
+
   subpart :: Lens' a (SubpartOf a)
 
 -- TODO name
 -- TODO laws?
 class BoundIncr a where
+
   maximum' :: NonEmpty a -> a
+
   increment' :: a -> a
 
 instance BoundIncr Integer where
+
   maximum' = maximum
+
   increment' = succ
 
 instance BoundIncr Subpart where
+
   maximum' = maximum . fmap firstComp
+
   increment' (Subpart xs) = Subpart (fmap succ xs)
 
 firstComp :: Subpart -> Subpart

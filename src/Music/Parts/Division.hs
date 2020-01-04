@@ -1,6 +1,6 @@
 -- | A type to represent (flat) subdivisions of a part.
 module Music.Parts.Division
-  ( Division(..),
+  ( Division (..),
     getDivision,
     divisions,
     showDivision,
@@ -19,13 +19,11 @@ import Data.Traversable (traverse)
 import Data.Typeable
 import Text.Numeral.Roman (toRoman)
 
-
 -- |
 -- A subdivision of a part, e.g. in "Violin II", the division is "II".
 --
 -- See also 'SubPart'.
---
-newtype Division = Division { getDivision :: Integer }
+newtype Division = Division {getDivision :: Integer}
   deriving (Eq, Ord, Enum, Num)
 
 instance Show Division where
@@ -53,4 +51,4 @@ showDivision = show . getDivision
 
 -- | Get all possible divisions for a given divisor in ascending order.
 divisions :: Int -> [Division]
-divisions n = take n $ [Division x | x <- [0..]]
+divisions n = take n $ [Division x | x <- [0 ..]]
