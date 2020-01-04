@@ -9,6 +9,8 @@
 - [X] Add more examples (e.g from Piece1, Piece2 etc)
   - [ ] Make them all compile (add to cabal file!)
 
+- [ ] Can not build docs in CI (pushd missing from shell). Why? The nix-shell is meant to be reproducible.
+
 - Finish UMTS (Unofficial MusicXML Test Suite)
   - We have manual Haskell encodings of UMTS data which we used to test the export pipeline from StandardNotation.Work to Lilypond/XML
   - Remaining work:

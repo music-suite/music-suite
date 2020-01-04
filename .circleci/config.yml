@@ -7,4 +7,4 @@ jobs:
           LC_ALL: C.UTF-8
     steps:
       - checkout
-      - run: nix-shell --pure --command "cabal update && cabal test && cabal build transf && (cd docs && make)"
+      - run: nix-shell --pure --command "cabal update && cabal test && cabal build transf"
