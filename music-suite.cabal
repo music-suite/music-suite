@@ -63,6 +63,7 @@ library
                         type-unary,
                         xml,
                         random,
+                        neat-interpolation,
                         random-shuffle
     if !os(windows)
       build-depends:    unix
