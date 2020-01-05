@@ -38,11 +38,11 @@
   - Could potentially use a quasiquoter for compile-time checked arbitrary instrument IDs
 
 - Make documentation generation compile/work with the new build system
-  - Make sure doc generation/doctests are run in CI
-  - Use hslinks or similar (disabled in Makefile for now)
-  - Make transf generate music files:
-    - Depends on [entry-point] above. Specifically the invocation in doc-tools/src/Text/Transf.hs has to work. It used to invoke music2ly etc which no longer exist. To make it work again:
-    - [ ] Add something to Transf.hs to turn E into "main = Music.IO.defaultMain (E)"
+  - [ ] Make sure doc generation/doctests are run in CI
+  - [ ] Use hslinks or similar (disabled in Makefile for now)
+  - [X] Make transf generate music files:
+    - [X] Use [entry-point] as per above.
+    - [X] Add something to Transf.hs to turn E into "main = Music.IO.defaultMain (E)"
     - [ ] Define Music.IO.defaultMain to invoke the new export and expose a CLI similar to what's expected in Transf.hs (dynamically dispatching on output format etc).
 
 - Add more examples/tests
