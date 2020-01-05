@@ -174,6 +174,14 @@ instance (HasDynamics a b) => HasDynamics (ColorT a) (ColorT b) where
 instance (HasDynamic a b) => HasDynamic (ColorT a) (ColorT b) where
   dynamic = _Wrapped . dynamic
 
+
+
+
+
+
+
+
+
 type instance Articulation (ColorT a) = Articulation a
 
 type instance SetArticulation g (ColorT a) = ColorT (SetArticulation g a)

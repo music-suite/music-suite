@@ -194,6 +194,18 @@
 
 - https://github.com/music-suite/music-score/issues/298
 
+- [ ] Replace ucat with (new) rcat
+
+- $minorAspect
+  - There's a philosophical difference between "major" aspects (pitch, dynamics, articulation, part)
+    and "minor" ones (tremolo, slide/gliss, freeform text, colour, harmonics).
+  - Some of these are being abused in current examples, e.g. freeform text is used to denote pizz/arco
+  - The representation of tremolo, slide/gliss, harmonics could be smarter. E.g. we should maybe use
+    (Reactive Pitch) or similar instead of context-specific begin/end marks. Note this might require
+    countext-bound rewriting as we currently do with dynamics and articulation.
+  - Simple playing techniques should be standarized, similarly to what we do with instruments.
+    The technique/instrument/rage relations should be availible somewhere.
+
 - IDE allowing "preview on hover"
   - Normal text editor
   - When moving around in a single file (with/without a 'main' function) any hovered expression should

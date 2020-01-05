@@ -11,6 +11,7 @@ module Music.Score.Color
 
     -- * Representation
     ColorT (..),
+    runColorT,
   )
 where
 
@@ -65,6 +66,9 @@ instance HasColor a => HasColor (TieT a) where
 
 newtype ColorT a = ColorT {getColorT :: Couple (Option (Last (Colour Double))) a}
   deriving (Eq {-Ord,-}, Show, Functor, Foldable {-Typeable,-}, Applicative, Monad, Comonad)
+
+runColorT :: ColorT a -> (Colour Double, a)
+runColorT (ColorT (Couple (_, a))) = (error "TODO color export", a)
 
 -- Lifted instances
 deriving instance Num a => Num (ColorT a)

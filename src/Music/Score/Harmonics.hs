@@ -1,8 +1,12 @@
+{-# LANGUAGE TupleSections #-}
+
 -- | Provides a representation of harmonics.
 module Music.Score.Harmonics
   ( -- * Harmonics
     HasHarmonic (..),
+    Harmonics(..),
     HarmonicT (..),
+    runHarmonicT,
     harmonic,
     artificial,
   )
@@ -12,6 +16,7 @@ import Control.Applicative
 import Control.Comonad
 import Control.Lens hiding (transform)
 import Data.Foldable
+import Numeric.Natural
 import Data.Foldable
 import Data.Functor.Couple
 import Data.Ratio
@@ -46,6 +51,16 @@ newtype HarmonicT a = HarmonicT {getHarmonicT :: Couple (Any, Sum Int) a}
       Monad,
       Comonad
     )
+
+data Harmonics
+  = NaturalHarmonic Natural
+  | ArtificialHarmonic Natural
+  deriving (Eq, Ord, Show)
+
+runHarmonicT :: HarmonicT a -> (Harmonics, a)
+runHarmonicT (HarmonicT (Couple (hs, x))) = (, x) $ case hs of
+  (Any False, Sum n) -> ArtificialHarmonic (fromIntegral n)
+  (Any True, Sum n)  -> NaturalHarmonic (fromIntegral n)
 
 instance HasHarmonic a => HasHarmonic (b, a) where
 

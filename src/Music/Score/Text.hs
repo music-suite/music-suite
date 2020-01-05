@@ -3,6 +3,7 @@ module Music.Score.Text
   ( -- * Text
     HasText (..),
     TextT (..),
+    runTextT,
     text,
     textLast,
   )
@@ -41,6 +42,9 @@ newtype TextT a = TextT {getTextT :: Couple [String] a}
       Monad,
       Comonad
     )
+
+runTextT :: TextT a -> ([String], a)
+runTextT (TextT (Couple (ts, x))) = (ts, x)
 
 instance HasText a => HasText (b, a) where
   addText s = fmap (addText s)
