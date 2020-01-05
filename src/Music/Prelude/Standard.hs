@@ -39,6 +39,7 @@ import Music.Parts
 import Music.Pitch
 import Music.Prelude.Instances ()
 import Music.Score hiding (Articulation, Clef (..), Dynamics, Fifths, Interval, Part, Pitch)
+import Music.Score.Export2.StandardNotation (Asp1)
 
 asNote :: StandardNote -> StandardNote
 asNote = id
@@ -59,26 +60,7 @@ asTrack = id
 -- instance Show BasicPart where
 --     show _ = ""
 
-type StandardNote =
-  ( PartT Part
-      ( ColorT
-          ( TextT
-              ( TremoloT
-                  ( HarmonicT
-                      ( SlideT
-                          ( ArticulationT Articulation
-                              ( DynamicT Dynamics
-                                  [ TieT
-                                      Pitch
-                                  ]
-                              )
-                          )
-                      )
-                  )
-              )
-          )
-      )
-  )
+type StandardNote = Asp1
 
 type Music = Score StandardNote
 

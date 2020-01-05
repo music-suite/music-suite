@@ -186,6 +186,8 @@
 - Proper scale/chord type supporting all common use-cases
   - Making (infinite) octave-repeating scales from pitches/intervals
 
+- Get rid of asNote/asScore/asVoice/asTrack
+
 - Get rid of Prelude.StandardNote et al, use Asp1 (renamed!) instead
 
 - Get rid of duplication in music-suite.cabal
@@ -205,6 +207,8 @@
     countext-bound rewriting as we currently do with dynamics and articulation.
   - Simple playing techniques should be standarized, similarly to what we do with instruments.
     The technique/instrument/rage relations should be availible somewhere.
+
+- If possible, derive everything in Music.Score.Internal.Instances
 
 - IDE allowing "preview on hover"
   - Normal text editor
