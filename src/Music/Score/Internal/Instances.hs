@@ -48,6 +48,7 @@ import Data.VectorSpace hiding (Sum)
 import Music.Dynamics.Literal
 import qualified Music.Parts
 import qualified Music.Pitch
+import qualified Music.Pitch.Common as Common
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 import Music.Pitch.Literal
@@ -193,6 +194,7 @@ instance (HasArticulation a b) => HasArticulation (ColorT a) (ColorT b) where
   articulation = _Wrapped . articulation
 
 -- -------------------------------------------------------------------------------------
+deriving instance HasColor a => HasColor (TremoloT a)
 
 deriving instance HasTremolo a => HasTremolo (PartT n a)
 
@@ -438,6 +440,91 @@ instance (Transformable a, a ~ Part a) => HasPart Music.Parts.Part a where
 
 instance (Transformable a, a ~ Part a) => HasParts Music.Parts.Part a where
   parts = ($)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+instance HasDuration Common.Pitch where
+  _duration = const 1
+
+instance HasDuration a => HasDuration (PartT p a) where
+  _duration = _duration . extract
+
+instance HasDuration a => HasDuration (ColorT a) where
+  _duration = _duration . extract
+
+instance HasDuration a => HasDuration (TextT a) where
+  _duration = _duration . extract
+
+instance HasDuration a => HasDuration (TremoloT a) where
+  _duration = _duration . extract
+
+instance HasDuration a => HasDuration (HarmonicT a) where
+  _duration = _duration . extract
+
+instance HasDuration a => HasDuration (SlideT a) where
+  _duration = _duration . extract
+
+instance HasDuration a => HasDuration (ArticulationT b a) where
+  _duration = _duration . extract
+
+instance HasDuration a => HasDuration (DynamicT b a) where
+  _duration = _duration . extract
+
+instance HasDuration a => HasDuration (TieT a) where
+  _duration = _duration . extract
+
+instance Splittable Common.Pitch where
+  split _ x = (x, x)
+
+instance Splittable a => Splittable (PartT p a) where
+  split t = unzipR . fmap (split t)
+
+instance Splittable a => Splittable (ColorT a) where
+  split t = unzipR . fmap (split t)
+
+instance Splittable a => Splittable (TextT a) where
+  split t = unzipR . fmap (split t)
+
+instance Splittable a => Splittable (TremoloT a) where
+  split t = unzipR . fmap (split t)
+
+instance Splittable a => Splittable (HarmonicT a) where
+  split t = unzipR . fmap (split t)
+
+instance Splittable a => Splittable (SlideT a) where
+  split t = unzipR . fmap (split t)
+
+instance Splittable a => Splittable (ArticulationT b a) where
+  split t = unzipR . fmap (split t)
+
+instance Splittable a => Splittable (DynamicT b a) where
+  split t = unzipR . fmap (split t)
+
+instance Splittable a => Splittable (TieT a) where
+  split t = unzipR . fmap (split t)
+
+instance Reversible Common.Pitch where
+  rev = id
+
+instance Reversible (Score a) where
+  rev = revDefault
+
 
 unzipR :: Functor f => f (a, b) -> (f a, f b)
 unzipR x = (fmap fst x, fmap snd x)

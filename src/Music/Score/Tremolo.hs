@@ -4,7 +4,7 @@ module Music.Score.Tremolo
     tremolo,
 
     -- ** Tremolo note transformer
-    TremoloT,
+    TremoloT(..),
     runTremoloT,
   )
 where

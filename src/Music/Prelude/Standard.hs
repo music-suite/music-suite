@@ -53,17 +53,11 @@ asVoice = id
 asTrack :: Track StandardNote -> Track StandardNote
 asTrack = id
 
--- newtype BasicPart = BasicPart { getBasicPart :: Integer }
---     deriving (Eq, Ord, Num, Integral, Real, Enum, Typeable)
---
--- instance Default BasicPart where def = BasicPart 0
--- instance Show BasicPart where
---     show _ = ""
-
 type StandardNote = Asp1
 
 type Music = Score StandardNote
 
+-- TODO remove!
 fromPitch'' :: IsPitch a => Pitch -> a
 fromPitch'' = fromPitch
 {-# DEPRECATED fromPitch'' "Use fromPitch (no primes!)" #-}

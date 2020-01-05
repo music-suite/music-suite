@@ -46,6 +46,8 @@ class HasColor a where
 instance HasColor a => HasColor (b, a) where
   setColor s = fmap (setColor s)
 
+deriving instance HasColor a => HasColor (Couple b a)
+
 instance HasColor a => HasColor [a] where
   setColor s = fmap (setColor s)
 

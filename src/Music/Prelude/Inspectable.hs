@@ -23,9 +23,6 @@
 -- Provides miscellaneous instances.
 module Music.Prelude.Inspectable
   ( Inspectable (..),
-    display,
-    audify,
-    displayAndAudify,
   )
 where
 
@@ -36,21 +33,6 @@ import qualified System.Info
 import qualified System.Process
 import qualified System.Process
 
--- import Data.Ini
-
-data Conf
-  = Conf
-      String --Midi player
-      String --Midi converter
-      String --Audio viwer
-      String --Score viewer (TODO use program vs just write file etc)
-
-defaultConf =
-  Conf
-    "timidity"
-    "timidity -Ow"
-    "open -a audacity"
-    "lilypond"
 
 -- Not perfect but works for many cases
 --
@@ -75,48 +57,8 @@ ucat xs =
 class Inspectable a where
   inspectableToMusic :: a -> Music
 
-displayAndAudify :: Inspectable a => a -> IO ()
-displayAndAudify x = display x >> audify x
-
 instance Inspectable (Score StandardNote) where
   inspectableToMusic = id
-
-display :: Inspectable a => a -> IO ()
-
-audify :: Inspectable a => a -> IO ()
-
-display = display' . inspectableToMusic
-
--- audify  = audify' . inspectableToMusic
-audify _ = return ()
-
-display' = error "Disabled display"
-
--- display' = openLilypond
---   where
---     openLilypond' options sc = do
---       writeLilypond' options "test.ly" sc
---       runLilypond >> cleanLilypond >> runOpen
---         where
---           runLilypond = void $ System.Process.runCommand
---             -- "lilypond -f pdf test.ly"  >>= waitForProcess
---             "lilypond -f pdf test.ly 2>/dev/null"  >>= System.Process.waitForProcess
---           cleanLilypond = void $ System.Process.runCommand
---             "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
---           runOpen = void $ System.Process.runCommand
---             $ openCommand ++ " test.pdf"
-
-openCommand :: String
-openCommand = case System.Info.os of
-  "darwin" -> "open"
-  "linux" -> "xdg-open"
-
--- audify'  = play_
---   where
---     play_ x = do
---       Music.Score.Export.Midi.writeMidi "test.mid" x
---       System.Process.system "timidity test.mid 2>/dev/null >/dev/null"
---       return ()
 
 instance Inspectable a => Inspectable (Maybe a) where
   inspectableToMusic = maybe mempty id . fmap inspectableToMusic
