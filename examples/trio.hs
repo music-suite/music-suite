@@ -19,7 +19,7 @@ tremCanon = compress 4 $
         <>
     (delay 0 $ set parts' cellos  $ subjs|*2)
     where
-        subjs = scat $ map (\n -> palindrome2 $ rev2 $ subj n) [1..40::Int]
+        subjs = scat $ map (\n -> palindrome $ rev $ subj n) [1..40::Int]
         subj n
             | n < 8     = a_|*2  |> e|*1   |> a|*1
             | n < 16    = a_|*2  |> e|*1   |> a|*1   |> e|*1   |> a|*1
@@ -27,7 +27,7 @@ tremCanon = compress 4 $
             | otherwise = e|*0.5 |> a|*0.5
 
 mainCanon2 :: Music
-mainCanon2 = palindrome2 mainCanon <> celloEntry
+mainCanon2 = palindrome mainCanon <> celloEntry
 
 celloEntry :: Music
 celloEntry = set parts' cellos e'' |*(25*5/8)
@@ -52,8 +52,5 @@ music :: Music
 music = mainCanon2
 
 main :: IO ()
-main = pure ()
+main = defaultMain music
 
--- TODO actually implement:
-rev2 = id
-palindrome2 = id

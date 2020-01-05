@@ -16,4 +16,4 @@ music = id
 
   $ scat [c,c',b,bb,a,as,g|*2,scat [f,e,d,b_]|/2,d|*2,c|*2]|/8
 
-main = pure ()
+main = defaultMain music

@@ -21,4 +21,4 @@ catSep = pcat . zipWith (set parts') (divide 100 mempty)
 music :: Music
 music = renderChorale [subj]
 
-main = pure ()
+main = defaultMain music

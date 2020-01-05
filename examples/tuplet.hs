@@ -26,5 +26,5 @@ music = {-fadeIn 1 $-} {-fadeOut 1 $-} catSep $ map test [1..5]
 catSep = pcat . zipWith (set parts') (divide 100 mempty)
 
 main :: IO ()
-main = pure ()
+main = defaultMain music
 
