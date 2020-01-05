@@ -378,7 +378,7 @@ header = Data.Text.unpack [text|
   --------------------------------------------------------------------------------
 
   --------------------------------------------------------------------------------
-  {-# LINE 1 "TODOgeneratedMusicFileHere" #-}
+  {-# LINE 1 "TODO insert name of original file (e.g. User-Guide.md) here + correct line offset" #-}
   |]
 
 musicT :: MusicOpts -> Transform
