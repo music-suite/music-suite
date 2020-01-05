@@ -142,6 +142,8 @@ wrapMeta a = Meta $ Map.singleton key $ wrapAttr a
     key = show $ typeOf (undefined :: a)
 
 -- | Type class for things which have meta-data.
+--
+-- Laws: 'meta'
 class HasMeta a where
   -- | Access the meta-data.
   meta :: Lens' a Meta
@@ -151,13 +153,6 @@ instance Show Meta where
 
 instance HasMeta Meta where
   meta = ($)
-
-instance HasMeta a => HasMeta (Maybe a) where
-  meta = lens viewM $ flip setM
-    where
-      viewM Nothing = mempty
-      viewM (Just x) = view meta x
-      setM m = fmap (set meta m)
 
 instance HasMeta a => HasMeta (b, a) where
   meta = _2 . meta
