@@ -16,10 +16,7 @@ import Prelude hiding ((**))
 
 import Data.Monoid.Average
 import Data.Ord (comparing)
--- import Music.Prelude hiding (elements, unit, (**), Note)
--- import Data.VectorSpace hiding (Sum)
--- import Music.Time (Note)
-import Music.Prelude hiding (elements)
+import Music.Prelude hiding (defaultMain, elements)
 
 import Test.Tasty
 import Test.Tasty.QuickCheck (testProperty)
