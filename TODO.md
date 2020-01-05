@@ -176,6 +176,8 @@
 
 - Get rid of Option (can use plain Maybe/First/Last now)
 
+- Reexport (set, over) from lens in default prelude? (see examples!)
+
 - Better syntax for entering pitch, maybe using a quasi-quoter
   - See e.g. Mozart example
   - See syntax sketches, also compare Lilypond

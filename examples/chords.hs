@@ -1,12 +1,12 @@
 
 import Music.Prelude
+import Control.Lens (set)
 
 -- kStrum = 0.005
 kStrum = 0
 
-main   = do
-  openLilypond music
-  -- openMidi music
+main = defaultMain music
+
 
 guitar = (tutti $ fromMidiProgram 26)
 alto   = (tutti $ fromMidiProgram 65)
@@ -43,6 +43,7 @@ strumRhythm startDirection durations' values = scat chords
       ) directions durations values
 
 
+strum :: [Music] -> Music
 strum x = strumRhythm Up (map (/8) [2,1,2,1,2])
   [x,dropLast 1 x,level _p $ drop 1 x,level _p $ dropLast 1 x, level _p $ drop 1 x]
   where

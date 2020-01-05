@@ -304,6 +304,27 @@ executable "music-suite-examples-canon"
     hs-source-dirs:     examples
     main-is:            canon.hs
 
+executable "music-suite-examples-chopin"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            chopin.hs
+
+-- executable "music-suite-examples-dynamics"
+--     build-depends:      base,
+--                         lens,
+--                         music-suite
+--     hs-source-dirs:     examples
+--     main-is:            dynamics.hs
+
+executable "music-suite-examples-chords"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            chords.hs
+
 executable "music-suite-examples-fugue1"
     build-depends:      base,
                         lens,
@@ -323,7 +344,12 @@ executable "music-suite-examples-part"
     hs-source-dirs:     examples
     main-is:            part.hs
 
--- TODO add phrases.hs
+executable "music-suite-examples-phrases"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            phrases.hs
 
 executable "music-suite-examples-simple"
     build-depends:      base,

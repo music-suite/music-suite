@@ -10,4 +10,4 @@ toPitch x = c .+^ si x
 music :: Score (Behavior Pitch)
 music = set pitches' (stretch 12 $ fmap toPitch $ sine * 7) $ times 24 c
 
-main = pure ()
+main = defaultMain $ fmap (error "TODO") $ music

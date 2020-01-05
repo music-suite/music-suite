@@ -27,4 +27,4 @@ music = rcat [
     markDiss      $ scat subject
   ]
 
-main = pure ()
+main = defaultMain music

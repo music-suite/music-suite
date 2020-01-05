@@ -28,6 +28,7 @@ module Music.Prelude.Standard
     asVoice,
     asTrack,
     asNote,
+    defaultMain,
     fromPitch'',
   )
 where
@@ -56,6 +57,9 @@ asTrack = id
 type StandardNote = Asp1
 
 type Music = Score StandardNote
+
+defaultMain :: Music -> IO ()
+defaultMain _ = pure () -- TODO use Export2 (depending on CLI)
 
 -- TODO remove!
 fromPitch'' :: IsPitch a => Pitch -> a

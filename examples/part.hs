@@ -8,7 +8,6 @@
 --
 import Music.Prelude hiding (open)
 import qualified Music.Score as S
-import Music.Score.Export2.StandardNotation (Asp, exportLilypond)
 
 withTintin :: (HasPitches' a, S.Pitch a ~ Pitch) => Pitch -> Score a -> Score a
 withTintin p x = x <> tintin p x
@@ -64,7 +63,7 @@ strings = pcat [
         stringPart = delay (1/2) $ withTintin (down (_P8^*4) $ (a::Pitch)) $ mainSubject
 
 -- music :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
-music :: Asp
+music :: Music
 music = meta $ stretch (3/2) $ bell <> delay 6 strings
     where
         meta = id
@@ -77,4 +76,4 @@ music = meta $ stretch (3/2) $ bell <> delay 6 strings
 -- openBook = openLilypond' LyScoreFormat
 --
 main :: IO ()
-main = exportLilypond music
+main = defaultMain music

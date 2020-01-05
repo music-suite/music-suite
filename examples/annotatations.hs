@@ -7,7 +7,7 @@
 import Music.Prelude
 
 main :: IO ()
-main = openLilypond . showAnnotations' ""
+main = defaultMain . showAnnotations' ""
      . intervalAnnotations subjectDiff
      . scat $ map (fromPitch'') subject
 
@@ -25,6 +25,6 @@ intervalAnnotations = foldr1 (.) . zipWith notate (map spanify [0..])
 
     notate :: Span -> Interval -> (Score StandardNote -> Score StandardNote)
     notate s n = annotateSpan s ("       " ++ showIntervalName n)
- 
+
     showIntervalName = filter (/= '_') . show
 

@@ -31,4 +31,4 @@ music = let
 
   in meta $ compress 8 $ left <> set parts' cellos (down _P8 right)
 
-main = pure ()
+main = defaultMain music

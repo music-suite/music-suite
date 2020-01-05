@@ -19,5 +19,5 @@ frere4 = delay 4 frere2 <> frere2
 info = title "Frere Jaques" . composer "Trad." . tempo (metronome (1/4) 120)
 music = info frere4
 
-main = pure ()
+main = defaultMain music
 

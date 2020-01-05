@@ -26,4 +26,4 @@ lh = [((3/4) <-> 1,e__)^.event,(1 <-> (5/4),e_)^.event,(1 <-> (5/4),e)^.event,((
   (13/2),e)^.event]^.score
 
 music = timeSignature (3/4) $ lh <> rh
-main = open music
+main = defaultMain music

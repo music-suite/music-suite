@@ -8,10 +8,11 @@ import Music.Prelude hiding ((</>))
 import qualified Music.Score
 import qualified Data.List
 
-music :: Music
-music = asScore $ times 55 (stretch (1/8) c) |> times 28 (stretch (1/16) d)
+main = defaultMain music
 
-main = pure ()
+music :: Music
+music = times 55 (stretch (1/8) c) |> times 28 (stretch (1/16) d)
+
 
 
 voiceDurations :: Voice a -> [Duration]

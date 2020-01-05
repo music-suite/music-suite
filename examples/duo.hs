@@ -17,9 +17,9 @@ pres1 = subj1|*(2/2)
 pres2 = subj1|*(2/2) <> delay 2 (subj1|*(3/2))
 
 part1 = pres1 |> pres2
-part2 = pres1 |> pres2  
+part2 = pres1 |> pres2
 
 music = asScore $ level pp $ compress 2 $ part1 |> toLydian part2
 
 main :: IO ()
-main = open music
+main = defaultMain music

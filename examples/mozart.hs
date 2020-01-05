@@ -4,7 +4,6 @@
 
 import Music.Prelude
 import qualified Music.Score
-import Music.Score.Export2.StandardNotation (Asp, exportLilypond)
 
 {-
     W.A. Mozart: Ave Verum (excerpt)
@@ -39,7 +38,7 @@ info = id
     . timeSignature (4/4)
     . keySignature (key g False)
 
-score' :: Asp
+score' :: Music
 score' = info $ compress 4 $ tempo (metronome (1/4) 30) $ {-delay (4*2) $ -}
     stanza1_instr </> stanza1_voc
 
@@ -121,5 +120,4 @@ stanza1_bc = octavesDown 1 $ empty
 
 main :: IO ()
 main =
-  -- print $ length $ show example
-  exportLilypond score'
+  defaultMain score'
