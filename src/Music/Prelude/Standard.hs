@@ -15,7 +15,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Standard music representation.
+-- Standard music representation and export.
 module Music.Prelude.Standard
   ( module Music.Pitch,
     module Music.Dynamics,
@@ -24,11 +24,13 @@ module Music.Prelude.Standard
     module Music.Score,
     Music,
     StandardNote,
+    defaultMain,
+
+    -- TODO remove the below:
     asScore,
     asVoice,
     asTrack,
     asNote,
-    defaultMain,
     fromPitch'',
   )
 where
@@ -41,6 +43,9 @@ import Music.Pitch
 import Music.Score hiding (Articulation, Clef (..), Dynamics, Fifths, Interval, Part, Pitch)
 import Music.Score.Export2.StandardNotation (Asp1, fromAspects, runIOExportM, toLy, toMidi, toXml)
 import qualified System.Environment
+import qualified Data.Music.MusicXml
+import qualified Text.Pretty
+import qualified Codec.Midi
 
 asNote :: StandardNote -> StandardNote
 asNote = id
@@ -83,15 +88,18 @@ defaultMain music = do
         "Usage: <executable> -f [xml|ly|mid] -o PATH"
     ToMidi path -> do
       midi <- runIOExportM $ toMidi music
-      _writeMidi path midi
+      Codec.Midi.exportFile path midi
     ToLy path -> do
       work <- runIOExportM $ fromAspects music
-      work' <- runIOExportM $ toLy work
-      _writeLy path work'
+      (h, ly) <- runIOExportM $ toLy work
+      let ly' = h ++ show (Text.Pretty.pretty ly)
+      -- TODO use ByteString/builders, not String?
+      writeFile path ly'
     ToXml path -> do
       work <- runIOExportM $ fromAspects music
       work' <- runIOExportM $ toXml work
-      _writeXml path work'
+      -- TODO use ByteString/builders, not String?
+      writeFile path $ Data.Music.MusicXml.showXml work'
 
 -- TODO remove!
 fromPitch'' :: IsPitch a => Pitch -> a
