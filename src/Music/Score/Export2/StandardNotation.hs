@@ -1022,7 +1022,7 @@ toLy opts work = do
             )
           ]
   let headerData = case layout opts of
-            LilypondBigScore -> $(embedFile "data/ly_big_score.ily")
+            LilypondBigScore -> $(embedFile "data/ly_big_score.ly")
             LilypondScore -> $(embedFile "data/ly_score.ly")
             LilypondInline -> $(embedFile "data/ly_inline.ly")
   let header = Data.ByteString.Char8.unpack headerData `expandTemplate` headerTempl
