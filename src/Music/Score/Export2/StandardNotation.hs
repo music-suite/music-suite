@@ -8,6 +8,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -1036,7 +1037,7 @@ toLy opts work = do
       -- We will copy system-staff info to each bar (time sigs, key sigs and so on,
       -- which seems to be what Lilypond expects), so the system staff is included
       -- in the rendering of each staff
-      renderedStaves <- mapM (toLyStaff $ m ^. systemStaff) (m ^. staves)
+      renderedStaves <- traverse (toLyStaff $ m ^. systemStaff) (m ^. staves)
       -- Now we still have (LabelTree BracketType), which is converted to a parallel
       -- music expression, using \StaffGroup etc
       toLyStaffGroup renderedStaves
@@ -1065,7 +1066,7 @@ toLy opts work = do
     toLyBar sysBar bar = do
       let layers = bar ^. pitchLayers
       -- TODO emit \new Voice for eachlayer
-      sim <$> sysStuff <$> mapM (toLyLayer . getPitchLayer) layers
+      sim <$> sysStuff <$> traverse (toLyLayer . getPitchLayer) layers
       where
         -- System information need not be replicated in all layers
         -- TODO other system stuff (reh marks, special barlines etc)
@@ -1087,7 +1088,7 @@ toLy opts work = do
     toLyLayer (Beat d x) = toLyChord d x
     toLyLayer (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
     toLyLayer (Dotted n _) = error "FIXME"
-    toLyLayer (Group rs) = Lilypond.Sequential <$> mapM toLyLayer rs
+    toLyLayer (Group rs) = Lilypond.Sequential <$> traverse toLyLayer rs
     toLyLayer (Tuplet m r) = Lilypond.Times (realToFrac m) <$> (toLyLayer r)
       where
         (a, b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
@@ -1376,7 +1377,7 @@ toXml work = do
           to assure that all /bars/ have the same duration.
         -}
         staffMusic :: (MusicXmlExportM m) => m [[MusicXml.Music]]
-        staffMusic = mapM renderStaff $ movement ^.. staves . traverse
+        staffMusic = traverse renderStaff $ movement ^.. staves . traverse
           where
             renderClef :: Music.Pitch.Clef -> MusicXml.Music
             renderClef (Music.Pitch.Clef clef) = case clef of
@@ -1394,7 +1395,7 @@ toXml work = do
             renderStaff :: (MusicXmlExportM m) => Staff -> m [MusicXml.Music]
             renderStaff staff = do
               say "  MusicXML: Generating staff <<>>"
-              fromBars <- mapM renderBar (staff ^. bars)
+              fromBars <- traverse renderBar (staff ^. bars)
               let clef = renderClef initClef
               pure $ mapHead ((transposeInfo <> clef) <>) fromBars
               where
@@ -1814,13 +1815,14 @@ fromAspects :: (StandardNotationExportM m) => Asp -> m Work
 fromAspects sc = do
   -- Part extraction
   say "Extracting parts"
-  let postPartExtract = Music.Score.Part.extractPartsWithInfo normScore
+  let postPartExtract :: [(Music.Parts.Part, Score Asp1)] = Music.Score.Part.extractPartsWithInfo normScore
+  say $ "Done, " ++ show (length postPartExtract) ++ " parts"
   -- postPartExtract :: [(Music.Parts.Part,Score Asp1)]
 
   -- Change aspect type as we need Semigroup to compose all simultanous notes
   -- Merge simultanous notes into chords, to simplify voice-separation
   say "Merging overlapping notes into chords"
-  let postChordMerge = fmap2 (simultaneous . fmap asp1ToAsp2) postPartExtract
+  let postChordMerge :: [(Music.Parts.Part, Score Asp2)]  = fmap2 (simultaneous . fmap asp1ToAsp2) postPartExtract
   -- postChordMerge :: [(Music.Parts.Part,Score Asp2)]
 
   {-
@@ -1832,9 +1834,9 @@ fromAspects sc = do
   -}
   say "Separating voices in parts (assuming no overlaps)"
   postVoiceSeparation <-
-    mapM
+    traverse
       ( \a@(p, _) ->
-          mapM (toLayer p) a
+          traverse (toLayer p) a
       )
       $ postChordMerge
   -- Rewrite dynamics and articulation to be context-sensitive
@@ -1851,10 +1853,10 @@ fromAspects sc = do
 
   -- For each bar, quantize all layers. This is where tuplets/note values are generated.
   say "Quantize rhythms (generating dotted notes and tuplets)"
-  postQuantize <- mapM (mapM (mapM quantizeBar)) postTieSplit
+  postQuantize <- traverse (traverse (traverse quantizeBar)) postTieSplit
   -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
 
-  -- TODO all steps above that start with fmap or mapM can be factored out (functor law)
+  -- TODO all steps above that start with fmap or traverse can be factored out (functor law)
 
   -- Group staves, generating brackets and braces
   say "Generate staff groups"
