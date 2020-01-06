@@ -38,7 +38,6 @@ import Music.Articulation
 import Music.Dynamics
 import Music.Parts
 import Music.Pitch
-import Music.Prelude.Instances ()
 import Music.Score hiding (Articulation, Clef (..), Dynamics, Fifths, Interval, Part, Pitch)
 import Music.Score.Export2.StandardNotation (Asp1)
 
