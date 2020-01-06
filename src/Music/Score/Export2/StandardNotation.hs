@@ -156,6 +156,10 @@ module Music.Score.Export2.StandardNotation
     fromAspects,
 
     -- * Backends
+    LilypondLayout(..),
+    LilypondOptions(..),
+    defaultLilypondLayout,
+    defaultLilypondOptions,
     LilypondExportM,
     toLy,
     MusicXmlExportM,
@@ -322,19 +326,19 @@ data SystemBar
   = SystemBar
       {-
       We treat all the following information as global.
-      
+
       This is more restrictive than most classical notations, but greatly
       simplifies representation. In this view, a score is a matrix of bars
       (each belonging to a single staff). Each bar must have a single
       time sig/key sig/rehearsal mark/tempo mark.
-      
+
       ----
       Note: Option First ~ Maybe
-      
+
       Alternatively we could just make these things into Monoids such that
       mempty means "no notation at this point", and remove the "Option First"
       part here.
-      
+
       Actually I'm pretty sure this is the right approach. See also #242
       -}
       { _barNumbers :: Option (First BarNumber),
@@ -377,11 +381,11 @@ data StaffInfo
         _sibeliusFriendlyName :: SibeliusFriendlyName,
         {-
         See also clefChanges
-        
+
         TODO change name of _instrumentDefaultClef
         More accurately, it represents the first clef to be used on the staff
         (and the only one if there are no changes.)
-        
+
         OTOH having clef in the staff at all is redundant, specifying clef
         is optional (along with everything else) in this representation anyway.
         This is arguably wrong, as stanard notation generally requires a clef.
@@ -389,7 +393,7 @@ data StaffInfo
         _instrumentDefaultClef :: Music.Pitch.Clef,
         {-
         I.e. -P5 for horn
-        
+
         Note that this representation indicates *written pitch*, not sounding (as does MusicXML),
         so this value is redundant when rendering a graphical score. OTOH if this representation
         is used to render *sound*, pitches need to be transposed acconrdingly.
@@ -983,8 +987,27 @@ expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
 
 type LilypondExportM m = (MonadLog String m, MonadError String m)
 
-toLy :: (LilypondExportM m) => Work -> m (String, Lilypond.Music)
-toLy work = do
+data LilypondLayout
+  = LilypondInline
+  | LilypondScore
+  | LilypondBigScore
+  deriving (Eq, Show)
+
+defaultLilypondLayout :: LilypondLayout
+defaultLilypondLayout = LilypondBigScore
+
+data LilypondOptions = LilypondOptions
+  { layout :: LilypondLayout
+  }
+  deriving (Eq, Show)
+
+defaultLilypondOptions :: LilypondOptions
+defaultLilypondOptions = LilypondOptions
+  { layout = defaultLilypondLayout
+  }
+
+toLy :: (LilypondExportM m) => LilypondOptions -> Work -> m (String, Lilypond.Music)
+toLy opts work = do
   -- TODO assumes one movement
   say "Lilypond: Assuming one movement only"
   firstMovement <- case work ^? movements . _head of
@@ -998,7 +1021,11 @@ toLy work = do
                 firstMovement ^. movementInfo . movementAttribution . at "composer"
             )
           ]
-  let header = (Data.ByteString.Char8.unpack $(embedFile "data/ly_big_score.ily")) `expandTemplate` headerTempl
+  let headerData = case layout opts of
+            LilypondBigScore -> $(embedFile "data/ly_big_score.ily")
+            LilypondScore -> $(embedFile "data/ly_score.ly")
+            LilypondInline -> $(embedFile "data/ly_inline.ly")
+  let header = Data.ByteString.Char8.unpack headerData `expandTemplate` headerTempl
   say "Lilypond: Converting music"
   music <- toLyMusic $ firstMovement
   return (header, music)
@@ -1276,16 +1303,16 @@ toXml work = do
     {-
       Returns a matrix of bars in in row-major order, i.e. each inner list
       represents the bars of one particular MusicXML part[1].
-    
+
       This is suitable for a "partwise" MusicXML score. The transpose of the
       returned matrix is suitable for a "timewise" score.
-    
+
       [1]: Note that a MusicXML part can be rendered as 1 staff (default) or more,
       so there are two ways to render a piano staff:
         1) Use two MusicXML parts grouped with a brace.
         2) Use one MusicXML part with 2 staves. In this case each note must
            have a staff child element.
-    
+
     -}
     movementToPartwiseXml :: (MusicXmlExportM m) => Movement -> m [[MusicXml.Music]]
     movementToPartwiseXml movement = music
@@ -1300,7 +1327,7 @@ toXml work = do
                 We could also prepend it to other staves, but that is reduntant and makes the
                 generated XML file much larger.
           Trying a new approach here by including this in all parts.
-        
+
           ---
           Again, this definition is a sequnce of elements to be prepended to each bar
           (typically divisions and attributes).
@@ -1343,7 +1370,7 @@ toXml work = do
         {-
           A matrix similar to the one returned from movementToPartwiseXml, but
           not including information from the system staff.
-        
+
           TODO we use movementAssureSameNumberOfBars
           We should do a sumilar check on the transpose of the bar/staff matrix
           to assure that all /bars/ have the same duration.
@@ -1392,12 +1419,12 @@ toXml work = do
                about this, are we always emitting the voice?)
                 YES, see setDefaultVoice below?
                 How about staff, are we always emitting that?
-            
+
               - TODO how does this interact with the staff-crossing feature?
                 (are we always emitting staff?)
               - TODO how does it interact with clefs/other in-measure elements not
                 connected to chords?
-            
+
                 Lots of meta-stuff here about how a bar is represented, would be nice to write up music-score
                 eloquently!
             -}
@@ -1434,7 +1461,7 @@ toXml work = do
             renderPitchLayer = renderBarMusic . fmap renderChord . getPitchLayer
             {-
             Render a rest/note/chord.
-            
+
             This returns a series of <note> elements, with appropriate <chord> tags.
             -}
             renderChord :: Chord -> Duration -> MusicXml.Music
@@ -1799,7 +1826,7 @@ fromAspects sc = do
   {-
     Separate voices (called "layers" to avoid confusion)
     This is currently a trivial algorithm that assumes overlapping notes are in different parts
-  
+
     TODO layer sepration (which, again, does not actually happen in current code)
     should happen after ties have been split.
   -}
@@ -1941,7 +1968,7 @@ fromAspects sc = do
 -- Test
 
 test =
-  runPureExportMNoLog $ toLy $
+  runPureExportMNoLog $ toLy defaultLilypondOptions $
     Work
       mempty
       [ Movement
@@ -1955,7 +1982,7 @@ test =
           )
       ]
 
-test2 x = runPureExportMNoLog $ toLy =<< fromAspects x
+test2 x = runPureExportMNoLog $ toLy defaultLilypondOptions =<< fromAspects x
 
 -- | Write t.ly and run Lilypond on it
 exportLilypond :: Asp -> IO ()

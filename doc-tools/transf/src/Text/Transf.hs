@@ -118,7 +118,7 @@ type Context = ContextT IO
 runContext :: Context a -> IO (Either String a)
 runContext x = do
     (r, Post posts) <- runC x
-    let runAll = sequence_ -- parallel_
+    let runAll = parallel_ -- sequence_
     runAll (fmap ignoreErrorsAndPost posts)
     return r
     where
@@ -321,13 +321,11 @@ printT = transform "print" $ \input -> inform input >> return ""
 -- > The number is 6
 --
 evalT :: Transform
--- evalT = transform "eval" $ \input -> evalWith ["Prelude"] input
 evalT = transform "eval" $ \input -> do
   (exit, out, err) <- liftIO $ readProcessWithExitCode "runhaskell" [] input
   inform err
   return out
 
--- TODO move to separate module and/or package
 
 data MusicOpts = MusicOpts {
         format     :: String,
@@ -389,9 +387,11 @@ musicT opts = transform "music" $ \input -> do
     -- (including both parse and type errors).
 
     -- TODO do not run Lilypond if not necessary (e.g. cache hash, including hash of transf, after successful run)
+    -- TODO layout this as per (using a parameter to defaultMain?):
+    --  https://music.stackexchange.com/questions/15544/lilypond-how-to-control-the-paper-size-to-create-images
     do
       writeFile (name++".hs") (header <> indent 2 input)
-      liftIO $ void $ readProcess "cabal" ["run", name++".hs", "--", "-f", "ly", "-o", name++".ly"] ""
+      liftIO $ void $ readProcess "cabal" ["run", name++".hs", "--", "-f", "ly", "--layout=inline", "-o", name++".ly"] ""
 
       -- TODO cabal run -- music-suite-examples-simple -f ly -o t.ly && lilypond -fpng -o t t.ly
       -- no separate makePng necessary!
@@ -418,7 +418,7 @@ musicT opts = transform "music" $ \input -> do
     --                "  <a href=\"javascript:stopPlaying()\">[stop]</a>\n" ++
     --                "</div>\n"
 
-    let ending = if format opts == "png" then "x" else ""
+    let ending = "" -- if format opts == "png" then "x" else ""
     return $ playText ++ "\n\n" ++ "![](" ++ name ++ ending ++ "." ++ format opts ++ ")"
     --  -resize 30%
 

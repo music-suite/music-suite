@@ -41,7 +41,7 @@ import Music.Dynamics
 import Music.Parts
 import Music.Pitch
 import Music.Score hiding (Articulation, Clef (..), Dynamics, Fifths, Interval, Part, Pitch)
-import Music.Score.Export2.StandardNotation (Asp1, fromAspects, runIOExportM, toLy, toMidi, toXml)
+import Music.Score.Export2.StandardNotation (Asp1, fromAspects, runIOExportM, toLy, LilypondLayout(..), LilypondOptions(..), defaultLilypondOptions, toMidi, toXml)
 import qualified System.Environment
 import qualified Data.Music.MusicXml
 import qualified Text.Pretty
@@ -67,14 +67,15 @@ type Music = Score StandardNote
 -- TODO more options?
 data CommandLineOptions
   = ToXml FilePath
-  | ToLy FilePath
+  | ToLy LilypondOptions FilePath
   | ToMidi FilePath
   | Help
 
 -- TOOD Proper parser using optparse-applicative or optparse-generic
 parse :: Applicative m => [String] -> m CommandLineOptions
 parse ("-f" : "xml" : "-o" : path : _) = pure $ ToXml path
-parse ("-f" : "ly" : "-o" : path : _) = pure $ ToLy path
+parse ("-f" : "ly" : "-o" : path : _) = pure $ ToLy defaultLilypondOptions path
+parse ("-f" : "ly" : "--layout=inline" : "-o" : path : _) = pure $ ToLy (defaultLilypondOptions { layout = LilypondInline }) path
 parse ("-f" : "mid" : "-o" : path : _) = pure $ ToMidi path
 parse _ = pure Help
 
@@ -89,9 +90,9 @@ defaultMain music = do
     ToMidi path -> do
       midi <- runIOExportM $ toMidi music
       Codec.Midi.exportFile path midi
-    ToLy path -> do
+    ToLy opts path -> do
       work <- runIOExportM $ fromAspects music
-      (h, ly) <- runIOExportM $ toLy work
+      (h, ly) <- runIOExportM $ toLy opts work
       let ly' = h ++ show (Text.Pretty.pretty ly)
       -- TODO use ByteString/builders, not String?
       writeFile path ly'
