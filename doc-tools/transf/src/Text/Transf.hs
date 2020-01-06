@@ -201,6 +201,7 @@ namedFenceWithPrefix prefix name = (== (prefix ++ name)) . trimEnd
 transform :: String -> (Lines -> Context Lines) -> Transform
 transform name = newTransform (namedFence name) (namedFence "")
 
+{-
 -- | 
 -- Run a transformation with the given error handler and input.
 --
@@ -210,6 +211,7 @@ runTransformIO t handler input = do
     case res of
         Left e  -> handler e
         Right a -> return a
+-}
 
 -- | 
 -- Run a transformation in the 'Context' monad.
@@ -224,6 +226,8 @@ runTransform = go
         go (SingTrans (start,stop) f) as = do
             let bs = (sections start stop . lines) as                   :: [([Line], Maybe [Line])]
             let cs = fmap (first unlines . second (fmap unlines)) bs    :: [(String, Maybe String)]
+
+            -- TODO parallelize!
             ds <- Traversable.mapM (secondM (Traversable.mapM f)) cs    :: Context [(String, Maybe String)]
             return $ concatMap (\(a, b) -> a ++ fromMaybe [] b ++ "\n") ds
 
@@ -387,14 +391,13 @@ musicT opts = transform "music" $ \input -> do
     -- (including both parse and type errors).
 
     -- TODO do not run Lilypond if not necessary (e.g. cache hash, including hash of transf, after successful run)
-    -- TODO layout this as per (using a parameter to defaultMain?):
-    --  https://music.stackexchange.com/questions/15544/lilypond-how-to-control-the-paper-size-to-create-images
     do
       writeFile (name++".hs") (header <> indent 2 input)
       liftIO $ void $ readProcess "cabal" ["run", name++".hs", "--", "-f", "ly", "--layout=inline", "-o", name++".ly"] ""
 
-      -- TODO cabal run -- music-suite-examples-simple -f ly -o t.ly && lilypond -fpng -o t t.ly
-      -- no separate makePng necessary!
+
+    --  For the source of these flags, see:
+    --    https://music.stackexchange.com/questions/15544/lilypond-how-to-control-the-paper-size-to-create-images
       let makeLy = do
           (exit, out, err) <- readProcessWithExitCode "lilypond" [
               "-dbackend=eps",

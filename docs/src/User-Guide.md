@@ -262,14 +262,7 @@ There is also a shorthand for other octaves:
 c__ |> c_ |> c |> c' |> c''
 ```
 
-Sharps and flats can be added by the functions @[sharp] and @[flat], which are written
-*postfix* thanks to some overloading magic.
-
-```TODOmusic+haskell
-c sharp |> d |> e flat
-```
-
-You can also use the ordinary (prefix) versions @[sharpen] and @[flatten].
+Sharps and flats can be added using @[sharpen] and @[flatten].
 
 ```music+haskell
 sharpen c
@@ -433,7 +426,7 @@ TODO chord tremolo
 @[slide]
 @[glissando]
 
-```TODOmusic+haskell
+```music+haskell
 glissando $ scat [c,d]|/2
 ```
 
@@ -441,7 +434,7 @@ glissando $ scat [c,d]|/2
 
 Use the @[harmonic] function:
 
-```TODOmusic+haskell
+```music+haskell
 (harmonic 1 $ c|/2)
     </>
 (harmonic 2 $ c|/2)
@@ -460,7 +453,7 @@ TODO
 
 @[text]
 
-```TODOmusic+haskell
+```music+haskell
 text "pizz." $ c|/2
 ```
 
@@ -493,7 +486,7 @@ It is possible to add rests explicitly as follows.
 
 @[mcatMaybes]
 
-```TODOmusic+haskell
+```TODO
 times 4 (accentAll g|*2 |> rest |> scat [d,d]|/2)|/8
 ```
 
@@ -865,7 +858,7 @@ Annotations are simply textual values attached to a specific section of the scor
 Annotations are invisible by default. To show annotations in the generated output, use
 @[showAnnotations].
 
-```TODOmusic+haskell
+```music+haskell
 showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 ```
 
