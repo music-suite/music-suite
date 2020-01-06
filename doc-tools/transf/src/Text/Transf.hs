@@ -118,7 +118,8 @@ type Context = ContextT IO
 runContext :: Context a -> IO (Either String a)
 runContext x = do
     (r, Post posts) <- runC x
-    parallel_ (fmap ignoreErrorsAndPost posts)
+    let runAll = sequence_ -- parallel_
+    runAll (fmap ignoreErrorsAndPost posts)
     return r
     where
         runC = runWriterT . runErrorT . runContextT_
@@ -357,8 +358,6 @@ instance Default MusicOpts where def = MusicOpts {
 indent :: Int -> String -> String
 indent n = unlines . fmap (replicate n ' ' <>) . lines
 
--- TODO actually write the Ly/XML/Midi files here with new 'defaultMain' instead
--- of (pure ()). See TODO.md
 header :: String
 header = Data.Text.unpack [text|
   -- WARNING! AUTO GENERATED! DO NOT EDIT!
@@ -370,9 +369,8 @@ header = Data.Text.unpack [text|
       build-depends: base, music-suite
   -}
   import Music.Prelude
-  import Music.Score.Export2.StandardNotation (Asp1)
   main :: IO ()
-  main = const (pure ()) $ id @(Score Asp1) $
+  main = defaultMain $ id @Music $
   --------------------------------------------------------------------------------
   -- Header added by transf ends here
   --------------------------------------------------------------------------------
@@ -393,32 +391,20 @@ musicT opts = transform "music" $ \input -> do
     -- TODO do not run Lilypond if not necessary (e.g. cache hash, including hash of transf, after successful run)
     do
       writeFile (name++".hs") (header <> indent 2 input)
-      liftIO $ void $ readProcess "cabal" ["exec", "runhaskell", name++".hs", "--", "-o", name++".ly"] ""
+      liftIO $ void $ readProcess "cabal" ["run", name++".hs", "--", "-f", "ly", "-o", name++".ly"] ""
 
       -- TODO cabal run -- music-suite-examples-simple -f ly -o t.ly && lilypond -fpng -o t t.ly
       -- no separate makePng necessary!
       let makeLy = do
           (exit, out, err) <- readProcessWithExitCode "lilypond" [
-              "-f", format opts,
+              "-f", "png", -- TODO remove format from Options, we always generate PNG!
               "-dresolution=" ++ show (resolution opts) ++ "", name++".ly"
               ] mempty
           hPutStr stderr out
           hPutStr stderr err
           return ()
 
-      let makePng = pure ()
-      {- TODO add 'convert' (from where?) to Nix environment
-      let makePng = when (format opts == "png") $ void $ system $
-              "convert -transparent white -resize "
-                  ++ show (resize opts) ++"% "
-                  ++ name ++".png "
-                  ++ name ++ "x.png"
-
-      -}
-
-      addPost (liftIO $ makeLy >> makePng)
-      pure ()
-    -- let playText = ""
+      addPost (liftIO $ makeLy)
 
     -- Play generated MIDI file
     let playText = "<div class='haskell-music-listen'><a href='"++name++".mid'>[listen]</a></div>"

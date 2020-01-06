@@ -214,6 +214,8 @@
   - Simple playing techniques should be standarized, similarly to what we do with instruments.
     The technique/instrument/rage relations should be availible somewhere.
 
+- Purge lawless instances, do more property testing
+
 - If possible, derive everything in Music.Score.Internal.Instances
 
 - IDE allowing "preview on hover"

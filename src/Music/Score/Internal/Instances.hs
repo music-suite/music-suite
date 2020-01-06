@@ -346,26 +346,26 @@ instance (Enum v, Eq v, Num a) => Num (PartT v a) where
 
   fromInteger a = PartT (toEnum 0, fromInteger a)
 
-instance (Enum v, Enum a) => Enum (PartT v a) where
+instance (Monoid v, Enum a) => Enum (PartT v a) where
 
-  toEnum a = PartT (toEnum 0, toEnum a) -- TODO use def, mempty or minBound?
+  toEnum a = PartT (mempty, toEnum a)
 
   fromEnum (PartT (v, a)) = fromEnum a
 
-instance (Enum v, Bounded a) => Bounded (PartT v a) where
+instance (Monoid v, Bounded a) => Bounded (PartT v a) where
 
-  minBound = PartT (toEnum 0, minBound)
+  minBound = PartT (mempty, minBound)
 
-  maxBound = PartT (toEnum 0, maxBound)
+  maxBound = PartT (mempty, maxBound)
 
-instance (Enum v, Ord v, Num a, Ord a, Real a) => Real (PartT v a) where
-  toRational (PartT (v, a)) = toRational a
+-- instance (Enum v, Ord v, Num a, Ord a, Real a) => Real (PartT v a) where
+--   toRational (PartT (v, a)) = toRational a
 
-instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) where
-
-  PartT (v, a) `quotRem` PartT (_, b) = (PartT (v, q), PartT (v, r)) where (q, r) = a `quotRem` b
-
-  toInteger (PartT (v, a)) = toInteger a
+-- instance (Monoid v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) where
+--
+--   PartT (v, a) `quotRem` PartT (_, b) = (PartT (v, q), PartT (v, r)) where (q, r) = a `quotRem` b
+--
+--   toInteger (PartT (v, a)) = toInteger a
 
 --
 -- TODO suspect instances
@@ -375,11 +375,11 @@ instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) whe
 --     toEnum a       = [toEnum a]
 --     fromEnum ([a]) = fromEnum a
 
-instance Bounded a => Bounded [a] where
-
-  minBound = [minBound]
-
-  maxBound = [maxBound]
+-- instance Bounded a => Bounded [a] where
+--
+--   minBound = [minBound]
+--
+--   maxBound = [maxBound]
 
 -- TODO use wrapper type and replace withContext
 type instance Dynamic (a, b, c) = (a, b, c)
