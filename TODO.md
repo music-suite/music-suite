@@ -6,7 +6,7 @@
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
 
-- [ ] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
+- [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
 - [ ] New (current) export does not render tremolo/gliss/harmonics/text/color
 

@@ -875,8 +875,22 @@ barLayersHaveEqualDuration (Bar _ layers) =
 
 -- |
 -- Check that all staves (including system-staff) has the same number of bars.
--- If not truncate to assure this.
+-- If not add empty bars at the end of each staves to assure this.
 movementAssureSameNumberOfBars :: Movement -> Movement
+movementAssureSameNumberOfBars (Movement i ss st) =
+  Movement i (addSystemBars n ss) (fmap (over bars (addBars n)) st)
+  where
+    emptySystemBar :: SystemBar = mempty
+    emptyBar :: Bar = mempty
+
+    addBars n = take n . (++ repeat emptyBar)
+    addSystemBars n = take n . (++ repeat emptySystemBar)
+    n = maximum $ numSystemBars : numBars
+    numSystemBars :: Int = length ss
+    numBars :: [Int] = fmap (length . _bars) $ toList st
+
+
+{-
 movementAssureSameNumberOfBars (Movement i ss st) = case Just minBars of
   Nothing -> Movement i ss st
   Just n -> Movement i (systemStaffTakeBars n ss) (fmap (staffTakeBars n) st)
@@ -885,6 +899,7 @@ movementAssureSameNumberOfBars (Movement i ss st) = case Just minBars of
     minBars = shortestListLength ss (_bars $ head $ toList st)
     shortestListLength :: [a] -> [b] -> Int
     shortestListLength xs ys = length (zip xs ys)
+-}
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -1863,7 +1878,11 @@ fromAspects sc = do
   let postStaffGrouping = generateStaffGrouping postQuantize
   -- postStaffGrouping :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
 
-  return $ Work mempty [Movement info systemStaff (fmap aspectsToStaff postStaffGrouping)]
+  let staves :: LabelTree BracketType Staff  = fmap aspectsToStaff postStaffGrouping
+
+  say $ "System staff bars: " ++ show (length systemStaff)
+  say $ "Regular staff bars: " ++ show (fmap (length . _bars) . toList $ staves)
+  return $ Work mempty [Movement info systemStaff staves]
   where
     fmap2 = fmap . fmap
     info =
