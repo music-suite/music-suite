@@ -1,8 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Provides functions for manipulating parts.
 module Music.Score.Part
@@ -52,12 +52,12 @@ import Data.Ord (comparing)
 import Data.PairMonad
 import Data.Semigroup
 import Music.Dynamics.Literal
+import Music.Parts.Subpart (BoundIncr (..), HasSubpart (..))
 import Music.Pitch.Literal
 import Music.Score.Internal.Util (through)
 import Music.Score.Ties
 import Music.Time
 import Music.Time.Internal.Transform
-import Music.Parts.Subpart (BoundIncr(..), HasSubpart(..))
 
 -- |
 -- Parts type.
@@ -342,14 +342,12 @@ rcat = List.foldl (</>) mempty
 
 -- |
 -- TODO document semantics, see TODO.md
-(</>) :: forall a . (Semigroup a, HasParts' a, HasSubpart (Part a)) => a -> a -> a
+(</>) :: forall a. (Semigroup a, HasParts' a, HasSubpart (Part a)) => a -> a -> a
 a </> b = a <> next b
   where
     subparts :: [SubpartOf (Part a)]
     subparts = toListOf (parts . subpart) a
-
     next :: a -> a
     next = case subparts of
-      []       -> id
+      [] -> id
       (x : xs) -> set (parts . subpart) (increment' (maximum' (x :| xs)))
-

@@ -33,7 +33,6 @@ import qualified System.Info
 import qualified System.Process
 import qualified System.Process
 
-
 -- Not perfect but works for many cases
 --
 -- >>> ucat [[violins],[violas]]

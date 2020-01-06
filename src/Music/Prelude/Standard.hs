@@ -39,7 +39,7 @@ import Music.Dynamics
 import Music.Parts
 import Music.Pitch
 import Music.Score hiding (Articulation, Clef (..), Dynamics, Fifths, Interval, Part, Pitch)
-import Music.Score.Export2.StandardNotation (Asp1, toMidi, toXml, toLy, fromAspects, runIOExportM)
+import Music.Score.Export2.StandardNotation (Asp1, fromAspects, runIOExportM, toLy, toMidi, toXml)
 import qualified System.Environment
 
 asNote :: StandardNote -> StandardNote
@@ -69,7 +69,7 @@ data CommandLineOptions
 -- TOOD Proper parser using optparse-applicative or optparse-generic
 parse :: Applicative m => [String] -> m CommandLineOptions
 parse ("-f" : "xml" : "-o" : path : _) = pure $ ToXml path
-parse ("-f" : "ly"  : "-o" : path : _) = pure $ ToLy path
+parse ("-f" : "ly" : "-o" : path : _) = pure $ ToLy path
 parse ("-f" : "mid" : "-o" : path : _) = pure $ ToMidi path
 parse _ = pure Help
 
@@ -78,25 +78,20 @@ defaultMain music = do
   args <- System.Environment.getArgs
   opts <- parse args
   case opts of
-    Help -> putStrLn
-      "Usage: <executable> -f [xml|ly|mid] -o PATH"
+    Help ->
+      putStrLn
+        "Usage: <executable> -f [xml|ly|mid] -o PATH"
     ToMidi path -> do
       midi <- runIOExportM $ toMidi music
       _writeMidi path midi
     ToLy path -> do
       work <- runIOExportM $ fromAspects music
-      work'  <- runIOExportM $ toLy work
+      work' <- runIOExportM $ toLy work
       _writeLy path work'
     ToXml path -> do
       work <- runIOExportM $ fromAspects music
-      work'  <- runIOExportM $ toXml work
+      work' <- runIOExportM $ toXml work
       _writeXml path work'
-
-
-
-
-
-
 
 -- TODO remove!
 fromPitch'' :: IsPitch a => Pitch -> a

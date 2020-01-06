@@ -48,9 +48,9 @@ import Data.VectorSpace hiding (Sum)
 import Music.Dynamics.Literal
 import qualified Music.Parts
 import qualified Music.Pitch
-import qualified Music.Pitch.Common as Common
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
+import qualified Music.Pitch.Common as Common
 import Music.Pitch.Literal
 import Music.Score.Articulation
 import Music.Score.Color
@@ -174,14 +174,6 @@ instance (HasDynamics a b) => HasDynamics (ColorT a) (ColorT b) where
 
 instance (HasDynamic a b) => HasDynamic (ColorT a) (ColorT b) where
   dynamic = _Wrapped . dynamic
-
-
-
-
-
-
-
-
 
 type instance Articulation (ColorT a) = Articulation a
 
@@ -441,24 +433,6 @@ instance (Transformable a, a ~ Part a) => HasPart Music.Parts.Part a where
 instance (Transformable a, a ~ Part a) => HasParts Music.Parts.Part a where
   parts = ($)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 instance HasDuration Common.Pitch where
   _duration = const 1
 
@@ -524,7 +498,6 @@ instance Reversible Common.Pitch where
 
 instance Reversible (Score a) where
   rev = revDefault
-
 
 unzipR :: Functor f => f (a, b) -> (f a, f b)
 unzipR x = (fmap fst x, fmap snd x)

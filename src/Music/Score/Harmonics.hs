@@ -4,7 +4,7 @@
 module Music.Score.Harmonics
   ( -- * Harmonics
     HasHarmonic (..),
-    Harmonics(..),
+    Harmonics (..),
     HarmonicT (..),
     runHarmonicT,
     harmonic,
@@ -16,7 +16,6 @@ import Control.Applicative
 import Control.Comonad
 import Control.Lens hiding (transform)
 import Data.Foldable
-import Numeric.Natural
 import Data.Foldable
 import Data.Functor.Couple
 import Data.Ratio
@@ -30,6 +29,7 @@ import Music.Pitch.Literal
 import Music.Score.Part
 import Music.Score.Phrases
 import Music.Time
+import Numeric.Natural
 
 -- 0 for none, positive for natural, negative for artificial
 class HasHarmonic a where
@@ -58,9 +58,9 @@ data Harmonics
   deriving (Eq, Ord, Show)
 
 runHarmonicT :: HarmonicT a -> (Harmonics, a)
-runHarmonicT (HarmonicT (Couple (hs, x))) = (, x) $ case hs of
+runHarmonicT (HarmonicT (Couple (hs, x))) = (,x) $ case hs of
   (Any False, Sum n) -> ArtificialHarmonic (fromIntegral n)
-  (Any True, Sum n)  -> NaturalHarmonic (fromIntegral n)
+  (Any True, Sum n) -> NaturalHarmonic (fromIntegral n)
 
 instance HasHarmonic a => HasHarmonic (b, a) where
 
