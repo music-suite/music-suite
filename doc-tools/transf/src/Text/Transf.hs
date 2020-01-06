@@ -390,12 +390,13 @@ musicT opts = transform "music" $ \input -> do
     -- Note that the use of readProcess will propagate error messages from stderr
     -- (including both parse and type errors).
 
-    -- TODO add defaultMain, using ${prel}
     -- TODO do not run Lilypond if not necessary (e.g. cache hash, including hash of transf, after successful run)
     do
       writeFile (name++".hs") (header <> indent 2 input)
       liftIO $ void $ readProcess "cabal" ["exec", "runhaskell", name++".hs", "--", "-o", name++".ly"] ""
 
+      -- TODO cabal run -- music-suite-examples-simple -f ly -o t.ly && lilypond -fpng -o t t.ly
+      -- no separate makePng necessary!
       let makeLy = do
           (exit, out, err) <- readProcessWithExitCode "lilypond" [
               "-f", format opts,
