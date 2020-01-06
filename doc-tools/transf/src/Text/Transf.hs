@@ -397,8 +397,12 @@ musicT opts = transform "music" $ \input -> do
       -- no separate makePng necessary!
       let makeLy = do
           (exit, out, err) <- readProcessWithExitCode "lilypond" [
-              "-f", "png", -- TODO remove format from Options, we always generate PNG!
-              "-dresolution=" ++ show (resolution opts) ++ "", name++".ly"
+              "-dbackend=eps",
+              "-dno-gs-load-fonts",
+              "-dinclude-eps-fonts",
+              "-dpixmap-format=pngalpha",
+              "--png"
+              , name++".ly"
               ] mempty
           hPutStr stderr out
           hPutStr stderr err
