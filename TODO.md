@@ -6,6 +6,10 @@
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
 
+- [ ] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
+
+- [ ] New (current) export does not render tremolo/gliss/harmonics/text/color
+
 - [X] Add more examples (e.g from Piece1, Piece2 etc)
   - [ ] Make them all compile (add to cabal file!)
 
