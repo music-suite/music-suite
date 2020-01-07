@@ -2588,7 +2588,7 @@ umts_13a =
     $ Leaf staff
   where
     staff :: Staff
-    staff = Staff mempty $ repeat $ Bar mempty [PitchLayer $ Beat (1 / 2) $ pitches .~ [P.c] $ mempty]
+    staff = Staff mempty $ take (length sysStaff) $ repeat $ Bar mempty [PitchLayer $ Beat (1 / 2) $ pitches .~ [P.c] $ mempty]
     -- sysStaff = zipWith (\setTS ks -> setTS $ keySignature .~ (Option $ Just $ First $ ks) $ mempty)
     --   -- TODO just 2/4
     --   ( (timeSignature .~ (Option $ Just $ First (2/4))) : (timeSignature .~ (Option $ Just $ First (3/4))) : repeat mempty)
