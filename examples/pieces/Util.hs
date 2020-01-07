@@ -699,30 +699,6 @@ i = spell {-s-}modally . (`asTypeOf` (0::Semitones)) . fromIntegral
 
 --------
 
--- | Orchestrate in the given parts.
-singleParts :: (Monoid a, Semigroup a, HasParts' a) => [PartOf a] -> [a] -> a
-singleParts ens = pcat . zipWith (set parts') (reverse $ ens)
-
-
--- | Orchestrate by doubling the given music in all given parts.
---
--- >>> doublePartsInOctave [violins,flutes] $ scat[c,d,e]
---
-doubleParts :: (Monoid a, HasParts' a) => [PartOf a] -> a -> a
-doubleParts ps x = mconcat $ fmap (\p -> set parts' p x) ps
-
-doublePartsF :: (Monoid (f a), HasParts' a, Functor f) => [PartOf a] -> f a -> f a
-doublePartsF ps x = mconcat $ fmap (\p -> set (mapped.parts') p x) ps
-
--- | Orchestrate by doubling in all given parts.
---
--- >>> doublePartsInOctave [(violins,0),(flutes,1)] $ scat[c,d,e]
---
-doublePartsInOctave :: (Monoid a, Transposable a, HasParts' a) => [(PartOf a, Int)] -> a -> a
-doublePartsInOctave ps x = mconcat $ fmap (\(p, n) -> set parts' p $ octavesUp (fromIntegral n) x) ps
-
-doublePartsInOctaveF :: (Monoid (f a), Transposable a, HasParts' a, Functor f) => [(PartOf a, Int)] -> f a -> f a
-doublePartsInOctaveF ps x = mconcat $ fmap (\(p, n) -> set (mapped . parts') p $ fmap (octavesUp (fromIntegral n)) x) ps
 
 --------
 

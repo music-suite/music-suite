@@ -1,5 +1,5 @@
-
-module Piece3 where
+{-# LANGUAGE FlexibleContexts #-}
+module Main where
 
 import Music.Prelude hiding (
     flutes1,    flutes2,
@@ -8,6 +8,7 @@ import Music.Prelude hiding (
     bassoons1,  bassoons2,
     trumpets1,  trumpets2,
     trombones1, trombones2,
+    offsetVs,
     Chord,
     Mode
     )
@@ -22,7 +23,7 @@ import qualified Debug.Trace
 import qualified Data.Foldable
 import qualified Music.Time.Internal.Convert
 import Music.Time.Internal.Util (rotate)
-import Util
+-- import Util
 
 {-
 
@@ -37,7 +38,7 @@ motive = compress 16 $ voiceFromDurs [2,1,1,2] motive'
 
 {-
   Total: 160 bars
-  
+
   Use recursive proc for harmony (brass) + lower strings:
     16  Vla (=10b)
     8   Vla (=20b)
@@ -66,7 +67,7 @@ motive = compress 16 $ voiceFromDurs [2,1,1,2] motive'
     Several expositions following one another in I, II doing something else
     Several expositions following one another in II, I doing something else
     I moving out or in while II being stationary (i.e. at front)
-    
+
     Version of the above with soloists (a) instead of tutti, gli altri (b) playing something else (i.e. sustaining)
 
     Motive being flung back and forth through ensemble (in various transpositions)
@@ -112,20 +113,27 @@ combinedVs = liftA3 k motiveVs offsetVs transpVs
     k m o t = aligned o 0 $ up t m
 
 renderMotive :: Aligned (Voice Pitch) -> Music
-renderMotive = renderAlignedVoice . fmap2 fromPitch''
+renderMotive = renderAlignedVoice . fmap2 fromPitch
 
-disp = openLilypond $ anExp 
+-- disp = openLilypond $ anExp
+
+main = defaultMain anExp
+
+anExp :: Music
+anExp = timeSignature (3/8) $ scat $ Data.List.intersperse (c |* (15/7)) $ take 20 $
+  fmap (rcat . set parts' violins) $ splitInto 20 $ getZipList $ fmap renderMotive combinedVs
 
 
-anExp = timeSignature (3/8) $ ucat $ set parts' violins $ take 10 $ getZipList $ fmap renderMotive combinedVs
+splitInto :: Int -> [a] -> [[a]]
+splitInto n xs = take n xs : splitInto n (drop n xs)
 
 
 
+-- viewSib = sys "open private/studies/Piece2/Export test 1 - Full Score.pdf"
 
-
-viewSib = sys "open private/studies/Piece2/Export test 1 - Full Score.pdf"
-
+orch :: Music
 orch = level mf $ flip doubleParts c $ orchParts
+
 orchParts :: [Part]
 orchParts = [flutes1,flutes2,oboes1,oboes2,clarinets1,clarinets2,bassoons1,bassoons2]
   <> divide 4 horns <> divide 3 trumpets <> divide 3 trombones <> [tutti tuba]
@@ -156,3 +164,5 @@ voiceFromDurs ds x = mconcat $ zipWith stretch ds $ fmap pure x
 -- TODO asum vs. msum vs. mconcat
 
 type Motive = Voice Pitch
+
+fmap2 = fmap . fmap

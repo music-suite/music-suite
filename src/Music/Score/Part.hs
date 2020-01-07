@@ -38,6 +38,7 @@ module Music.Score.Part
     -- PartT(..),
     -- getParts,
 
+    -- * Part composition
     (</>),
     rcat,
   )

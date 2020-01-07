@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 ------------------------------------------------------------------------------------
 
@@ -31,6 +32,12 @@ module Music.Prelude.Standard
     over,
     view,
 
+    -- ** Orchestration
+singleParts,
+doubleParts,
+doublePartsF,
+doublePartsInOctave,
+
     -- TODO remove the below:
     asScore,
     asVoice,
@@ -46,12 +53,13 @@ import Music.Dynamics
 import Music.Parts
 import Music.Pitch
 import Music.Score hiding (Articulation, Clef (..), Dynamics, Fifths, Interval, Part, Pitch)
+import qualified Music.Score.Part
 import Music.Score.Export2.StandardNotation (Asp1, fromAspects, runIOExportM, toLy, LilypondLayout(..), LilypondOptions(..), defaultLilypondOptions, toMidi, toXml)
 import qualified System.Environment
 import qualified Data.Music.MusicXml
 import qualified Text.Pretty
 import qualified Codec.Midi
-import Control.Lens (set, over, view)
+import Control.Lens (set, over, view, mapped)
 
 asNote :: StandardNote -> StandardNote
 asNote = id
@@ -112,3 +120,30 @@ defaultMain music = do
 fromPitch'' :: IsPitch a => Pitch -> a
 fromPitch'' = fromPitch
 {-# DEPRECATED fromPitch'' "Use fromPitch (no primes!)" #-}
+
+
+
+-- | Orchestrate in the given parts.
+singleParts :: (Monoid a, Semigroup a, HasParts' a) => [Music.Score.Part.Part a] -> [a] -> a
+singleParts ens = pcat . zipWith (set parts') (reverse $ ens)
+
+
+-- | Orchestrate by doubling the given music in all given parts.
+--
+-- >>> doublePartsInOctave [violins,flutes] $ scat[c,d,e]
+--
+doubleParts :: (Monoid a, HasParts' a) => [Music.Score.Part.Part a] -> a -> a
+doubleParts ps x = mconcat $ fmap (\p -> set parts' p x) ps
+
+doublePartsF :: (Monoid (f a), HasParts' a, Functor f) => [Music.Score.Part.Part a] -> f a -> f a
+doublePartsF ps x = mconcat $ fmap (\p -> set (mapped.parts') p x) ps
+
+-- | Orchestrate by doubling in all given parts.
+--
+-- >>> doublePartsInOctave [(violins,0),(flutes,1)] $ scat[c,d,e]
+--
+doublePartsInOctave :: (Monoid a, Transposable a, HasParts' a) => [(Music.Score.Part.Part a, Int)] -> a -> a
+doublePartsInOctave ps x = mconcat $ fmap (\(p, n) -> set parts' p $ octavesUp (fromIntegral n) x) ps
+
+doublePartsInOctaveF :: (Monoid (f a), Transposable a, HasParts' a, Functor f) => [(Music.Score.Part.Part a, Int)] -> f a -> f a
+doublePartsInOctaveF ps x = mconcat $ fmap (\(p, n) -> set (mapped . parts') p $ fmap (octavesUp (fromIntegral n)) x) ps
