@@ -36,6 +36,8 @@
 
 - Never fail on overlapping events
 
+- Render all examples (see music-suite.cabal and examples/ directory for documentation/web site)
+
 - Articualtion
   - [ ] Make sure tenuto/portato is rendered
   - [ ] Remove 'separated'
