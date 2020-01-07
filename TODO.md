@@ -12,6 +12,7 @@
 
 - [X] Add more examples (e.g from Piece1, Piece2 etc)
   - [ ] Make them all compile (add to cabal file!)
+  - [ ] Make all examples compile with the new build system
 
 - [ ] Can not build docs in CI (pushd missing from shell). Why? The nix-shell is meant to be reproducible.
   - This might work post 6694359cbe17bf3880714f8b3cd8b018da083b43, try reverting b11b2593b12a9d3014b36651f5094a12be0631f8 and test in CI again
@@ -43,9 +44,8 @@
   - [ ] Remove 'separated'
 
 - Lilypond export
-  - For LilypondInline, hide instrument names (at least if they're all "Piano X")
-
-- Make all examples compile with the new build system
+  - [ ] For LilypondInline, hide instrument names (at least if they're all "Piano X")
+  - [ ] Inline examples do not render composer/title
 
 - fromMidiProgram/fromMusicXmlSoundId are unsafe, rename accordingly. Only use these internally (users can use Music.Parts.<instrumentName> instead).
   - Could potentially use a quasiquoter for compile-time checked arbitrary instrument IDs
@@ -53,6 +53,9 @@
 - [ ] Large scores makes Lilypond segfault
 
 - Test generating all examples/documentation (and add more) in CI (nightly?)
+  - [ ] Make CI validate MIDI output (how?)
+  - [ ] Make CI validate MusicXML 3.0 output (using its XSD schema)
+  - [ ] Make CI run Lilypond on all examples to assure there are no errors
 
 - Make documentation generation compile/work with the new build system
   - [ ] Make sure doc generation/doctests are run in CI

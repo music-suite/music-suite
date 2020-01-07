@@ -11,7 +11,8 @@
 -- Stability   : experimental
 -- Portability : portable
 --
--- A Haskell representation of MusicXML.
+-- A Haskell representation of MusicXML 3.0.
+--
 -- You may want to use the "Data.Music.MusicXml.Simple" module to generate the representation.
 --
 -- For an introduction to MusicXML, see <http://www.makemusic.com/musicxml/tutorial>.
