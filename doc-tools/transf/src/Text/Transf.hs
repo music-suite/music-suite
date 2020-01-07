@@ -73,6 +73,7 @@ import qualified Data.Traversable   as Traversable
 -- import qualified Music.Prelude.Basic as Music
 import NeatInterpolation (text)
 import qualified Data.Text
+import qualified System.Directory
 
 -- |
 -- A single line of text.
@@ -390,8 +391,10 @@ musicT opts = transform "music" $ \input -> do
     -- Note that the use of readProcess will propagate error messages from stderr
     -- (including both parse and type errors).
 
+
     -- TODO do not run Lilypond if not necessary (e.g. cache hash, including hash of transf, after successful run)
-    do
+    exists <- liftIO $ System.Directory.doesFileExist (name ++ ".png")
+    unless exists $ do
       writeFile (name++".hs") (header <> indent 2 input)
       liftIO $ void $ readProcess "cabal" ["run", name++".hs", "--", "-f", "ly", "--layout=inline", "-o", name++".ly"] ""
 

@@ -53,6 +53,7 @@ library
         hashable,
         neat-interpolation,
         text,
+        directory,
         hint
     hs-source-dirs: src
     exposed-modules:

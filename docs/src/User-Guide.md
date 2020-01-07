@@ -1,4 +1,3 @@
-
 # First steps
 
 ## Installing the Suite
