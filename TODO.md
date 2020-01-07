@@ -43,7 +43,7 @@
 
 - [ ] Large scores makes Lilypond segfault
 
-- Test generating all examples (and add more) in CI (nightly?)
+- Test generating all examples/documentation (and add more) in CI (nightly?)
 
 - Make documentation generation compile/work with the new build system
   - [ ] Make sure doc generation/doctests are run in CI
@@ -51,7 +51,7 @@
   - [X] Make transf generate music files:
     - [X] Use [entry-point] as per above.
     - [X] Add something to Transf.hs to turn E into "main = Music.IO.defaultMain (E)"
-    - [ ] Define Music.IO.defaultMain to invoke the new export and expose a CLI similar to what's expected in Transf.hs (dynamically dispatching on output format etc).
+    - [X] Define Music.IO.defaultMain to invoke the new export and expose a CLI similar to what's expected in Transf.hs (dynamically dispatching on output format etc).
 
 - Add more examples/tests
 
@@ -228,7 +228,7 @@
     trigger a preview (visual/audial) in an editor window, as if the expression had been applied to
     defaultMain (see above).
 
-- For each part we want to know:
+- For each instrument we want to know:
         - Classification:
             - Type: (i.e. woodwind)
             - Family: (i.e. saxophone)
