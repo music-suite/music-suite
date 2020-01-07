@@ -334,45 +334,6 @@ inAmbitus amb p = m <= p && p <= n
     (m,n) = amb^.from ambitus
 
 
-{-|
-A 'PitchSpace' is a possibly infinite, ordered set of pitches.
--}
-newtype PitchSpace = PitchSpace { getPitchSpace :: Ambitus Pitch -> [Pitch] }
-  deriving ()
-
-
--- Build symmetric infinite space, useful for chords
-symmetricPitchSpace :: Pitch -> [Interval] -> PitchSpace
-symmetricPitchSpace o vs = harmonicSpace (cycle . reverse . fmap negate $ vs) o (cycle vs)
-
-{-
-Build a (possibly infinite) harmonic space from an origin and a list of intervals.
-The harmonic space is a function from ambitus, returning all pitches available in that ambitus.
-
->>> harmonicSpace [] c (cycle [m3,_M3,_P4]) ((c,c'')^.ambitus)
->>> harmonicSpace [-_P4,-_M3,-m3] c (cycle [m3,_M3,_P4]) ((c_,c')^.ambitus)
-[g_,eb_,c_,c,eb,g,c']
-
--}
-harmonicSpace :: [Interval] -> Pitch -> [Interval] -> PitchSpace
-harmonicSpace downw origin upw = PitchSpace $ go
-  where
-    go amb = Data.List.sort res
-      where
-        -- Widen ambitus to always contain the origin
-        amb2 = widenAmbitus origin amb
-        -- Fill the widened ambitus (and thus the original ambitus) by offseting intervals from origin
-        d = takeWhile (inAmbitus amb2) $ tail $ offsetPoints origin downw
-        u = takeWhile (inAmbitus amb2) $ tail $ offsetPoints origin upw
-        -- Filter to original ambitus
-        res = mfilter (inAmbitus amb) (d<>[origin]<>u)
-
-lookupSpace :: Ambitus Pitch -> PitchSpace -> [Pitch]
-lookupSpace = flip getPitchSpace
-
-inSpace :: Pitch -> PitchSpace -> Bool
-inSpace p s = not $ null $ lookupSpace ((p,p)^.ambitus) s
-
 
 -- TODO these should be the show instances...
 showDynamicT :: Show a => DynamicT Dynamics a -> String

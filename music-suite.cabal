@@ -350,11 +350,11 @@ executable "music-suite-examples-phrases"
     hs-source-dirs:     examples
     main-is:            phrases.hs
 
-executable "music-suite-examples-simple"
+executable "music-suite-examples-hello"
     build-depends:      base,
                         music-suite
     hs-source-dirs:     examples
-    main-is:            simple.hs
+    main-is:            hello.hs
 
 executable "music-suite-examples-time_signatures"
     build-depends:      base,
@@ -403,4 +403,11 @@ executable "music-suite-examples-sustain-punctuated"
                         lens,
                         music-suite
     hs-source-dirs:     examples/pieces/SustainPunctuated
+    main-is:            Score.hs
+
+executable "music-suite-examples-ambitus"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples/pieces/Ambitus
     main-is:            Score.hs
