@@ -40,6 +40,9 @@
   - [ ] Make sure tenuto/portato is rendered
   - [ ] Remove 'separated'
 
+- Lilypond export
+  - For LilypondInline, hide instrument names (at least if they're all "Piano X")
+
 - Make all examples compile with the new build system
 
 - fromMidiProgram/fromMusicXmlSoundId are unsafe, rename accordingly. Only use these internally (users can use Music.Parts.<instrumentName> instead).
