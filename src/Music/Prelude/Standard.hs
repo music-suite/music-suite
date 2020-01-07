@@ -26,6 +26,11 @@ module Music.Prelude.Standard
     StandardNote,
     defaultMain,
 
+    -- * Lens re-exports
+    set,
+    over,
+    view,
+
     -- TODO remove the below:
     asScore,
     asVoice,
@@ -46,6 +51,7 @@ import qualified System.Environment
 import qualified Data.Music.MusicXml
 import qualified Text.Pretty
 import qualified Codec.Midi
+import Control.Lens (set, over, view)
 
 asNote :: StandardNote -> StandardNote
 asNote = id

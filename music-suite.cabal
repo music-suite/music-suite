@@ -384,9 +384,9 @@ executable "music-suite-examples-voices"
     hs-source-dirs:     examples
     main-is:            voices.hs
 
--- executable "music-suite-examples-winds-phrasing"
---     build-depends:      base,
---                         lens,
---                         music-suite
---     hs-source-dirs:     examples/WindsPhrasing
---     main-is:            Score.hs
+executable "music-suite-examples-winds-phrasing"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples/pieces/WindsPhrasing
+    main-is:            Score.hs
