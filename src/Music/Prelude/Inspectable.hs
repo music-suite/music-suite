@@ -33,25 +33,6 @@ import qualified System.Info
 import qualified System.Process
 import qualified System.Process
 
--- Not perfect but works for many cases
---
--- >>> ucat [[violins],[violas]]
--- [Violin,Viola]
--- >>> ucat [[violins],[violins]]
--- [Violin I,Violin II]
--- >>> ucat [[violins1],[violins2]]
--- [Violin I,Violin II]
--- >>> ucat [[violins],[violins2]]
--- [Violin I,Violin II]
---
-ucat :: (Monoid a, Semigroup a, HasParts a a, Music.Score.Part a ~ Part) => [a] -> a
-ucat xs =
-  if allDistinct ps
-    then pcat xs
-    else pcat $ zipWith (parts' .~) (divide (length xs) p) xs
-  where
-    ps = concatMap (toListOf parts') xs
-    p = foldr1 largestPart ps
 
 class Inspectable a where
   inspectableToMusic :: a -> Music
@@ -117,10 +98,10 @@ instance Inspectable Duration where
   inspectableToMusic d = inspectableToMusic (0 >-> d)
 
 instance Inspectable [Span] where
-  inspectableToMusic xs = ucat $ fmap inspectableToMusic xs
+  inspectableToMusic xs = rcat $ fmap inspectableToMusic xs
 
 instance Inspectable [Voice Pitch] where
-  inspectableToMusic = asScore . ucat . fmap (fmap fromPitch) . fmap (renderAlignedVoice . aligned 0 0)
+  inspectableToMusic = asScore . rcat . fmap (fmap fromPitch) . fmap (renderAlignedVoice . aligned 0 0)
 
 instance Inspectable [Note Pitch] where
   inspectableToMusic = inspectableToMusic . fmap ((^. voice) . pure)

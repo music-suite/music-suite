@@ -89,12 +89,12 @@ trumpetPitches = fmap (take 7 . betweenOvertones) [1..7]
 -- Limit to 7!
 
 showPitch2D :: [[Pitch]] -> Music
-showPitch2D xss = ucat $ fmap (scat . fmap toNote) xss
+showPitch2D xss = rcat $ fmap (scat . fmap toNote) xss
 showPitch1D :: [Pitch] -> Music
 showPitch1D xs  = scat $ fmap toNote $ xs
 
 showRhythm2D :: [[Duration]] -> Music
-showRhythm2D xss = ucat $ fmap (scat . fmap (`stretch` c)) xss
+showRhythm2D xss = rcat $ fmap (scat . fmap (`stretch` c)) xss
 showRhythm1D :: [Duration] -> Music
 showRhythm1D xs  = scat $ fmap (`stretch` c) $ xs
 {-
@@ -143,7 +143,7 @@ applyRh n ps = zipWith (\p d -> stretch d p) ps (nthRhSeries n)
 -- How to do time?
 -- Just a (bad) sketch
 testTrumpets :: Music
-testTrumpets = level ff $ ucat $ set parts' trumpets $ fmap (\n -> times n padBar |> fullTrumpetFall n) [1..8]
+testTrumpets = level ff $ rcat $ set parts' trumpets $ fmap (\n -> times n padBar |> fullTrumpetFall n) [1..8]
   where
     padBar :: Music
     padBar          = colorBlue $ c'

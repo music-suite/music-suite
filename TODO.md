@@ -218,7 +218,7 @@
 
 - https://github.com/music-suite/music-score/issues/298
 
-- [ ] Replace ucat with (new) rcat
+- [X] Replace ucat with (new) rcat
 
 - $minorAspect
   - There's a philosophical difference between "major" aspects (pitch, dynamics, articulation, part)

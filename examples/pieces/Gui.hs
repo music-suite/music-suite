@@ -45,7 +45,7 @@ getRects (Array xs) = fmap getRect $ toList xs
     getN (Number x) = realToFrac x
      
 fromRects :: [[Double]] -> Music
-fromRects xs = ucat $ map f xs
+fromRects xs = rcat $ map f xs
   where
     f [x1,y1,x2,y2] = transform (toSpan x1 x2) $ down (toInt y2) $ set parts' violins $ pcat $ take ((+ 2) $ abs $ toNPitches $ y1-y2) [c..c''']
     -- TODO use range as well (y1-y2)

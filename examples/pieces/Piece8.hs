@@ -334,7 +334,7 @@ expandInto d v w = va `stitch` w `stitch` vb
 between a b = beginning (b-a) . ending a
 
 instance Inspectable [Aligned Melody] where
-  inspectableToMusic = inspectableToMusic . ucat . fmap (preserveMeta $ asScore . fmap fromPitch''. mcatMaybes . renderAlignedVoice)
+  inspectableToMusic = inspectableToMusic . rcat . fmap (preserveMeta $ asScore . fmap fromPitch''. mcatMaybes . renderAlignedVoice)
 
 -- TODO actually add these
 instance HasMeta a => HasMeta (Aligned a) where

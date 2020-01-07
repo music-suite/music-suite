@@ -484,7 +484,7 @@ allChords = scat $ fmap (uncurry addText . fmap inspectableToMusic) [
 
 {-
 Randomness idea:
->>> openMusicXml$  set (parts'._instrument) violin $ ucat $ simplifyPitches $ take 40 $ zipWith (flip transform) (fmap (\x-> up (_M2^*(floor$x*16)) (c::Music))(drop 205 rands)) $ fmap (\x->(realToFrac$floor$x*(16*2))/16<->32/16) rands
+>>> openMusicXml$  set (parts'._instrument) violin $ rcat $ simplifyPitches $ take 40 $ zipWith (flip transform) (fmap (\x-> up (_M2^*(floor$x*16)) (c::Music))(drop 205 rands)) $ fmap (\x->(realToFrac$floor$x*(16*2))/16<->32/16) rands
 -}
 
 
