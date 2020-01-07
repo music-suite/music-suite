@@ -120,7 +120,7 @@ renderMotive = renderAlignedVoice . fmap2 fromPitch
 main = defaultMain anExp
 
 anExp :: Music
-anExp = timeSignature (3/8) $ scat $ Data.List.intersperse (c |* (15/7)) $ take 20 $
+anExp = timeSignature (3/8) $ scat $ Data.List.intersperse (c |* (15/8)) $ take 20 $
   fmap (rcat . set parts' violins) $ splitInto 20 $ getZipList $ fmap renderMotive combinedVs
 
 
