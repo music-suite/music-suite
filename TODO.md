@@ -81,7 +81,7 @@
 
 - Replace (Option :. Last) with Maybe now that Semigroup is a superclass of Monoid
 
-- Improve rcat: do not use Enum
+- [X] Improve rcat: do not use Enum
   - [X] Make Common.Part use NonEmpty division list for Subpart (part I is the default for all instruments)
   - [X] New type and impl of rcat and </>
   - [ ] Document, as per below:
@@ -196,7 +196,7 @@
 
 - Get rid of Option (can use plain Maybe/First/Last now)
 
-- Reexport (set, over) from lens in default prelude? (see examples!)
+- [X] Reexport (set, over) from lens in default prelude? (see examples!)
 
 - Better syntax for entering pitch, maybe using a quasi-quoter
   - See e.g. Mozart example
