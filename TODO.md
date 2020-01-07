@@ -36,6 +36,10 @@
 
 - Never fail on overlapping events
 
+- Articualtion
+  - [ ] Make sure tenuto/portato is rendered
+  - [ ] Remove 'separated'
+
 - Make all examples compile with the new build system
 
 - fromMidiProgram/fromMusicXmlSoundId are unsafe, rename accordingly. Only use these internally (users can use Music.Parts.<instrumentName> instead).
