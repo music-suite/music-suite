@@ -397,3 +397,10 @@ executable "music-suite-examples-winds-phrasing"
                         music-suite
     hs-source-dirs:     examples/pieces/WindsPhrasing
     main-is:            Score.hs
+
+executable "music-suite-examples-sustain-punctuated"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples/pieces/SustainPunctuated
+    main-is:            Score.hs
