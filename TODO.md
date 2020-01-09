@@ -106,6 +106,8 @@
           incrSubpart :: Subpart a -> Subpart a
           subpart :: Lens' a (Subpart a)
 
+- Check `examples` dir for code that can be moved upstream to the main library
+
 - $spitSemantics
   - [ ] Check split semantics for Voice/Note. Should be possble to write a simple instance for both not and voice,
     not requiring a Splittable instance for the contained note.
