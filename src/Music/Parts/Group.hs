@@ -126,5 +126,5 @@ groupDefault xs =
     br = filter (isBrassInstrument . fst) xs
     pc = filter (isPercussionInstrument . fst) xs
     kb = filter (isKeyboardInstrument . fst) xs
-    voc = filter (isVocalInstrument . fst) xs
+    voc = filter (isVocalist . fst) xs
     str = filter (isStringInstrument . fst) xs
