@@ -32,11 +32,6 @@ module Music.Time.Position (
       stretchRelativeMidpoint,
       stretchRelativeOffset,
 
-      delayRelative,
-      delayRelativeOnset,
-      delayRelativeMidpoint,
-      delayRelativeOffset,
-
       transformRelative,
       transformRelativeOnset,
       transformRelativeMidpoint,
@@ -232,18 +227,6 @@ stretchRelativeMidpoint = stretchRelative 0.5
 -- 0 <-> 2
 stretchRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
 stretchRelativeOffset = stretchRelative 1
-
-delayRelative :: (HasPosition a, Transformable a) => Duration -> Duration -> a -> a
-delayRelative p n x = over (transformed $ undelaying (realToFrac $ x^.position p)) (delay n) x
-
-delayRelativeOnset :: (HasPosition a, Transformable a) => Duration -> a -> a
-delayRelativeOnset = delayRelative 0
-
-delayRelativeMidpoint :: (HasPosition a, Transformable a) => Duration -> a -> a
-delayRelativeMidpoint = delayRelative 0.5
-
-delayRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
-delayRelativeOffset = delayRelative 1
 
 transformRelative :: (HasPosition a, Transformable a) => Duration -> Span -> a -> a
 transformRelative p n x = over (transformed $ undelaying (realToFrac $ x^.position p)) (transform n) x
