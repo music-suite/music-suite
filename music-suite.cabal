@@ -420,3 +420,14 @@ executable "music-suite-examples-brass-large-ensemble"
                         music-suite
     hs-source-dirs:     examples/pieces/BrassLargeEnsemble
     main-is:            Score.hs
+
+-- TODO CrawfordSeeger
+-- TODO Floaters
+-- TODO HarmonyToTexture
+-- TODO HarmonyTriads
+-- TODO HarmPhasing
+-- TODO PianoChords
+-- TODO PopRhythms
+-- TODO SalientMelodicTransformations
+-- TODO SustainPunctuated
+-- TODO KlangFarben
