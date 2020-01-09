@@ -2,77 +2,45 @@
 
 ## Installing the Suite
 
-The Music Suite depends on the [Haskell platform][haskell-platform].
+TODO
 
-While not strictly required, [Lilypond][lilypond] is highly recommended as it allow you to
-preview musical scores. See [Import and Export](#import-and-export) for other formats.
-
-To install the suite, simply install the Haskell platform, and then run:
-
-    cabal install music-suite
-
-## Using Music files
-
-A piece of music is described by a *expressions* such as this one:
+Music Suite is an [embedded language](https://en.wikipedia.org/wiki/Domain-specific_language#External_and_Embedded_Domain_Specific_Languages), based on Haskell. A piece of music is described by a *expressions* such as this one:
 
 ```haskell
 c |> d |> e
 ```
 
-The simplest way to render this expression is to save it in a file named
-`foo.music` (or similar) and convert it using `music2pdf foo.music`. This
-should render a file called `foo.pdf`.
+### Using Haskell files
 
-There are several programs for converting music files:
-
-* `music2midi` – converts to MIDI
-* `music2musicxml` – converts to MusicXML
-* `music2ly` – converts to Lilypond input files
-* `music2pdf` – converts to PDF (using Lilypond)
-* `music2png` – converts to PNG (using Lilypond)
-
-## Using Haskell files
-
-Alternatively, you can create a file called `test.hs` (or similar) with the following structure:
 
 ```haskell
 import Music.Prelude
 
-example = c |> d |> e
-main = open example
+music = c |> d |> e
+
+main = defaultMain music
 ```
 
 Then either execute it using:
 
-    $ runhaskell test.hs
+    $ cabal runhaskell test.hs
 
 or compile and run it with
 
-    $ ghc --make test
-    $ ./test
+    $ cabal build PROGRAM-NAME
+    $ cabal run PROGRAM-NAME
 
-In this case the resulting program will generate and open a file called `test.pdf` containing the output seen above.
-
-Music files and Haskell files using `open` are equivalent in every aspect. In fact, the `music2...` programs are simple utilities that substitutes a single expression into a Haskell module such as the one above and executes the resulting main function.
+TODO
 
 ## Interactive use
 
-An advantage of Haskell files is that you can load them into a Haskell interpreter (i.e. GHCI).
-
-TODO configuration
-
-In the interpreter, the @[display] and @[audify] functions are the most convenient ways of inspecting music. Note that because these functions are overloaded you may be required to provide a specific type signature.
-
-```hs
->>> display $ ([c,g,bb]^.chord :: Chord Pitch)
->>> audify  $ (c :: Pitch)
->>> display $ ([c,g,bb]^.chord :: Chord Pitch)
->>> audify  $ [1,2,1]^.rhythm
-```
-
+TODO shell, notebook or similar interactive backend. See TODO.md.
 
 
 # Basic concepts
+
+<!--
+TODO explain link to Haskell concepts such as values, functions, type errors, lenses, etc.
 
 ## Lens, Prism and Iso
 
@@ -108,7 +76,7 @@ Most standard musical aspects are vector spaces:
 ## Separating points and vectors
 
 Music Suite takes inspiration from diagrams in *separating points and vectors*. XXX just briefly hint why this is important.
-
+-->
 
 
 # Writing music
@@ -500,7 +468,6 @@ mcatMaybes $ times 4 (accentAll g|*2 |> rest |> scat [d,d]|/2)|/8
 
 
 
-<!--
 # Transforming music
 
 ## Time transformations
@@ -600,7 +567,6 @@ TODO
 
 ## Part composition
 
--->
 
 # Musical aspects
 
@@ -881,6 +847,10 @@ See issue 103
 
 
 
+
+
+
+
 # Import and export
 
 The standard distribution (installed as part of `music-suite`) of the Music Suite includes a variety of input and output formats. There are also some experimental formats, which are distributed in separate packages, these are marked as experimental below.
@@ -889,21 +859,15 @@ The conventions for input or output formats is similar to the convention for pro
 
 ## MIDI
 
-All standard representations support MIDI input and output. The MIDI representation uses [HCodecs](http://hackage.haskell.org/package/HCodecs) and the real-time support uses [hamid](http://hackage.haskell.org/package/hamid).
-
-<!--
-You can read and write MIDI files using the functions @[readMidi] and @[writeMidi]. To play MIDI back in real-time, use @[playMidi] or @[playMidiIO], which uses [reenact](http://hackage.haskell.org/package/reenact).
--->
+TODO how to export
 
 Beware that MIDI input may contain time and pitch values that yield a non-readable notation, you need an sophisticated piece of analysis software to convert raw MIDI input to quantized input.
 
 ## Lilypond
 
-All standard representations support Lilypond output. The [lilypond](http://hackage.haskell.org/package/lilypond) package is used for parsing and pretty printing of Lilypond syntax. Lilypond is the recommended way of rendering music notation.
+TODO how to export
 
-Lilypond input is not available yet but a subset of the Lilypond language will hopefully be added soon.
-
-An example:
+TODO re-add toLilypondString?
 
 ```haskell
 toLilypondString $ asScore $ scat [c,d,e]
@@ -916,12 +880,11 @@ toLilypondString $ asScore $ scat [c,d,e]
 
 ## MusicXML
 
-All standard representations support MusicXML output. The [musicxml2](http://hackage.haskell.org/package/musicxml2) package is used for
-parsing and pretty printing.
+TODO export MusicXML 3.0
 
-The output is fairly complete, with some limitations ([reports][issue-tracker] welcome). There are no plans to support input in the near future.
+There are no plans to support input at the moment.
 
-Beware of the extreme verboseness of XML, for example:
+TODO re-add toMusicXmlString?
 
 ```haskell
 toMusicXmlString $ asScore $ scat [c,d,e]
@@ -1018,25 +981,26 @@ Vextab output (for use with [Vexflow](http://www.vexflow.com/)) is not supported
 
 The [music-sibelius](http://hackage.haskell.org/package/music-sibelius) package provides experimental import of Sibelius scores (as MusicXML import is [not supported](#musicxml)).
 
-<!--
-This feature could of course also be used to convert Sibelius scores to other formats such as Guido or ABC without having to write in the ManuScript language used by Sibelius.
--->
 
 
 
-<!--
 
 # Customizing music representation
 
+TODO explain 'Aspect' vs 'Meta'
+
 ## Adding an new representation
 
-You can use your own representation for all standard musical aspects.
 
 TODO
 
 ## Adding a new aspect
 
-It is also possible to make the Suite work with completely *new* aspects.
+It is also possible to make Music Suite work with completely *new* aspects.
+
+TODO
+
+## Adding meta
 
 TODO
 
@@ -1049,9 +1013,8 @@ TODO
 - If your representation supports *parallel* composition it should be a trivial (non-lifted) @[Monoid]. It it also supports sequential composition, it should support @[Transformable] and @[HasPosition].
 - Optionally, add instances for @[Splittable] and @[Reversible].
 
--->
 
-# Related work and libraries
+# Related work and Acknowledgements
 
 The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [PWGL][pwgl], [nyquist][nyquist], [music21][music21], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
 
