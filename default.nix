@@ -22,7 +22,7 @@ let
 in
 
 pkgs.stdenv.mkDerivation {
-  name = "build1";
+  name = "music-suite";
   buildInputs = [
 
     pkgs.lilypond
@@ -34,6 +34,6 @@ pkgs.stdenv.mkDerivation {
     )
    ];
   shellHook = ''
-    export PS1="build1> "
+    export PS1="music-suite@build> "
   '';
 }
