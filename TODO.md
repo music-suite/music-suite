@@ -79,7 +79,9 @@ Consider switching to a decentralized issue tracker such as:
   - Check compatibility with current HasPitch/HasPitches etc and new GHC record proposals
 
 - Rename the core composition operators (was: scat/pcat/rcat)
-  - seq/par/div - nice, probably simplest. The Prelude conflict is OK.
+  - seq/par/sep - nice, probably simplest.
+      - Need to enable NoImplicitPrelude in examples and make Music.Prelude reexport
+        the standard prelude sans (seq, par).
   - sequence/parallel/staves - also nice. Conflict with Control.Applicative is arguably worse (though sequenceA
     should be preferred in modern Haskell)
   - line/chord/staves, melody/chord? - Used in temporal-media, but both too specific?
