@@ -108,7 +108,7 @@
 
 - Check `examples` dir for code that can be moved upstream to the main library
 
-- $spitSemantics
+- $splitSemantics
   - [ ] Check split semantics for Voice/Note. Should be possble to write a simple instance for both not and voice,
     not requiring a Splittable instance for the contained note.
   - [ ] Compile examples/Piece/Piece8.hs
