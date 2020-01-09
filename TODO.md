@@ -1,7 +1,14 @@
 
 ## TODO
 
-**We use this file instead of an issue tracker, for now**
+**Note: We use this file instead of an issue tracker, for now**
+
+Consider switching to a decentralized issue tracker such as:
+
+- https://github.com/dspinellis/git-issue
+- https://github.com/MichaelMure/git-bug
+
+---
 
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
