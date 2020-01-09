@@ -22,7 +22,7 @@ import qualified Control.Comonad
 import qualified Debug.Trace
 import qualified Data.Text
 import qualified Music.Time.Internal.Convert
-import Music.Score.Export2.StandardNotation (test3)
+import Music.Score.Export.StandardNotation (test3)
 import Music.Time.Internal.Util (rotate)
 import Util
 import System.IO.Unsafe (unsafePerformIO)

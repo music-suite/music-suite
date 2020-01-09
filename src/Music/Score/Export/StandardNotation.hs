@@ -51,7 +51,7 @@
 -- - Like Sibelius (and unlike MusicXML/Lilypond) we use a conceptual \"system
 --   staff\" that contains information pertaining to all parts, such as key and
 --   time signatures.
-module Music.Score.Export2.StandardNotation
+module Music.Score.Export.StandardNotation
   ( LabelTree (..),
     foldLabelTree,
 

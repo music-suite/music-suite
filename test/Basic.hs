@@ -11,7 +11,7 @@ import qualified Music.Parts
 import qualified Music.Dynamics
 import qualified Music.Articulation
 import qualified Music.Score
-import Music.Score.Export2.StandardNotation(fromAspects, Work, PureExportM, runPureExportMNoLog, umts_export)
+import Music.Score.Export.StandardNotation(fromAspects, Work, PureExportM, runPureExportMNoLog, umts_export)
 
 import Record(r, l)
 import Record.Types -- TODO import list

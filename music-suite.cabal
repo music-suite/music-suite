@@ -184,7 +184,7 @@ library
                         -- Music.Score.Export.MusicXml
                         Music.Score.Export.ArticulationNotation
                         Music.Score.Export.DynamicNotation
-                        Music.Score.Export2.StandardNotation
+                        Music.Score.Export.StandardNotation
                         Music.Score.Import.Abc
                         Music.Score.Import.Lilypond
                         Music.Score.Import.Midi
