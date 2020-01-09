@@ -411,3 +411,12 @@ executable "music-suite-examples-ambitus"
                         music-suite
     hs-source-dirs:     examples/pieces/Ambitus
     main-is:            Score.hs
+
+executable "music-suite-examples-brass-large-ensemble"
+    build-depends:      base,
+                        lens,
+                        containers,
+                        random,
+                        music-suite
+    hs-source-dirs:     examples/pieces/BrassLargeEnsemble
+    main-is:            Score.hs
