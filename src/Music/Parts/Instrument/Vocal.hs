@@ -1,9 +1,9 @@
 -- | Vocal part "instruments".
 -- Of course voices are not instruments, but for the sake of consistency.
 module Music.Parts.Instrument.Vocal
-  ( VocalInstrument,
+  ( Vocalist,
     vocalInstrument,
-    isVocalInstrument,
+    isVocalist,
   )
 where
 
@@ -14,15 +14,15 @@ import Music.Parts.Instrument
 import Music.Pitch (Ambitus, Clef)
 import Music.Pitch.Common (Interval, Pitch)
 
-newtype VocalInstrument = VocalInstrument {getVocalInstrument :: Instrument}
+newtype Vocalist = Vocalist {getVocalist :: Instrument}
 
 partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
 
-vocalInstrument :: Prism' Instrument VocalInstrument
-vocalInstrument = prism' getVocalInstrument (fmap VocalInstrument . partial isVocalInstrument)
+vocalInstrument :: Prism' Instrument Vocalist
+vocalInstrument = prism' getVocalist (fmap Vocalist . partial isVocalist)
 
-isVocalInstrument :: Instrument -> Bool
-isVocalInstrument x = case toMusicXmlSoundId x of
+isVocalist :: Instrument -> Bool
+isVocalist x = case toMusicXmlSoundId x of
   Nothing -> False
   Just i -> Data.List.isPrefixOf "voice" i
