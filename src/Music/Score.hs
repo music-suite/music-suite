@@ -24,13 +24,6 @@ module Music.Score
     module Music.Score.Import.Abc,
     module Music.Score.Import.Lilypond,
     module Music.Score.Import.Midi,
-    -- module Music.Score.Export.Backend,
-    -- module Music.Score.Export.NoteList,
-    -- module Music.Score.Export.Midi,
-    -- module Music.Score.Export.SuperCollider,
-    -- module Music.Score.Export.Lilypond,
-    -- module Music.Score.Export.MusicXml,
-    -- module Music.Score.Export2.StandardNotation,
 
     module Music.Time,
     module Control.Lens.Operators,
@@ -47,15 +40,10 @@ module Music.Score
   )
 where
 
--- to,
 
 import Control.Applicative
 import Control.Lens (from, toListOf, view)
 import Control.Lens.Operators hiding ((<.>), (<|), (|>))
--- import           Control.Lens                   hiding (Level, above, below,
---                                                  inside, parts, reversed,
---                                                  rewrite, simple, transform,
---                                                  (<.>), (<|), (|>))
 import Control.Monad hiding (mapM)
 import Control.Monad.Plus
 import Data.AffineSpace
