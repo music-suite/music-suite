@@ -34,6 +34,6 @@ pkgs.stdenv.mkDerivation {
     )
    ];
   shellHook = ''
-    export PS1="music-suite@build> "
+  export PS1="music-suite-build> "
   '';
 }
