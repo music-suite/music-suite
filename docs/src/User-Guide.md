@@ -39,8 +39,9 @@ TODO shell, notebook or similar interactive backend. See TODO.md.
 
 # Basic concepts
 
+TODO explain link to Haskell concepts such as values, functions, type errors, lenses, etc?
+
 <!--
-TODO explain link to Haskell concepts such as values, functions, type errors, lenses, etc.
 
 ## Lens, Prism and Iso
 
