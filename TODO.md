@@ -126,8 +126,8 @@ Consider switching to a decentralized issue tracker such as:
   - Quantization
   - Voice separation
 
-- Finish/document new export code ("Export2")
-  - Make Export2 support:
+- Finish/document new export code (formerly "Export2")
+  - Make new export support:
     - Colored noteheads?
         To be added to Asp1.
         Could be part of pitch type.
