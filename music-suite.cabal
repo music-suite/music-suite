@@ -405,6 +405,15 @@ executable "music-suite-examples-sustain-punctuated"
     hs-source-dirs:     examples/pieces/SustainPunctuated
     main-is:            Score.hs
 
+executable "music-suite-examples-piece8"
+    build-depends:      base,
+                        lens,
+                        containers,
+                        vector-space,
+                        music-suite
+    hs-source-dirs:     examples/pieces
+    main-is:            Piece8.hs
+
 executable "music-suite-examples-ambitus"
     build-depends:      base,
                         lens,

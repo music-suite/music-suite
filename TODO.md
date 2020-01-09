@@ -106,6 +106,10 @@
           incrSubpart :: Subpart a -> Subpart a
           subpart :: Lens' a (Subpart a)
 
+- $spitSemantics
+  - [ ] Check split semantics for Voice/Note. Should be possble to write a simple instance for both not and voice,
+    not requiring a Splittable instance for the contained note.
+  - [ ] Compile examples/Piece/Piece8.hs
 
 - Regression test:
   - Quantization

@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, ConstraintKinds, FlexibleContexts, FlexibleInstances, TypeFamilies, DeriveFunctor,
+{-# LANGUAGE TypeFamilies, ScopedTypeVariables, ConstraintKinds, FlexibleContexts, FlexibleInstances, TypeFamilies, DeriveFunctor,
   GeneralizedNewtypeDeriving, ViewPatterns, MultiParamTypeClasses, RankNTypes, ConstraintKinds, StandaloneDeriving,
   DeriveTraversable, DeriveDataTypeable, TupleSections #-}
 
@@ -7,24 +7,32 @@ Voice combinators (create basic voices, combine, transform)
   Monoid
   Time and pitch tranformations
   Notably: split/chunks/mconcat
-  
+
   Infinite voice
   Sequence, parallel and random
     Maybe create a big tree of "alternative" and traverse in various ways to get seq/par structure
 -}
 import Music.Prelude
-import Util
+import qualified Music.Score.Pitch
 import Data.AffineSpace
 import Music.Time.Internal.Util (rotate)
 import Data.Tree(Tree)
 import qualified Data.Tree
 import qualified Data.List
+import Control.Lens (Iso, Lens', lens, element, iso, _1, _2, preview, each, _head, _last, nullOf)
 
 
 
 
 
+type Rhythm = Voice ()
+type Melody = Voice (Maybe Pitch)
+type Accompaniment = Score Pitch
 
+rhythm = durationsAsVoice
+
+simplifyPitches :: (HasPitches' a, Music.Score.Pitch.Pitch a ~ Pitch) => a -> a
+simplifyPitches = over pitches' (relative c $ spell usingSharps)
 
 
 -- Some melodies
@@ -33,12 +41,14 @@ fiskeskar = [((1/8),Just d)^.note,((1/8),Just a)^.note,((1/8),Just a)^.note,((1/
 
 silent :: Melody
 silent     = [((3/16),Just g)^.note,((1/16),Just a)^.note,((1/8),Just g)^.note,((3/8),Just e)^.note,((3/16),Just g)^.note,((1/16),Just a)^.note,((1/8),Just g)^.note,((3/8),Just e)^.note,((1/4),Just d')^.note,((1/8),Just d')^.note,((3/8),Just b)^.note,((1/4),Just c')^.note,((1/8),Just c')^.note,((3/8),Just g)^.note,((1/4),Just a)^.note,((1/8),Just a)^.note,((3/16),Just c')^.note,((1/16),Just b)^.note,((1/8),Just a)^.note,((3/16),Just g)^.note,((1/16),Just a)^.note,((1/8),Just g)^.note,((3/8),Just e)^.note,((1/4),Just a)^.note,((1/8),Just a)^.note,((3/16),Just c')^.note,((1/16),Just b)^.note,((1/8),Just a)^.note,((3/16),Just g)^.note,((1/16),Just a)^.note,((1/8),Just g)^.note,((3/8),Just e)^.note,((1/4),Just d')^.note,((1/8),Just d')^.note,((3/16),Just f')^.note,((1/16),Just d')^.note,((1/8),Just b)^.note,((3/8),Just c')^.note,((3/8),Just e')^.note,((3/16),Just c')^.note,((1/16),Just g)^.note,((1/8),Just e)^.note,((3/16),Just g)^.note,((1/16),Just f)^.note,((1/8),Just d)^.note,((3/4),Just c)^.note]^.voice
+
+silentBass :: Melody
 silentBass = [((3/4),Just c_)^.note,((3/4),Just c_)^.note,((3/4),Just g_)^.note,((3/4),Just c_)^.note,((3/4),Just f__)^.note,((3/4),Just c_)^.note,((3/4),Just f__)^.note,((3/4),Just c_)^.note,((3/4),Just g_)^.note,((3/4),Just c_)^.note,((3/4),Just g_)^.note,((3/4),Just c_)^.note]^.voice
 
 -- Just repeats with a strange offset (as we begin and end on tonic)
 -- Example of why melodies as sequences doesn't really make sense (we can't just move the pickup to the position of the final tonic)
 fs1 = beginning 20 $ mconcat $ stitchTogether fiskeskar
--- Split off part at beginning, transform before stitching back together 
+-- Split off part at beginning, transform before stitching back together
 fs2 = (rev $ beginning 2.5 $ fiskeskar) `stitch` fiskeskar
 -- Expand chunks, gradually increasing
 fs3 = simplifyPitches $ beginning 40 $ mconcat $ zipWith (\n -> over pitches (relative d  (^*n))) [1..] (chunks 4.25 $ cycleV fiskeskar)
@@ -51,6 +61,16 @@ fs7  = expandInto (4+3/8) fiskeskar (fiskeskar)
 fs8  = expandInto (5+2/4) fiskeskar (fiskeskar|/3) -- mad!
 fs9  = expandInto (2+1/4) fiskeskar (between (2/4) (5/4) fiskeskar)
 fs10 = expandInto (5+1/4) fiskeskar (between (0/4) (3/4) fiskeskar)
+
+music :: Music
+music = (error "TODO")
+  [ fs1, fs2, fs3, fs7, fs8, fs9, fs10 ]
+
+-- TODO FIXME add?
+-- See $splitSemantics in TODO.md
+instance HasDuration a => HasDuration (Maybe a)
+-- TODO FIXME add?
+instance Splittable a => Splittable (Maybe a)
 
 {-
 All rather chaotic! Stitch is interesting, but not that intuitive!
@@ -70,7 +90,7 @@ ausfaltung i v = interleave v (up i v)
 
 -- Uses of stichTogether
 v1 :: Melody
-v1 = 
+v1 =
   simplifyPitches $ 
   (!! 4) $ -- generations grow quickly
   (stitchTogether $ octavesDown 2 [c,d,fs,b_,cs]^.voice |/4)
@@ -102,7 +122,7 @@ vectorsPoints o = iso (points o) (vectors o)
   where
     points o  = tail . offsetPoints o
     vectors o = tail . pointOffsets o
-    
+
 pointsVectors :: AffineSpace a => a -> Iso [a] [a] [Diff a] [Diff a]
 pointsVectors o = from (vectorsPoints o)
 
@@ -134,24 +154,24 @@ I.e. it becomes possible to cut out notes.
 --  ((((-m2)-M2)P1
 --    ((-M2)-m2))P1
 --   (((-m2)-M2(P1)))))
--- 
--- 
+--
+--
 -- (1   (2 3))
 -- ==>
---    1 1 (1)   
--- 
+--    1 1 (1)
+--
 -- ((0 1) (2 3))
 -- ==>
 --   (1) 1 (1)
--- 
--- 
+--
+--
 -- ((1 2) (((3 4) (5 6)) (7 (8 9))))
---  ( (1) 1 ( ((1)1(1))1     (1(1))))  
+--  ( (1) 1 ( ((1)1(1))1     (1(1))))
 -- renderMelT :: MelT -> Melody
 -- renderMelT ()
 
 
---  Schenkerian stuff 
+--  Schenkerian stuff
 
 -- Contours
 
@@ -176,8 +196,8 @@ I.e. it becomes possible to cut out notes.
 
 
 -- Melody as vector
-melodicAmbitus :: (HasPitch' a, PitchOf a ~ Pitch) => Voice a -> Ambitus Pitch
-melodicAmbitus ys = 
+melodicAmbitus :: (HasPitch' a, Music.Score.Pitch.Pitch a ~ Pitch) => Voice a -> Ambitus Pitch
+melodicAmbitus ys =
   let xs = fmap (^.pitch) ys in case (headV xs, lastV xs) of
   (Just a, Just b) -> (a `min` b, a `max` b)^.ambitus
   _                -> error "melodicAmbitus: Empty voice"
@@ -252,7 +272,9 @@ stitch = stitchWith (\a b -> [a]^.voice)
 stitchLast :: (HasPitches' a, Transposable a) => Voice a -> Voice a -> Voice a
 stitchLast = stitchWith (\a b -> [b]^.voice)
 
-stitchWith :: (HasPitches' a, Transposable a) => (Note a -> Note a -> Voice a) -> Voice a -> Voice a -> Voice a
+main = defaultMain music
+
+stitchWith :: forall a . (HasPitches' a, Transposable a) => (Note a -> Note a -> Voice a) -> Voice a -> Voice a -> Voice a
 stitchWith f a b
   | nullOf notes a = b
   | nullOf notes b = a
@@ -266,7 +288,6 @@ stitchWith f a b
     lastPitch a = lastV a^?!pitches
     headPitch b = headV b^?!pitches
     diff = (lastPitch a .-. headPitch b)
-
 
 
 type VS a = [Placed (Voice a)]
@@ -334,7 +355,7 @@ expandInto d v w = va `stitch` w `stitch` vb
 between a b = beginning (b-a) . ending a
 
 instance Inspectable [Aligned Melody] where
-  inspectableToMusic = inspectableToMusic . rcat . fmap (preserveMeta $ asScore . fmap fromPitch''. mcatMaybes . renderAlignedVoice)
+  inspectableToMusic = inspectableToMusic . rcat . fmap (preserveMeta $ asScore . fmap fromPitch . mcatMaybes . renderAlignedVoice)
 
 -- TODO actually add these
 instance HasMeta a => HasMeta (Aligned a) where
