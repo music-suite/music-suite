@@ -175,20 +175,12 @@ library
                         Music.Score.Text
                         Music.Score.Harmonics
                         Music.Score.Color
-                        -- Music.Score.Export.Abc
-                        -- Music.Score.Export.Backend
-                        -- Music.Score.Export.NoteList
-                        -- Music.Score.Export.Midi
-                        -- Music.Score.Export.SuperCollider
-                        -- Music.Score.Export.Lilypond
-                        -- Music.Score.Export.MusicXml
                         Music.Score.Export.ArticulationNotation
                         Music.Score.Export.DynamicNotation
                         Music.Score.Export.StandardNotation
                         Music.Score.Import.Abc
                         Music.Score.Import.Lilypond
                         Music.Score.Import.Midi
-                        -- We expose these to allow GHCI development
                         Music.Time.Internal.Convert
                         Music.Time.Internal.Util
                         Music.Time.Internal.Transform
