@@ -199,9 +199,9 @@ For Western-style pitch types, the standard pitch names can be used:
 scat [c, d, e, f, g, a, b]
 ```
 
+<!--
 Pitch names in other languages work as well, for example `ut, do, re, mi, fa, so, la, ti, si`.
 
-<!--
 German names (using `h` and `b` instead of `b` and `bb`) can be approximated as follows:
 
 ```haskell
@@ -249,13 +249,15 @@ As you might expect, there is also a shorthand for sharp and flat notes:
 Here is an overview of all pitch notations:
 
 ```haskell
-sharpen c             == c sharp       == cs
-flatten d             == d flat        == db
-(sharpen . sharpen) c == c doubleSharp == css
-(flatten . flatten) d == d doubleFlat  == dss
+sharpen c             == cs
+flatten d             == db
+(sharpen . sharpen) c == css
+(flatten . flatten) d == dss
 ```
 
-Note that `cs == db` may or may not hold depending on which pitch representation you use.
+TODO explain overloading first
+
+Note that `cs == db` may or may not hold depending on the pitch representation. For example `Music.Pitch.Common` distinguishes between enharmonics, while `Integer` does not.
 
 ### Interval names
 
@@ -286,11 +288,14 @@ in scat $ fmap (`up` c) intervals
 You can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
 operators, think of pitches and points `.` and intervals as vectors `^`.
 
+### Spelling and normalization
 
+TODO
 
 ### Qualified pitch and interval names
 
-There is nothing special about the pitch and interval literals, they are simply values exported by the `Music.Pitch.Literal` module. While this module is reexported by the standard music preludes, you can also import it qualified if you want to avoid bringing the single-letter pitch names into scope.
+There is nothing special about the pitch and interval literals, they are simply values exported by the `Music.Pitch.Literal` module. While this module is reexported by the standard music preludes, you can also import it qualified. You can use this in combination with `hiding`.
+
 
 ```haskell
 Pitch.c |> Pitch.d .+^ Interval.m3
@@ -374,10 +379,10 @@ in (accent . legato) (p1 </> p2 </> p3)
 
 @[Solo]
 
+TODO working with staves
 
-## Space
+TODO updating and merging parts. Or should we write about this in cobination with pitch/dynamic etc (as they're all traversal-based).
 
-TODO
 
 ## Tremolo
 
@@ -516,10 +521,11 @@ in compress 4 $ melody </> pedal
 (invertPitches e $ scat [c..g]|*(2/5))
 ```
 
+TODO Transformable class.
 
 ## Pitches and intervals
 
-TODO
+TODO Transposable class. Similar to Transformable but for pitches.
 
 ## Name and accidental
 
@@ -616,7 +622,6 @@ TODO equal temperament and intonation
 ## Articulation
 ## Dynamics
 ## Parts
-## Space
 
 
 # Time and structure
@@ -712,7 +717,10 @@ The notion of meta-data used in the Music Suite is more extensive than just stat
 
 All time structures in the Suite support an arbitrary number of meta-data fields, indexed by type. All meta-information is required to satisfy the `Typeable`, so that meta-data can be packed and unpacked dynamically), and `Monoid`, so that values can be created and composed without having to worry about meta-data. The `mempty` value is implicitly chosen if no meta-information of the given type has been entered: for example the default title is empty, the default time signature is `4/4`. If two values annotated with meta-data are composed, their associated meta-data maps are composed as well, using the `<>` operator on each of the types.
 
-The distinction between ordinary musical data and meta-data is not always clear cut. As a rule of thumb, meta-events are any kind of event that does not directly affect how the represented music sounds when performed. However they might affect the appearance of the musical notation. For example, a *clef* is meta-information, while a *slur* is not. A notable exception to this rule is meta-events affecting tempo such as metronome marks and fermatas, which usually *do* affect the performance of the music.
+> The distinction between ordinary musical data and meta-data is not always clear-cut. As a rule of thumb, meta-events are any kind of event that does not directly affect how the represented music sounds when performed. However they might affect the appearance of the musical notation. For example, a *clef* is meta-information, while a *slur* is not. A notable exception to this rule is meta-events affecting tempo such as metronome marks and fermatas, which usually *do* affect the performance of the music.
+
+TODO explain what meta-really is: dynamical (Typeable) vs static. All presentational/extra info is meta, all *logical/semantic/sounding* information is not. This is a trade off between static and dynamic typing.
+
 
 ## Title
 
@@ -850,6 +858,23 @@ See issue 103
 
 
 
+# Constraints
+
+# Counterpoint
+
+# Orchestration
+
+# Tuning
+
+# Sound and timbre
+
+# Spacialization
+
+# Interactive use
+
+# Serialization
+
+
 
 
 # Import and export
@@ -970,13 +995,6 @@ toMusicXmlString $ asScore $ scat [c,d,e]
 
 ABC notation (for use with [abcjs](https://github.com/paulrosen/abcjs) or similar engines) is still experimental.
 
-## Guido
-
-Guido output (for use with the [GUIDO engine](http://guidolib.sourceforge.net/)) is not supported yet. This would be useful, as it allow real-time rendering of scores.
-
-## Vextab
-
-Vextab output (for use with [Vexflow](http://www.vexflow.com/)) is not supported yet.
 
 ## Sibelius
 

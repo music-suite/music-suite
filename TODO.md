@@ -40,9 +40,22 @@ Consider switching to a decentralized issue tracker such as:
 
 - Get rid of all CPP
 
+- Remove/fix code stubs/undefined
+
 - Port issues from the old tracker
 
 - Never fail on overlapping events
+  $needsTests
+
+- New features:
+  - Constraints
+  - Counterpoint
+  - Harmonic systems (harmonic spaces?)
+  - Randomization/markov etc.
+  - Orchestration
+  - Melodic shapes
+  - Check "playing difficulty" (most basically range, but also breathing, range over time etc)
+  - "Snap to closest beat/beat group/bar" to model pickups etc. In combination with concat.
 
 - Render all examples (see music-suite.cabal and examples/ directory for documentation/web site)
 
@@ -155,7 +168,6 @@ Consider switching to a decentralized issue tracker such as:
 
 - New backends (ideas):
   - ABC notation
-  - Vextab
   - Audio engines:
     - csound-expression/temporal-media
     - scsynth
@@ -167,7 +179,7 @@ Consider switching to a decentralized issue tracker such as:
 
 
 
-- $entrypoint Decide on top-level interface
+- [X]  $entrypoint Decide on top-level interface
   - By default recommend *no IO*
 
   - All data is is in the DSL/Haskell code. For *import formats* (such as Sibelius), we'll generate either 1) Haskell code or 2) TIDL serialized data, which can be automatically converted to Haskell code as per TIDL semantics.
@@ -213,7 +225,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] Reexport (set, over) from lens in default prelude? (see examples!)
 
-- Better syntax for entering pitch, maybe using a quasi-quoter
+- Better syntax for entering pitch/time, maybe using a quasi-quoter
   - See e.g. Mozart example
   - See syntax sketches, also compare Lilypond
   - OTOH the language "just basic Haskell" is maybe more important than simple syntax?
@@ -225,7 +237,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - Get rid of asNote/asScore/asVoice/asTrack
 
-- Get rid of Prelude.StandardNote et al, use Asp1 (renamed!) instead
+- [X] Get rid of Prelude.StandardNote et al, use Asp1 (renamed!) instead
 
 - Get rid of duplication in music-suite.cabal
 
