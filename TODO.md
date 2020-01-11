@@ -49,6 +49,10 @@ Consider switching to a decentralized issue tracker such as:
 - Never fail on overlapping/simultaneously events
   $needsTests
   - What is the correct behavior if a score is exported where a some part has overlapping notes?
+  - Generally this should be fine, though currently the backend/export code does not handle it
+    correctly.
+  - Putting overlapping events in monophonic instruments (e.g. flute) should be a linting error,
+    similar to range etc.
 
 - Music.Score.Export contains internal modules and should be renamed accordingly
   - What top-level interface should we support other than defaultMain?
