@@ -483,11 +483,11 @@ intervalDiv i di
   | otherwise = 0 :: Int
   where
     intervalDivPos i di
-      | (i < basis_P1) = undefined
+      | (i < basis_P1) = error "Impossible"
       | (i ^-^ di) < basis_P1 = 0
       | otherwise = 1 + (intervalDiv (i ^-^ di) di)
     intervalDivNeg i di
-      | (i > basis_P1) = undefined
+      | (i > basis_P1) = error "Impossible"
       | (i ^+^ di) > basis_P1 = 0
       | otherwise = 1 + (intervalDiv (i ^+^ di) di)
 
