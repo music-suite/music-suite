@@ -531,11 +531,11 @@ scat [e,d,f,e] <> c
 
 ## Onset and duration
 
-```TODOmusic+haskell
+```music+haskell
 let
     melody = legato $ scat [scat [c,d,e,c], scat [e,f], g|*2]
-    pedal era = set era (era^.duration) $ c_
-in compress 4 $ melody </> pedal melody
+    pedal = set era (melody^.era) g_
+in compress 4 $ melody </> pedal
 ```
 
 ## Pitch
