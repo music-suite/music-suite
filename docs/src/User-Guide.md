@@ -180,9 +180,6 @@ For `x <> y <> z ..`, we can write @[ppar] `[x, y, z]` (short for *parallel conc
 ppar [c,e..g]|/2
 ```
 
-Actually, @[pseq] and @[ppar] used to be called `melody` and `chord` back in the days, but
-I figured out that these are names that you actually want to use in your own code.
-
 ## Pitch
 
 ### Pitch names
