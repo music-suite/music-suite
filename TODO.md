@@ -238,7 +238,9 @@ Consider switching to a decentralized issue tracker such as:
     - Cons: Disallows the onset/offset lenses Music.Time.Position
       - E.g. what happens if you set the era of a Note to Nothing?
   - Idea 2: Make a separate class for things which may have empty positions (e.g. Scores)
-    - Pros: Can retain lenses in Music.Time.Position
+    - Pros:
+      - Can retain lenses in Music.Time.Position
+      - Allow a convenient definition of 'rest' as a synonym for 'mempty'. No more removeRests/mcatMaybes!
     - Cons: Different juxtaposition operators (e.g. scat) for scores/notes etc.
   - Idea 3: Decore empty type with an extra era, e.g. semantically:
       type Score a = Either Span (NonEmpty (Event a))
