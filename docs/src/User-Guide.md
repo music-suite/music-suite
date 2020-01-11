@@ -23,24 +23,32 @@ TODO
 
 ```haskell
 import Music.Prelude
-
-music = c |> d |> e
-
 main = defaultMain music
+
+music =
+  c |> d |> e
 ```
+
+TODO the first lines here are boilerplate. The last line (`c |> d |> e`) containsthe actual music expression.
+
+The purpose of the `import` line is to allow you to use Music Suite, as Haskell only imports its own standard libary by default. The `main` line turns whatever `music` is defined to be into a CLI program which we can execute as follows:
 
 Then either execute it using:
 
     $ cabal runhaskell test.hs
 
-or compile and run it with
+TODO you can copy-paste all examples from this file into the above template. For example, this is how our original expression would look:
 
-    $ cabal build PROGRAM-NAME
-    $ cabal run PROGRAM-NAME
+```haskell
+import Music.Prelude
+main = defaultMain music
 
-TODO
+music =
+  c <> e
+```
 
-## Using an interactive environment
+
+### Using an interactive environment
 
 TODO shell, notebook or similar interactive backend. See TODO.md.
 
