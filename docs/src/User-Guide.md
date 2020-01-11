@@ -982,12 +982,23 @@ modeToScale c phrygian
 
 ## Chords
 
-TODO
 
 ```music+haskell
 inspectableToMusic $
-[ functionToChord c majorTriad
+[ majorTriad
+, minorTriad
+, augmentedChord
+, diminishedChord
+, halfDiminishedChord
+]
+```
+
+```music+haskell
+inspectableToMusic $
+[ functionToChord g majorTriad
 , functionToChord c minorTriad
+, functionToChord f augmentedChord
+, functionToChord eb diminishedChord
 ]
 ```
 
