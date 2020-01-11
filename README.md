@@ -31,6 +31,12 @@ cabal build
 cabal test
 ```
 
+To run individual tests:
+
+```
+cabal run TEST_NAME -- TEST_ARGS...
+```
+
 ### Generate documentation
 
 #### Reference docs

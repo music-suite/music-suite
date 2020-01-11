@@ -85,21 +85,36 @@ import qualified Data.Set as Set
 import Data.VectorSpace hiding (Sum (..))
 import Music.Time.Types
 
--- Transformable laws:
--- > transform mempty   = id
--- > transform (s <> t) = transform s . transform t
---
--- Duration law:
--- > _duration a = _duration (_era a)
---
--- Position law:
--- > _position p (transform s a) = transform s (_position p a)
---
--- Lemma:
--- > _duration (transform s a) = transform s (_duration a)
 
 -- |
 -- Class of values that can be transformed (i.e. scaled and moved) in time.
+--
+-- Laws:
+--
+-- @
+-- transform mempty   = id
+-- transform (s <> t) = transform s . transform t
+-- @
+--
+-- In other words 'Transformable' values are monoid actions of 'Span'.
+--
+-- Instances of Transformable and HasDuration should satisfy:
+--
+-- @
+-- _duration a = _duration (_era a)
+-- @
+--
+-- Instances of Transformable and HasPosition  should satisfy:
+--
+-- @
+-- _position p (transform s a) = transform s (_position p a)
+-- @
+--
+-- Lemmas
+--
+-- @
+-- _duration (transform s a) = transform s (_duration a)
+-- @
 class Transformable a where
   transform :: Span -> a -> a
 
