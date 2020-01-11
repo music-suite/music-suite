@@ -815,7 +815,7 @@ timeSignature (3/8) $ scat [db,eb,f]
 ```music+haskell
 let
   ch = pcat [e,g,c']
-  waltz = scat [c,ch,ch,g_,ch,ch]
+  waltz = scat [c,ch,ch,g_,ch,ch] |* (1/4)
 in
 timeSignature (3/4) waltz
 ```
@@ -823,7 +823,7 @@ timeSignature (3/4) waltz
 ```music+haskell
 let
   ch = pcat [e,g,c']
-  waltz = scat [c,ch,ch,g_,ch,ch]
+  waltz = scat [c,ch,ch,g_,ch,ch] |* (1/4)
 in
 timeSignature (3/8) $ compress 2 waltz
 ```
