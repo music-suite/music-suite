@@ -258,6 +258,11 @@ Consider switching to a decentralized issue tracker such as:
     - Cons: Different juxtaposition operators (e.g. scat) for scores/notes etc.
   - Idea 3: Decore empty type with an extra era, e.g. semantically:
       type Score a = Either Span (NonEmpty (Event a))
+      instance Monoid (Score a) where
+        mempty = Left mempty
+        mappend (Left _) x = x
+        mappend x (Left _) = x
+        mappend (Right x) (Right y) = Right (x <> y)
     - Pros:
       - Allows onset/offset lenses, etc
       - Same juxtaposition operators everywhere
