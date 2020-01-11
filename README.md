@@ -56,5 +56,5 @@ The output appears in `docs/build`. You can point a HTTP server to this director
 #### API docs
 
 ```
-cabal haddock
+cabal haddock --haddock-options=--hyperlink-source
 ```

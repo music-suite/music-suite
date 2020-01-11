@@ -418,7 +418,11 @@ set dynamics' pp c
 ```
 
 ```music+haskell
-set articulation' (accentuation +~ 2 $ def) c
+set articulations' (accentuation +~ 2 $ mempty) c
+```
+
+```music+haskell
+over (articulations' . accentuation) (+ 2) c
 ```
 
 ## Parts
