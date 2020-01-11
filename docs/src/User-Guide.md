@@ -96,8 +96,6 @@ Music Suite takes inspiration from diagrams in *separating points and vectors*. 
 -->
 
 
-# Writing music
-
 ## Time and Duration
 
 A single note can be entered by its name. This will render a note in the middle octave with a duration of one. Note that note values and durations correspond exactly, a duration of `1` is a whole note, a duration of `1/2` is a half note, and so on.
