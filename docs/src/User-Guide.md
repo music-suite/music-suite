@@ -6,11 +6,18 @@ TODO
 
 ## Writing music
 
-Music Suite is an [embedded language](https://en.wikipedia.org/wiki/Domain-specific_language#External_and_Embedded_Domain_Specific_Languages), based on Haskell. A piece of music is described by a *expressions* such as this one:
+Music Suite is an [embedded language](https://en.wikipedia.org/wiki/Domain-specific_language#External_and_Embedded_Domain_Specific_Languages), based on Haskell. A piece of music is described by a *expressions*. Much as arithmetic expressions describes numbers or other mathematical objects, music expressions describe music.
 
-```haskell
-c |> d |> e
+Here is a very simple expression:
+
+```haskell+haskell
+c <> e
 ```
+
+This consist of the notes `c` and `e`, played simultaneously. The `<>` symbol is an operator that means "compose this music in parallel".
+
+TODO
+
 
 ### Using files
 
@@ -527,7 +534,9 @@ in times 4 $ melody
 pseq [e,d,f,e] <> c
 ```
 
-## Onset and duration
+## Position and duration
+
+TODO instead of using Transformable, show how to set duration explicitly
 
 ```music+haskell
 let
@@ -535,6 +544,12 @@ let
     pedal = set era (melody^.era) g_
 in compress 4 $ melody </> pedal
 ```
+
+TODO example with stretchRelative
+
+TODO HasPosition for scores (see TODO.d)
+
+TODO Aligned, "floaters"
 
 ## Pitch
 
@@ -582,15 +597,6 @@ TODO
 ## Spelling
 
 TODO
-
-## Scales
-
-TODO
-
-## Chords
-
-TODO
-
 
 
 ## Parts
@@ -925,6 +931,30 @@ TODO
 ## Phrase traversals
 
 TODO
+
+
+# Scales, modes and harmony
+
+TODO
+
+```music+haskell
+inspectableToMusic $
+modeToScale c phrygian
+```
+
+## Chords
+
+TODO
+
+```music+haskell
+inspectableToMusic $
+[ functionToChord c majorTriad
+, functionToChord c minorTriad
+]
+```
+
+
+# Random sources and non-determinism
 
 # Constraints
 

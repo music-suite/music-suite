@@ -306,6 +306,14 @@ Consider switching to a decentralized issue tracker such as:
   - Briefly: Simultaneous events should not be allowed with Reactive. Semantically:
       type Reactive a = ([Time], Time -> a)
 
+- Maybe: Allow passing Inspectables in defaultMain
+  - Pros:
+    - No arbitrary hardcoding of (Score ...)
+    - Looks nicer in documentation (no need for inspectableToMusic)
+  - Cons:
+    - No defaulting. Simple expressions like `c` will be ambigous.
+      Ideally we would accept any type and default to Music/Score StandardNotate iff there is ambiguity.
+
 - [X] For each instrument we want to know:
         - Classification:
             - Type: (i.e. woodwind)
