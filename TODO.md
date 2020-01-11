@@ -297,11 +297,11 @@ Consider switching to a decentralized issue tracker such as:
     trigger a preview (visual/audial) in an editor window, as if the expression had been applied to
     defaultMain (see above).
 
-- $reactiveSemantics
+- [X] $reactiveSemantics
   - Briefly: Simultaneous events should not be allowed with Reactive. Semantically:
       type Reactive a = ([Time], Time -> a)
 
-- For each instrument we want to know:
+- [X] For each instrument we want to know:
         - Classification:
             - Type: (i.e. woodwind)
             - Family: (i.e. saxophone)
