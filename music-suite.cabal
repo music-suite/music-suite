@@ -166,7 +166,7 @@ library
                         Music.Score.Meta.Tempo
                         Music.Score.Meta.Time
                         Music.Score.Meta.Title
-                        Music.Score.Meta.Extract
+                        Music.Score.Export.Meta
                         Music.Score.Pitch
                         Music.Score.Articulation
                         Music.Score.Dynamics

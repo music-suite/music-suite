@@ -50,6 +50,9 @@ Consider switching to a decentralized issue tracker such as:
   $needsTests
   - What is the correct behavior if a score is exported where a some part has overlapping notes?
 
+- Music.Score.Export contains internal modules and should be renamed accordingly
+  - What top-level interface should we support other than defaultMain?
+
 - New features:
   - Constraints
   - Counterpoint

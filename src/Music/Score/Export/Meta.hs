@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -- Utility to extract meta-data at a specific point in time.
-module Music.Score.Meta.Extract where
+module Music.Score.Export.Meta where
 
 import Control.Lens
 import Control.Monad
