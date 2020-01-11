@@ -332,6 +332,7 @@ over eras (stretchRelativeOnset 0.5) $ scat $ zipWith level [fff,ff,_f,mf,mp,_p,
 
 TODO other ways of applying level
 
+
 Equal dynamic marks are hidden if they appear to closely:
 
 ```music+haskell
@@ -745,7 +746,7 @@ The notion of meta-data used in the Music Suite is more extensive than just stat
 
 All time structures in the Suite support an arbitrary number of meta-data fields, indexed by type. All meta-information is required to satisfy the `Typeable`, so that meta-data can be packed and unpacked dynamically), and `Monoid`, so that values can be created and composed without having to worry about meta-data. The `mempty` value is implicitly chosen if no meta-information of the given type has been entered: for example the default title is empty, the default time signature is `4/4`. If two values annotated with meta-data are composed, their associated meta-data maps are composed as well, using the `<>` operator on each of the types.
 
-> The distinction between ordinary musical data and meta-data is not always clear-cut. As a rule of thumb, meta-events are any kind of event that does not directly affect how the represented music sounds when performed. However they might affect the appearance of the musical notation. For example, a *clef* is meta-information, while a *slur* is not. A notable exception to this rule is meta-events affecting tempo such as metronome marks and fermatas, which usually *do* affect the performance of the music.
+The distinction between ordinary musical data and meta-data is not always clear-cut. As a rule of thumb, meta-events are any kind of event that does not directly affect how the represented music sounds when performed. However they might affect the appearance of the musical notation. For example, a *clef* is meta-information, while a *slur* is not. A notable exception to this rule is meta-events affecting tempo such as metronome marks and fermatas, which usually *do* affect the performance of the music.
 
 TODO explain what meta-really is: dynamical (Typeable) vs static. All presentational/extra info is meta, all *logical/semantic/sounding* information is not. This is a trade off between static and dynamic typing.
 
