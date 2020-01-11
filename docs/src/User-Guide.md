@@ -329,10 +329,16 @@ Dynamic values are overloaded in the same way as pitches. The dynamic literals a
 An overview of the dynamic values:
 
 ```music+haskell
-scat $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
+over eras (stretchRelativeOnset 0.5) $ scat $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
 ```
 
 TODO other ways of applying level
+
+TODO FIXME this is not exported correctly:
+
+```music+haskell
+[(0<->1, c)^.event, (2<->3, d)^.event]^.score
+```
 
 ## Articulation
 

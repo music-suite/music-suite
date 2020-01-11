@@ -37,6 +37,12 @@ To run individual tests:
 cabal run TEST_NAME -- TEST_ARGS...
 ```
 
+### Development shell
+
+```
+cabal exec --package music-suite ghci
+```
+
 ### Generate documentation
 
 #### Reference docs

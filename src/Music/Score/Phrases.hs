@@ -183,14 +183,14 @@ singleMVoice = prism' voiceToScore' scoreToVoice
               | u < t = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
               | otherwise = error "scoreToVoice: Impossible!" -- Because of overlapping events guard
 
-mapPhrasesWithPrevAndCurrentOnset :: HasPhrases s t a b => (Maybe Time -> Time -> Phrase a -> Phrase b) -> s -> t
+mapPhrasesWithPrevAndCurrentOnset :: HasPhrases s t a b => (Maybe (Time, Phrase a) -> Time -> Phrase a -> Phrase b) -> s -> t
 mapPhrasesWithPrevAndCurrentOnset f = over (mvoices . mVoiceTVoice) (withPrevAndCurrentOnset f)
 
-withPrevAndCurrentOnset :: (Maybe Time -> Time -> a -> b) -> Track a -> Track b
-withPrevAndCurrentOnset f = over placeds (fmap (\(x, y, z) -> fmap (f (fmap placedOnset x) (placedOnset y)) y) . withPrevNext)
+withPrevAndCurrentOnset :: (Maybe (Time, a) -> Time -> a -> b) -> Track a -> Track b
+withPrevAndCurrentOnset f = over placeds (fmap (\(x, y, z) -> fmap (f (fmap placedOnset x) (fst $ placedOnset y)) y) . withPrevNext)
   where
-    placedOnset :: Placed a -> Time
-    placedOnset = view (from placed . _1)
+    placedOnset :: Placed a -> (Time, a)
+    placedOnset = view (from placed)
 
 mVoiceTVoice :: Lens (MVoice a) (MVoice b) (TVoice a) (TVoice b)
 mVoiceTVoice = mVoicePVoice . pVoiceTVoice
