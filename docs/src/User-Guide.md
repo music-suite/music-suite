@@ -1,8 +1,10 @@
 # First steps
 
-## Installing the Suite
+## Installing
 
 TODO
+
+## Writing music
 
 Music Suite is an [embedded language](https://en.wikipedia.org/wiki/Domain-specific_language#External_and_Embedded_Domain_Specific_Languages), based on Haskell. A piece of music is described by a *expressions* such as this one:
 
@@ -10,8 +12,7 @@ Music Suite is an [embedded language](https://en.wikipedia.org/wiki/Domain-speci
 c |> d |> e
 ```
 
-### Using Haskell files
-
+### Using files
 
 ```haskell
 import Music.Prelude
@@ -32,7 +33,7 @@ or compile and run it with
 
 TODO
 
-## Interactive use
+## Using an interactive environment
 
 TODO shell, notebook or similar interactive backend. See TODO.md.
 
@@ -741,7 +742,7 @@ It is often desirable to annotate music with extraneous information, such as tit
 
 The notion of meta-data used in the Music Suite is more extensive than just static values: any @[Transformable] container can be wrapped, and the meta-data will be transformed when the annotated value is transformed. This is why meta-data is often variable values, such as @[Reactive] or @[Behavior].
 
-All time structures in the Suite support an arbitrary number of meta-data fields, indexed by type. All meta-information is required to satisfy the `Typeable`, so that meta-data can be packed and unpacked dynamically), and `Monoid`, so that values can be created and composed without having to worry about meta-data. The `mempty` value is implicitly chosen if no meta-information of the given type has been entered: for example the default title is empty, the default time signature is `4/4`. If two values annotated with meta-data are composed, their associated meta-data maps are composed as well, using the `<>` operator on each of the types.
+All time structures in Music Suite support an arbitrary number of meta-data fields, indexed by type. All meta-information is required to satisfy the `Typeable`, so that meta-data can be packed and unpacked dynamically), and `Monoid`, so that values can be created and composed without having to worry about meta-data. The `mempty` value is implicitly chosen if no meta-information of the given type has been entered: for example the default title is empty, the default time signature is `4/4`. If two values annotated with meta-data are composed, their associated meta-data maps are composed as well, using the `<>` operator on each of the types.
 
 The distinction between ordinary musical data and meta-data is not always clear-cut. As a rule of thumb, meta-events are any kind of event that does not directly affect how the represented music sounds when performed. However they might affect the appearance of the musical notation. For example, a *clef* is meta-information, while a *slur* is not. A notable exception to this rule is meta-events affecting tempo such as metronome marks and fermatas, which usually *do* affect the performance of the music.
 
