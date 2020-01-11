@@ -401,6 +401,26 @@ in (accent . legato) (p1 </> p2 </> p3)
 
 These kind of traversals are not limited to articulation. See [Phrase traversals](#phrase-traversals) for a more general overview.
 
+## Overloading of dynamics and artiulation
+
+We've already seen how the expression `c` is overloaded to mean many things: the pitch C4, an event containing the pitch `c` with the default onset and offset, a score containing a single event, and so on. (TODO make sure we have)
+
+Dynamics and articulations are overloaded too. The default articulation means "no particular separation or accentuation", and renders as a note without any markings Similarly the default dynamic renders as *mf* (mezzo-forte).
+
+TODO show how to override/add/multiply much as with pitch.
+
+```music+haskell
+c
+```
+
+```music+haskell
+set dynamics' pp c
+```
+
+```music+haskell
+set articulation' (accentuation +~ 2 $ def) c
+```
+
 ## Parts
 
 @[Division]
