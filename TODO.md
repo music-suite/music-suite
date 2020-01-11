@@ -270,7 +270,10 @@ Consider switching to a decentralized issue tracker such as:
 
 
 - Proper scale/chord type supporting all common use-cases
+  - Represent functions/modes and chords/scales
   - Making (infinite) octave-repeating scales from pitches/intervals
+  - Looking up pitches
+  - Transposable instance for chords/scales (pitch-wise)
 
 - Get rid of asNote/asScore/asVoice/asTrack
 
