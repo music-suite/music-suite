@@ -249,15 +249,24 @@ As you might expect, there is also a shorthand for sharp and flat notes:
 Here is an overview of all pitch notations:
 
 ```haskell
-sharpen c             == cs
-flatten d             == db
-(sharpen . sharpen) c == css
-(flatten . flatten) d == dss
+sharpen c             = cs
+flatten d             = db
+(sharpen . sharpen) c = css
+(flatten . flatten) d = dss
 ```
 
-TODO explain overloading first
+Note that `cs == db` may or may not hold depending on the pitch representation to understand this, read about *overloading* in the next section.
 
-Note that `cs == db` may or may not hold depending on the pitch representation. For example `Music.Pitch.Common` distinguishes between enharmonics, while `Integer` does not.
+
+### Overloading
+
+TODO overloading, explain why the following works:
+
+```haskell
+return (c::Note) == (c::Score Note)
+```
+
+TODO refer back to previous table. For example `Music.Pitch.Common` distinguishes between enharmonics, while `Integer` does not.
 
 ### Interval names
 
@@ -290,7 +299,16 @@ operators, think of pitches and points `.` and intervals as vectors `^`.
 
 ### Spelling and normalization
 
-TODO
+TODO auto-spelling/normalization
+
+```music+haskell
+scat $ fmap (`alter` c) [-2..2]
+```
+
+TODO this breaks Lilypond output (and XML?). Add auto-normalization in export
+```TODOmusic+haskell
+scat $ fmap (`alter` c) [-5..5]
+```
 
 ### Qualified pitch and interval names
 
@@ -301,11 +319,6 @@ There is nothing special about the pitch and interval literals, they are simply 
 Pitch.c |> Pitch.d .+^ Interval.m3
 ```
 
-TODO overloading, explain why the following works:
-
-```haskell
-return (c::Note) == (c::Score Note)
-```
 
 ## Dynamics
 

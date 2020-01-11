@@ -84,6 +84,6 @@ flattened = iso flatten sharpen
 
 alter :: Alterable a => Int -> a -> a
 alter n x
-  | n < 0 = iterate flatten x !! n
+  | n < 0 = iterate flatten x !! (abs n)
   | n == 0 = x
   | n > 0 = iterate sharpen x !! n
