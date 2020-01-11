@@ -232,7 +232,21 @@ Consider switching to a decentralized issue tracker such as:
   - See syntax sketches, also compare Lilypond
   - OTOH the language "just basic Haskell" is maybe more important than simple syntax?
 
-- Fix lawless (HasPosition (Score a)) by adding default/empty position to class
+- Fix lawless (HasPosition (Score a))
+  - Idea 1: by adding default/empty position to class (a HasEnvelope in Diagrams)
+    - Pros: simple. Same operators (e.g. for juxtaposition) can be used for Scores, Notes, Spans, etc.
+    - Cons: Disallows the onset/offset lenses Music.Time.Position
+      - E.g. what happens if you set the era of a Note to Nothing?
+  - Idea 2: Make a separate class for things which may have empty positions (e.g. Scores)
+    - Pros: Can retain lenses in Music.Time.Position
+    - Cons: Different juxtaposition operators (e.g. scat) for scores/notes etc.
+  - Idea 3: Decore empty type with an extra era, e.g. semantically:
+      type Score a = Either Span (NonEmpty (Event a))
+    - Pros:
+      - Allows onset/offset lenses, etc
+      - Same juxtaposition operators everywhere
+
+
 
 - Proper scale/chord type supporting all common use-cases
   - Making (infinite) octave-repeating scales from pitches/intervals
