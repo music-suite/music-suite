@@ -53,6 +53,9 @@ Consider switching to a decentralized issue tracker such as:
 - Music.Score.Export contains internal modules and should be renamed accordingly
   - What top-level interface should we support other than defaultMain?
 
+- In Parts: extracted/extractedWithInfo should be Traversals, not lenses to lists (the latter
+  is generally law-breaking)
+
 - New features:
   - Constraints
   - Counterpoint
