@@ -772,9 +772,11 @@ composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ scat [c,d,e,c]|/
 
 ## Key signatures
 
-@[key]
-
-@[keySignature]
+```music+haskell
+let major = True -- TODO!
+in
+keySignature (key db major) $ scat [db,eb,f]
+```
 
 @[keySignatureDuring]
 
@@ -782,15 +784,49 @@ composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ scat [c,d,e,c]|/
 
 ## Time signatures
 
-@[time]
+```haskell
+2/4 :: TimeSignature
+```
 
-@[compoundTime]
+```haskell
+(3+2)/8 :: TimeSignature
+```
 
-@[timeSignature]
+Or equivalently:
+
+```haskell
+time 4 4 :: TimeSignature
+```
+
+```haskell
+compoundTime [3,2] 8 :: TimeSignature
+```
+
+```music+haskell
+timeSignature (3/8) $ scat [db,eb,f]
+```
 
 @[timeSignatureDuring]
 
 @[withTimeSignature]
+
+### Converting from one time signature to another
+
+```music+haskell
+let
+  ch = pcat [e,g,c']
+  waltz = scat [c,ch,ch,g_,ch,ch]
+in
+timeSignature (3/4) waltz
+```
+
+```music+haskell
+let
+  ch = pcat [e,g,c']
+  waltz = scat [c,ch,ch,g_,ch,ch]
+in
+timeSignature (3/8) $ compress 2 waltz
+```
 
 ## Tempo
 
