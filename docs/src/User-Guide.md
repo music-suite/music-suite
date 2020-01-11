@@ -393,7 +393,7 @@ let
 in (accent . legato) (p1 </> p2 </> p3)
 ```
 
-These kind of traversals are not limited to articulation. See [Phrase traversals](#phrase-traverals) for a more general overview.
+These kind of traversals are not limited to articulation. See [Phrase traversals](#phrase-traversals) for a more general overview.
 
 ## Parts
 
