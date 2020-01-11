@@ -355,7 +355,7 @@ header =
   --------------------------------------------------------------------------------
   -- Header added by transf begins here
   --------------------------------------------------------------------------------
-  {-# LANGUAGE TypeApplications, FlexibleContexts, OverloadedStrings #-}
+  {-# LANGUAGE TypeApplications, GADTs, FlexibleContexts, OverloadedStrings #-}
   {- cabal:
       build-depends: base, music-suite
   -}

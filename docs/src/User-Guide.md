@@ -558,11 +558,6 @@ let
 in times 4 $ melody
 ```
 
-@[sustain]
-
-```music+haskell
-pseq [e,d,f,e] <> c
-```
 
 ## Position and duration
 
@@ -600,6 +595,7 @@ TODO Transformable class.
 TODO Transposable class. Similar to Transformable but for pitches.
 
 ## Name and accidental
+
 
 TODO
 
@@ -656,6 +652,12 @@ TODO
 @[pitches']
 
 @[up]
+
+```music+haskell
+let
+  ch x = ppar [x, upDiatonic c 2 x, upDiatonic c 5 x]
+in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
+```
 
 @[down]
 
@@ -983,6 +985,7 @@ inspectableToMusic $
 ]
 ```
 
+# Patterns
 
 # Random sources and non-determinism
 
@@ -991,6 +994,8 @@ inspectableToMusic $
 # Counterpoint
 
 # Orchestration
+
+TODO defining ensembles (part lists)
 
 # Tuning
 
