@@ -46,8 +46,9 @@ Consider switching to a decentralized issue tracker such as:
 
 - Port issues from the old tracker
 
-- Never fail on overlapping events
+- Never fail on overlapping/simultaneously events
   $needsTests
+  - What is the correct behavior if a score is exported where a some part has overlapping notes?
 
 - New features:
   - Constraints
