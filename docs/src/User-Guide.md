@@ -130,12 +130,10 @@ The `|*` and `|/` operators can be used as shorthands for `delay` and `compress`
 (c |> d |> e |> c |> d|*2 |> d|*2)|/16
 ```
 
-
-Allthough the actual types are more general, you can think of `c` as an expression
-of type `Score Note`, and the transformations as functions `Score Note -> Score Note`.
+Here is a more complex example using function composition. The dot operator `.` is used to compose the function `up _P8` (transpose the music up one octave), `compress 2` ("compress" or "diminish" the music by a factor of two) and `delay 3` (delay the music by the duration of three whole notes). The composition applies the in left to right order.
 
 ```music+haskell
-up _P8 . compress 2 . delay 3 $ c
+(up _P8 . compress 2 . delay 3) c
 ```
 
 
@@ -334,15 +332,22 @@ over eras (stretchRelativeOnset 0.5) $ scat $ zipWith level [fff,ff,_f,mf,mp,_p,
 
 TODO other ways of applying level
 
-TODO FIXME this is not exported correctly:
+Equal dynamic marks are hidden if they appear to closely:
 
 ```music+haskell
-[(0<->1, c)^.event, (2<->3, d)^.event]^.score
+-- Hidden
+[(0<->1, c)^.event, (1.5<->3, d)^.event]^.score
+  </>
+-- Different
+[(0<->1, c)^.event, set dynamics' ff (1.5<->3, d)^.event]^.score
+  </>
+-- Distant
+[(0<->1, c)^.event, (3<->4, d)^.event]^.score
 ```
 
 ## Articulation
 
-Some basic articulation functions are @[legato], @[staccato], @[portato], @[tenuto], @[separated], @[staccatissimo]:
+Some basic articulation functions are @[legato], @[staccato], @[portato], @[tenuto], @[staccatissimo]:
 
 ```music+haskell
 legato (scat [c..g]|/8)
@@ -352,8 +357,6 @@ staccato (scat [c..g]|/8)
 portato (scat [c..g]|/8)
     </>
 tenuto (scat [c..g]|/8)
-    </>
-separated (scat [c..g]|/8)
     </>
 staccatissimo (scat [c..g]|/8)
 ```
@@ -367,6 +370,8 @@ accent (scat [c..g]|/8)
 marcato (scat [c..g]|/8)
 ```
 
+By default, accents are only applied to the first note in each phrase. You can also explicitly specify the last note, or all the notes:
+
 @[accentLast]
 @[accentAll]
 
@@ -376,7 +381,9 @@ accentLast (scat [c..g]|/8)
 accentAll (scat [c..g]|/8)
 ```
 
-Applying articulations over multiple parts:
+You can apply slurs and articulation marks to scores of arbitrary complexity. The library will traverse each phrase in the score and apply the articulations separately.
+
+For example in this example we're building up a score consisting of three parts and then apply `accent . legato`:
 
 ```music+haskell
 let
@@ -385,6 +392,8 @@ let
     p3 = delay (3/4) $ scat [c..c']|/4
 in (accent . legato) (p1 </> p2 </> p3)
 ```
+
+These kind of traversals are not limited to articulation. See [Phrase traversals](#phrase-traverals) for a more general overview.
 
 ## Parts
 
@@ -521,11 +530,11 @@ scat [e,d,f,e] <> c
 
 ## Onset and duration
 
-```music+haskellx
+```TODOmusic+haskell
 let
-    melody = asScore $ legato $ scat [scat [c,d,e,c], scat [e,f], g|*2]
-    pedal  = asScore $ delayTime (melody^.onset) $ stretch (melody^.duration) $ c_
-in compress 4 $ melody </> pedal
+    melody = legato $ scat [scat [c,d,e,c], scat [e,f], g|*2]
+    pedal era = set era (era^.duration) $ c_
+in compress 4 $ melody </> pedal melody
 ```
 
 ## Pitch
@@ -874,8 +883,13 @@ See issue 103
 @[setMetaTAttr]
 
 
+# Querying and traversing scores
 
+TODO
 
+## Phrase traversals
+
+TODO
 
 # Constraints
 
