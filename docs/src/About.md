@@ -43,6 +43,7 @@ The Music Suite works well with the following input and output formats.
 
 Other formats are being added in the near future, see [Import and export](#import-and-export) for a more detailed overview.
 
+<!--
 ### Version numbers and stability
 
 The Music Suite consists of a group of packages released concurrently under a common version number. The [music-suite](http://hackage.haskell.org/package/music-suite) acts as a meta-package that includes all stable packages of the Suite.
@@ -68,7 +69,7 @@ If you are interested in contributing to the Suite, please join the Github organ
 
 - For questions, feedback and general discussion, see [the Google discussion group](http://groups.google.com/d/forum/music-suite-discuss)
 
-
+-->
 
 <!--
 For an introduction, see [User Guide](User-Guide).
