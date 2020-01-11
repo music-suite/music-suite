@@ -16,6 +16,7 @@ import Music.Pitch.Common (Interval, Pitch)
 
 newtype Vocalist = Vocalist {getVocalist :: Instrument}
 
+-- TODO move/consolidate
 partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
 

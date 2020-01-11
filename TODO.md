@@ -36,6 +36,8 @@ Consider switching to a decentralized issue tracker such as:
   - Later: Maybe use approximate image diffs (comparing the entire rendering pipeline to musicxml2ly on the original XML files) instead
   - Run as part of CI builds
 
+- Use modern type-level nats in Music.Pitch.Equal
+
 - Fix all compiler warnings
 
 - Get rid of all CPP
@@ -249,7 +251,8 @@ Consider switching to a decentralized issue tracker such as:
 
 - $minorAspect
   - There's a philosophical difference between "major" aspects (pitch, dynamics, articulation, part)
-    and "minor" ones (tremolo, slide/gliss, freeform text, colour, harmonics).
+    and "minor" ones (tremolo, slide/gq
+    liss, freeform text, colour, harmonics).
   - Some of these are being abused in current examples, e.g. freeform text is used to denote pizz/arco
   - The representation of tremolo, slide/gliss, harmonics could be smarter. E.g. we should maybe use
     (Reactive Pitch) or similar instead of context-specific begin/end marks. Note this might require

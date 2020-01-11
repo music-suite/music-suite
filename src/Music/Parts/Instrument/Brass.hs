@@ -18,6 +18,7 @@ brassInstrument :: Prism' Instrument BrassInstrument
 brassInstrument = prism' getBrassInstrument (fmap BrassInstrument . partial isBrassInstrument)
   where
 
+-- TODO move/consolidate
 partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
 

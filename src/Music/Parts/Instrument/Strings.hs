@@ -25,6 +25,7 @@ newtype StringInstrument = StringInstrument {getStringInstrument :: Instrument}
 stringInstrument :: Prism' Instrument StringInstrument
 stringInstrument = prism' getStringInstrument (fmap StringInstrument . partial isStringInstrument)
 
+-- TODO move/consolidate
 partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
 

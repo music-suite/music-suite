@@ -17,8 +17,7 @@ newtype KeyboardInstrument = KeyboardInstrument {getKeyboardInstrument :: Instru
 keyboardInstrument :: Prism' Instrument KeyboardInstrument
 keyboardInstrument = prism' getKeyboardInstrument (fmap KeyboardInstrument . partial isKeyboardInstrument)
 
--- TODO
-
+-- TODO move/consolidate
 partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
 

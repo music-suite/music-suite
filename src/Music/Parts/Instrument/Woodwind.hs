@@ -22,6 +22,7 @@ newtype WoodwindInstrument = WoodwindInstrument {getWoodwindInstrument :: Instru
 woodwindInstrument :: Prism' Instrument WoodwindInstrument
 woodwindInstrument = prism' getWoodwindInstrument (fmap WoodwindInstrument . partial isWoodwindInstrument)
 
+-- TODO move/consolidate
 partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
 

@@ -17,6 +17,7 @@ newtype PercussionInstrument = PercussionInstrument {getPercussionInstrument :: 
 percussionInstrument :: Prism' Instrument PercussionInstrument
 percussionInstrument = prism' getPercussionInstrument (fmap PercussionInstrument . partial isPercussionInstrument)
 
+-- TODO move/consolidate
 partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
 
