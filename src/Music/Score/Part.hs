@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
 -- | Provides functions for manipulating parts.
@@ -301,15 +300,15 @@ instance Reversible a => Reversible (PartT p a) where
 instance Tiable a => Tiable (PartT n a) where
   toTied (PartT (v, a)) = (PartT (v, b), PartT (v, c)) where (b, c) = toTied a
 
-type instance Part (Behavior a) = Behavior (Part a)
-
-type instance SetPart (Behavior g) (Behavior a) = Behavior (SetPart g a)
-
-instance (HasPart a a, HasPart a b) => HasParts (Behavior a) (Behavior b) where
-  parts = through part part
-
-instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
-  part = through part part
+-- type instance Part (Behavior a) = Behavior (Part a)
+--
+-- type instance SetPart (Behavior g) (Behavior a) = Behavior (SetPart g a)
+--
+-- instance (HasPart a a, HasPart a b) => HasParts (Behavior a) (Behavior b) where
+--   parts = through part part
+--
+-- instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
+--   part = through part part
 
 type instance Part (Score a) = Part a
 

@@ -3,7 +3,6 @@
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE UndecidableInstances       #-}
 
 -- | Provides generic functions for inspecting and manipulating pitch.
 --

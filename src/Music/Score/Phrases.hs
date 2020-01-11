@@ -18,12 +18,9 @@ module Music.Score.Phrases
     Phrase,
     MVoice,
     PVoice,
-    TVoice,
 
     -- ** Utility
     mVoicePVoice,
-    mVoiceTVoice,
-    pVoiceTVoice,
     mVoicePVoiceIgnoringMeta,
     singleMVoice,
     -- oldSingleMVoice,
