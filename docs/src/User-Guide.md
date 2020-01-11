@@ -659,6 +659,12 @@ let
 in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 ```
 
+```music+haskell
+let
+  ch x = ppar [x, upDiatonic fs 2 x, upDiatonic fs 5 x]
+in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
+```
+
 @[down]
 
 @[above]
