@@ -1,1 +1,1 @@
-staccato (scat [c..g]|/8)
+staccato (pseq [c..g]|/8)

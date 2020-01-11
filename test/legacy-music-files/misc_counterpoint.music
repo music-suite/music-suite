@@ -1,4 +1,4 @@
 let                      
-    subj = scat $ scat [ [c],       [d],        [f],          [e]           ]
-    cs1  = scat $ scat [ [g,f,e,g], [f,a,g,d'], [c',b,c',d'], [e',g',f',e'] ]
+    subj = pseq $ pseq [ [c],       [d],        [f],          [e]           ]
+    cs1  = pseq $ pseq [ [g,f,e,g], [f,a,g,d'], [c',b,c',d'], [e',g',f',e'] ]
 in compress 4 cs1 </> subj

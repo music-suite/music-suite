@@ -21,7 +21,7 @@ data RtmValue
 
 rhythmToScore :: Rtm -> Score StandardNote 
 rhythmToScore (Rtm bc rl) = mfilter (\x -> all (== c) $ map (! 0) $ x^..pitches')
-  $ stretchTo (realToFrac bc) $ scat $ map rhythmListToScore rl -- TODO: use BeatCount
+  $ stretchTo (realToFrac bc) $ pseq $ map rhythmListToScore rl -- TODO: use BeatCount
 
 rhythmListToScore :: RtmValue -> Score StandardNote
 rhythmListToScore (RtmRest d)       = stretch (realToFrac d) g_

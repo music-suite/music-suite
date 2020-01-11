@@ -203,7 +203,7 @@ module TimeTypes (
         (<|),
 
         -- ** Catenation
-        scat,
+        pseq,
         pcat,
 
         -- ** Repetition
@@ -1365,8 +1365,8 @@ palindrome a = a `after` rev a
 -- For non-positioned types, this is the often same as 'mconcat'
 -- For positioned types, this is the same as 'afterAnother'
 --
-scat :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
-scat = Prelude.foldr (|>) mempty
+pseq :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
+pseq = Prelude.foldr (|>) mempty
 
 -- |
 -- Compose a list of parallel objects, so that their local origins align.
@@ -1393,7 +1393,7 @@ x `sustain` y   = x <> y `during` x
 -- Move a value so that
 --
 times :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => Int -> a -> a
-times n   = scat . replicate n
+times n   = pseq . replicate n
 
 -- |
 -- Class of values that can be split.

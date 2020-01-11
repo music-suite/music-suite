@@ -44,13 +44,13 @@ mapEvensOdds f g [a] = [f a]
 mapEvensOdds f g (a : b : cs) = f a : g b : mapEvensOdds f g cs
 
 -- mainSubject :: (HasPitch' a, HasPart' a, HasArticulation' a, Enum a, IsPitch a, S.Articulation a ~ Articulation, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
-mainSubject = stretch (1/6) $ scat $ mapEvensOdds (accent . (|*2)) id $ concatMap fallingScaleSect [1..30]
+mainSubject = stretch (1/6) $ pseq $ mapEvensOdds (accent . (|*2)) id $ concatMap fallingScaleSect [1..30]
 
 -- bell :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
 bell = let
     -- cue :: Score (Maybe a)
     cue = stretchTo 1 (rest |> a)
-    in parts' .~ solo tubularBells $ {- text "l.v." $ -} removeRests $ times 40 $ scat [times 3 $ scat [cue,rest], rest|*2]
+    in parts' .~ solo tubularBells $ {- text "l.v." $ -} removeRests $ times 40 $ pseq [times 3 $ pseq [cue,rest], rest|*2]
 
 -- strings :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
 strings = pcat [

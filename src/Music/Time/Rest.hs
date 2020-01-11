@@ -6,7 +6,7 @@
 --
 -- To remove rests from a score, use 'mcatMaybes', for example:
 --
--- > open $ mcatMaybes $ scat [c,d,rest^*2,e]^/8
+-- > open $ mcatMaybes $ pseq [c,d,rest^*2,e]^/8
 module Music.Time.Rest
   ( -- * Rests
     rest,

@@ -31,7 +31,7 @@ full = [0 .. 11]
 complement = (List.\\) full
 
 -- showPitchSet :: PitchSet -> Score
-showPitchSet = asScore . scat . map (fromPitch' . pure . pitchClassToPitch) . List.nub
+showPitchSet = asScore . pseq . map (fromPitch' . pure . pitchClassToPitch) . List.nub
 
 -- showPitchSetV :: PitchSet -> IO ()
 showPitchSetV = asScore . pcat . map (fromPitch' . pure . pitchClassToPitch) . List.nub

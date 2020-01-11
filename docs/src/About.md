@@ -13,7 +13,7 @@ To generate music we write an *expressions* such as this one:
 
 ```music+haskell
 let
-    m = staccato (scat [c,d,e,c]|/2) |> ab |> b_ |> legato (d |> c)|*2
+    m = staccato (pseq [c,d,e,c]|/2) |> ab |> b_ |> legato (d |> c)|*2
 in stretch (1/8) m
 ```
 
@@ -28,7 +28,7 @@ Applied to the above music we get:
 ```music
 let
     transform = up m6 . compress 2
-    m = staccato (scat [c,d,e,c]|/2) |> ab |> b_ |> legato (d |> c)|*2
+    m = staccato (pseq [c,d,e,c]|/2) |> ab |> b_ |> legato (d |> c)|*2
 in transform $ stretch (1/8) m
 ```
 

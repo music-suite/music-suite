@@ -89,14 +89,14 @@ trumpetPitches = fmap (take 7 . betweenOvertones) [1..7]
 -- Limit to 7!
 
 showPitch2D :: [[Pitch]] -> Music
-showPitch2D xss = rcat $ fmap (scat . fmap fromPitch) xss
+showPitch2D xss = rcat $ fmap (pseq . fmap fromPitch) xss
 showPitch1D :: [Pitch] -> Music
-showPitch1D xs  = scat $ fmap fromPitch $ xs
+showPitch1D xs  = pseq $ fmap fromPitch $ xs
 
 showRhythm2D :: [[Duration]] -> Music
-showRhythm2D xss = rcat $ fmap (scat . fmap (`stretch` c)) xss
+showRhythm2D xss = rcat $ fmap (pseq . fmap (`stretch` c)) xss
 showRhythm1D :: [Duration] -> Music
-showRhythm1D xs  = scat $ fmap (`stretch` c) $ xs
+showRhythm1D xs  = pseq $ fmap (`stretch` c) $ xs
 {-
 :o showPitch2D $ trumpetPitches
 :o showPitch1D $ trumpetPitches !! 0
@@ -150,7 +150,7 @@ testTrumpets = level ff $ rcat $ set parts' trumpets $ fmap (\n -> times n padBa
     fullTrumpetFall :: Int -> Music
     fullTrumpetFall n = ps
         where
-          ps = scat $ map (breakInto (12) . compress 4) $ applyRh n $ concat $ chooseExp $ ns3
+          ps = pseq $ map (breakInto (12) . compress 4) $ applyRh n $ concat $ chooseExp $ ns3
           -- chooseExp = {-Only use first exposistion for now-} head
           chooseExp = concat
 

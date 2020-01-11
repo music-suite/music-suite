@@ -16,7 +16,7 @@ Possibly:
 -}
 
 x :: Music
-x = removeRests $ compress 16 $ times 10 $ ((times 5 $ legato $ (scat [e,f,e,ds]) |> scat[g,f,e,ds]) |> rest |*2 )
+x = removeRests $ compress 16 $ times 10 $ ((times 5 $ legato $ (pseq [e,f,e,ds]) |> pseq[g,f,e,ds]) |> rest |*2 )
 
 fls  = up   _P12 $ set (parts'.instrument) flute    $ tempo presto (rcat [x,delay 2.5 x,delay 5 x])
 obs  = up   _P8  $ set (parts'.instrument) oboe     $ tempo presto (rcat [x,delay 4 x,delay 5.5 x])

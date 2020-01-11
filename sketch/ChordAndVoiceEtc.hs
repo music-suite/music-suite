@@ -8,7 +8,7 @@ renderVoice = fmap (view stretchee) . view stretcheds
 renderVoice2 :: Voice a -> [Music.Time.Note.Note a]
 renderVoice2 = renderVoice . fmap (return :: a -> Music.Time.Note.Note a)
 
--- TODO "scat"
+-- TODO "pseq"
 renderVoice3 :: Voice a -> Score a
 renderVoice3 = view score . renderVoice2
 

@@ -1,1 +1,1 @@
-title "Piece" $ scat [c,d,e,c]
+title "Piece" $ pseq [c,d,e,c]

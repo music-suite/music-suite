@@ -190,7 +190,7 @@ slopeShape :: Shape
 slopeShape = dependentShapeC ((*0.5).(+1).realToFrac.cos.(*(2*3.1415)).(+0).toDouble) (const 1)
 
 allShapes :: Music
-allShapes = stretch 4 $ scatPad 1 $ fmap ({-stretchTo 1.-}renderFloater.flip makeFloater (pitchMat^.chord)) $ fmap (stretch 4) $
+allShapes = stretch 4 $ pseqPad 1 $ fmap ({-stretchTo 1.-}renderFloater.flip makeFloater (pitchMat^.chord)) $ fmap (stretch 4) $
   [
   circShape,
   randShape,
@@ -472,7 +472,7 @@ chords1 = fmap (^.chord) $ [[c___,c__,g__,d_,bb_,g,a,bb,c',f',d'',ds'',e'',f'',f
 chords5 :: [Chord Pitch]
 chords5 = fmap (^.chord) $ fmap2 (octavesDown 2) $ fmap2 (^.from pitchHertz) fmChords
 
-allChords = scat $ fmap (uncurry addText . fmap inspectableToMusic) [
+allChords = pseq $ fmap (uncurry addText . fmap inspectableToMusic) [
   ("chords1",chords1),
   -- ("chords3", chords3),
   -- ("chords4", chords4),
@@ -584,12 +584,12 @@ Think more about pitch material.
 -- bigFlo4a = makeFloater topToFullToTop $ otWithExtra
 -- 
 -- -- Interpolate between different shapes
--- example2 = scat $ fmap (renderFloater.flip makeFloater [c..c'']) $ fmap (interpShape randShape topToFull) [0,0.1..1]
+-- example2 = pseq $ fmap (renderFloater.flip makeFloater [c..c'']) $ fmap (interpShape randShape topToFull) [0,0.1..1]
 -- -- ... pitches
--- example3 = scat $ fmap (renderFloater.makeFloater basicLeftShape) $ fmap (interpPitches [c,e',g'] [f,d',a']) [0,0.1..1]
+-- example3 = pseq $ fmap (renderFloater.makeFloater basicLeftShape) $ fmap (interpPitches [c,e',g'] [f,d',a']) [0,0.1..1]
 -- 
 -- example = mempty
---   |> scatPad 5 [
+--   |> pseqPad 5 [
 --      renderFloater bigFlo1,
 --      renderFloater bigFlo2,
 --      renderFloater bigFlo3,
@@ -600,8 +600,8 @@ Think more about pitch material.
 --      renderFloater bigFlo3a,
 --      renderFloater bigFlo4a
 --   ]
---   |> (scat $ zipWith stretch (take 5  [1.5^x | x<-[1..] ]) $ repeat $ renderFloater bigFlo1NS)
---   |> (scat $ zipWith stretch (take 10 [1.1^x | x<-[1..] ]) $ repeat $ renderFloater bigFlo2)
+--   |> (pseq $ zipWith stretch (take 5  [1.5^x | x<-[1..] ]) $ repeat $ renderFloater bigFlo1NS)
+--   |> (pseq $ zipWith stretch (take 10 [1.1^x | x<-[1..] ]) $ repeat $ renderFloater bigFlo2)
 --   |> (renderFloater bigFlo3 <> recursiveFloaters)
 --   |> renderFloater bigFlo3
 -- 
@@ -610,7 +610,7 @@ Think more about pitch material.
 {-
 -- Show chords in ascending order of dissonance. 
 showDiss :: [Chord Pitch] -> Music
-showDiss = asScore . scat . fmap (\ps -> addText (take 12 $ show $ chordDiss ps) $ pcat $ fmap fromPitch'' ps) 
+showDiss = asScore . pseq . fmap (\ps -> addText (take 12 $ show $ chordDiss ps) $ pcat $ fmap fromPitch'' ps) 
   . Data.List.sortBy (Data.Ord.comparing chordDiss) . fmap (^.from chord)
 
 -- Example
@@ -668,7 +668,7 @@ disses = fmap (^.chord) [
 --     -- m = invertMode 1 ot
 -- 
 -- treeToScore :: Tree a -> Score a
--- treeToScore (Node x xs) = pure x |> (compress 1 $ scat $ fmap treeToScore xs)
+-- treeToScore (Node x xs) = pure x |> (compress 1 $ pseq $ fmap treeToScore xs)
 -- 
 -- showOt = putStr $ drawTree $ fmap show otTree
 -- sibOt  = openMusicXml $ asScore $ compress 32 $ treeToScore $ fmap fromPitch'' $ otTree

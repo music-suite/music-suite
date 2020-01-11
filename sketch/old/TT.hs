@@ -694,8 +694,8 @@ infixr 6 <|
 (<|) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 (<|) = before
 
-scat :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
-scat = Prelude.foldr (|>) mempty
+pseq :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
+pseq = Prelude.foldr (|>) mempty
 
 pcat :: (Semigroup a, Monoid a) => [a] -> a
 pcat = Prelude.foldr (<>) mempty
@@ -707,7 +707,7 @@ sustain :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 x `sustain` y = x <> y `during` x
 
 times :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => Int -> a -> a
-times n = scat . replicate n
+times n = pseq . replicate n
 
 
 
@@ -1391,7 +1391,7 @@ instance HasDuration v => HasPosition (Aligned v) where
 -- TODO better API
 -- compare placeAt etc. above
 renderAlignedVoice :: AlignedVoice a -> Score a
-renderAlignedVoice a@(Aligned (_, _, v)) = startAt (_onset a) $ scat $ map (uncurry stretch) (fmap pure v^.triplesV)
+renderAlignedVoice a@(Aligned (_, _, v)) = startAt (_onset a) $ pseq $ map (uncurry stretch) (fmap pure v^.triplesV)
 
 
 
@@ -1455,12 +1455,12 @@ chordToScore = pcat . map pure . toListOf traverse
 unchord =  toListOf traverse
 
 arpUp3 :: Chord a -> Score a
-arpUp3 x = scat $ map ((^/16) . pure) [a,b,c]
+arpUp3 x = pseq $ map ((^/16) . pure) [a,b,c]
   where
     [a,b,c] = unchord x
 
 arpDown3 :: Chord a -> Score a
-arpDown3 x = scat $ map ((^/16) . pure) [c,b,a]
+arpDown3 x = pseq $ map ((^/16) . pure) [c,b,a]
   where
     [a,b,c] = unchord x
 
@@ -1468,7 +1468,7 @@ arpUpDown3 x = arpUp3 x |> arpDown3 x
 arpDownUp3 x = arpDown3 x |> arpUp3 x
 
 alberti3 :: Chord a -> Score a
-alberti3 x = scat $ map ((^/16) . pure) [a,c,b,c]
+alberti3 x = pseq $ map ((^/16) . pure) [a,c,b,c]
   where
     [a,b,c] = unchord x
 
@@ -2125,7 +2125,7 @@ reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. note) $ durs `z
 
 
         voiceToScore :: Voice a -> Score a
-        voiceToScore = scat . fmap g . (^. notes) where g = (^. notee) . fmap return
+        voiceToScore = pseq . fmap g . (^. notes) where g = (^. notee) . fmap return
 
 
         {-

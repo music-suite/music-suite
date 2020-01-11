@@ -144,17 +144,17 @@ Functions taking lists
     15
     >>> highest [c,d]
     Just d
-    >>> scat [c,e,g]
+    >>> pseq [c,e,g]
     >>> pcat [c,e,g]
 
     >>> join [[1,2]‚[3,4]]
     [1,2,3,4]
-    >>> scat [c,e,g]
+    >>> pseq [c,e,g]
     >>> pcat [c,e,g]
 
 ### Exercises:
 
-- Define several melodies and chords using `scat`, `pcat` and pitch names
+- Define several melodies and chords using `pseq`, `pcat` and pitch names
 - Combine the melodies and chords you have written into a 1-minute composition
 
 ## Delay and stretch

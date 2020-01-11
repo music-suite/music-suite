@@ -429,7 +429,7 @@ printEras = mapM_ print . toListOf eras
 -- |
 -- Print all eras of the given score.
 --
--- >>> toListOf eras $ scat [c,d,e :: Score Integer]
+-- >>> toListOf eras $ pseq [c,d,e :: Score Integer]
 -- [0 <-> 1,1 <-> 2,2 <-> 3]
 eras :: Traversal' (Score a) Span
 eras = events . each . era
@@ -450,7 +450,7 @@ simultaneous' sc = (^. from triplesIgnoringMeta) vs
     vs = zipWith (\(view onsetAndDuration -> (t, d)) a -> (t, d, a)) es evs
 
 -- overSimult :: Transformable a => (Score [a] -> Score [b]) -> Score a -> Score b
--- overSimult f = mscatter . f . simultaneous'
+-- overSimult f = mpseqter . f . simultaneous'
 
 -- | Merge all simultaneous events using their 'Semigroup' instance.
 simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a

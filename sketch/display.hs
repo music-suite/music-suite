@@ -18,7 +18,7 @@ instance Display Pitch where
 instance Display Interval where
   displayS = (<> c) . fmap (fromPitch'.pure) . (pure :: a -> Score a) . (c .+^)  
 instance Display [Pitch] where
-  displayS = fmap (fromPitch'.pure) . compress 4 . scat . map (pure :: a -> Score a)  
+  displayS = fmap (fromPitch'.pure) . compress 4 . pseq . map (pure :: a -> Score a)  
 instance Display (Ambitus Pitch) where
   displayS = displayS . ambitusShowPitches
 instance TypeUnary.Nat.IsNat a => Display (Equal a) where

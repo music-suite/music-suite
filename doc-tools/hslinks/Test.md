@@ -103,7 +103,7 @@ Offset and duration is not limited to simple numbers. Here are some more complex
 ```music+haskell
 (c^*(9/8) |> d^*(3/8))
     </>
-(compress 3 (scat [c,d,e]) |> f^*(3/4))
+(compress 3 (pseq [c,d,e]) |> f^*(3/4))
 ```
 
 The `^*` and `^/` operators can be used as shorthands for `delay` and `compress`.
@@ -148,14 +148,14 @@ Here is a more complex example:
 ```music+haskell
 let
     triad a = a <> up _M3 a <> up _P5 a
-in up _P8 (scat [c,d,e,f,g,a,g,f]^/8) </> (triad c)^/2 |> (triad g_)^/2
+in up _P8 (pseq [c,d,e,f,g,a,g,f]^/8) </> (triad c)^/2 |> (triad g_)^/2
 ```
 
-As a shorthand for `x |> y |> z ..`, we can write `scat [x, y, z]`.
-@[scat] (this is short for *sequential concatenation*).
+As a shorthand for `x |> y |> z ..`, we can write `pseq [x, y, z]`.
+@[pseq] (this is short for *sequential concatenation*).
 
 ```music+haskell
-scat [c,e..g]^/4
+pseq [c,e..g]^/4
 ```
 
 For `x <> y <> z ..`, we can write `pcat [x, y, z]`.
@@ -176,7 +176,7 @@ To understand how this works, think about the type of numeric literal. The value
 For Western-style pitch types, the standard pitch names can be used:
 
 ```music+haskell
-scat [c, d, e, f, g, a, b]
+pseq [c, d, e, f, g, a, b]
 ```
 
 Pitch names in other languages work as well, for example `ut, do, re, mi, fa, so, la, ti, si`. 
@@ -263,7 +263,7 @@ Dynamic values are overloaded in the same way as pitches. The dynamic literals a
 An overview of the dynamic values:
 
 ```music+haskell
-scat $ zipWith dynamics [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
+pseq $ zipWith dynamics [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
 ```
 
 TODO other ways of applying dynamics
@@ -282,44 +282,44 @@ Some basic articulation functions are @[legato], @[staccato], @[portato], @[tenu
 
 
 ```music+haskell
-legato (scat [c..g]^/8)
+legato (pseq [c..g]^/8)
     </>
-staccato (scat [c..g]^/8)
+staccato (pseq [c..g]^/8)
     </>
-portato (scat [c..g]^/8)
+portato (pseq [c..g]^/8)
     </>
-tenuto (scat [c..g]^/8)
+tenuto (pseq [c..g]^/8)
     </>
-separated (scat [c..g]^/8)
+separated (pseq [c..g]^/8)
     </>
-spiccato (scat [c..g]^/8)
+spiccato (pseq [c..g]^/8)
 ```
 
 @[accent]
 @[marcato]
 
 ```music+haskell
-accent (scat [c..g]^/8)
+accent (pseq [c..g]^/8)
     </>
-marcato (scat [c..g]^/8)
+marcato (pseq [c..g]^/8)
 ```
 
 @[accentLast]
 @[accentAll]
 
 ```music+haskell
-accentLast (scat [c..g]^/8)
+accentLast (pseq [c..g]^/8)
     </>
-accentAll (scat [c..g]^/8)
+accentAll (pseq [c..g]^/8)
 ```
 
 Applying articulations over multiple parts:
 
 ```music+haskell     
 let
-    p1 = scat [c..b]^/4
-    p2 = delay (1/4) $ scat [c..b]^/4
-    p3 = delay (3/4) $ scat [c..b]^/4
+    p1 = pseq [c..b]^/4
+    p2 = delay (1/4) $ pseq [c..b]^/4
+    p3 = delay (3/4) $ pseq [c..b]^/4
 in (accent . legato) (p1 </> p2 </> p3)
 ```
 
@@ -337,7 +337,7 @@ tremolo 2 $ times 2 $ (c |> d)^/4
 @[glissando]
 
 ```music+haskell
-glissando $ scat [c,d]^/2
+glissando $ pseq [c,d]^/2
 ```
 
 ## Harmonics
@@ -370,7 +370,7 @@ Note)`. We use @[removeRests] to convert a `Score (Maybe a)`
 into a `Score a`.
 
 ```music+haskell
-removeRests $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
+removeRests $ times 4 (accent g^*2 |> rest |> pseq [d,d]^/2)^/8
 ```
                  
 
@@ -384,7 +384,7 @@ removeRests $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
 
 ```music+haskell
 let
-    melody = legato $ scat [d, scat [g,fs]^/2,bb^*2]^/4
+    melody = legato $ pseq [d, pseq [g,fs]^/2,bb^*2]^/4
 in melody |> rev melody
 ```
 
@@ -392,7 +392,7 @@ in melody |> rev melody
 
 ```music+haskell
 let
-    melody = legato $ scat [c,d,e,c]^/16
+    melody = legato $ pseq [c,d,e,c]^/16
 in times 4 $ melody
 ```
 
@@ -400,7 +400,7 @@ in times 4 $ melody
 
 ```music+haskell
 let 
-    m = legato $ scat [c,d,scat [e,d]^/2, c]^/4 
+    m = legato $ pseq [c,d,pseq [e,d]^/2, c]^/4 
 in [c,eb,ab,g] `repeated` (\p -> up (asPitch p .-. c) m)
 ```
 
@@ -408,7 +408,7 @@ in [c,eb,ab,g] `repeated` (\p -> up (asPitch p .-. c) m)
 
 ```music+haskell
 let                
-    melody = asScore $ legato $ scat [scat [c,d,e,c], scat [e,f], g^*2]
+    melody = asScore $ legato $ pseq [pseq [c,d,e,c], pseq [e,f], g^*2]
     pedal  = asScore $ delayTime (onset melody) $ stretch (duration melody) $ c_
 in compress 4 $ melody </> pedal
 ```
@@ -418,11 +418,11 @@ in compress 4 $ melody </> pedal
 @[invertAround]
 
 ```music+haskell
-(scat [c..g]^*(2/5))
+(pseq [c..g]^*(2/5))
     </>
-(invertAround c $ scat [c..g]^*(2/5))
+(invertAround c $ pseq [c..g]^*(2/5))
     </>
-(invertAround e $ scat [c..g]^*(2/5))
+(invertAround e $ pseq [c..g]^*(2/5))
 ```
 
 
@@ -506,7 +506,7 @@ Lilypond input is not available yet but will hopefully be added soon.
 An example:
 
 ```haskell
-putStrLn $ toLyString $ asScore $ scat [c,d,e]
+putStrLn $ toLyString $ asScore $ pseq [c,d,e]
 ```
 
     <<
@@ -524,7 +524,7 @@ The output is fairly complete, with some limitations ([reports][issue-tracker] w
 Beware of the extreme verboseness of XML, for example:
 
 ```haskell
-putStrLn $ toXmlString $ asScore $ scat [c,d,e]
+putStrLn $ toXmlString $ asScore $ pseq [c,d,e]
 ```
 
     <?xml version='1.0' ?>
@@ -635,10 +635,10 @@ Some more involved examples:
 TODO about
 
 ```music+haskell
-let subj = removeRests $ scat [ 
-            scat [rest,c,d,e], 
-            f^*1.5, scat[g,f]^/4, scat [e,a,d], g^*1.5,
-            scat [a,g,f,e,f,e,d]^/2, c^*2 
+let subj = removeRests $ pseq [ 
+            pseq [rest,c,d,e], 
+            f^*1.5, pseq[g,f]^/4, pseq [e,a,d], g^*1.5,
+            pseq [a,g,f,e,f,e,d]^/2, c^*2 
         ]^/8
 
 in (delay 1.5 . up _P5) subj </> subj
@@ -649,7 +649,7 @@ in (delay 1.5 . up _P5) subj </> subj
 ```music+haskell
 let
     row = cycle [c,eb,ab,asPitch g]
-    mel = asScore $ scat [d, scat [g,fs]^/2,bb^*2]^/4
+    mel = asScore $ pseq [d, pseq [g,fs]^/2,bb^*2]^/4
 in (take 25 $ row) `repeated` (\p -> up (asPitch p .-. c) mel)
 ```
 

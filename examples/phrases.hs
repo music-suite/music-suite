@@ -5,10 +5,10 @@ import Music.Prelude
 import Control.Lens (set, over)
 
 -- A simple subject
-subj  = times 2 $ scat [c,c,d,b_,e,e]|/16
+subj  = times 2 $ pseq [c,c,d,b_,e,e]|/16
 
 -- Each voice differ slighly in onset etc
-voca v = delay ((4/8)|*v) $ removeRests $ scat $ fmap (\i -> (id $ up (_M2^*i) subj) |> rest|*(15/8))
+voca v = delay ((4/8)|*v) $ removeRests $ pseq $ fmap (\i -> (id $ up (_M2^*i) subj) |> rest|*(15/8))
   $ [0..3]
 
 -- The

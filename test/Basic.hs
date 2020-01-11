@@ -328,43 +328,43 @@ sharp * 3
 -- music-suite/test/legacy-music-files/articulation_all_accents.music
 articulation_all_accents :: Music
 articulation_all_accents =
-  accent (scat [c..g]|/8)
+  accent (pseq [c..g]|/8)
       </>
-  marcato (scat [c..g]|/8)
+  marcato (pseq [c..g]|/8)
 
 
 -- music-suite/test/legacy-music-files/articulation_all_separations.music
 articulation_all_separations :: Music
 articulation_all_separations =
-  legato (scat [c..g]|/8)
+  legato (pseq [c..g]|/8)
       </>
-  staccato (scat [c..g]|/8)
+  staccato (pseq [c..g]|/8)
       </>
-  portato (scat [c..g]|/8)
+  portato (pseq [c..g]|/8)
       </>
-  tenuto (scat [c..g]|/8)
+  tenuto (pseq [c..g]|/8)
       </>
-  separated (scat [c..g]|/8)
+  separated (pseq [c..g]|/8)
       </>
-  spiccato (scat [c..g]|/8)
+  spiccato (pseq [c..g]|/8)
 
 
 -- music-suite/test/legacy-music-files/articulation_legato.music
 articulation_legato :: Music
 articulation_legato =
-  legato (scat [c..g]|/8)
+  legato (pseq [c..g]|/8)
 
 
 -- music-suite/test/legacy-music-files/articulation_portato.music
 articulation_portato :: Music
 articulation_portato =
-  portato (scat [c..g]|/8)
+  portato (pseq [c..g]|/8)
 
 
 -- music-suite/test/legacy-music-files/articulation_staccato.music
 articulation_staccato :: Music
 articulation_staccato =
-  staccato (scat [c..g]|/8)
+  staccato (pseq [c..g]|/8)
 -- TODO articulation, more high-level combinators (a la photoshop)
 
 
@@ -373,7 +373,7 @@ articulation_staccato =
 --
 --   data Foo = Foo | Bar
 --
---   scale Foo = scat [c,d,e,f,g,a,g,f]|/8
+--   scale Foo = pseq [c,d,e,f,g,a,g,f]|/8
 --   scale Bar = scale Foo
 --
 --   triad a = a <> up _M3 a <> up _P5 a
@@ -385,19 +385,19 @@ articulation_staccato =
 -- music-suite/test/legacy-music-files/dynamics_constant.music
 -- dynamics_test :: Music
 -- dynamics_test =
---   scat $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
+--   pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
 
 dynamics_test2 :: Music
 dynamics_test2 =
-  scat $ louder 1 $ zipWith level [pp,ff,pp] [c,d,e]
+  pseq $ louder 1 $ zipWith level [pp,ff,pp] [c,d,e]
 
 dynamics_test3 :: Music
 dynamics_test3 =
-  scat $ softer 1 $ zipWith level [pp,ff,pp] [c,d,e]
+  pseq $ softer 1 $ zipWith level [pp,ff,pp] [c,d,e]
 
 dynamics_test4 :: Music
 dynamics_test4 =
-  scat $ softer (ff-pp) $ zipWith level [pp,ff,pp] [c,d,e]
+  pseq $ softer (ff-pp) $ zipWith level [pp,ff,pp] [c,d,e]
 
 -- TODO more basic dynamics stuff
 -- TODO music-part
@@ -418,7 +418,7 @@ dynamics_test4 =
 melody_chords :: Music
 melody_chords =
   let
-      scale = scat [c,d,e,f,g,a,g,f] |/ 8
+      scale = pseq [c,d,e,f,g,a,g,f] |/ 8
       triad a = a <> up _M3 a <> up _P5 a
   in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2
 
@@ -430,101 +430,101 @@ meta_annotations =
 
 meta_annotations2 :: Music
 meta_annotations2 =
-  showAnnotations $ annotate "First note" $ scat [c,d,e]
+  showAnnotations $ annotate "First note" $ pseq [c,d,e]
 
 meta_annotations3 :: Music
 meta_annotations3 =
-  showAnnotations $ annotateSpan (1 <-> 2) "First note" $ scat [c,d,e]
+  showAnnotations $ annotateSpan (1 <-> 2) "First note" $ pseq [c,d,e]
 
 meta_barlines :: Music
-meta_barlines = scat [c{-, barline-}, d{-, doubleBarline-}, e, f {-, finalBarline-}]
+meta_barlines = pseq [c{-, barline-}, d{-, doubleBarline-}, e, f {-, finalBarline-}]
 
 -- music-suite/test/legacy-music-files/meta_composer.music
 meta_attribution :: Music
 meta_attribution =
-  composer "Anonymous" $ scat [c,d,e,c]
+  composer "Anonymous" $ pseq [c,d,e,c]
 
 meta_attribution2 :: Music
 meta_attribution2 =
-  lyricist "Anonymous" $ scat [c,d,e,c]
+  lyricist "Anonymous" $ pseq [c,d,e,c]
 
 meta_attribution3 :: Music
 meta_attribution3 =
   arrangerDuring (0 <-> 1) "Anonymous I" $
   arrangerDuring (1 <-> 2) "Anonymous II" $
-    scat [c,d,e,c]
+    pseq [c,d,e,c]
 
 -- music-suite/test/legacy-music-files/meta_clef1.music
 meta_clef1 :: Music
 meta_clef1 =
   let
-      part1 = clef f $ staccato $ scat [c_,g_,c,g_]
-      part2 = clef c $ staccato $ scat [ab_,eb,d,a]
-      part3 = clef g $ staccato $ accentLast $ scat [g,fs,e,d]
+      part1 = clef f $ staccato $ pseq [c_,g_,c,g_]
+      part2 = clef c $ staccato $ pseq [ab_,eb,d,a]
+      part3 = clef g $ staccato $ accentLast $ pseq [g,fs,e,d]
   in compress 8 $ part1 |> part2 |> part3
   -- TODO need a better API here, integrated with Music.Pitch.Clef
   -- This should only be a hint, as clefs should be automatically inferred
 
 
 -- meta_fermata :: Music
--- meta_fermata = scat [c, d, fermata StandardFermata e]
+-- meta_fermata = pseq [c, d, fermata StandardFermata e]
 -- TODO does not work (Fermata /~ FermataType)
 -- TODO just saying "fermata" should yield a standard fermata
 
 -- meta_fermata2 :: Music
--- meta_fermata2 = scat [c, d, fermata LongFermata e]
+-- meta_fermata2 = pseq [c, d, fermata LongFermata e]
 
 -- meta_fermata3 :: Music
--- meta_fermata3 = fermataAt 2 $ scat [c, d, e]
+-- meta_fermata3 = fermataAt 2 $ pseq [c, d, e]
 -- TODO does not work (Fermata /~ FermataType)
 -- TODO remove fermataDuring, add fermataAt (fermatas attach to points, not spans)
 
 
 meta_key_signature :: Music
 meta_key_signature =
-  keySignature (key 1 False) $ scat [c,d,e,f,g]
+  keySignature (key 1 False) $ pseq [c,d,e,f,g]
   -- TODO should really be (keySignature g major) or similar
   -- Integrate with music-pitch
 
 -- meta_rehearsal_mark :: Music
 -- meta_rehearsal_mark =
-  -- rehearsalMark $ scat [c,d,e,f,g]
+  -- rehearsalMark $ pseq [c,d,e,f,g]
   -- TODO
 
 -- music-suite/test/legacy-music-files/meta_time_signature.music
 meta_time_signature :: Music
 meta_time_signature =
-  compress 4 $ timeSignature (4/4) (scat [c,d,e,c,d,e,f,d,g,d]) |> timeSignature (3/4) (scat [a,g,f,g,f,e])
+  compress 4 $ timeSignature (4/4) (pseq [c,d,e,c,d,e,f,d,g,d]) |> timeSignature (3/4) (pseq [a,g,f,g,f,e])
 
 -- music-suite/test/legacy-music-files/meta_time_signature.music
 meta_time_signature2 :: Music
 meta_time_signature2 =
-  compress 16 $ timeSignature ((3+2)/16) $ scat [c,d,e,f,g]
+  compress 16 $ timeSignature ((3+2)/16) $ pseq [c,d,e,f,g]
 
 meta_tempo :: Music
-meta_tempo = scat
-  [ tempo presto $ scat [c,d,e,f,g]
-  , tempo allegretto $ scat [c,d,e,f,g]
-  , tempo (metronome (1/4) 48) $ scat [c,d,e,f,g]
+meta_tempo = pseq
+  [ tempo presto $ pseq [c,d,e,f,g]
+  , tempo allegretto $ pseq [c,d,e,f,g]
+  , tempo (metronome (1/4) 48) $ pseq [c,d,e,f,g]
   ]
   -- TODO custom tempo names
 
 -- music-suite/test/legacy-music-files/meta_title.music
 meta_title :: Music
 meta_title =
-  title "Piece" $ scat [c,d,e,c]
+  title "Piece" $ pseq [c,d,e,c]
 
 meta_title2 :: Music
 meta_title2 =
-  subtitle "I" $ scat [c,d,e,c]
+  subtitle "I" $ pseq [c,d,e,c]
   -- TODO alternative for indexing movements by number etc
 
 -- music-suite/test/legacy-music-files/misc_counterpoint.music
 misc_counterpoint :: Music
 misc_counterpoint =
   let
-      subj = scat $ scat [ [c],       [d],        [f],          [e]           ]
-      cs1  = scat $ scat [ [g,f,e,g], [f,a,g,d'], [c',b,c',d'], [e',g',f',e'] ]
+      subj = pseq $ pseq [ [c],       [d],        [f],          [e]           ]
+      cs1  = pseq $ pseq [ [g,f,e,g], [f,a,g,d'], [c',b,c',d'], [e',g',f',e'] ]
   in compress 4 cs1 </> subj
 
 
@@ -543,7 +543,7 @@ overlay_chords =
 -- music-suite/test/legacy-music-files/overlay_voices.music
 overlay_voices :: Music
 overlay_voices =
-  scat [c,d,e,c] <> scat [e,f,g,e] <> scat [g,a,b,g]
+  pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]
 
 voice1 :: Voice Pitch
 voice1 = a -- mconcat [a,a,b,b,b,b,c,c]
@@ -555,11 +555,11 @@ voice1 = a -- mconcat [a,a,b,b,b,b,c,c]
 -- music-suite/test/legacy-music-files/pitch_inv.music
 -- pitch_inv :: Music
 -- pitch_inv =
---   (scat [c..g]|*(2/5))
+--   (pseq [c..g]|*(2/5))
 --       </>
---   (invertPitches c $ scat [c..g]|*(2/5))
+--   (invertPitches c $ pseq [c..g]|*(2/5))
 --       </>
---   (invertPitches e $ scat [c..g]|*(2/5))
+--   (invertPitches e $ pseq [c..g]|*(2/5))
 
 
 -- music-suite/test/legacy-music-files/sharpen.music
@@ -590,7 +590,7 @@ single_note =
 -- music-suite/test/legacy-music-files/special_gliss.music
 special_gliss :: Music
 special_gliss =
-  glissando $ scat [c,d]|/2
+  glissando $ pseq [c,d]|/2
 -- TODO slide/gliss
 -- This should be moved to pitch using Behavior or similar
 -- How?
@@ -649,7 +649,7 @@ stretch_single_note3 =
 times' :: Music
 times' =
   let
-      melody = legato $ scat [c,d,e,cs,ds,es]|/16
+      melody = legato $ pseq [c,d,e,cs,ds,es]|/16
   in times 4 $ melody
 
 -- TODO Aligned
@@ -695,13 +695,13 @@ string_quartet = mainCanon2
 
     mainCanon = timeSignature (time 6 8) $ asScore $
         (set parts' violins1 $ harmonic 2 $ times 50 $ legato $ accentLast $
-            octavesUp 2 $ scat [a_,e,a,cs',cs',a,e,a_]|/8)
+            octavesUp 2 $ pseq [a_,e,a,cs',cs',a,e,a_]|/8)
             <>
         (set parts' violins2 $ harmonic 2 $ times 50 $ legato $ accentLast $
-            octavesUp 2 $ scat [d,g,b,b,g,d]|/8)|*(3/2)
+            octavesUp 2 $ pseq [d,g,b,b,g,d]|/8)|*(3/2)
             <>
         (set parts' violas $ harmonic 2 $ times 50 $ legato $ accentLast $
-            octavesUp 2 $ scat [a,d,a,a,d,a]|/8)|*(3*2/2)
+            octavesUp 2 $ pseq [a,d,a,a,d,a]|/8)|*(3*2/2)
             <>
         set parts' cellos a'|*(25*5/8)
 
@@ -714,7 +714,7 @@ string_quartet = mainCanon2
             <>
         (delay 0 $ set parts' cellos  $ subjs|*2)
         where
-          subjs = scat $ map (\n -> palindrome $ rev $ subj n) [1..40::Int]
+          subjs = pseq $ map (\n -> palindrome $ rev $ subj n) [1..40::Int]
           subj n
               | n < 8     = a_|*2  |> e|*1   |> a|*1
               | n < 16    = a_|*2  |> e|*1   |> a|*1   |> e|*1   |> a|*1
@@ -730,15 +730,15 @@ bartok_mikrokosmos = let
       . timeSignatureDuring ((2/4) >-> (5/4)) (3/4)
 
     left = (level pp . legato)
-         (scat [a,g,f,e] |> d|*2)
+         (pseq [a,g,f,e] |> d|*2)
       |> {-(level ((mp |> mp `cresc` mf |> mf)|*8) . legato)-}id
-         (scat [g,f,e,d] |> c |> (d |> e)|/2 |> f |> e |> d|*8)
+         (pseq [g,f,e,d] |> c |> (d |> e)|/2 |> f |> e |> d|*8)
     --
     right = up _P4 . delay 2 $
          (level pp . legato)
-         (scat [a,g,f,e] |> d|*2)
+         (pseq [a,g,f,e] |> d|*2)
       |> (level mp . legato)
-         (scat [g,f,e,d] |> c |> (d |> e)|/2 |> f |> e |> d|*8)
+         (pseq [g,f,e,d] |> c |> (d |> e)|/2 |> f |> e |> d|*8)
 
   in meta $ compress 8 $ left <> set parts' cellos (down _P8 right)
 

@@ -355,7 +355,7 @@ barDuration (getTimeSignature -> (as,b)) =  realToFrac (sum as) / realToFrac b
 
 fromSibeliusStaff :: IsSibelius a => Duration -> SibeliusStaff -> Score a
 fromSibeliusStaff d (SibeliusStaff bars name shortName) =
-    removeRests $ scat $ fmap (fromSibeliusBar d) bars
+    removeRests $ pseq $ fmap (fromSibeliusBar d) bars
     -- TODO meta information
     -- NOTE slur pos/dur always "stick" to an adjacent note, regardless of visual position
     --      for other lines (cresc etc) this might not be the case

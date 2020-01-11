@@ -556,7 +556,7 @@ rotateDurations :: GHC.Types.Int -> Voice a -> Voice a
 rotateValues :: GHC.Types.Int -> Voice a -> Voice a
 sample :: [Time] -> Behavior a -> Reactive a
 sawtooth :: GHC.Real.RealFrac a => Behavior a
-scat ::
+pseq ::
   (Data.Semigroup.Semigroup a, Data.Monoid.Monoid a, HasPosition a,
    Transformable a) =>
   [a] -> a

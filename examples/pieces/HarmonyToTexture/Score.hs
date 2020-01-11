@@ -23,16 +23,16 @@ How to categorize:
 arp, arpUD
   :: (Monoid s, Transformable s, HasPosition s, Semigroup s, Reversible s) =>
      [s] -> s
-arp ps = stretchTo 1 $ scat ps
+arp ps = stretchTo 1 $ pseq ps
 arpUD x = arp x |> rev (arp x) -- TODO palindrome without repeat
 
 elab, elabUD
   :: (Monoid s, HasPosition s, Reversible s, Semigroup s) => [s] -> s
-elab ps = stretchTo 3 $ scat [arp ps, arp (invertChord 2 ps), arp (invertChord 1 ps)]
-elabUD ps = stretchTo 3 $ scat [arpUD ps, arpUD (invertChord 2 ps), arpUD (invertChord 1 ps)]
+elab ps = stretchTo 3 $ pseq [arp ps, arp (invertChord 2 ps), arp (invertChord 1 ps)]
+elabUD ps = stretchTo 3 $ pseq [arpUD ps, arpUD (invertChord 2 ps), arpUD (invertChord 1 ps)]
 
 music = asScore $ spcat chords
-arpChords = compress 4 $ scat $ fmap arp chords
+arpChords = compress 4 $ pseq $ fmap arp chords
 
 
 

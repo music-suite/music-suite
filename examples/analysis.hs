@@ -22,9 +22,9 @@ subject = fmap fromPitch [c..c']
 
 music :: Music
 music = rcat [
-    markPerfect   $ scat subject,
-    markImperfect $ scat subject,
-    markDiss      $ scat subject
+    markPerfect   $ pseq subject,
+    markImperfect $ pseq subject,
+    markDiss      $ pseq subject
   ]
 
 main = defaultMain music

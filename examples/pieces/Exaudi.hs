@@ -205,7 +205,7 @@ music = asScore $ stretchTo 480 (parts' .~ violins $ form) <> orch
 
 {-
 >>> let hexachords n = up _P8 $ set parts' oboes (pcat hexachord1) <> set parts' trumpets (up (i n) $ pcat hexachord2)
->>> :pl scat $ fmap hexachords [0..12]
+>>> :pl pseq $ fmap hexachords [0..12]
 -}
 
 
@@ -255,7 +255,7 @@ renderTexture = undefined
 
 -----
 
--- >>> :o fmap fromPitch'' $ mscatter bachCMaj 
+-- >>> :o fmap fromPitch'' $ mpseqter bachCMaj 
 
 -- Chords for Bach WTC I C major prelude (last 3 bars simplified)
 bachCMajChords :: IsPitch a => Score (Chord a)
@@ -340,7 +340,7 @@ renderChordPattern texture pitchMap = fmap (over pitches' pitchMap) texture
 
 
 foo :: Score (Pattern (PartT Part (DynamicT Dynamics Pitch)), Chord Pitch)
-foo = scat 
+foo = pseq 
   -- [ stretch 4    $ (mempty, (pat1<>hrnPat, [c,e,g,c',e',g',c'']))  ^.event.eventScore
   -- , stretch 3.25 $ (mempty, (pat1<>hrnPat, [b_,e,gs,d',f',a',b']))^.event.eventScore
   -- , stretch 5.25 $ (mempty, (pat1<>hrnPat, [c,e,g,c',e',g',c']))  ^.event.eventScore
@@ -357,7 +357,7 @@ foo = scat
   where
 
 fooX :: Score (Pattern (PartT Part (DynamicT Dynamics Pitch)), Chord Pitch)
-fooX = scat 
+fooX = pseq 
   -- [ stretch 4    $ (mempty, (pat1<>hrnPat, [c,e,g,c',e',g',c'']))  ^.event.eventScore
   -- , stretch 3.25 $ (mempty, (pat1<>hrnPat, [b_,e,gs,d',f',a',b']))^.event.eventScore
   -- , stretch 5.25 $ (mempty, (pat1<>hrnPat, [c,e,g,c',e',g',c']))  ^.event.eventScore
@@ -374,7 +374,7 @@ fooX = scat
   where
 
 foo2 :: Score (Pattern (PartT Part (DynamicT Dynamics Pitch)), Chord Pitch)
-foo2 = scat 
+foo2 = pseq 
   -- [ stretch 4    $ (mempty, (pat1<>hrnPat, [c,e,g,c',e',g',c'']))  ^.event.eventScore
   -- , stretch 3.25 $ (mempty, (pat1<>hrnPat, [b_,e,gs,d',f',a',b']))^.event.eventScore
   -- , stretch 5.25 $ (mempty, (pat1<>hrnPat, [c,e,g,c',e',g',c']))  ^.event.eventScore
@@ -397,7 +397,7 @@ pat1 = (\x -> mempty
     <> (delay (10/16)) (fmap (set parts' cellos1a2) x)
     <> (delay (16/16)) (fmap (set parts' cellos2a2) x)
     )
-  $ monophonicScoreToPattern $ stretch (1/16) $ scat [c,e,g,b,b,g,e,c]
+  $ monophonicScoreToPattern $ stretch (1/16) $ pseq [c,e,g,b,b,g,e,c]
 pat2 = (\x -> mempty
     <> (delay (0/6)) (fmap (set parts' flutes1)    x)
     <> (delay (1/6)) (fmap (set parts' flutes2)    x)
@@ -408,7 +408,7 @@ pat2 = (\x -> mempty
     -- <> (delay (0/6)) (fmap (set parts' oboes1)     x)
     -- <> (delay (0/6)) (fmap (set parts' oboes2)     x)
     )
-  $ monophonicScoreToPattern $ stretch (1/6) $ upDiatonic c 1 $ scat [c^*4,e^*4,g^*3,b^*1,b^*3,g^*1,e^*4,c^*4]
+  $ monophonicScoreToPattern $ stretch (1/6) $ upDiatonic c 1 $ pseq [c^*4,e^*4,g^*3,b^*1,b^*3,g^*1,e^*4,c^*4]
 
 hrnPat = (\x -> mempty 
     <> delay (1/4) (fmap (set parts' horns1) x) 
@@ -416,7 +416,7 @@ hrnPat = (\x -> mempty
     <> delay (5/4) (fmap (set parts' horns3) x) 
     <> delay (6/4) (fmap (set parts' horns4) x) 
     )
-  $ monophonicScoreToPattern $ stretchTo 4 $ scat [c^*3,e,g^*8,e^*4]
+  $ monophonicScoreToPattern $ stretchTo 4 $ pseq [c^*3,e,g^*8,e^*4]
 hrnPat2 = (\x -> mempty 
     <> delay (1/4)  (fmap (set parts' horns1) x) 
     <> delay (3/4)  (fmap (set parts' horns2) x) 
@@ -427,21 +427,21 @@ hrnPat2 = (\x -> mempty
     <> delay (10/4) (fmap (set parts' clarinets1) x) 
     <> delay (11/4) (fmap (set parts' clarinets2) x) 
     )
-  $ monophonicScoreToPattern $ stretchTo 4 $ scat [c^*3,e,g^*8,e^*4]
+  $ monophonicScoreToPattern $ stretchTo 4 $ pseq [c^*3,e,g^*8,e^*4]
 
 tptPat = (\x -> mempty 
     <> delay (0/4) (fmap (set parts' trumpets1) x) 
     <> delay (0/4) (fmap (set parts' trumpets2) x) 
     <> delay (0/4) (fmap (set parts' trumpets3) x) 
     )
-  $ monophonicScoreToPattern $ stretchTo (1/8) $ scat [c^*7,c'^*1]
+  $ monophonicScoreToPattern $ stretchTo (1/8) $ pseq [c^*7,c'^*1]
 
 tbnPat = (\x -> mempty 
     <> delay (0/4) (fmap (set parts' trombones1) x) 
     <> delay (0/4) (fmap (set parts' trombones2) x) 
     <> delay (0/4) (fmap (set parts' trombones3) x) 
     )
-  $ monophonicScoreToPattern $ stretchTo (1/4) $ scat [c^*7,c'^*1]
+  $ monophonicScoreToPattern $ stretchTo (1/4) $ pseq [c^*7,c'^*1]
 
 
 [flutes1,flutes2,flutes3] = divide 3 oboes
@@ -521,7 +521,7 @@ allHexaChords = id
   $ fmap (fmap (relative c (spell usingSharps)). offsetPoints (c::Pitch))
   $ fmap (fmap $ spell usingSharps) $ Data.List.permutations [2,2,1,2,2::Semitones]
 
-allHexaChords' = timeSignature (6/4) $ compress 4 $ scat $ concat $ (fmap.fmap) fromPitch'' allHexaChords
+allHexaChords' = timeSignature (6/4) $ compress 4 $ pseq $ concat $ (fmap.fmap) fromPitch'' allHexaChords
 
 
 firstChordSketchStr = (firstChordSketch^*20) >>= (\x -> stretchTo 1 $ times (8*10) $ [x]^.score)

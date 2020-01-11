@@ -126,7 +126,7 @@ resPairs' :: [Music]
 resPairs' = compress 2 $ fmap (uncurry (|>)) $ over (mapped.both) (leadingNoteFromResolution' c) resPairs
 
 resPairScore :: Music
-resPairScore = scat $ compress 2 $ fmap (uncurry (|>)) $ over (mapped.both) (leadingNoteFromResolution' c) resPairs
+resPairScore = pseq $ compress 2 $ fmap (uncurry (|>)) $ over (mapped.both) (leadingNoteFromResolution' c) resPairs
 
 -- Realisation of all resPairs
 foo :: [Music]
@@ -139,7 +139,7 @@ indexFoo n = cycle foo !! n
 >>> :pl (!! 7) $ zipWith (<<>) (repeat $ fmap fromPitch'' $ pcat $ fmap pure $ triad c) (up _P8 resPairs')
 
 View all resolutions
->>> :o scat $ fmap indexFoo [1..16]
+>>> :o pseq $ fmap indexFoo [1..16]
 
 -}
 
@@ -171,7 +171,7 @@ allChordWithResolutionPairs = liftA2 (,) [c::Behavior Pitch,cs,d,ds,e,f,fs,g,gs,
 
 
 chordWithResolutionPairs' = showCWRP chordWithResolutionPairs
-showCWRP x = scat $ fmap (\(root,res2) -> up (root .-. asPitch c) $ indexFoo res2) x
+showCWRP x = pseq $ fmap (\(root,res2) -> up (root .-. asPitch c) $ indexFoo res2) x
 
 
 

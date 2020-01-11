@@ -33,7 +33,7 @@ strumRhythm
   -> [Duration]     -- ^ Duration pattern (repeated if necessary)
   -> [[Score a]]    -- ^ Sequence of chords to strum
   -> Score a
-strumRhythm startDirection durations' values = scat chords
+strumRhythm startDirection durations' values = pseq chords
   where
     directions = iterate nextDirection startDirection
     durations = cycle durations'
@@ -50,7 +50,7 @@ strum x = strumRhythm Up (map (/8) [2,1,2,1,2])
     dropLast n = reverse . drop n . reverse
 
 counterRh :: Music
-counterRh = set parts' rh $ (removeRests $ times 4 $ octavesUp 1 $ scat [rest |*2,g,g,g|*2,g|*2, rest|*2, scat [g,g,g]|*2])|/8
+counterRh = set parts' rh $ (removeRests $ times 4 $ octavesUp 1 $ pseq [rest |*2,g,g,g|*2,g|*2, rest|*2, pseq [g,g,g]|*2])|/8
 
 strings :: Music
 strings = set parts' (tutti violin) $ (\x -> x <> octavesUp 1 x) $
@@ -61,12 +61,12 @@ strings = set parts' (tutti violin) $ (\x -> x <> octavesUp 1 x) $
 
 melody :: Music
 melody = octavesDown 1 $ set parts' (tutti horn) $
-  (scat [c',g'|*2,e',d',c'|*2,b,c'|*2,d'|*2,e',d',c'|*2]|/4)
+  (pseq [c',g'|*2,e',d',c'|*2,b,c'|*2,d'|*2,e',d',c'|*2]|/4)
   |>
-  (scat [c',a'|*2,e',d',c'|*2,b,c'|*2,d'|*2,eb',d',c']|/4)
+  (pseq [c',a'|*2,e',d',c'|*2,b,c'|*2,d'|*2,eb',d',c']|/4)
 
 
-music = scat [music1, music2]
+music = pseq [music1, music2]
 music1 = asScore $ mempty
   -- <> (level mf $ set parts' guitar $ melody)
   -- <> level _p strings

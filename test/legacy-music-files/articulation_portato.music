@@ -1,1 +1,1 @@
-portato (scat [c..g]|/8)
+portato (pseq [c..g]|/8)

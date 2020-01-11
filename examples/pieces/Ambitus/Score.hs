@@ -142,7 +142,7 @@ pitchSpaceVoices = extractChords (0<->10) $
     r3 = pure$(f_,d'')^.ambitus
 
 pitchSpaceVoices' :: Music
-pitchSpaceVoices' = (asScore . fmap fromPitch) $ mscatter $ (renderAlignedVoice . aligned 0 0) pitchSpaceVoices
+pitchSpaceVoices' = (asScore . fmap fromPitch) $ mpseqter $ (renderAlignedVoice . aligned 0 0) pitchSpaceVoices
 
 
 {-

@@ -4,7 +4,7 @@ Times redesign
     Stop using Span and transformation as synonyms (?)
     Clean up split and reverse defs
     Stop claiming that mconcat is pcat
-        - pcat should look at eras and put them together just like scat
+        - pcat should look at eras and put them together just like pseq
         - Many other ways of laying out eras, could be a sub-language
         - Maybe use other mconcat synonym (like "atop")
         - This confusion comes from using Hudak-style names (seq vs par composition – UNALIGNED)

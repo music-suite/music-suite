@@ -66,7 +66,7 @@ toMusic = mcatMaybes . toMusic'
 toMusic' :: Lisp2 -> Score (Maybe StandardNote)
 toMusic' x = case x of
   LSymbol x -> symbolToNote x
-  LList xs -> stretchTo 1 $ scat (fmap toMusic' xs) -- TODO not if 1st elem is kw
+  LList xs -> stretchTo 1 $ pseq (fmap toMusic' xs) -- TODO not if 1st elem is kw
   _ -> mempty -- TODO
 
 symbolToNote x = case x of
@@ -162,9 +162,9 @@ fromActivity = go
   where
     go PlayingMotive = fmap Just $ stretchTo 1 $ mot'
     go PlayingEffect = fmap Just $ stretchTo 1 $ staccato $ times 16 $ d |/16
-    go PlayingFigure = fmap Just $ stretchTo 1 $ scat [c,d]
+    go PlayingFigure = fmap Just $ stretchTo 1 $ pseq [c,d]
     go PlayingDrone  = fmap Just $ d
-    go PlayingScale  = fmap Just $ stretchTo 1 $ legato $ scat $ palindrome [a_..a']
+    go PlayingScale  = fmap Just $ stretchTo 1 $ legato $ pseq $ palindrome [a_..a']
     go Tacet         = rest
 
 
@@ -188,7 +188,7 @@ example = id
   $ title "Variations on a Swedish Folk-Tune" 
   $ composer "Hans Jacob Hoeglund (2015)"
   -- $ over phrases' (cresc pp ff)
-  $ pcat $ zipWith (set parts') orchParts (fmap (mcatMaybes . scat) grid)
+  $ pcat $ zipWith (set parts') orchParts (fmap (mcatMaybes . pseq) grid)
 
 test a b ps = bm $ op $ (if ps == [] then id else filterParts ps) $ filterEventsInSpan (a<->b) example
   where

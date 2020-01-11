@@ -6,7 +6,7 @@ import Control.Lens (over)
 
 -- A simple subject
 subj :: Score (DynamicT (Behavior Amplitude) Pitch)
-subj  = times 20 $ scat [c,d,e,f]|/8 |> scat [g,fs]|/2
+subj  = times 20 $ pseq [c,d,e,f]|/8 |> pseq [g,fs]|/2
 
 music = id
   $ title "Dynamics"

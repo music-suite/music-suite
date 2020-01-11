@@ -58,13 +58,13 @@ instance Inspectable (Ambitus Pitch) where
   inspectableToMusic x = let (m, n) = x ^. from ambitus in glissando $ fromPitch m |> fromPitch n
 
 instance Inspectable [Chord Pitch] where
-  inspectableToMusic = scat . fmap inspectableToMusic
+  inspectableToMusic = pseq . fmap inspectableToMusic
 
 instance Inspectable (Mode Pitch) where
   inspectableToMusic = inspectableToMusic . modeToScale c
 
 instance Inspectable (Scale Pitch) where
-  inspectableToMusic = fmap fromPitch . scat . map (\x -> pure x :: Score Pitch) . scaleToList
+  inspectableToMusic = fmap fromPitch . pseq . map (\x -> pure x :: Score Pitch) . scaleToList
 
 instance Inspectable (Function Pitch) where
   inspectableToMusic = inspectableToMusic . functionToChord c
@@ -75,9 +75,9 @@ instance Inspectable (Chord Pitch) where
 -- instance Inspectable [Hertz] where
 --   inspectableToMusic xs = pcat $ map fromPitch $ map (^.from pitchHertz) xs
 -- instance Inspectable [[Hertz]] where
---   inspectableToMusic = scat . fmap inspectableToMusic
+--   inspectableToMusic = pseq . fmap inspectableToMusic
 instance Inspectable [Pitch] where
-  inspectableToMusic = compress 8 . scat . fmap fromPitch
+  inspectableToMusic = compress 8 . pseq . fmap fromPitch
 
 -- instance Inspectable Hertz where
 -- inspectableToMusic = inspectableToMusic . (:[])

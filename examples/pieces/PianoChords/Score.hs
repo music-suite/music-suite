@@ -30,7 +30,7 @@ TODO
 music = 
   title "Study 1" $ composer "Hans Hoeglund 2014" $ _8vb rh </> set parts' cellos (c^/8)
   where
-    rh = scatPaused (fmap (\x -> fromInteger $ floor $ x*7) rands) $ compress 4 $ map (\(a,b,c) -> realize a b c) material
+    rh = pseqPaused (fmap (\x -> fromInteger $ floor $ x*7) rands) $ compress 4 $ map (\(a,b,c) -> realize a b c) material
 
 
 pitchClassMaterial :: [PitchClassSet]
@@ -314,9 +314,9 @@ material = zip3 pitchClassMaterial registerMaterial permMaterial
 showMaterial m = pcm' </> rm' </> pm'
   where
     (pcm, rm, pm) = unzip3 m
-    pcm' = scat $ fmap fromPitchClassSet pcm
-    rm'  = scat $ fmap showAmbitus rm
-    pm'  = scat $ fmap showPermutation pm
+    pcm' = pseq $ fmap fromPitchClassSet pcm
+    rm'  = pseq $ fmap showAmbitus rm
+    pm'  = pseq $ fmap showPermutation pm
     
 
 realize :: PitchClassSet -> Ambitus Pitch -> Permutation -> Score StandardNote
@@ -326,7 +326,7 @@ realize pcs reg perm = music
     transposedPitches       = spreadPitchesIntoAmbitus reg {-$ List.sort-} pitches
     sortedTransposedPitches = List.sort transposedPitches
     pitchSequence           = fmap (cycle sortedTransposedPitches !!) (indexPermutation perm)
-    music                   = level pp $ legato $ stretchTo 1 $ scat $ fmap fromPitch'' (pitchSequence :: [Pitch])
+    music                   = level pp $ legato $ stretchTo 1 $ pseq $ fmap fromPitch'' (pitchSequence :: [Pitch])
 
 
 

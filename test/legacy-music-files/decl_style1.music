@@ -1,7 +1,7 @@
 
 data Foo = Foo | Bar
 
-scale Foo = scat [c,d,e,f,g,a,g,f]|/8
+scale Foo = pseq [c,d,e,f,g,a,g,f]|/8
 scale Bar = scale Foo
 
 triad a = a <> up _M3 a <> up _P5 a

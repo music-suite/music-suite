@@ -119,7 +119,7 @@ c|*(9/8) |> d|*(7/8)
 ```
 
 ```music+haskell
-stretch (2/3) (scat [c,d,e]) |> f|*2
+stretch (2/3) (pseq [c,d,e]) |> f|*2
 ```
 
 As you can see, note values, tuplets and ties are added automatically
@@ -163,15 +163,15 @@ Here is a more complex example:
 
 ```music+haskell
 let
-    scale = scat [c,d,e,f,g,a,g,f]|/8
+    scale = pseq [c,d,e,f,g,a,g,f]|/8
     triad a = a <> up _M3 a <> up _P5 a
 in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2
 ```
 
-As a shorthand for `x |> y |> z ..`, we can write @[scat] `[x, y, z]` (short for *sequential concatenation*).
+As a shorthand for `x |> y |> z ..`, we can write @[pseq] `[x, y, z]` (short for *sequential concatenation*).
 
 ```music+haskell
-scat [c,e..g]|/4
+pseq [c,e..g]|/4
 ```
 
 For `x <> y <> z ..`, we can write @[pcat] `[x, y, z]` (short for *parallel concatenation*).
@@ -180,7 +180,7 @@ For `x <> y <> z ..`, we can write @[pcat] `[x, y, z]` (short for *parallel conc
 pcat [c,e..g]|/2
 ```
 
-Actually, @[scat] and @[pcat] used to be called `melody` and `chord` back in the days, but
+Actually, @[pseq] and @[pcat] used to be called `melody` and `chord` back in the days, but
 I figured out that these are names that you actually want to use in your own code.
 
 ## Pitch
@@ -194,7 +194,7 @@ To understand how this works, think about the type of numeric literal. The value
 For Western-style pitch types, the standard pitch names can be used:
 
 ```music+haskell
-scat [c, d, e, f, g, a, b]
+pseq [c, d, e, f, g, a, b]
 ```
 
 <!--
@@ -289,7 +289,7 @@ to alter the size of an interval. For example:
 ```music+haskell
 let
     intervals = [diminish _P5, (diminish . diminish) _P5]
-in scat $ fmap (`up` c) intervals
+in pseq $ fmap (`up` c) intervals
 ```
 
 You can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
@@ -300,12 +300,12 @@ operators, think of pitches and points `.` and intervals as vectors `^`.
 TODO auto-spelling/normalization
 
 ```music+haskell
-scat $ fmap (`alter` c) [-2..2]
+pseq $ fmap (`alter` c) [-2..2]
 ```
 
 TODO this breaks Lilypond output (and XML?). Add auto-normalization in export
 ```TODOmusic+haskell
-scat $ fmap (`alter` c) [-5..5]
+pseq $ fmap (`alter` c) [-5..5]
 ```
 
 ### Qualified pitch and interval names
@@ -327,7 +327,7 @@ Dynamic values are overloaded in the same way as pitches. The dynamic literals a
 An overview of the dynamic values:
 
 ```music+haskell
-over eras (stretchRelativeOnset 0.5) $ scat $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
+over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
 ```
 
 TODO other ways of applying level
@@ -351,24 +351,24 @@ Equal dynamic marks are hidden if they appear to closely:
 Some basic articulation functions are @[legato], @[staccato], @[portato], @[tenuto], @[staccatissimo]:
 
 ```music+haskell
-legato (scat [c..g]|/8)
+legato (pseq [c..g]|/8)
     </>
-staccato (scat [c..g]|/8)
+staccato (pseq [c..g]|/8)
     </>
-portato (scat [c..g]|/8)
+portato (pseq [c..g]|/8)
     </>
-tenuto (scat [c..g]|/8)
+tenuto (pseq [c..g]|/8)
     </>
-staccatissimo (scat [c..g]|/8)
+staccatissimo (pseq [c..g]|/8)
 ```
 
 @[accent]
 @[marcato]
 
 ```music+haskell
-accent (scat [c..g]|/8)
+accent (pseq [c..g]|/8)
     </>
-marcato (scat [c..g]|/8)
+marcato (pseq [c..g]|/8)
 ```
 
 By default, accents are only applied to the first note in each phrase. You can also explicitly specify the last note, or all the notes:
@@ -377,9 +377,9 @@ By default, accents are only applied to the first note in each phrase. You can a
 @[accentAll]
 
 ```music+haskell
-accentLast (scat [c..g]|/8)
+accentLast (pseq [c..g]|/8)
     </>
-accentAll (scat [c..g]|/8)
+accentAll (pseq [c..g]|/8)
 ```
 
 You can apply slurs and articulation marks to scores of arbitrary complexity. The library will traverse each phrase in the score and apply the articulations separately.
@@ -388,9 +388,9 @@ For example in this example we're building up a score consisting of three parts 
 
 ```music+haskell
 let
-    p1 = scat [c..c']|/4
-    p2 = delay (1/4) $ scat [c..c']|/4
-    p3 = delay (3/4) $ scat [c..c']|/4
+    p1 = pseq [c..c']|/4
+    p2 = delay (1/4) $ pseq [c..c']|/4
+    p3 = delay (3/4) $ pseq [c..c']|/4
 in (accent . legato) (p1 </> p2 </> p3)
 ```
 
@@ -429,7 +429,7 @@ TODO chord tremolo
 @[glissando]
 
 ```music+haskell
-glissando $ scat [c,d]|/2
+glissando $ pseq [c,d]|/2
 ```
 
 ## Harmonics
@@ -464,7 +464,7 @@ text "pizz." $ c|/2
 Note with the same onset and offset are rendered as chords by default. If you want to prevent this you must put them in separate parts.
 
 ```music+haskell
-scat [c,d,e,c] <> scat [e,f,g,e] <> scat [g,a,b,g]
+pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]
 ```
 
 Or, equivalently:
@@ -489,7 +489,7 @@ It is possible to add rests explicitly as follows.
 @[mcatMaybes]
 
 ```TODO
-times 4 (accentAll g|*2 |> rest |> scat [d,d]|/2)|/8
+times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
 
 You can also remove rests explicitly:
@@ -497,7 +497,7 @@ You can also remove rests explicitly:
 TODO explain how this works.
 
 ```music+haskell
-mcatMaybes $ times 4 (accentAll g|*2 |> rest |> scat [d,d]|/2)|/8
+mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
 
 
@@ -511,7 +511,7 @@ mcatMaybes $ times 4 (accentAll g|*2 |> rest |> scat [d,d]|/2)|/8
 
 ```music+haskell
 let
-    melody = accent $ legato $ scat [d, scat [g,fs]|/2,bb|*2]|/4
+    melody = accent $ legato $ pseq [d, pseq [g,fs]|/2,bb|*2]|/4
 in melody |> rev melody
 ```
 
@@ -519,21 +519,21 @@ in melody |> rev melody
 
 ```music+haskell
 let
-    melody = legato $ scat [c,d,e,c]|/16
+    melody = legato $ pseq [c,d,e,c]|/16
 in times 4 $ melody
 ```
 
 @[sustain]
 
 ```music+haskell
-scat [e,d,f,e] <> c
+pseq [e,d,f,e] <> c
 ```
 
 ## Onset and duration
 
 ```music+haskell
 let
-    melody = legato $ scat [scat [c,d,e,c], scat [e,f], g|*2]
+    melody = legato $ pseq [pseq [c,d,e,c], pseq [e,f], g|*2]
     pedal = set era (melody^.era) g_
 in compress 4 $ melody </> pedal
 ```
@@ -543,11 +543,11 @@ in compress 4 $ melody </> pedal
 @[invertPitches]
 
 ```music+haskell
-(scat [c..g]|*(2/5))
+(pseq [c..g]|*(2/5))
     </>
-(invertPitches c $ scat [c..g]|*(2/5))
+(invertPitches c $ pseq [c..g]|*(2/5))
     </>
-(invertPitches e $ scat [c..g]|*(2/5))
+(invertPitches e $ pseq [c..g]|*(2/5))
 ```
 
 TODO Transformable class.
@@ -683,11 +683,11 @@ The @[Span] type represents a *slice* of time. We can represent spans in exactly
 A @[Voice] represents a single voice of music. It consists of a sequence of values with duration.
 
 ```music+haskell
-stretch (1/4) $ scat [c..a]|/2 |> b |> c'|*4
+stretch (1/4) $ pseq [c..a]|/2 |> b |> c'|*4
 ```
 
 ```music+haskell
-stretch (1/2) $ scat [c..e]|/3 |> f |> g|*2
+stretch (1/2) $ pseq [c..e]|/3 |> f |> g|*2
 ```
 
 
@@ -756,7 +756,7 @@ TODO explain what meta-really is: dynamical (Typeable) vs static. All presentati
 Title, subtitle etc is grouped together as a single type `Title`, thus an arbitrary number of nested titles is supported. The simplest way to add a title is to use the functions @[title], @[subtitle], @[subsubtitle] and so son.
 
 ```music+haskell
-title "Frere Jaques" $ scat [c,d,e,c]|/4
+title "Frere Jaques" $ pseq [c,d,e,c]|/4
 ```
 
 ## Attribution
@@ -764,11 +764,11 @@ title "Frere Jaques" $ scat [c,d,e,c]|/4
 Similar to titles, the attribution of the creators of music can be annotated according to description such as @[composer], @[lyricist], @[arranger] etc. More generally, @[attribution] or @[attributions] can be used to embed arbitrary `(profession, name)` mappings.
 
 ```music+haskell
-composer "Anonymous" $ scat [c,d,e,c]
+composer "Anonymous" $ pseq [c,d,e,c]
 ```
 
 ```music+haskell
-composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ scat [c,d,e,c]|/4
+composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ pseq [c,d,e,c]|/4
 ```
 
 ## Key signatures
@@ -776,7 +776,7 @@ composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ scat [c,d,e,c]|/
 ```music+haskell
 let major = True -- TODO!
 in
-keySignature (key db major) $ scat [db,eb,f]
+keySignature (key db major) $ pseq [db,eb,f]
 ```
 
 @[keySignatureDuring]
@@ -804,7 +804,7 @@ compoundTime [3,2] 8 :: TimeSignature
 ```
 
 ```music+haskell
-timeSignature (3/8) $ scat [db,eb,f]
+timeSignature (3/8) $ pseq [db,eb,f]
 ```
 
 @[timeSignatureDuring]
@@ -816,7 +816,7 @@ timeSignature (3/8) $ scat [db,eb,f]
 ```music+haskell
 let
   ch = pcat [e,g,c']
-  waltz = scat [c,ch,ch,g_,ch,ch] |* (1/4)
+  waltz = pseq [c,ch,ch,g_,ch,ch] |* (1/4)
 in
 timeSignature (3/4) waltz
 ```
@@ -824,7 +824,7 @@ timeSignature (3/4) waltz
 ```music+haskell
 let
   ch = pcat [e,g,c']
-  waltz = scat [c,ch,ch,g_,ch,ch] |* (1/4)
+  waltz = pseq [c,ch,ch,g_,ch,ch] |* (1/4)
 in
 timeSignature (3/8) $ compress 2 waltz
 ```
@@ -877,7 +877,7 @@ However, the user may also enter explicit bar lines using the following function
 Whenever a bar line is created as a result of a meta-event, an shorted time signature may need to be inserted as in:
 
 ```music+haskell
-compress 4 $ timeSignature (4/4) (scat [c,d,e,c,d,e,f,d,g,d]) |> timeSignature (3/4) (scat [a,g,f,g,f,e])
+compress 4 $ timeSignature (4/4) (pseq [c,d,e,c,d,e,f,d,g,d]) |> timeSignature (3/4) (pseq [a,g,f,g,f,e])
 ```
 
 TODO repeats
@@ -966,7 +966,7 @@ TODO how to export
 TODO re-add toLilypondString?
 
 ```haskell
-toLilypondString $ asScore $ scat [c,d,e]
+toLilypondString $ asScore $ pseq [c,d,e]
 ```
 
     <<
@@ -983,7 +983,7 @@ There are no plans to support input at the moment.
 TODO re-add toMusicXmlString?
 
 ```haskell
-toMusicXmlString $ asScore $ scat [c,d,e]
+toMusicXmlString $ asScore $ pseq [c,d,e]
 ```
 
     <?xml version='1.0' ?>

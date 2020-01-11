@@ -44,5 +44,5 @@ Min#7
 Aug-min (inversion of Maj-6)
 Aug
 -}
-music  = scat $ fmap (pcat . fmap fromPitch'' . offsetPoints (c::Pitch)) ch
-music2 = over pitches' (relative c $ spell usingSharps) $ scat $ fmap (pcat . fmap fromPitch'' . offsetPoints (c::Pitch)) cch
+music  = pseq $ fmap (pcat . fmap fromPitch'' . offsetPoints (c::Pitch)) ch
+music2 = over pitches' (relative c $ spell usingSharps) $ pseq $ fmap (pcat . fmap fromPitch'' . offsetPoints (c::Pitch)) cch

@@ -24,7 +24,7 @@ Try to encode the form of classical fugues in table form, see for example
 
 -}
 subj :: Music
-subj = scat [a_ |*2,c,d,e|*3,g,
+subj = pseq [a_ |*2,c,d,e|*3,g,
  a |*2,g,a,e|*3,e,
  d |*4,e,a_,b_,c,d]
 
@@ -66,13 +66,13 @@ TODO
     - Or: just enumerate the permutations to allow for manual checking
 -}
 
-fugue1a  = fugue1 $ scat [c,cs] |> compress 4 (scat [d,b,bb,a] |> scat [gs,cs,d,ds])
-fugue1a' = fugue1 $ scat [c,cs] |> compress 4 (scat [d,b,bb,b] |> scat [gs,cs,d,ds])
+fugue1a  = fugue1 $ pseq [c,cs] |> compress 4 (pseq [d,b,bb,a] |> pseq [gs,cs,d,ds])
+fugue1a' = fugue1 $ pseq [c,cs] |> compress 4 (pseq [d,b,bb,b] |> pseq [gs,cs,d,ds])
 
 
-fugue1b = fugue1 $ scat [c,e] |> compress 4 (scat [f,a,g,a] |> scat [bb,a,g,f])
-fugue1c = fugue1 $ scat [c,d,b] |> compress 8 (scat [e,d,e,d,e,g,a,e,d])
-fugue1d = fugue1 $ compress 8 (scat
+fugue1b = fugue1 $ pseq [c,e] |> compress 4 (pseq [f,a,g,a] |> pseq [bb,a,g,f])
+fugue1c = fugue1 $ pseq [c,d,b] |> compress 8 (pseq [e,d,e,d,e,g,a,e,d])
+fugue1d = fugue1 $ compress 8 (pseq
   [e,d,c|*2,f|*2,e,f,g,b,a|*2]
   )
 

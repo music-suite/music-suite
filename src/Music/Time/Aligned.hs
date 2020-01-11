@@ -90,7 +90,7 @@ renderAligned f a@(Aligned (_, v)) = f (_era a) v
 -- Somewhat suspect, see below for clarity...
 
 voiceToScoreInEra :: Span -> Voice a -> Score a
-voiceToScoreInEra e = set era e . scat . map (uncurry stretch) . view pairs . fmap pure
+voiceToScoreInEra e = set era e . pseq . map (uncurry stretch) . view pairs . fmap pure
 
 noteToEventInEra :: Span -> Note a -> Event a
 noteToEventInEra e = set era e . view notee . fmap pure

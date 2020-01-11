@@ -9,7 +9,7 @@ import Music.Prelude
 main :: IO ()
 main = defaultMain . showAnnotations' ""
      . intervalAnnotations subjectDiff
-     . scat $ map (fromPitch'') subject
+     . pseq $ map (fromPitch'') subject
 
 subject :: [Pitch]
 subject = [c, d, f, e, f, g, a, g, e, d, c]

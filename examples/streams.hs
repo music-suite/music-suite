@@ -38,11 +38,11 @@ scale n = case n `mod` 6 of
 len = 390
 
 seq1 :: Score Integer
-seq1 = scat $ take len $ fmap return $ fmap (`mod` 6) $ Data.Foldable.toList $ extendSequence [2,1,1,2,2]
-seq2 = scat $ take len $ fmap return $ fmap (`mod` 6) $ Data.Foldable.toList $ extendSequence [2,1,1,2,2,1]
+seq1 = pseq $ take len $ fmap return $ fmap (`mod` 6) $ Data.Foldable.toList $ extendSequence [2,1,1,2,2]
+seq2 = pseq $ take len $ fmap return $ fmap (`mod` 6) $ Data.Foldable.toList $ extendSequence [2,1,1,2,2,1]
 
 -- Thue–Morse sequence
-seq3 = scat $ take len $ fmap return $ fmap (`mod` 6) $ Data.Foldable.toList $ extendSequence [2,1,1,2,2,1,1]
+seq3 = pseq $ take len $ fmap return $ fmap (`mod` 6) $ Data.Foldable.toList $ extendSequence [2,1,1,2,2,1,1]
 
 music = pcat [(partNs 0 & up (m3^*2) & compress 6),
               (partNs 1 & up (m3^*1) & compress 5),

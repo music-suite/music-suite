@@ -1,1 +1,1 @@
-glissando $ scat [c,d]|/2
+glissando $ pseq [c,d]|/2

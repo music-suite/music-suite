@@ -1,11 +1,11 @@
-legato (scat [c..g]|/8)
+legato (pseq [c..g]|/8)
     </>
-staccato (scat [c..g]|/8)
+staccato (pseq [c..g]|/8)
     </>
-portato (scat [c..g]|/8)
+portato (pseq [c..g]|/8)
     </>
-tenuto (scat [c..g]|/8)
+tenuto (pseq [c..g]|/8)
     </>
-separated (scat [c..g]|/8)
+separated (pseq [c..g]|/8)
     </>
-spiccato (scat [c..g]|/8)
+spiccato (pseq [c..g]|/8)

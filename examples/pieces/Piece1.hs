@@ -148,7 +148,7 @@ allHexaChordTypes = id
   $ fmap (fmap (relative c (spell usingSharps)). offsetPoints (c::Pitch))
   $ fmap (fmap $ spell usingSharps) $ Data.List.permutations [2,2,1,2,2::Semitones]
 
-allHexaChordTypes' = timeSignature (6/4) $ compress 4 $ scat $ concat $ (fmap.fmap) fromPitch'' allHexaChordTypes
+allHexaChordTypes' = timeSignature (6/4) $ compress 4 $ pseq $ concat $ (fmap.fmap) fromPitch'' allHexaChordTypes
 
 -}
 
@@ -250,7 +250,7 @@ Generate all possible voicings of a 6-note chord into 2 and 3 octaves (64 and 72
 
 voicings :: Integer -> [Pitch] -> [[Pitch]]
 voicings n pitches = fmap (\(a,b,c,d,e,f) -> zipWith octavesUp (map pred [a,b,c,d,e,f]) pitches) $ combination6 n
-voicings' n pitches = scat $ fmap pcat $ fmap2 fromPitch'' (voicings n pitches)
+voicings' n pitches = pseq $ fmap pcat $ fmap2 fromPitch'' (voicings n pitches)
 
 -- What is the correct Math term?
 combination6 n = [(a,b,c,d,e,f)

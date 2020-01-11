@@ -1,1 +1,1 @@
-scat $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
+pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
