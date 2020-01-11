@@ -697,8 +697,8 @@ infixr 6 <|
 pseq :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
 pseq = Prelude.foldr (|>) mempty
 
-pcat :: (Semigroup a, Monoid a) => [a] -> a
-pcat = Prelude.foldr (<>) mempty
+ppar :: (Semigroup a, Monoid a) => [a] -> a
+ppar = Prelude.foldr (<>) mempty
 
 during :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
 y `during` x = set era (view era x) y
@@ -1450,7 +1450,7 @@ inversions :: Transposable a => Chord a -> [Chord a]
 inversions = iterate invertC
 
 chordToScore :: Chord a -> Score a
-chordToScore = pcat . map pure . toListOf traverse
+chordToScore = ppar . map pure . toListOf traverse
 
 unchord =  toListOf traverse
 
@@ -2130,7 +2130,7 @@ reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. note) $ durs `z
 
         {-
         voicesToScore :: HasPart a => [(Part a, Voice a)] -> Score a
-        voicesToScore = pcat . fmap (voiceToScore . uncurry (\n -> fmap (setPart n)))
+        voicesToScore = ppar . fmap (voiceToScore . uncurry (\n -> fmap (setPart n)))
         -}
 
         voiceToScore' :: Voice (Maybe a) -> Score a

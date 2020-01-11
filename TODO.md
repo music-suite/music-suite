@@ -107,7 +107,7 @@ Consider switching to a decentralized issue tracker such as:
   - See `sketch`
   - Check compatibility with current HasPitch/HasPitches etc and new GHC record proposals
 
-- Rename the core composition operators (was: pseq/pcat/rcat)
+- Rename the core composition operators (was: scat/pcat/rcat)
   - seq/par/sep - nice, probably simplest.
       - Need to enable NoImplicitPrelude in examples and make Music.Prelude reexport
         the standard prelude sans (seq, par).
@@ -255,7 +255,7 @@ Consider switching to a decentralized issue tracker such as:
     - Pros:
       - Can retain lenses in Music.Time.Position
       - Allow a convenient definition of 'rest' as a synonym for 'mempty'. No more removeRests/mcatMaybes!
-    - Cons: Different juxtaposition operators (e.g. pseq) for scores/notes etc.
+    - Cons: Different juxtaposition operators (e.g. scat) for scores/notes etc.
   - Idea 3: Decore empty type with an extra era, e.g. semantically:
       type Score a = Either Span (NonEmpty (Event a))
       instance Monoid (Score a) where

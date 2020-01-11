@@ -44,7 +44,7 @@ seq2 = pseq $ take len $ fmap return $ fmap (`mod` 6) $ Data.Foldable.toList $�
 -- Thue–Morse sequence
 seq3 = pseq $ take len $ fmap return $ fmap (`mod` 6) $ Data.Foldable.toList $ extendSequence [2,1,1,2,2,1,1]
 
-music = pcat [(partNs 0 & up (m3^*2) & compress 6),
+music = ppar [(partNs 0 & up (m3^*2) & compress 6),
               (partNs 1 & up (m3^*1) & compress 5),
               (partNs 2 & compress 4)]
   & fmap (pitches' %~ normalize) & compress 4 & staccato

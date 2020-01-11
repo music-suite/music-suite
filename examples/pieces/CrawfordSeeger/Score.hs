@@ -48,18 +48,18 @@ playersByHighest = Data.List.sortBy (Data.Ord.comparing $ \p -> (instrumentRange
 playersByLowest  = Data.List.sortBy (Data.Ord.comparing $ \p -> (instrumentRange (p^._instrument))^.from ambitus._1) players
 
 -- Some example "chords"
-unison1 = pcat $ zipWith (set parts') players (repeat c)
-unison2 = pcat $ zipWith (set parts') players (fmap fromPitch'' $ cycle $ enumChromaticFromTo c c')
-unison3 = pcat $ zipWith (set parts') playersByLowest (fmap fromPitch'' $ cycle $ enumChromaticFromTo c c')
-unison4 = pcat $ zipWith (set parts') playersByHighest (fmap fromPitch'' $ cycle $ enumChromaticFromTo c c')
+unison1 = ppar $ zipWith (set parts') players (repeat c)
+unison2 = ppar $ zipWith (set parts') players (fmap fromPitch'' $ cycle $ enumChromaticFromTo c c')
+unison3 = ppar $ zipWith (set parts') playersByLowest (fmap fromPitch'' $ cycle $ enumChromaticFromTo c c')
+unison4 = ppar $ zipWith (set parts') playersByHighest (fmap fromPitch'' $ cycle $ enumChromaticFromTo c c')
 
-unison2a = pcat $ zipWith (set parts') players (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
-unison3a = pcat $ zipWith (set parts') playersByLowest (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
-unison4a = pcat $ zipWith (set parts') playersByHighest (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
+unison2a = ppar $ zipWith (set parts') players (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
+unison3a = ppar $ zipWith (set parts') playersByLowest (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
+unison4a = ppar $ zipWith (set parts') playersByHighest (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
 
-unison2b = pcat $ zipWith (set parts') (reverse players) (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
-unison3b = pcat $ zipWith (set parts') (reverse playersByLowest) (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
-unison4b = pcat $ zipWith (set parts') (reverse playersByHighest) (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
+unison2b = ppar $ zipWith (set parts') (reverse players) (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
+unison3b = ppar $ zipWith (set parts') (reverse playersByLowest) (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
+unison4b = ppar $ zipWith (set parts') (reverse playersByHighest) (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
 
 -----
 {-

@@ -23,7 +23,7 @@ group n x = times n x |/ fromIntegral n
 music :: Music
 music = {-fadeIn 1 $-} {-fadeOut 1 $-} catSep $ map test [1..5]
 
-catSep = pcat . zipWith (set parts') (divide 100 mempty)
+catSep = ppar . zipWith (set parts') (divide 100 mempty)
 
 main :: IO ()
 main = defaultMain music

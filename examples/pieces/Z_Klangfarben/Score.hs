@@ -14,7 +14,7 @@ Klangfarben melodien...
 -- main = displayAndAudify music
 main = displayAndAudify $ music2
 
-music2 = compress 4 $ pcat $ map renderAlignedVoice $
+music2 = compress 4 $ ppar $ map renderAlignedVoice $
   times 2 (pure $ aligned 0 0 $ music1)
   
 music1 = asVoice $ klangfarben 

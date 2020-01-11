@@ -19,12 +19,12 @@ and so on.
 -}
 
 subj :: Voice StandardNote
-subj  = compress 16 $ simplifyPitches $ asVoice $ (!! 3) $ stitchTogether $ pcat $ concat $ replicate 5 [c,g,bb,g,cs,b_]
--- subj2 = compress 16 $ simplifyPitches $ asVoice $ (!! 3) $ stitchTogether $ pcat $ concat $ replicate 5 [c,e,f,e,c,cs]
-subj2 = compress 16 $ simplifyPitches $ asVoice $ (!! 3) $ stitchTogether $ pcat $ concat $ replicate 5 [c,e,f,e,c,ds]
+subj  = compress 16 $ simplifyPitches $ asVoice $ (!! 3) $ stitchTogether $ ppar $ concat $ replicate 5 [c,g,bb,g,cs,b_]
+-- subj2 = compress 16 $ simplifyPitches $ asVoice $ (!! 3) $ stitchTogether $ ppar $ concat $ replicate 5 [c,e,f,e,c,cs]
+subj2 = compress 16 $ simplifyPitches $ asVoice $ (!! 3) $ stitchTogether $ ppar $ concat $ replicate 5 [c,e,f,e,c,ds]
 
 otherNotes :: Voice a -> Score a
-otherNotes v = pcat $ zipWith (\t n -> delay t (pure n)) ts (fmap (fromMaybe (error "Outside voice") . voiceAtDuration v) ts)
+otherNotes v = ppar $ zipWith (\t n -> delay t (pure n)) ts (fmap (fromMaybe (error "Outside voice") . voiceAtDuration v) ts)
   where
     -- Times to sample
     ts = [1,5.25,7,9.75,15,16.5,18,19]

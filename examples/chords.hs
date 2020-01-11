@@ -16,7 +16,7 @@ rh     = (tutti $ fromMidiProgram 0)
 -- Strum a chord
 -- TODO port this to Chord module
 strumUp :: [Score a] -> Score a
-strumUp = pcat . zipWith (\t x -> delay t . stretchTo (x^.duration ^-^ t) $ x) [0,kStrum..]
+strumUp = ppar . zipWith (\t x -> delay t . stretchTo (x^.duration ^-^ t) $ x) [0,kStrum..]
 
 strumDown = strumUp . reverse
 
@@ -80,10 +80,10 @@ music2 = asScore $ mempty
 
 gtr :: Music
 gtr = set parts' guitar $
-  (pcat $ take 4 $ zipWith delay [0,1..10] $ repeat $ strum [c_,e_,g_,c,e,g])
+  (ppar $ take 4 $ zipWith delay [0,1..10] $ repeat $ strum [c_,e_,g_,c,e,g])
   |>
-  (pcat $ take 4 $ zipWith delay [0,1..10] $ repeat $ strum [c_,fs_,a_,c,fs,a])
+  (ppar $ take 4 $ zipWith delay [0,1..10] $ repeat $ strum [c_,fs_,a_,c,fs,a])
   |>
-  (pcat $ take 4 $ zipWith delay [0,1..10] $ repeat $ strum [c_,e_,g_,c,e,g])
+  (ppar $ take 4 $ zipWith delay [0,1..10] $ repeat $ strum [c_,e_,g_,c,e,g])
   |>
-  (pcat $ take 4 $ zipWith delay [0,1..10] $ repeat $ strum [g_,a_,c,f,a,c'])
+  (ppar $ take 4 $ zipWith delay [0,1..10] $ repeat $ strum [g_,a_,c,f,a,c'])

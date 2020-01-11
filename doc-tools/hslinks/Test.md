@@ -158,11 +158,11 @@ As a shorthand for `x |> y |> z ..`, we can write `pseq [x, y, z]`.
 pseq [c,e..g]^/4
 ```
 
-For `x <> y <> z ..`, we can write `pcat [x, y, z]`.
-@[pcat] (short for *parallel concatenation*).
+For `x <> y <> z ..`, we can write `ppar [x, y, z]`.
+@[ppar] (short for *parallel concatenation*).
 
 ```music+haskell
-pcat [c,e..g]^/2
+ppar [c,e..g]^/2
 ```
 
 

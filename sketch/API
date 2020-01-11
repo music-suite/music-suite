@@ -527,7 +527,7 @@ palindrome ::
   (Data.Semigroup.Semigroup a, Reversible a, HasPosition a) => a -> a
 past :: Past a -> Time -> Data.Maybe.Maybe a
 pastSeg :: Past (Segment a) -> Behavior (Data.Maybe.Maybe a)
-pcat ::
+ppar ::
   (Data.Semigroup.Semigroup a, Data.Monoid.Monoid a) => [a] -> a
 placeAt ::
   (Transformable a, HasPosition a) => Duration -> Time -> a -> a

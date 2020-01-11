@@ -53,7 +53,7 @@ bell = let
     in parts' .~ solo tubularBells $ {- text "l.v." $ -} removeRests $ times 40 $ pseq [times 3 $ pseq [cue,rest], rest|*2]
 
 -- strings :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
-strings = pcat [
+strings = ppar [
     parts' .~ violins1     $ up (_P8^*1)   $ stringPart,
     parts' .~ violins2     $ up (_P8^*0)   $ stretch 2 stringPart,
     parts' .~ violas       $ down (_P8^*1) $ stretch 4 stringPart,

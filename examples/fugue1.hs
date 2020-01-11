@@ -21,7 +21,7 @@ subj = pseq [ a_|*2,c,d,e|*3,g,
  d|*4,e,a_,b_,c,d]
 
 fugue :: [(Part, Duration, Interval)] -> Music -> Music
-fugue exps subj = pcat $ fmap (\(p,t,i) -> set parts' p . delay t . up i $ subj) exps
+fugue exps subj = ppar $ fmap (\(p,t,i) -> set parts' p . delay t . up i $ subj) exps
 
 fugue1 = fugue
   [ (p1, 0, _P1)

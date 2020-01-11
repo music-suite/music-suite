@@ -276,7 +276,7 @@ uniquePitches :: forall a p . (HasPitches' a, Music.Score.Pitch.Pitch a ~ p, Ord
 uniquePitches = \x -> Data.List.nub $ Data.List.sort $ toListOf pitches' x
 
 replacePitches :: (HasPitches' a, Music.Score.Pitch.Pitch a ~ Pitch) => [Pitch] -> Score a -> Score a
-replacePitches newPitches texture = pcat $ fmap ($ texture) replacers
+replacePitches newPitches texture = ppar $ fmap ($ texture) replacers
   where
     replacers = zipWith (\n o -> set pitches' n . mfilter (\x->x^?!pitches == o)) (cycle newPitches) originalPitches
     originalPitches = uniquePitches texture

@@ -383,7 +383,7 @@ pitchToPitchClass :: Pitch -> PitchClass
 pitchToPitchClass p = PC (name p, accidental p)
 
 fromPitchSet :: PitchSet -> Score StandardNote
-fromPitchSet = asScore . pcat . fmap fromPitch'' . Set.toList
+fromPitchSet = asScore . ppar . fmap fromPitch'' . Set.toList
 
 fromPitchClassSet :: PitchClassSet -> Score StandardNote
 fromPitchClassSet = fromPitchSet . Set.map pitchClassToPitch

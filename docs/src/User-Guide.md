@@ -174,13 +174,13 @@ As a shorthand for `x |> y |> z ..`, we can write @[pseq] `[x, y, z]` (short for
 pseq [c,e..g]|/4
 ```
 
-For `x <> y <> z ..`, we can write @[pcat] `[x, y, z]` (short for *parallel concatenation*).
+For `x <> y <> z ..`, we can write @[ppar] `[x, y, z]` (short for *parallel concatenation*).
 
 ```music+haskell
-pcat [c,e..g]|/2
+ppar [c,e..g]|/2
 ```
 
-Actually, @[pseq] and @[pcat] used to be called `melody` and `chord` back in the days, but
+Actually, @[pseq] and @[ppar] used to be called `melody` and `chord` back in the days, but
 I figured out that these are names that you actually want to use in your own code.
 
 ## Pitch
@@ -470,7 +470,7 @@ pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]
 Or, equivalently:
 
 ```music+haskell
-pcat [c,e,g] |> pcat [d,f,a] |> pcat [e,g,b] |> pcat [c,e,g]
+ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
 ```
 
 TODO how part separation works w.r.t. division etc
@@ -815,7 +815,7 @@ timeSignature (3/8) $ pseq [db,eb,f]
 
 ```music+haskell
 let
-  ch = pcat [e,g,c']
+  ch = ppar [e,g,c']
   waltz = pseq [c,ch,ch,g_,ch,ch] |* (1/4)
 in
 timeSignature (3/4) waltz
@@ -823,7 +823,7 @@ timeSignature (3/4) waltz
 
 ```music+haskell
 let
-  ch = pcat [e,g,c']
+  ch = ppar [e,g,c']
   waltz = pseq [c,ch,ch,g_,ch,ch] |* (1/4)
 in
 timeSignature (3/8) $ compress 2 waltz

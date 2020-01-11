@@ -19,7 +19,7 @@ module Music.Time.Juxtapose
 
     -- * Catenation
     pseq,
-    pcat,
+    ppar,
 
     -- * Repetition
     times,
@@ -89,8 +89,8 @@ pseq = Prelude.foldr (|>) mempty
 --
 -- This not possible for non-positioned types, as they have no notion of an origin.
 -- For positioned types this is the same as 'mconcat'.
-pcat :: (Semigroup a, Monoid a) => [a] -> a
-pcat = Prelude.foldr (<>) mempty
+ppar :: (Semigroup a, Monoid a) => [a] -> a
+ppar = Prelude.foldr (<>) mempty
 
 -- |
 -- Move a value so that its era is equal to the era of another value.

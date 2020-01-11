@@ -29,7 +29,7 @@ basic1WithOpenClose = toPattern
   , "b s b s " ]
 
 toPattern :: [String] -> Score Pitch
-toPattern patterns = compress (fromIntegral $ maximum $ fmap length patterns) $ pcat $ fmap (removeRests . pseq . fmap g) patterns
+toPattern patterns = compress (fromIntegral $ maximum $ fmap length patterns) $ ppar $ fmap (removeRests . pseq . fmap g) patterns
   where
     g ' ' = rest
     g 'x' = hiHat

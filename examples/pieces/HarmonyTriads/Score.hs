@@ -130,13 +130,13 @@ resPairScore = pseq $ compress 2 $ fmap (uncurry (|>)) $ over (mapped.both) (lea
 
 -- Realisation of all resPairs
 foo :: [Music]
-foo =  zipWith (<<>) (repeat $ fmap fromPitch'' $ pcat $ fmap pure $ triad c) (up _P8 resPairs')
+foo =  zipWith (<<>) (repeat $ fmap fromPitch'' $ ppar $ fmap pure $ triad c) (up _P8 resPairs')
 
 indexFoo :: Int -> Music
 indexFoo n = cycle foo !! n
 
 {-
->>> :pl (!! 7) $ zipWith (<<>) (repeat $ fmap fromPitch'' $ pcat $ fmap pure $ triad c) (up _P8 resPairs')
+>>> :pl (!! 7) $ zipWith (<<>) (repeat $ fmap fromPitch'' $ ppar $ fmap pure $ triad c) (up _P8 resPairs')
 
 View all resolutions
 >>> :o pseq $ fmap indexFoo [1..16]

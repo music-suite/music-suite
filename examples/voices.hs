@@ -16,7 +16,7 @@ renderVoice = fmap fromPitch . removeRests . renderAlignedVoice . aligned 0 0
 -- renderChorale :: (IsPitch a, HasParts' a, S.Part a ~ Part) => Chorale -> Score a
 renderChorale = catSep . fmap renderVoice
 
-catSep = pcat . zipWith (set parts') (divide 100 mempty)
+catSep = ppar . zipWith (set parts') (divide 100 mempty)
 
 music :: Music
 music = renderChorale [subj]

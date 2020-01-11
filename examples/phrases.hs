@@ -32,4 +32,4 @@ rotate n xs = iterate rotate1 xs !! n
     rotate1 [] = []
     rotate1 xs = last xs : init xs
 
-catSep = pcat . zipWith (set parts') (divide 100 violins)
+catSep = ppar . zipWith (set parts') (divide 100 violins)

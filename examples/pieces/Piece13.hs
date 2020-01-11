@@ -188,7 +188,7 @@ example = id
   $ title "Variations on a Swedish Folk-Tune" 
   $ composer "Hans Jacob Hoeglund (2015)"
   -- $ over phrases' (cresc pp ff)
-  $ pcat $ zipWith (set parts') orchParts (fmap (mcatMaybes . pseq) grid)
+  $ ppar $ zipWith (set parts') orchParts (fmap (mcatMaybes . pseq) grid)
 
 test a b ps = bm $ op $ (if ps == [] then id else filterParts ps) $ filterEventsInSpan (a<->b) example
   where

@@ -145,16 +145,16 @@ Functions taking lists
     >>> highest [c,d]
     Just d
     >>> pseq [c,e,g]
-    >>> pcat [c,e,g]
+    >>> ppar [c,e,g]
 
     >>> join [[1,2]‚[3,4]]
     [1,2,3,4]
     >>> pseq [c,e,g]
-    >>> pcat [c,e,g]
+    >>> ppar [c,e,g]
 
 ### Exercises:
 
-- Define several melodies and chords using `pseq`, `pcat` and pitch names
+- Define several melodies and chords using `pseq`, `ppar` and pitch names
 - Combine the melodies and chords you have written into a 1-minute composition
 
 ## Delay and stretch

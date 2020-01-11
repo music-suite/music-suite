@@ -212,26 +212,26 @@ hexachord4Subsets =
 
 -- very dissonant
 both3 :: Music
-both3   = set parts' violins (pcat hexachord1) <> set parts' violins (pcat hexachord2)
-both3'  = set parts' horns (pcat hexachord1) <> set parts' trombones (pcat hexachord2)
+both3   = set parts' violins (ppar hexachord1) <> set parts' violins (ppar hexachord2)
+both3'  = set parts' horns (ppar hexachord1) <> set parts' trombones (ppar hexachord2)
 
 -- quite dissonant
 both1 :: Music
-both1   = set parts' violins (pcat hexachord1) <> set parts' horns (pcat hexachord2)
-both1'  = set parts' horns (pcat hexachord1)   <> set parts' violins (pcat hexachord2)
+both1   = set parts' violins (ppar hexachord1) <> set parts' horns (ppar hexachord2)
+both1'  = set parts' horns (ppar hexachord1)   <> set parts' violins (ppar hexachord2)
 
 -- not so dissonant
 both4 :: Music
-both4   = set parts' flutes (pcat hexachord1) <> set parts' trombones (pcat hexachord2)
-both4'  = set parts' flutes (pcat hexachord1) <> set parts' oboes (pcat hexachord2)
+both4   = set parts' flutes (ppar hexachord1) <> set parts' trombones (ppar hexachord2)
+both4'  = set parts' flutes (ppar hexachord1) <> set parts' oboes (ppar hexachord2)
 
-both4'' = (\x -> ((set parts' flutes . level ff . up _P8))x <> (set parts flutes . level ff)x) (pcat hexachord1)
-  <> set parts' bassoons (pcat hexachord2)
+both4'' = (\x -> ((set parts' flutes . level ff . up _P8))x <> (set parts flutes . level ff)x) (ppar hexachord1)
+  <> set parts' bassoons (ppar hexachord2)
 -}
 
 form :: Music
 -- Basic, basic sketch (480 bars at (1/4) = 120)
-form = pcat hexachord1|*5 |> (pcat hexachord1 <> pcat hexachord2)|*4 |> pcat hexachord2|*5
+form = ppar hexachord1|*5 |> (ppar hexachord1 <> ppar hexachord2)|*4 |> ppar hexachord2|*5
 
 
 
@@ -250,7 +250,7 @@ Generate all possible voicings of a 6-note chord into 2 and 3 octaves (64 and 72
 
 voicings :: Integer -> [Pitch] -> [[Pitch]]
 voicings n pitches = fmap (\(a,b,c,d,e,f) -> zipWith octavesUp (map pred [a,b,c,d,e,f]) pitches) $ combination6 n
-voicings' n pitches = pseq $ fmap pcat $ fmap2 fromPitch'' (voicings n pitches)
+voicings' n pitches = pseq $ fmap ppar $ fmap2 fromPitch'' (voicings n pitches)
 
 -- What is the correct Math term?
 combination6 n = [(a,b,c,d,e,f)
@@ -1515,7 +1515,7 @@ captureChordsWithParts = do
 showChords :: IO ()
 showChords =
   captureChordsWithParts
-    >>= pure . pcat
+    >>= pure . ppar
       . zipWith (set parts') stringsDiv10
       . fmap (fromChords . snd)
     >>= openLilypond
@@ -1527,7 +1527,7 @@ makeScoreFromSketch = do
   let cs = fmap2 (filterWithSpan (\s _ -> (s^.onset) >= start && (s^.offset) <= stop)) cs'
   res <- return
     -- $ (|> orch) -- FIXME notes out of range
-    $ pcat
+    $ ppar
     $ fmap snd
     $ fmap2 (mcatMaybes . renderPatternsAbs)
     $ stretch 20

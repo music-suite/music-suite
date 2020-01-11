@@ -23,7 +23,7 @@ renderChord = fmap (view delayee) . view unchord
 renderChord2 :: Chord a -> [Music.Time.Note.Note a]
 renderChord2 = renderChord . fmap (return :: a -> Music.Time.Note.Note a)
 
--- TODO "pcat"
+-- TODO "ppar"
 renderChord3 :: Chord a -> Score a
 renderChord3 = view score . renderChord2
 

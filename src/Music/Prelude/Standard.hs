@@ -122,7 +122,7 @@ fromPitch'' = fromPitch
 
 -- | Orchestrate in the given parts.
 singleParts :: (Monoid a, Semigroup a, HasParts' a) => [Music.Score.Part.Part a] -> [a] -> a
-singleParts ens = pcat . zipWith (set parts') (reverse $ ens)
+singleParts ens = ppar . zipWith (set parts') (reverse $ ens)
 
 -- | Orchestrate by doubling the given music in all given parts.
 --

@@ -431,7 +431,7 @@ norest :: Shape -> Chord Pitch -> Note (Maybe (Floater StandardNote))
 norest x y = pure $ Just $ makeFloater x y
 
 fast', slow', piece :: Music
-fast' = pcat $ fmap renderLayer fast
+fast' = ppar $ fmap renderLayer fast
 slow' = renderLayer slow
 piece = slow' <> fast'
 example = piece
@@ -610,7 +610,7 @@ Think more about pitch material.
 {-
 -- Show chords in ascending order of dissonance. 
 showDiss :: [Chord Pitch] -> Music
-showDiss = asScore . pseq . fmap (\ps -> addText (take 12 $ show $ chordDiss ps) $ pcat $ fmap fromPitch'' ps) 
+showDiss = asScore . pseq . fmap (\ps -> addText (take 12 $ show $ chordDiss ps) $ ppar $ fmap fromPitch'' ps) 
   . Data.List.sortBy (Data.Ord.comparing chordDiss) . fmap (^.from chord)
 
 -- Example
@@ -794,7 +794,7 @@ disses = fmap (^.chord) [
 
 testTutti :: [Part] -> Chord Pitch -> Music
 testTutti tutti ch =
-  asScore $ pcat $ zipWith (set parts') tutti (map fromPitch'' $ pitchMaterial)
+  asScore $ ppar $ zipWith (set parts') tutti (map fromPitch'' $ pitchMaterial)
   where
     pitchMaterial = ch^.from chord
 

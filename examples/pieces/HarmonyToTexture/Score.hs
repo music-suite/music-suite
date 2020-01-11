@@ -31,7 +31,7 @@ elab, elabUD
 elab ps = stretchTo 3 $ pseq [arp ps, arp (invertChord 2 ps), arp (invertChord 1 ps)]
 elabUD ps = stretchTo 3 $ pseq [arpUD ps, arpUD (invertChord 2 ps), arpUD (invertChord 1 ps)]
 
-music = asScore $ spcat chords
+music = asScore $ sppar chords
 arpChords = compress 4 $ pseq $ fmap arp chords
 
 

@@ -537,7 +537,7 @@ octaves =
 -- music-suite/test/legacy-music-files/overlay_chords.music
 overlay_chords :: Music
 overlay_chords =
-  pcat [c,e,g] |> pcat [d,f,a] |> pcat [e,g,b] |> pcat [c,e,g]
+  ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
 
 
 -- music-suite/test/legacy-music-files/overlay_voices.music

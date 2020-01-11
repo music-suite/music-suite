@@ -70,10 +70,10 @@ instance Inspectable (Function Pitch) where
   inspectableToMusic = inspectableToMusic . functionToChord c
 
 instance Inspectable (Chord Pitch) where
-  inspectableToMusic = fmap fromPitch . pcat . map (\x -> pure x :: Score Pitch) . chordToList
+  inspectableToMusic = fmap fromPitch . ppar . map (\x -> pure x :: Score Pitch) . chordToList
 
 -- instance Inspectable [Hertz] where
---   inspectableToMusic xs = pcat $ map fromPitch $ map (^.from pitchHertz) xs
+--   inspectableToMusic xs = ppar $ map fromPitch $ map (^.from pitchHertz) xs
 -- instance Inspectable [[Hertz]] where
 --   inspectableToMusic = pseq . fmap inspectableToMusic
 instance Inspectable [Pitch] where

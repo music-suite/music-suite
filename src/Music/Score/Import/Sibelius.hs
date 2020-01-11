@@ -70,7 +70,7 @@ convertTimeSignature (SibeliusBarObjectTimeSignature (SibeliusTimeSignature voic
 --
 fromSibelius :: IsSibelius a => SibeliusScore -> Score a
 fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff) =
-    timeSig $ pcat $ fmap (\staff -> set parts' (partFromSibeliusStaff staff) (fromSibeliusStaff barDur staff)) $ staves
+    timeSig $ ppar $ fmap (\staff -> set parts' (partFromSibeliusStaff staff) (fromSibeliusStaff barDur staff)) $ staves
     -- TODO meta information
         where
             -- FIXME only reads TS in first bar
@@ -363,7 +363,7 @@ fromSibeliusStaff d (SibeliusStaff bars name shortName) =
 
 fromSibeliusBar :: IsSibelius a => Duration -> SibeliusBar -> Score (Maybe a)
 fromSibeliusBar d (SibeliusBar elems) =
-    fmap Just (pcat $ fmap fromSibeliusChordElem chords) <> stretch d rest
+    fmap Just (ppar $ fmap fromSibeliusChordElem chords) <> stretch d rest
     where
         chords   = filter isChord elems
         tuplets  = filter isTuplet elems -- TODO use these
@@ -396,7 +396,7 @@ fromSibeliusChord :: (
   IsSibelius a
   ) => SibeliusChord -> Score a
 fromSibeliusChord (SibeliusChord pos dur voice ar strem dtrem acci appo notes) =
-    showVals $ setTime $ setDur $ every setArt ar $ tremolo strem $ pcat $ fmap fromSibeliusNote notes
+    showVals $ setTime $ setDur $ every setArt ar $ tremolo strem $ ppar $ fmap fromSibeliusNote notes
     where
         -- showVals = text (show pos ++ " " ++ show dur) -- TODO DEBUG
         showVals = id

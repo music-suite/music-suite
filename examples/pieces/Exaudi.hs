@@ -177,24 +177,24 @@ hexachord2 = up _A4 [c,d,e,f,g,a]
 
 -- very dissonant
 both3 :: Music
-both3   = set parts' violins (pcat hexachord1) <> set parts' violins (pcat hexachord2)
-both3'  = set parts' horns (pcat hexachord1) <> set parts' trombones (pcat hexachord2)
+both3   = set parts' violins (ppar hexachord1) <> set parts' violins (ppar hexachord2)
+both3'  = set parts' horns (ppar hexachord1) <> set parts' trombones (ppar hexachord2)
 
 -- quite dissonant
 both1 :: Music
-both1   = set parts' violins (pcat hexachord1) <> set parts' horns (pcat hexachord2)
-both1'  = set parts' horns (pcat hexachord1)   <> set parts' violins (pcat hexachord2)
+both1   = set parts' violins (ppar hexachord1) <> set parts' horns (ppar hexachord2)
+both1'  = set parts' horns (ppar hexachord1)   <> set parts' violins (ppar hexachord2)
 
 -- not so dissonant
 both4 :: Music
-both4   = set parts' flutes (pcat hexachord1) <> set parts' trombones (pcat hexachord2)
-both4'  = set parts' flutes (pcat hexachord1) <> set parts' oboes (pcat hexachord2)
+both4   = set parts' flutes (ppar hexachord1) <> set parts' trombones (ppar hexachord2)
+both4'  = set parts' flutes (ppar hexachord1) <> set parts' oboes (ppar hexachord2)
 
-both4'' = (\x -> ((set parts' flutes . level ff . up _P8))x <> (set parts flutes . level ff)x) (pcat hexachord1)
-  <> set parts' bassoons (pcat hexachord2)
+both4'' = (\x -> ((set parts' flutes . level ff . up _P8))x <> (set parts flutes . level ff)x) (ppar hexachord1)
+  <> set parts' bassoons (ppar hexachord2)
 
 -- Basic, basic sketch (480 bars at (1/4) = 120)
-form = pcat hexachord1^*5 |> (pcat hexachord1 <> pcat hexachord2)^*4 |> pcat hexachord2^*5
+form = ppar hexachord1^*5 |> (ppar hexachord1 <> ppar hexachord2)^*4 |> ppar hexachord2^*5
 
 -- Dummy to get all orchestral parts
 orch = flip doubleParts c $ orchParts
@@ -204,7 +204,7 @@ music :: Music
 music = asScore $ stretchTo 480 (parts' .~ violins $ form) <> orch
 
 {-
->>> let hexachords n = up _P8 $ set parts' oboes (pcat hexachord1) <> set parts' trumpets (up (i n) $ pcat hexachord2)
+>>> let hexachords n = up _P8 $ set parts' oboes (ppar hexachord1) <> set parts' trumpets (up (i n) $ ppar hexachord2)
 >>> :pl pseq $ fmap hexachords [0..12]
 -}
 
