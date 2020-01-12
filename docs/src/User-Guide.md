@@ -520,26 +520,20 @@ over (articulations' . accentuation) (+ 2) c
 
 ## Parts
 
-By default parts are represented using `Music.Common.Part` which consists of an instrument type, subpart and solo/tutti flag.
+TODO Parts vs Instruments
 
-@[Part]
+By convention a name in singlular refers to the instrument, and plural to the part.
+
+```haskell
+flute :: Instrument
+flutes :: Part
+```
 
 @[Subpart]
 
 @[Instrument]
 
 
-The solo/tutti component is useful when working with concertante scores.
-
-@[Solo]
-
-```music+haskell
-solo violin [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16
-  <>
-arrangeFor stringOrchestra $ pseq [rcat [c',e,g_,c_]]
-  where
-    stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
-```
 
 TODO working with staves
 
@@ -554,9 +548,23 @@ arrangeFor stringOrchestra $ rcat [c',e,g_,c_]
 
 ```
 
+The solo/tutti component is useful when working with concertante scores.
 
+@[Solo]
 
-## Tremolo
+```music+haskell
+(parts' .~ solo violin $ pseq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16)
+  <>
+arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
+  where
+    stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
+```
+
+## Playing techniques
+
+### String instruments
+
+TODO pizz/arco
 
 @[tremolo]
 
@@ -566,7 +574,7 @@ tremolo 2 $ times 2 $ (c |> d)|/2
 
 TODO chord tremolo
 
-## Slides and glissando
+### Slides and glissando
 
 @[slide]
 @[glissando]
@@ -575,7 +583,7 @@ TODO chord tremolo
 glissando $ pseq [c,d]|/2
 ```
 
-## Harmonics
+### Harmonics
 
 Use the @[harmonic] function:
 
