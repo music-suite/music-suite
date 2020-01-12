@@ -979,10 +979,10 @@ TODO
 inspectableToMusic $
 [ phrygian
 , majorScale
-, bluesMajor
-, wholeTone
-, octatonic
-, thirdMode
+-- , bluesMajor
+-- , wholeTone
+-- , octatonic
+-- , thirdMode
 ]
 ```
 
