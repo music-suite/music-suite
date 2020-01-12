@@ -343,14 +343,30 @@ over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,
 
 TODO other ways of applying level
 
+```music+haskell
+cresc pp mf $ pseq [c..c'] |/8
+  </>
+dim fff ff $ pseq [c..c'] |/8
+```
+
+You can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
+
+```music+haskell
+cresc pp mf $ pseq [c..c'] |/8
+  </>
+cresc ff pp $ pseq [c..c'] |/8
+  </>
+cresc mp mp $ pseq [c..c'] |/8
+```
 
 ### Understanding how dynamics are represented
 
 TODO value at each note. No need to explicitly draw indications or cresc./dim. lines.
 This means you can freely split/merge without having to worry about dynamics.
 
-In general, a new dynamic mark is drawn at the start of each entry.
-Equal dynamic marks are hidden if they appear to closely:
+In general, a new dynamic mark is drawn at the start of each entry, that is after
+each period of rests per voice. However if the dynamic has not changed the mark is only
+repeated if the last entry was a few bars ago.
 
 ```music+haskell
 -- Hidden
