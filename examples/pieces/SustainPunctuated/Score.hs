@@ -74,8 +74,6 @@ voiceAtDuration' v d = voiceToBehavior (aligned o a v) ! (o .+^ d)
 voiceToBehavior :: Monoid a => Aligned (Voice a) -> Behavior a
 voiceToBehavior = scoreToBehavior . renderAlignedVoice
 
-simplifyPitches :: (HasPitches' a, Music.Score.Pitch.Pitch a ~ Pitch) => a -> a
-simplifyPitches = over pitches' (relative c $ spell usingSharps)
 
 scoreToBehavior :: Monoid a => Score a -> Behavior a
 scoreToBehavior = concatB . fmap pure

@@ -31,8 +31,6 @@ type Accompaniment = Score Pitch
 
 rhythm = durationsAsVoice
 
-simplifyPitches :: (HasPitches' a, Music.Score.Pitch.Pitch a ~ Pitch) => a -> a
-simplifyPitches = over pitches' (relative c $ spell usingSharps)
 
 
 -- Some melodies
