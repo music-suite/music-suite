@@ -233,6 +233,11 @@ Consider switching to a decentralized issue tracker such as:
 
 - Get rid of Option (can use plain Maybe/First/Last now)
 
+- Piano/multi-stave/automatic voice separation support.
+  Test cases:
+    - Render examples/bartok correctly
+    - Render Beethoven sonata, e.g. beginning of Waldstein
+
 - [X] Reexport (set, over) from lens in default prelude? (see examples!)
 
 - Split up Music.Score

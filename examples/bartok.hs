@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
 
 import Music.Prelude
 import Control.Lens (set)
@@ -18,17 +18,24 @@ music = let
       . timeSignature (2/4)
       . timeSignatureDuring ((2/4) >-> (5/4)) (3/4)
 
-    left = (level pp {-. legato-})
+    left :: Music
+    left = (level pp . legato)
          (pseq [a,g,f,e] |> d|*2)
-      |> {-(level ((mp |> mp `cresc` mf |> mf)|*8) . legato)-}id
-         (pseq [g,f,e,d] |> c |> (d |> e)|/2 |> f |> e |> d|*8)
-    --
+      |> legato
+         (level mp (pseq [g,f,e,d]) |> crescX mp mf (c |> (d |> e)|/2 |> f |> e) |> id (d|*8))
+
+    right :: Music
     right = up _P4 . delay 2 $
-         (level pp {-. legato-})
+         (level pp . legato)
          (pseq [a,g,f,e] |> d|*2)
-      |> (level mp {-. legato-})
+      |> (level mp . legato)
          (pseq [g,f,e,d] |> c |> (d |> e)|/2 |> f |> e |> d|*8)
 
   in meta $ compress 8 $ left <> set parts' cellos (down _P8 right)
+
+crescX :: Dynamics -> Dynamics -> Music -> Music
+crescX a b = over phrases' (cresc a b)
+
+-- TODO this makes Lilypond segfault, see TODO.md
 
 main = defaultMain music
