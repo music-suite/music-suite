@@ -528,7 +528,18 @@ By default parts are represented using `Music.Common.Part` which consists of an 
 
 @[Instrument]
 
+
+The solo/tutti component is useful when working with concertante scores.
+
 @[Solo]
+
+```music+haskell
+solo violin [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16
+  <>
+arrangeFor stringOrchestra $ pseq [rcat [c',e,g_,c_]]
+  where
+    stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
+```
 
 TODO working with staves
 
@@ -537,9 +548,9 @@ TODO updating and merging parts. Or should we write about this in cobination wit
 TODO `divide 2 violins` should yield `V1, V2`, not `VI.0, VI.1`
 
 ```music+haskell
-arrangeFor stringQuartet $ rcat [c',e,g_,c_]
+arrangeFor stringOrchestra $ rcat [c',e,g_,c_]
   where
-    stringQuartet = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
+    stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 
 ```
 
