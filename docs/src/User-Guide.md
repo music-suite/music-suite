@@ -339,6 +339,59 @@ There is nothing special about the pitch and interval literals, they are simply 
 ```haskell
 Pitch.c |> Pitch.d .+^ Interval.m3
 ```
+ ## Pitch
+
+@[HasPitch]
+
+@[pitch]
+
+@[pitch']
+
+
+@[HasPitches]
+
+@[pitches]
+
+@[pitches']
+
+@[up]
+
+```music+haskell
+let
+  ch x = ppar [x, upDiatonic c 2 x, upDiatonic c 5 x]
+in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
+```
+
+```music+haskell
+let
+  ch x = ppar [x, upDiatonic fs 2 x, upDiatonic fs 5 x]
+in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
+```
+
+@[down]
+
+@[above]
+
+@[below]
+
+
+
+@[number]
+@[quality]
+@[name]
+@[accidental]
+@[number]
+@[invert]
+@[simple]
+@[octaves]
+@[asPitch]
+@[asAccidental]
+
+TODO Ambitus, Chord and Scale
+
+TODO spelling
+
+TODO equal temperament and intonation
 
 
 ## Dynamics
@@ -475,11 +528,11 @@ over (articulations' . accentuation) (+ 2) c
 
 ## Parts
 
-@[Division]
-
-@[Subpart]
+By default parts are represented using `Music.Common.Part` which consists of an instrument type, subpart and solo/tutti flag.
 
 @[Part]
+
+@[Subpart]
 
 @[Instrument]
 
@@ -686,68 +739,10 @@ TODO
 ## Part composition
 
 
-# Musical aspects
-
-## Pitch
-
-@[HasPitch]
-
-@[pitch]
-
-@[pitch']
-
-
-@[HasPitches]
-
-@[pitches]
-
-@[pitches']
-
-@[up]
-
-```music+haskell
-let
-  ch x = ppar [x, upDiatonic c 2 x, upDiatonic c 5 x]
-in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
-```
-
-```music+haskell
-let
-  ch x = ppar [x, upDiatonic fs 2 x, upDiatonic fs 5 x]
-in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
-```
-
-@[down]
-
-@[above]
-
-@[below]
-
-
-
-@[number]
-@[quality]
-@[name]
-@[accidental]
-@[number]
-@[invert]
-@[simple]
-@[octaves]
-@[asPitch]
-@[asAccidental]
-
-TODO Ambitus, Chord and Scale
-
-TODO spelling
-
-TODO equal temperament and intonation
-
-## Articulation
-## Dynamics
-## Parts
 
 
 # Time and structure
+
 
 @[Transformable]
 
@@ -759,8 +754,7 @@ TODO equal temperament and intonation
 
 @[HasDuration]
 
-
-## Time, duration and span
+## Basic time types
 
 Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
 
@@ -768,7 +762,9 @@ Time points form an affine space over durations, so we can use the operators @[.
 
 The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
 
-## Note, Chord and Event
+## Times with values
+
+The Note, Placed and Event types are similar to Duration, Time and Span respectively, except they also contain a *payload* of an arbitrary type. In practice the payload will usually contain information such as part, pitch.
 
 @[Note]
 
@@ -1016,14 +1012,24 @@ See issue 103
 
 # Querying and traversing scores
 
+## Traversing all the events in a score
+
 TODO
+
+## Traversing pitches
+
+## Traversing dynamics and articulation
+
+## Traversing parts
 
 ## Phrase traversals
 
 TODO
 
 
-# Scales, modes and harmony
+# Harmony
+
+## Scales and modes
 
 TODO we've seen several examples of affine spaces with notions of *points* and *distances*: time points and durations, pitches and intervals, spans and transformations, and so on.
 
