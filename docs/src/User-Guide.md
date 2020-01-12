@@ -11,41 +11,33 @@ Music Suite is an [embedded language](https://en.wikipedia.org/wiki/Domain-speci
 Here is a very simple expression:
 
 ```haskell+haskell
-c <> e
+c <> e <> g
 ```
 
-This consist of the notes `c` and `e`, played simultaneously. The `<>` symbol is an operator that means "compose this music in parallel".
+This consist of the notes C4, E4 and G4, played simultaneously. The `<>` symbol is an operator that means "compose this music in parallel".
 
-TODO
+Generally we want to convert our expressions representing music into some audio or graphics, such as standard music notation. There are a couple of ways of doing this.
 
 
 ### Using files
 
-```haskell
-import Music.Prelude
-main = defaultMain music
-
-music =
-  c |> d |> e
-```
-
-TODO the first lines here are boilerplate. The last line (`c |> d |> e`) containsthe actual music expression.
-
-The purpose of the `import` line is to allow you to use Music Suite, as Haskell only imports its own standard libary by default. The `main` line turns whatever `music` is defined to be into a CLI program which we can execute as follows:
-
-Then either execute it using:
-
-    $ cabal runhaskell test.hs
-
-TODO you can copy-paste all examples from this file into the above template. For example, this is how our original expression would look:
+Using a text editor, creating a file called `Test.hs` containing the following:
 
 ```haskell
 import Music.Prelude
 main = defaultMain music
 
 music =
-  c <> e
+  c <> d <> e
 ```
+
+The first three lines here are standard boilerplate. The last line (`c <> d <> e`) contains the actual music expression.
+
+The purpose of the `import` line is to allow you to use Music Suite, as Haskell only imports its own standard libary by default. The `main` line turns whatever `music` is defined to be into a command line program which we can execute as follows:
+
+    $ cabal exec runhaskell -- Test.hs
+
+TODO you can copy-paste all examples from this file into the above template.
 
 
 ### Using an interactive environment
