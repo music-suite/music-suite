@@ -42,6 +42,9 @@ module Music.Score.Pitch (
         interpolateAmbitus,
         interpolateAmbitus',
 
+        -- ** Spelling
+        simplifyPitches,
+
         -- ** Enumeration
         enumDiatonicFromTo,
         enumChromaticFromTo,
@@ -619,6 +622,8 @@ upChromaticP' _ n p
   | n <  0 = p .-^ spell usingFlats (fromIntegral (abs n) :: Semitones)
   | otherwise = error "Impossible"
 
+simplifyPitches :: (HasPitches' a, Pitch a ~ Common.Pitch) => a -> a
+simplifyPitches = over pitches' (relative c $ spell usingSharps)
 
 instance Transformable Common.Pitch where
   transform _ = id

@@ -40,6 +40,14 @@ class Inspectable a where
 instance Inspectable (Score StandardNote) where
   inspectableToMusic = id
 
+-- TODO not just Pitch
+instance Inspectable (Pattern Pitch) where
+  inspectableToMusic = fmap fromPitch'' . flip renderPattern (0<->1)
+
+instance (IsPitch a, Reversible a) => IsPitch (Pattern a) where
+  fromPitch = pureP . fromPitch
+
+
 instance Inspectable a => Inspectable (Maybe a) where
   inspectableToMusic = maybe mempty id . fmap inspectableToMusic
 

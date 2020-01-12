@@ -28,6 +28,7 @@ import Music.Time.Event
 import Music.Time.Juxtapose
 import Music.Time.Note
 import Music.Time.Placed
+import Music.Time.Pattern
 import Music.Time.Position
 import Music.Time.Reactive
 import Music.Time.Rest
