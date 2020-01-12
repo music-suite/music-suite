@@ -20,6 +20,7 @@ module Music.Score.Part
     -- * Listing parts
     allParts,
     replaceParts,
+    arrangeFor,
 
     -- * Extracting parts
     extracted,
@@ -227,6 +228,9 @@ replaceParts :: (HasParts' a, Eq (Part a)) => [(Part a, Part a)] -> a -> a
 replaceParts xs = over parts' (`lookupPos` xs)
   where
     lookupPos x ys = Data.Maybe.fromMaybe x $ lookup x ys
+
+arrangeFor :: (HasParts' a, Ord (Part a)) => [Part a] -> a -> a
+arrangeFor ps x = replaceParts (zip (allParts x) (cycle ps)) x
 
 -- |
 -- List all the parts

@@ -492,9 +492,10 @@ TODO updating and merging parts. Or should we write about this in cobination wit
 TODO rearranging music (e.g. replacing parts one-by-one). E.g. `arrangeFor stringQuartet`:
 
 ```music+haskell
-rcat $ reverse [c_,g_,e,c']
+arrangeFor stringQuartet $ rcat $ reverse [c_,g_,e,c']
   where
-    x = True
+    stringQuartet = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
+
 ```
 
 
