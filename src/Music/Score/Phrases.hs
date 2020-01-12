@@ -74,7 +74,11 @@ type PVoice a = [Either Duration (Phrase a)]
 type TVoice a = Track (Phrase a)
 
 -- |
--- Classes that provide a phrase traversal.
+-- Class of structures that can be traversed "by phrase".
+--
+-- A /phrase/ in this context is a sequence of consecutive notes played by the
+-- same performer, with no rests in between. Phrase traverals are used for
+-- attaching articulation marks, slurs and so on, but can also be used separately.
 class HasPhrases s t a b | s -> a, t -> b, s b -> t, t a -> s where
   mvoices :: Traversal s t (MVoice a) (MVoice b)
 

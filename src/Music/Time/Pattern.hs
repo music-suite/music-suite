@@ -28,8 +28,9 @@ eventToScore :: Event a -> Score a
 eventToScore = view score . pure
 
 
-sppar = pseq . fmap ppar
-ppseq = ppar . fmap pseq
+sppar = pseq . fmap ppar
+
+ppseq = ppar . fmap pseq
 
 -- TODO move
 -- TODO use proper math terminology here!

@@ -165,19 +165,6 @@ weightRands weights supply = fmap (snd . head) $ res
 
 ----
 
--- cresc :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
-cresc :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
-cresc a b x = stretchTo (x^.duration) $ cresc' a b (stretchTo 1 x)
-
-cresc' :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
-cresc' a b = setLevelWithAlignment (\t -> alerp a b (realToFrac t))
-
-setLevelWithAlignment :: (Attenuable a) => (Duration -> Dynamic a) -> Voice a -> Voice a
-setLevelWithAlignment f = mapWithOnsetRelative 0 (\t x -> level (f (t .-. 0)) x)
--- TODO more general mapWithLocalTime or similar
-
-dim = cresc
-
 -- crescendo
 mapWithIndex :: (Int -> b -> c) -> [b] -> [c]
 mapWithIndex f = zipWith f [0..]
@@ -770,7 +757,7 @@ quantizeSpan d = over (onsetAndOffset . both) (snapToGridBackward d)
 -- -3
 snapToGridBackward :: Duration -> Time -> Time
 snapToGridBackward d t = 0 .+^ (d^*fromIntegral n)
-   where
+ Querying and traversing scores  where
      (n,rho) = cycleAndPhase t d
 
 

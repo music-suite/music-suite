@@ -29,6 +29,8 @@ module Music.Score.Dynamics (
         level,
         louder,
         softer,
+        cresc,
+        dim,
         compressUp,
         compressDown,
 
@@ -304,7 +306,7 @@ level :: Attenuable a => Dynamic a -> a -> a
 level a = dynamics .~ a
 
 -- |
--- Class of types that can be transposed.
+-- Class of types that can be modified dynamically.
 --
 type Attenuable a
   = (HasDynamics a a,
@@ -383,6 +385,18 @@ compressor = compressUp
 --
 -- TODO non-linear fades etc
 --
+
+cresc :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
+cresc a b x = stretchTo (x^.duration) $ cresc' a b (stretchTo 1 x)
+
+cresc' :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
+cresc' a b = setLevelWithAlignment (\t -> alerp a b (realToFrac t))
+
+setLevelWithAlignment :: (Attenuable a) => (Duration -> Dynamic a) -> Voice a -> Voice a
+setLevelWithAlignment f = mapWithOnsetRelative 0 (\t x -> level (f (t .-. 0)) x)
+-- TODO more general mapWithLocalTime or similar
+
+dim = cresc
 
 -- |
 -- Fade in.

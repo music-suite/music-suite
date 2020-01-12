@@ -235,6 +235,12 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] Reexport (set, over) from lens in default prelude? (see examples!)
 
+- Split up Music.Score
+  - This module hierarchy exists for historical reasons. Move as per:
+    - Phrase traversals: move to Music.Time
+    - Export/Import: move to Music.Export, Music.Import
+    - Music.Score.ASPECT (e.g. where ASPECT is Pitch etc): merge with Music.ASPECT
+
 - Better syntax for entering pitch/time, maybe using a quasi-quoter
   - See e.g. Mozart example
   - See syntax sketches, also compare Lilypond
