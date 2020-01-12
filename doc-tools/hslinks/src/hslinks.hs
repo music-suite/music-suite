@@ -14,11 +14,11 @@ import qualified Data.MemoTrie as MT
 import Data.MemoTrie
 import Data.Ord (comparing)
 import Data.Traversable (traverse)
-import qualified Distribution.ModuleName as M
-import qualified Distribution.Package as P
-import qualified Distribution.PackageDescription as PD
-import qualified Distribution.PackageDescription.Parse as PDP
-import qualified Distribution.Verbosity
+-- import qualified Distribution.ModuleName as M
+-- import qualified Distribution.Package as P
+-- import qualified Distribution.PackageDescription as PD
+-- import qualified Distribution.PackageDescription.Parse as PDP
+-- import qualified Distribution.Verbosity
 import Language.Haskell.Interpreter (ModuleElem (..), ModuleName)
 import qualified Language.Haskell.Interpreter as Hint
 import System.Environment
@@ -26,6 +26,8 @@ import System.IO
 import System.IO.Unsafe
 import System.Process
 import Text.Regex
+
+import Music.Prelude ()
 
 type Identifier = String
 
@@ -178,9 +180,13 @@ modsInDir dir = do
 -}
 
 -- |
--- Given a list of paths to Cabal files, return all packages and the list
--- of modules declared therein.
 packageAndModNamesInCabals :: [FilePath] -> IO [(PackageName, [ModuleName])]
+packageAndModNamesInCabals _ = do
+  -- TODO
+  let mods = [("Music.Time.Reverse")]
+
+  pure [("music-suite", mods)]
+{-
 packageAndModNamesInCabals = packageAndModNamesInCabals'
   where
     packageAndModNamesInCabals' :: [FilePath] -> IO [(PackageName, [ModuleName])]
@@ -216,6 +222,7 @@ packageAndModNamesInCabals = packageAndModNamesInCabals'
         exposedModules = fmap unModName . PD.exposedModules . foldCondTree
         unModName = intercalate "." . M.components
         foldCondTree (PD.CondNode x c comp) = x -- Ignore subtrees
+-}
 
 -----------------------------------------------------------------------------------------
 

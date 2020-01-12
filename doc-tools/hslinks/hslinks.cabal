@@ -17,7 +17,7 @@ description:
     the source code but still have links the Haddock-generated API documentation.
     .
     For usage, see <https://github.com/hanshoglund/hslinks>
-    
+
 source-repository head
     type:               git
     location:           git://github.com/hanshoglund/hslinks.git
@@ -29,7 +29,8 @@ executable "hslinks"
         hint,
         process,
         MemoTrie,
-        regex-compat
+        regex-compat,
+        music-suite
     hs-source-dirs:     src
     default-language:   Haskell2010
     main-is:
