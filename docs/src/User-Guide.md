@@ -186,16 +186,64 @@ let
 in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2
 ```
 
-As a shorthand for `x |> y |> z ..`, we can write @[pseq] `[x, y, z]` (short for *sequential concatenation*).
+As a shorthand for `x |> y |> z ..`, we can write @[pseq] `[x, y, z, ...]` (short for *sequential concatenation*).
 
 ```music+haskell
 pseq [c,e..g]|/4
 ```
 
-For `x <> y <> z ..`, we can write @[ppar] `[x, y, z]` (short for *parallel concatenation*).
+For `x <> y <> z ...`, we can write @[ppar] `[x, y, z, ...]` (short for *parallel concatenation*).
 
 ```music+haskell
 ppar [c,e..g]|/2
+```
+
+For `x </> y </> ...` the syntax is @[rcat] `[x, y, z ...]`.
+
+```music+haskell
+rcat [c,e..g]|/2
+```
+
+
+## Chords
+
+Note with the same onset and offset are rendered as chords by default. If you want to prevent this you must put them in separate parts.
+
+```music+haskell
+pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]
+```
+
+Or, equivalently:
+
+```music+haskell
+ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
+```
+
+TODO how part separation works w.r.t. division etc
+
+@[simultaneous]
+
+
+## Rests
+
+Similar to chords, there is usually no need to handle rests explicitly.
+
+TODO show with examples how rests are added from delay/transform etc.
+
+It is possible to add rests explicitly as follows.
+
+@[mcatMaybes]
+
+```TODO
+times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
+```
+
+You can also remove rests explicitly:
+
+TODO explain how this works.
+
+```music+haskell
+mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
 
 ## Pitch
@@ -535,7 +583,7 @@ flutes :: Part
 
 
 
-TODO working with staves
+TODO multi-staff part support (see TODO.md)
 
 TODO updating and merging parts. Or should we write about this in cobination with pitch/dynamic etc (as they're all traversal-based).
 
@@ -562,17 +610,13 @@ arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
 
 ## Playing techniques
 
-### String instruments
+### Tremolo, trills and rolls
 
-TODO pizz/arco
+TODO measured vs unmeasured
+
+TODO realising tremolo/trills
 
 @[tremolo]
-
-```music+haskell
-tremolo 2 $ times 2 $ (c |> d)|/2
-```
-
-TODO chord tremolo
 
 ### Slides and glissando
 
@@ -600,7 +644,37 @@ TODO artificial harmonics
 @[artificial]
 
 
-## Text
+### String techniques
+
+TODO pizz/arco
+
+```music+haskell
+tremolo 2 $ times 2 $ (c |> d)|/2
+```
+
+TODO chord tremolo
+
+TODO stopping?
+
+### Wind techniques
+
+TODO fingering, multiphonics
+
+TODO key sounds, percussive attacks ("pizz"), haromonics/whistle tones
+
+### Brass techniques
+
+TODO stopping
+
+TODO mutes
+
+## Percussion
+
+TODO working with instruments for percussion
+
+TODO rolls (see tremolo above)
+
+# Free form text and expressive marks
 
 TODO
 
@@ -610,46 +684,6 @@ TODO
 text "pizz." $ c|/2
 ```
 
-## Chords
-
-Note with the same onset and offset are rendered as chords by default. If you want to prevent this you must put them in separate parts.
-
-```music+haskell
-pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]
-```
-
-Or, equivalently:
-
-```music+haskell
-ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
-```
-
-TODO how part separation works w.r.t. division etc
-
-@[simultaneous]
-
-
-## Rests
-
-Similar to chords, there is usually no need to handle rests explicitly.
-
-TODO show with examples how rests are added from delay/transform etc.
-
-It is possible to add rests explicitly as follows.
-
-@[mcatMaybes]
-
-```TODO
-times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
-```
-
-You can also remove rests explicitly:
-
-TODO explain how this works.
-
-```music+haskell
-mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
-```
 
 
 
