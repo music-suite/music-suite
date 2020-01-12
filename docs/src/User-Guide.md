@@ -343,20 +343,28 @@ over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,
 
 TODO other ways of applying level
 
+TODO should the phrase traversal version be the default? E.g. do we want `cresc a b = over phrases' (crescV a b)`.
+
 ```music+haskell
-cresc pp mf $ pseq [c..c'] |/8
+(over phrases' (cresc pp mf) $ pseq [c..c'] |/8)
   </>
-dim fff ff $ pseq [c..c'] |/8
+(over phrases' (dim fff ff) $ pseq [c..c'] |/8)
 ```
 
 You can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
 
+```TODOmusic+haskell
+(cresc pp mf $ pseq [c..c'] |/8)
+  </>
+(cresc ff pp $ pseq [c..c'] |/8)
+  </>
+(cresc mp mp $ pseq [c..c'] |/8)
+```
+
+TODO for long crescendo/diminuendos, render as text by default.
+
 ```music+haskell
-cresc pp mf $ pseq [c..c'] |/8
-  </>
-cresc ff pp $ pseq [c..c'] |/8
-  </>
-cresc mp mp $ pseq [c..c'] |/8
+(over phrases' (cresc pp mf) $ (times 8 $ pseq [c..g]) |/8)
 ```
 
 ### Understanding how dynamics are represented
