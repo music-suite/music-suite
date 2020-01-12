@@ -38,3 +38,4 @@ cabal.project.local*
 dist-newstyle
 TAGS
 tags
+.directory
