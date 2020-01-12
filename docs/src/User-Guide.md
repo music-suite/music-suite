@@ -977,7 +977,24 @@ TODO
 
 ```music+haskell
 inspectableToMusic $
-modeToScale c phrygian
+[ phrygian
+, majorScale
+, bluesMajor
+, wholeTone
+, octatonic
+, thirdMode
+]
+```
+
+```music+haskell
+inspectableToMusic $
+[ modeToScale c phrygian
+, modeToScale d majorScale
+, modeToScale e bluesMajor
+, modeToScale f wholeTone
+, modeToScale g octatonic
+, modeToScale a thirdMode
+]
 ```
 
 ## Chords
