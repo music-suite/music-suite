@@ -489,7 +489,7 @@ TODO working with staves
 
 TODO updating and merging parts. Or should we write about this in cobination with pitch/dynamic etc (as they're all traversal-based).
 
-TODO rearranging music (e.g. replacing parts one-by-one). E.g. `arrangeFor stringQuartet`:
+TODO `divide 2 violins` should yield `V1, V2`, not `VI.0, VI.1`
 
 ```music+haskell
 arrangeFor stringQuartet $ rcat $ reverse [c_,g_,e,c']
