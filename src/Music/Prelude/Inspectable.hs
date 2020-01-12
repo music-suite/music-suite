@@ -28,7 +28,7 @@ where
 
 import Music.Prelude.Standard hiding (open, play)
 import Music.Score ()
-import qualified Music.Score
+import qualified Music.Time
 import qualified System.Info
 import qualified System.Process
 import qualified System.Process
