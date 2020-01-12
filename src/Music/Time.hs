@@ -12,6 +12,7 @@ module Music.Time
     module Music.Time.Voice,
     module Music.Time.Event,
     module Music.Time.Score,
+    module Music.Time.Pattern,
     module Music.Time.Placed,
     module Music.Time.Track,
     module Music.Time.Reactive,
