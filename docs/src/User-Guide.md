@@ -489,6 +489,15 @@ TODO working with staves
 
 TODO updating and merging parts. Or should we write about this in cobination with pitch/dynamic etc (as they're all traversal-based).
 
+TODO rearranging music (e.g. replacing parts one-by-one). E.g. `arrangeFor stringQuartet`:
+
+```music+haskell
+rcat $ reverse [c_,g_,e,c']
+  where
+    x = True
+```
+
+
 
 ## Tremolo
 

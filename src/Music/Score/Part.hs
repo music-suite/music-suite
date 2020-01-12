@@ -19,6 +19,7 @@ module Music.Score.Part
 
     -- * Listing parts
     allParts,
+    replaceParts,
 
     -- * Extracting parts
     extracted,
@@ -57,6 +58,7 @@ import Music.Pitch.Literal
 import Music.Score.Internal.Util (through)
 import Music.Score.Ties
 import Music.Time
+import qualified Data.Maybe
 import Music.Time.Internal.Transform
 
 -- |
@@ -220,6 +222,11 @@ instance (HasParts a b) => HasParts (Note a) (Note b) where
 -- List all the parts
 allParts :: (Ord (Part a), HasParts' a) => a -> [Part a]
 allParts = List.nub . List.sort . toListOf parts
+
+replaceParts :: (HasParts' a, Eq (Part a)) => [(Part a, Part a)] -> a -> a
+replaceParts xs = over parts' (`lookupPos` xs)
+  where
+    lookupPos x ys = Data.Maybe.fromMaybe x $ lookup x ys
 
 -- |
 -- List all the parts
