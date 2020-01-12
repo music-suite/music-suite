@@ -18,15 +18,6 @@ import Data.AffineSpace
 import Music.Time.Juxtapose
 import Control.Lens (from, view, over, (^.))
 
--- -- Useful natural transformations
--- TODO move
-noteToVoice :: Note a -> Voice a
-noteToVoice = view voice . pure
-
--- TODO move
-eventToScore :: Event a -> Score a
-eventToScore = view score . pure
-
 
 sppar = pseq . fmap ppar
 

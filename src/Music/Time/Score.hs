@@ -12,6 +12,9 @@ module Music.Time.Score
     eras,
     triples,
 
+    -- * Conversion
+    eventToScore,
+
     -- * Traversal
     mapWithSpan,
     filterWithSpan,
@@ -311,6 +314,9 @@ events = _Wrapped . _2 . _Wrapped . sorted
     -- TODO should not have to sort...
     sorted = iso (List.sortBy (Ord.comparing (^. onset))) (List.sortBy (Ord.comparing (^. onset)))
 {-# INLINE events #-}
+
+eventToScore :: Event a -> Score a
+eventToScore = view score . pure
 
 --
 -- @

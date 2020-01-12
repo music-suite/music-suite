@@ -9,6 +9,8 @@ module Music.Time.Voice
     notes,
     pairs,
     durationsAsVoice,
+    -- * Conversion
+    noteToVoice,
 
     -- * Traversal
 
@@ -280,6 +282,9 @@ voice = from notesIgnoringMeta
 -- | View a 'Voice' as a list of 'Note' values.
 notes :: Lens (Voice a) (Voice b) [Note a] [Note b]
 notes = notesIgnoringMeta
+
+noteToVoice :: Note a -> Voice a
+noteToVoice = view voice . pure
 
 --
 -- @
