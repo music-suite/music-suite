@@ -136,7 +136,19 @@ c|*(9/8) |> d|*(7/8)
 stretch (2/3) (pseq [c,d,e]) |> f|*2
 ```
 
-As you can see, note values, tuplets and ties are added automatically
+As you can see, note values, tuplets and ties are added automatically.
+
+TODO this should use nested tuplets:
+
+```music+haskell
+pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
+```
+
+```music+haskell
+pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
+```
+
+
 
 The `|*` and `|/` operators can be used as shorthands for `delay` and `compress`.
 
@@ -1009,6 +1021,8 @@ Another example is the notion of scales and chords. These are (conceptually) inf
 
 TODO rename (Function -> ChordType or similar). Function implies context/direction and is confusing for other reasons too.
 
+TODO why does thirdMode not work?
+
 ```music+haskell
 inspectableToMusic $
 [ phrygian
@@ -1024,10 +1038,10 @@ inspectableToMusic $
 inspectableToMusic $
 [ modeToScale c phrygian
 , modeToScale d majorScale
-, modeToScale e bluesMajor
+-- , modeToScale e bluesMajor
 , modeToScale f wholeTone
 , modeToScale g octatonic
-, modeToScale a thirdMode
+-- , modeToScale a thirdMode
 ]
 ```
 
