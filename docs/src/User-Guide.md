@@ -973,15 +973,19 @@ TODO
 
 # Scales, modes and harmony
 
-TODO
+TODO we've seen several examples of affine spaces with notions of *points* and *distances*: time points and durations, pitches and intervals, spans and transformations, and so on.
+
+Another example is the notion of scales and chords. These are (conceptually) infinite collections of points, forming a subset of a larger pitch space. By forgetting the *root* or *fundamental* of a scale/chord we obtain what is known as a mode (for scales) or a chord type (for chords).
+
+TODO rename (Function -> ChordType or similar). Function implies context/direction and is confusing for other reasons too.
 
 ```music+haskell
 inspectableToMusic $
 [ phrygian
 , majorScale
 -- , bluesMajor
--- , wholeTone
--- , octatonic
+, wholeTone
+, octatonic
 -- , thirdMode
 ]
 ```
@@ -1018,6 +1022,16 @@ inspectableToMusic $
 , functionToChord eb diminishedChord
 ]
 ```
+
+TODO all types above are also *voiced*, in other words:
+
+  - Conceptually infinite/extensible
+  - Focused down on a subset of the space (e.g. the pitches [c,e,g]): the voicing
+  - We can "un-voice" the chord to forget the focused pitches
+  - We can "re-voice" the chord. TODO formalize this.
+    - Equivalence relations?
+    - Note this is *not* the same as inversion. `[c,e,g]` and `[e,g,c']` are related by inversion, but `[c,e,g]` and `[c,g,e']` are related by revoicing.
+
 
 # Patterns
 

@@ -70,9 +70,11 @@ instance Inspectable (Function Pitch) where
 instance Inspectable (Chord Pitch) where
   inspectableToMusic = fmap fromPitch . ppar . map (\x -> pure x :: Score Pitch) . chordToList
 
+-- TODO should be on separate staves, but without left binding (implying simultanuety)
 instance Inspectable [Mode Pitch] where
   inspectableToMusic = rcat . fmap inspectableToMusic
 
+-- TODO should be on separate staves, but without left binding (implying simultanuety)
 instance Inspectable [Scale Pitch] where
   inspectableToMusic = rcat . fmap inspectableToMusic
 
