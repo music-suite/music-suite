@@ -344,6 +344,12 @@ over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,
 TODO other ways of applying level
 
 
+### Understanding how dynamics are represented
+
+TODO value at each note. No need to explicitly draw indications or cresc./dim. lines.
+This means you can freely split/merge without having to worry about dynamics.
+
+In general, a new dynamic mark is drawn at the start of each entry.
 Equal dynamic marks are hidden if they appear to closely:
 
 ```music+haskell

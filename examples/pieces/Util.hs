@@ -169,15 +169,6 @@ weightRands weights supply = fmap (snd . head) $ res
 mapWithIndex :: (Int -> b -> c) -> [b] -> [c]
 mapWithIndex f = zipWith f [0..]
 
-mapWithOffsetRelative t f = mapWithEraRelative t (\s x -> f (s^.offset) x)
-mapWithOnsetRelative t f = mapWithEraRelative t (\s x -> f (s^.onset) x)
-
--- >>> mapWithEraRelative 0 (\s x -> s) $ asVoice $ mconcat [c,d^*2,e]
--- [(1,0 <-> 1)^.note,(2,1 <-> 3)^.note,(1,3 <-> 4)^.note]^.voice
-mapWithEraRelative :: Time -> (Span -> a -> b) -> Voice a -> Voice b
-mapWithEraRelative t f v = set valuesV newValues v
-  where
-    newValues = zipWith f (erasRelative t v) (v^.valuesV)
 
 
 
