@@ -492,7 +492,7 @@ TODO updating and merging parts. Or should we write about this in cobination wit
 TODO `divide 2 violins` should yield `V1, V2`, not `VI.0, VI.1`
 
 ```music+haskell
-arrangeFor stringQuartet $ rcat $ reverse [c_,g_,e,c']
+arrangeFor stringQuartet $ rcat [c',e,g_,c_]
   where
     stringQuartet = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 
