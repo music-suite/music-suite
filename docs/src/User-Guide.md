@@ -133,21 +133,6 @@ TODO these are added automatically
 c|*(9/8) |> d|*(7/8)
 ```
 
-## Tuplets
-
-```music+haskell
-stretch (2/3) (pseq [c,d,e]) |> f |*2
-```
-
-TODO this should use nested tuplets:
-
-```music+haskell
-pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
-```
-
-```music+haskell
-pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
-```
 
 ### Shorthands
 
@@ -1447,6 +1432,27 @@ TODO ABC notation (for use with [abcjs](https://github.com/paulrosen/abcjs) or s
 ## Sibelius
 
 TODO
+
+
+# Tips and tricks
+
+### Complex rhythms
+
+Nested tuplets.
+
+```music+haskell
+stretch (2/3) (pseq [c,d,e]) |> f |*2
+```
+
+TODO this should use nested tuplets:
+
+```music+haskell
+pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
+```
+
+```music+haskell
+pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
+```
 
 
 
