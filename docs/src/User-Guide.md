@@ -248,6 +248,10 @@ mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 
 TODO round off basic intro.
 
+## Working with Time and Duration
+
+TODO brief intro to adding time and duration? Introduce Time/Duration/Span/HasPosition properly later on?
+
 
 # Pitch
 
@@ -482,6 +486,12 @@ in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 TODO Ambitus, Chord and Scale
 
 TODO spelling
+
+## Adding pitches and intervals
+
+TODO AdditiveGroup, VectorSpace, AffineSpace for pitch/interval.
+
+Show how this the first example of an affine space (more to come!)
 
 
 
