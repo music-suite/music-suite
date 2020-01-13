@@ -1,12 +1,9 @@
-% Music Suite
 
-## Music Suite
+# Music Suite
 
 Music Suite is a language for describing music, based on Haskell.
 
 It allow representation and manipulation of music in a very general sense, that is compatible with standard notation and supporting a variety of [import and export formats](#import-and-export). The use of Haskell allow for music to be created, transformed or analyzed using the full expressive power of the Haskell language.
-
-@[abc]
 
 ### An example
 

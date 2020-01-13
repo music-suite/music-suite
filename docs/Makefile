@@ -27,7 +27,7 @@ TRANSFORM    =cabal exec transf -- +RTS -N4
 TRANSFORM_PDF=cabal exec transf -- --format=pdf
 #TRANSFORM    =transf +RTS -N4
 #TRANSFORM_PDF=transf --format=pdf
-RESOLVE_LINKS=cabal run hslinks
+RESOLVE_LINKS=cabal exec hslinks
 
 
 SRC=src
