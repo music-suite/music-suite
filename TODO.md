@@ -325,6 +325,8 @@ Consider switching to a decentralized issue tracker such as:
     - No defaulting. Simple expressions like `c` will be ambigous.
       Ideally we would accept any type and default to Music/Score StandardNotate iff there is ambiguity.
 
+- Restore hslinks functoriality (commented out in source), maybe using hasktags
+
 - [X] For each instrument we want to know:
         - Classification:
             - Type: (i.e. woodwind)
