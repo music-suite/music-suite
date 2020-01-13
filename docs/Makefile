@@ -23,14 +23,12 @@ CABAL_FILES=""
 # Can't include prelude, as that makes all refs point to the Prelude module
 # 	../../music-preludes/music-preludes.cabal
 
-TRANSFORM    =cabal v2-exec transf -- +RTS -N4
-TRANSFORM_PDF=cabal v2-exec transf -- --format=pdf
+TRANSFORM    =cabal exec transf -- +RTS -N4
+TRANSFORM_PDF=cabal exec transf -- --format=pdf
 #TRANSFORM    =transf +RTS -N4
 #TRANSFORM_PDF=transf --format=pdf
-#RESOLVE_LINKS=GHC_PACKAGE_PATH=`music-util package-path` hslinks $(CABAL_FILES)
+RESOLVE_LINKS=cabal run hslinks
 
-# Skip hslinks, for now
-RESOLVE_LINKS=cat
 
 SRC=src
 OUT=build

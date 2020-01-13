@@ -413,7 +413,7 @@ musicT opts = transform "music" $ \input -> do
   --                "</div>\n"
 
   let ending = "" -- if format opts == "png" then "x" else ""
-  return $ playText ++ "\n\n" ++ "![](" ++ name ++ ending ++ "." ++ format opts ++ ")"
+  return $ {-playText ++ "\n\n" ++ -} "![](" ++ name ++ ending ++ "." ++ format opts ++ ")"
 
 --  -resize 30%
 

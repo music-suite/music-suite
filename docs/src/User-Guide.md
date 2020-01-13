@@ -367,7 +367,8 @@ pseq $ fmap (`alter` c) [-2..2]
 ```
 
 TODO this breaks Lilypond output (and XML?). Add auto-normalization in export
-```TODOmusic+haskell
+
+```TODO
 pseq $ fmap (`alter` c) [-5..5]
 ```
 
@@ -379,7 +380,8 @@ There is nothing special about the pitch and interval literals, they are simply 
 ```haskell
 Pitch.c |> Pitch.d .+^ Interval.m3
 ```
- ## Pitch
+
+## Pitch
 
 @[HasPitch]
 
