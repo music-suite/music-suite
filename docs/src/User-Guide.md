@@ -695,9 +695,13 @@ TODO working with instruments for percussion
 
 TODO rolls (see tremolo above)
 
-# Free form text and expressive marks
+# Lyrics and Vocals
 
 TODO
+
+# Free form text
+
+TODO e.g. expressive marks ("dolce")
 
 @[text]
 
@@ -705,191 +709,6 @@ TODO
 text "pizz." $ c|/2
 ```
 
-
-
-
-
-# Transforming music
-
-## Time transformations
-
-@[rev]
-
-```music+haskell
-let
-    melody = accent $ legato $ pseq [d, pseq [g,fs]|/2,bb|*2]|/4
-in melody |> rev melody
-```
-
-@[times]
-
-```music+haskell
-let
-    melody = legato $ pseq [c,d,e,c]|/16
-in times 4 $ melody
-```
-
-
-## Position and duration
-
-TODO instead of using Transformable, show how to set duration explicitly
-
-```music+haskell
-let
-    melody = legato $ pseq [pseq [c,d,e,c], pseq [e,f], g|*2]
-    pedal = set era (melody^.era) g_
-in compress 4 $ melody </> pedal
-```
-
-TODO example with stretchRelative
-
-TODO HasPosition for scores (see TODO.d)
-
-TODO Aligned, "floaters"
-
-## Pitch
-
-@[invertPitches]
-
-```music+haskell
-(pseq [c..g]|*(2/5))
-    </>
-(invertPitches c $ pseq [c..g]|*(2/5))
-    </>
-(invertPitches e $ pseq [c..g]|*(2/5))
-```
-
-TODO Transformable class.
-
-## Pitches and intervals
-
-TODO Transposable class. Similar to Transformable but for pitches.
-
-## Name and accidental
-
-
-TODO
-
-## Spelling
-
-TODO
-
-## Quality and number
-
-TODO
-
-
-## Intonation
-
-TODO
-
-## Inspecting dissonant intervals
-
-TODO
-
-## Semitones and enharmonic equivalence
-
-TODO
-
-## Spelling
-
-TODO
-
-
-## Parts
-
-## Instrument, part and sub-part
-
-## Extracting and modifying parts
-
-## Part composition
-
-
-
-
-# Time and structure
-
-
-@[Transformable]
-
-@[Splittable]
-
-@[Reversible]
-
-@[HasPosition]
-
-@[HasDuration]
-
-## Basic time types
-
-Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
-
-Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
-
-The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
-
-## Times with values
-
-The Note, Placed and Event types are similar to Duration, Time and Span respectively, except they also contain a *payload* of an arbitrary type. In practice the payload will usually contain information such as part, pitch.
-
-@[Note]
-
-## Voices
-
-A @[Voice] represents a single voice of music. It consists of a sequence of values with duration.
-
-```music+haskell
-stretch (1/4) $ pseq [c..a]|/2 |> b |> c'|*4
-```
-
-```music+haskell
-stretch (1/2) $ pseq [c..e]|/3 |> f |> g|*2
-```
-
-
-It can be converted into a score by stretching each element and composing in sequence.
-
-<!--
-```music+haskellx
-let
-    x = [ (1, c),
-          (1, d),
-          (1, f),
-          (1, e) ]^.voice
-
-    y = join $ [ (1, x),
-                 (0.5, up _P5 x),
-                 (4, up _P8 x) ]^.voice
-
-in stretch (1/8) $ voiceToScore $ y
-```
--->
-
-## Behavior and Reactive
-
-## Aligned
-
-## Tracks
-
-A @[Track] is similar to a score, except that it events have no offset or duration. It is useful for representing point-wise occurrences such as samples, cues or percussion notes.
-
-It can be converted into a score by delaying each element and composing in parallel. An explicit duration has to be provided.
-
-<!--
-```music+haskellx
-let
-    x = [ (0, c), (1, d), (2, e) ]^.track
-    y = join $ [ (0, x),
-                (1.5,  up _P5 x),
-                (3.25, up _P8 x) ]^.track
-
-in trackToScore (1/8) y
-```
--->
-
-## Scores
-
-@[Score]
 
 
 
@@ -1078,7 +897,214 @@ See issue 103
 @[setMetaTAttr]
 
 
-# Querying and traversing scores
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Transforming music (TODO break up and merge into above sections)
+
+## Time transformations
+
+@[rev]
+
+```music+haskell
+let
+    melody = accent $ legato $ pseq [d, pseq [g,fs]|/2,bb|*2]|/4
+in melody |> rev melody
+```
+
+@[times]
+
+```music+haskell
+let
+    melody = legato $ pseq [c,d,e,c]|/16
+in times 4 $ melody
+```
+
+
+## Position and duration
+
+TODO instead of using Transformable, show how to set duration explicitly
+
+```music+haskell
+let
+    melody = legato $ pseq [pseq [c,d,e,c], pseq [e,f], g|*2]
+    pedal = set era (melody^.era) g_
+in compress 4 $ melody </> pedal
+```
+
+TODO example with stretchRelative
+
+TODO HasPosition for scores (see TODO.d)
+
+TODO Aligned, "floaters"
+
+## Pitch
+
+@[invertPitches]
+
+```music+haskell
+(pseq [c..g]|*(2/5))
+    </>
+(invertPitches c $ pseq [c..g]|*(2/5))
+    </>
+(invertPitches e $ pseq [c..g]|*(2/5))
+```
+
+TODO Transformable class.
+
+## Pitches and intervals
+
+TODO Transposable class. Similar to Transformable but for pitches.
+
+## Name and accidental
+
+
+TODO
+
+## Spelling
+
+TODO
+
+## Quality and number
+
+TODO
+
+
+## Intonation
+
+TODO
+
+## Inspecting dissonant intervals
+
+TODO
+
+## Semitones and enharmonic equivalence
+
+TODO
+
+## Spelling
+
+TODO
+
+
+## Parts
+
+## Instrument, part and sub-part
+
+## Extracting and modifying parts
+
+## Part composition
+
+
+
+
+# Time and structure
+
+
+@[Transformable]
+
+@[Splittable]
+
+@[Reversible]
+
+@[HasPosition]
+
+@[HasDuration]
+
+## Basic time types
+
+Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
+
+Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
+
+The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
+
+## Times with values
+
+The Note, Placed and Event types are similar to Duration, Time and Span respectively, except they also contain a *payload* of an arbitrary type. In practice the payload will usually contain information such as part, pitch.
+
+@[Note]
+
+## Voices
+
+A @[Voice] represents a single voice of music. It consists of a sequence of values with duration.
+
+```music+haskell
+stretch (1/4) $ pseq [c..a]|/2 |> b |> c'|*4
+```
+
+```music+haskell
+stretch (1/2) $ pseq [c..e]|/3 |> f |> g|*2
+```
+
+
+It can be converted into a score by stretching each element and composing in sequence.
+
+<!--
+```music+haskellx
+let
+    x = [ (1, c),
+          (1, d),
+          (1, f),
+          (1, e) ]^.voice
+
+    y = join $ [ (1, x),
+                 (0.5, up _P5 x),
+                 (4, up _P8 x) ]^.voice
+
+in stretch (1/8) $ voiceToScore $ y
+```
+-->
+
+## Behavior and Reactive
+
+## Aligned
+
+## Tracks
+
+A @[Track] is similar to a score, except that it events have no offset or duration. It is useful for representing point-wise occurrences such as samples, cues or percussion notes.
+
+It can be converted into a score by delaying each element and composing in parallel. An explicit duration has to be provided.
+
+<!--
+```music+haskellx
+let
+    x = [ (0, c), (1, d), (2, e) ]^.track
+    y = join $ [ (0, x),
+                (1.5,  up _P5 x),
+                (3.25, up _P8 x) ]^.track
+
+in trackToScore (1/8) y
+```
+-->
+
+## Scores
+
+@[Score]
+
+
+
+
+
+# Traversals
+
+TODO traverals are a powerful concept
 
 ## Traversing all the events in a score
 
@@ -1166,9 +1192,6 @@ TODO all types above are also *voiced*, in other words:
 TODO a Pattern can be throught of as a generalization of a rhythm or beat. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself, though the repetition frequence may be very long.
 
 
-# Random sources and non-determinism
-
-# Constraints
 
 # Counterpoint
 
@@ -1176,13 +1199,13 @@ TODO a Pattern can be throught of as a generalization of a rhythm or beat. They 
 
 TODO defining ensembles (part lists)
 
+# Randomness
+
+# Constraints
+
 # Tuning
 
-# Sound and timbre
-
 # Spacialization
-
-# Interactive use
 
 # Serialization
 
@@ -1345,7 +1368,13 @@ TODO
 - Optionally, add instances for @[Splittable] and @[Reversible].
 
 
-# Related work and Acknowledgements
+# Acknowledgements
+
+## Contributors
+
+TODO thanks
+
+## Previous work
 
 The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [PWGL][pwgl], [nyquist][nyquist], [music21][music21], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
 
