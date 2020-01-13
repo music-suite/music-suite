@@ -88,21 +88,18 @@ Music Suite takes inspiration from diagrams in *separating points and vectors*. 
 -->
 
 
-## Time and Duration
+A single note can be entered by its name, e.g. `c`, `d` and so on.
 
-A single note can be entered by its name. This will render a note in the middle octave with a duration of one. Note that note values and durations correspond exactly, a duration of `1` is a whole note, a duration of `1/2` is a half note, and so on.
+The expression `c` enters C4 (middle C) with a duration of a a whole note. Durations are measured in rational numbers: a duration of `1` is a whole note (or semibreve), a duration of `1/2` is a half note (minim), and so on.
 
 ```music+haskell
 c
 ```
 
-To change the duration of a note, use @[stretch] or @[compress]. Note that:
+## Duration and onset
 
-```haskell
-compress x = stretch (1/x)
-```
+To change the duration of a note, use @[stretch] or @[compress]
 
-for all values of *x*.
 
 ```music+haskell
 stretch (1/2) c
@@ -116,19 +113,31 @@ stretch 2 c
 stretch (4+1/2) c
 ```
 
-TODO delay
+We can also change the *onset* of a note using @[delay]:
 
-Offset and duration is not limited to simple numbers. Here are some more complex examples:
+```music+haskell
+delay 1 c
+```
+
+TODO stretch/compress are related as follows:
+
+```haskell
+compress x = stretch (1/x)
+```
+
+## Tuplets and ties
+
+TODO these are added automatically
 
 ```music+haskell
 c|*(9/8) |> d|*(7/8)
 ```
 
-```music+haskell
-stretch (2/3) (pseq [c,d,e]) |> f|*2
-```
+## Tuplets
 
-As you can see, note values, tuplets and ties are added automatically.
+```music+haskell
+stretch (2/3) (pseq [c,d,e]) |> f |*2
+```
 
 TODO this should use nested tuplets:
 
@@ -140,6 +149,7 @@ pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
 pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 ```
 
+### Shorthands
 
 
 The `|*` and `|/` operators can be used as shorthands for `delay` and `compress`.
@@ -155,7 +165,9 @@ Here is a more complex example using function composition. The dot operator `.` 
 ```
 
 
-## Composition
+## Composition operators
+
+TODO composition operators: central.
 
 Music expressions can be composed @[<>]:
 
@@ -163,7 +175,6 @@ Music expressions can be composed @[<>]:
 c <> e <> g
 ```
 
-TODO fundamentally, `<>` is the only way to compose music...
 
 Or in sequence using @[|>]:
 
@@ -177,7 +188,27 @@ Or partwise using @[</>]:
 c </> e </> g
 ```
 
-Here is a more complex example:
+### Shorthands
+
+As a shorthand for `x |> y |> z ..`, we can write @[pseq] `[x, y, z, ...]`.
+
+```music+haskell
+pseq [c,e..g] |* (1/4)
+```
+
+For `x <> y <> z ...`, we can write @[ppar] `[x, y, z, ...]` .
+
+```music+haskell
+ppar [c,e..g] |/ 2
+```
+
+For `x </> y </> ...` the syntax is @[rcat] `[x, y, z ...]`.
+
+```music+haskell
+rcat [c,e..g] |/ 2
+```
+
+Here is a more complex example using all forms of composition:
 
 ```music+haskell
 let
@@ -186,23 +217,7 @@ let
 in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2
 ```
 
-As a shorthand for `x |> y |> z ..`, we can write @[pseq] `[x, y, z, ...]` (short for *sequential concatenation*).
-
-```music+haskell
-pseq [c,e..g]|/4
-```
-
-For `x <> y <> z ...`, we can write @[ppar] `[x, y, z, ...]` (short for *parallel concatenation*).
-
-```music+haskell
-ppar [c,e..g]|/2
-```
-
-For `x </> y </> ...` the syntax is @[rcat] `[x, y, z ...]`.
-
-```music+haskell
-rcat [c,e..g]|/2
-```
+TODO understanding that `|>` and `</>` are based on `<>`.
 
 
 ## Chords
@@ -246,9 +261,12 @@ TODO explain how this works.
 mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
 
-## Pitch
+TODO round off basic intro.
 
-### Pitch names
+
+# Pitch
+
+## Pitch names
 
 To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*.
 
@@ -436,7 +454,7 @@ TODO spelling
 TODO equal temperament and intonation
 
 
-## Dynamics
+# Dynamics and Articulation
 
 Dynamic values are overloaded in the same way as pitches. The dynamic literals are defined in `Music.Dynamics.Literal` and have type `IsDynamics a => a`.
 
@@ -494,7 +512,7 @@ repeated if the last entry was a few bars ago.
 [(0<->1, c)^.event, (3<->4, d)^.event]^.score
 ```
 
-## Articulation
+## Working with articulations
 
 Some basic articulation functions are @[legato], @[staccato], @[portato], @[tenuto], @[staccatissimo]:
 
@@ -568,7 +586,8 @@ set articulations' (accentuation +~ 2 $ mempty) c
 over (articulations' . accentuation) (+ 2) c
 ```
 
-## Parts
+
+# Instruments and Parts
 
 TODO Parts vs Instruments
 
@@ -877,6 +896,9 @@ in trackToScore (1/8) y
 
 # Meta-information
 
+TODO define this. Meta-information is presentational and not attached to a specific part. Shorten this intro. All presentational/extra info is meta, all *logical/semantic/sounding* information is not. We represent meta-information dynamically (Typeable).
+
+
 It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In the Music Suite these are grouped together under the common label *meta-information*.
 
 The notion of meta-data used in the Music Suite is more extensive than just static values: any @[Transformable] container can be wrapped, and the meta-data will be transformed when the annotated value is transformed. This is why meta-data is often variable values, such as @[Reactive] or @[Behavior].
@@ -885,7 +907,6 @@ All time structures in Music Suite support an arbitrary number of meta-data fiel
 
 The distinction between ordinary musical data and meta-data is not always clear-cut. As a rule of thumb, meta-events are any kind of event that does not directly affect how the represented music sounds when performed. However they might affect the appearance of the musical notation. For example, a *clef* is meta-information, while a *slur* is not. A notable exception to this rule is meta-events affecting tempo such as metronome marks and fermatas, which usually *do* affect the performance of the music.
 
-TODO explain what meta-really is: dynamical (Typeable) vs static. All presentational/extra info is meta, all *logical/semantic/sounding* information is not. This is a trade off between static and dynamic typing.
 
 
 ## Title
@@ -1141,6 +1162,9 @@ TODO all types above are also *voiced*, in other words:
 
 
 # Patterns
+
+TODO a Pattern can be throught of as a generalization of a rhythm or beat. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself, though the repetition frequence may be very long.
+
 
 # Random sources and non-determinism
 
