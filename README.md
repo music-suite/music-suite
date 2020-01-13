@@ -48,7 +48,7 @@ cabal exec --package music-suite ghci
 #### Reference docs
 
 ```
-cabal build transf && (cd docs && make)
+cabal build transf hslinks && (cd docs && make)
 ```
 
 The output appears in `docs/build`. You can point a HTTP server to this directory.
