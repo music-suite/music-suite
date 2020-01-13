@@ -33,7 +33,6 @@ library
                         vector-space-points,
                         process,
                         filepath,
-                        temporary,
                         optparse-applicative,
                         average,
                         semigroups,
