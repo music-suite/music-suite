@@ -484,10 +484,6 @@ TODO Ambitus, Chord and Scale
 TODO spelling
 
 
-### Spelling
-
-TODO equal temperament and intonation
-
 
 ## Alternative pitch representations
 
