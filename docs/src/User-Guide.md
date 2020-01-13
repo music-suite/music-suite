@@ -424,6 +424,7 @@ down _A4 tune
     tune = pseq [c,c,g,g,a,a,c|*2] |/8
 ```
 
+Note that transposing will not automatically change the key signature. See [key signatures](#key-signatures) for how to do this explicitly.
 
 ### Parallel motion
 
