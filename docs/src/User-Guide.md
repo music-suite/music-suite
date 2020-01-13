@@ -419,13 +419,13 @@ NOTE Transposable is a synonym for the type expression `(HasPitches' a, AffinePa
 ```music+haskell
 up m3 tune
   where
-    tune = pseq [c,c,g,g,a,a,c|*2] |/8
+    tune = pseq [c,c,g,g,a,a,g|*2] |/8
 ```
 
 ```music+haskell
 down _A4 tune
   where
-    tune = pseq [c,c,g,g,a,a,c|*2] |/8
+    tune = pseq [c,c,g,g,a,a,g|*2] |/8
 ```
 
 Note that transposing will not automatically change the key signature. See [key signatures](#key-signatures) for how to do this explicitly.
@@ -438,7 +438,7 @@ Note that transposing will not automatically change the key signature. See [key 
 ```music+haskell
 above m3 tune |> below m3 tune
   where
-    tune = pseq [c,c,g,g,a,a,c|*2] |/8
+    tune = pseq [c,c,g,g,a,a,g|*2] |/8
 ```
 
 ### Diatonic transposition
