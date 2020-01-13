@@ -415,13 +415,13 @@ NOTE Transposable is a synonym for the type expression `(HasPitches' a, AffinePa
 ```music+haskell
 up m3 tune
   where
-    tune = pseq [c,c,g,g,a,a,c|*2]
+    tune = pseq [c,c,g,g,a,a,c|*2] |/8
 ```
 
 ```music+haskell
 down _A4 tune
   where
-    tune = pseq [c,c,g,g,a,a,c|*2]
+    tune = pseq [c,c,g,g,a,a,c|*2] |/8
 ```
 
 
@@ -431,15 +431,9 @@ down _A4 tune
 @[below]
 
 ```music+haskell
-above m3 tune
+above m3 tune |> below m3 tune
   where
-    tune = pseq [c,c,g,g,a,a,c|*2]
-```
-
-```music+haskell
-below _A4 tune
-  where
-    tune = pseq [c,c,g,g,a,a,c|*2]
+    tune = pseq [c,c,g,g,a,a,c|*2] |/8
 ```
 
 ### Diatonic transposition
