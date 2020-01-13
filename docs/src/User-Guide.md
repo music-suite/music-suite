@@ -412,10 +412,35 @@ NOTE Transposable is a synonym for the type expression `(HasPitches' a, AffinePa
 @[up]
 @[down]
 
+```music+haskell
+up m3 tune
+  where
+    tune = pseq [c,c,g,g,a,a,c|*2]
+```
+
+```music+haskell
+down _A4 tune
+  where
+    tune = pseq [c,c,g,g,a,a,c|*2]
+```
+
+
 ### Parallel motion
 
 @[above]
 @[below]
+
+```music+haskell
+above m3 tune
+  where
+    tune = pseq [c,c,g,g,a,a,c|*2]
+```
+
+```music+haskell
+below _A4 tune
+  where
+    tune = pseq [c,c,g,g,a,a,c|*2]
+```
 
 ### Diatonic transposition
 
@@ -668,6 +693,9 @@ over (articulations' . accentuation) (+ 2) c
 
 TODO Parts vs Instruments
 
+@[Part]
+@[Instrument]
+
 By convention a name in singlular refers to the instrument, and plural to the part.
 
 ```haskell
@@ -675,15 +703,34 @@ flute :: Instrument
 flutes :: Part
 ```
 
-## Instrument, part and sub-part
+## Basic use
 
-@[Subpart]
+TODO the default part is `Piano I`.
 
-@[Instrument]
+```music+haskell
+ppar [c,d,fs]
+```
 
+### Setting instrument and subpart
 
+```music+haskell
+(parts' . instrument) .~ trumpet $ ppar [c,d,fs]
+```
+
+```music+haskell
+(parts' . subpart) .~ 2 $ (parts' . instrument) .~ trumpet $ ppar [c,d,fs]
+```
+
+### Multi-staff parts
 
 TODO multi-staff part support (see TODO.md)
+
+
+### The part composition operator
+
+TODO rcat, then replacing instrument
+
+### Updating several parts at once
 
 TODO updating and merging parts. Or should we write about this in cobination with pitch/dynamic etc (as they're all traversal-based).
 
@@ -695,6 +742,8 @@ arrangeFor stringOrchestra $ rcat [c',e,g_,c_]
     stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 
 ```
+
+### Solo parts
 
 The solo/tutti component is useful when working with concertante scores.
 
@@ -708,10 +757,27 @@ arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
     stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 ```
 
+### TODO further subdivision
+
+TODO "Violin I.1", Soprano IIa etc
+
+
 
 ## Extracting and modifying parts
 
-## Part composition
+TODO extractPart extractPartNamed extractParts extractPartsWithInfo
+
+```music+haskell
+extractPart violas fullScore
+  where
+    fullScore :: Music
+    fullScore =
+      (parts' .~ solo violin $ pseq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16)
+        <>
+      arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
+        where
+          stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
+```
 
 ## Playing techniques
 

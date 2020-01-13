@@ -92,6 +92,14 @@ instance Wrapped Subpart where
 instance Rewrapped Subpart Subpart
 -}
 
+instance Num Subpart where
+  fromInteger n = Subpart (pure $ fromInteger n)
+  (+) = error "Num Subpart: Not implemented"
+  (*) = error "Num Subpart: Not implemented"
+  (-) = error "Num Subpart: Not implemented"
+  abs    = error "Num Subpart: Not implemented"
+  signum = error "Num Subpart: Not implemented"
+
 instance ToJSON Subpart where
   toJSON (Subpart xs) = toJSON xs
 
