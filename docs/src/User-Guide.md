@@ -266,6 +266,8 @@ TODO round off basic intro.
 
 # Pitch
 
+## Pitches and intervals
+
 ## Pitch names
 
 To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*.
@@ -390,7 +392,7 @@ TODO this breaks Lilypond output (and XML?). Add auto-normalization in export
 pseq $ fmap (`alter` c) [-5..5]
 ```
 
-### Qualified pitch and interval names
+### Where the literals are defined
 
 There is nothing special about the pitch and interval literals, they are simply values exported by the `Music.Pitch.Literal` module. While this module is reexported by the standard music preludes, you can also import it qualified. You can use this in combination with `hiding`.
 
@@ -399,7 +401,7 @@ There is nothing special about the pitch and interval literals, they are simply 
 Pitch.c |> Pitch.d .+^ Interval.m3
 ```
 
-## Pitch
+TODO NOTE: In this chapter, do go into details about HasPitches (see Traversals), just show example uses
 
 @[HasPitch]
 
@@ -407,14 +409,31 @@ Pitch.c |> Pitch.d .+^ Interval.m3
 
 @[pitch']
 
-
 @[HasPitches]
 
 @[pitches]
 
 @[pitches']
 
+
+## Transposing music
+
+@[Transposable]
+
+NOTE Transposable is a synonym for the type expression `(HasPitches' a, AffinePair (Interval a) (Pitch a), PitchPair (Interval a) (Pitch a))`. We will explain what this means later.
+
+### Basic transposition
+
 @[up]
+@[down]
+
+### Parallel motion
+
+@[above]
+@[below]
+
+### Diatonic transposition
+
 
 ```music+haskell
 let
@@ -428,11 +447,19 @@ let
 in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 ```
 
-@[down]
+### Inverting pitch
 
-@[above]
+@[invertPitches]
 
-@[below]
+```music+haskell
+(pseq [c..g]|*(2/5))
+    </>
+(invertPitches c $ pseq [c..g]|*(2/5))
+    </>
+(invertPitches e $ pseq [c..g]|*(2/5))
+```
+
+### Qualities, numbers, names, accidentals
 
 
 
@@ -451,7 +478,56 @@ TODO Ambitus, Chord and Scale
 
 TODO spelling
 
+
+### Spelling
+
 TODO equal temperament and intonation
+
+
+## Alternative pitch representations
+
+THe standard pitch representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling.
+
+### Absolute pitch
+
+@[Hertz]
+
+Logarithmic scales:
+
+@[Fifths]
+@[Cents]
+
+### Equal tempered scales
+
+TODO equal tempered scales of any size
+
+
+### Consonance and dissonance
+
+See the [Harmony][x] chapter.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Dynamics and Articulation
@@ -587,6 +663,22 @@ over (articulations' . accentuation) (+ 2) c
 ```
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Instruments and Parts
 
 TODO Parts vs Instruments
@@ -597,6 +689,8 @@ By convention a name in singlular refers to the instrument, and plural to the pa
 flute :: Instrument
 flutes :: Part
 ```
+
+## Instrument, part and sub-part
 
 @[Subpart]
 
@@ -628,6 +722,11 @@ arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
   where
     stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 ```
+
+
+## Extracting and modifying parts
+
+## Part composition
 
 ## Playing techniques
 
@@ -712,6 +811,32 @@ text "pizz." $ c|/2
 ```
 
 TODO color
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -921,7 +1046,41 @@ See issue 103
 
 
 
-# Transforming music (TODO break up and merge into above sections)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Time and structure
+
+
+@[Transformable]
+
+@[Splittable]
+
+@[Reversible]
+
+@[HasPosition]
+
+@[HasDuration]
+
+## Basic time types
+
+Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
+
+Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
+
+The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
+
 
 ## Time transformations
 
@@ -959,86 +1118,10 @@ TODO HasPosition for scores (see TODO.d)
 
 TODO Aligned, "floaters"
 
-## Pitch
-
-@[invertPitches]
-
-```music+haskell
-(pseq [c..g]|*(2/5))
-    </>
-(invertPitches c $ pseq [c..g]|*(2/5))
-    </>
-(invertPitches e $ pseq [c..g]|*(2/5))
-```
-
-TODO Transformable class.
-
-## Pitches and intervals
-
-TODO Transposable class. Similar to Transformable but for pitches.
-
-## Name and accidental
-
-
-TODO
-
-## Spelling
-
-TODO
-
-## Quality and number
-
-TODO
-
-
-## Intonation
-
-TODO
-
-## Inspecting dissonant intervals
-
-TODO
-
-## Semitones and enharmonic equivalence
-
-TODO
-
-## Spelling
-
-TODO
-
-
-## Parts
-
-## Instrument, part and sub-part
-
-## Extracting and modifying parts
-
-## Part composition
 
 
 
 
-# Time and structure
-
-
-@[Transformable]
-
-@[Splittable]
-
-@[Reversible]
-
-@[HasPosition]
-
-@[HasDuration]
-
-## Basic time types
-
-Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
-
-Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
-
-The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
 
 ## Times with values
 
@@ -1079,7 +1162,10 @@ in stretch (1/8) $ voiceToScore $ y
 
 ## Behavior and Reactive
 
-## Aligned
+## Alignment
+
+@[Aligned]
+
 
 ## Tracks
 
@@ -1102,6 +1188,21 @@ in trackToScore (1/8) y
 ## Scores
 
 @[Score]
+
+## Patterns
+
+TODO a Pattern can be throught of as a generalization of a rhythm or beat. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself, though the repetition frequence may be very long.
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1192,44 +1293,52 @@ TODO all types above are also *voiced*, in other words:
     - Note this is *not* the same as inversion. `[c,e,g]` and `[e,g,c']` are related by inversion, but `[c,e,g]` and `[c,g,e']` are related by revoicing.
 
 
-# Patterns
-
-TODO a Pattern can be throught of as a generalization of a rhythm or beat. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself, though the repetition frequence may be very long.
-
-
-
 # Counterpoint
+
+TODO
 
 # Orchestration
 
-TODO defining ensembles (part lists)
+TODO
 
 # Randomness
 
+TODO
+
 # Constraints
 
-# Tuning
+TODO
 
-# Spacialization
+# Space
 
-# Serialization
-
-
+TODO
 
 
-# Import and export
 
-The standard distribution (installed as part of `music-suite`) of the Music Suite includes a variety of input and output formats. There are also some experimental formats, which are distributed in separate packages, these are marked as experimental below.
 
-The conventions for input or output formats is similar to the convention for properties (TODO ref above): for any type `a` and format `T a`, input formats are defined by an *is* constraint, and output format by a *has* constraint. For example, types that can be exported to Lilypond are defined by the constraint `HasLilypond a`, while types that can be imported from MIDI are defined by the constraint `IsMidi a`.
 
-## MIDI
+
+# Import and Export
+
+TODO basic structure/aproach to import and export
+
+## Native format/Serialization
+
+TODO
+
+## Prelude/Inspectable
+
+TODO this is
+
+## Overview of formats
+
+### MIDI
 
 TODO how to export
 
 Beware that MIDI input may contain time and pitch values that yield a non-readable notation, you need an sophisticated piece of analysis software to convert raw MIDI input to quantized input.
 
-## Lilypond
+### Lilypond
 
 TODO how to export
 
@@ -1244,7 +1353,7 @@ toLilypondString $ asScore $ pseq [c,d,e]
     >>
 
 
-## MusicXML
+### MusicXML
 
 TODO export MusicXML 3.0
 
@@ -1331,22 +1440,14 @@ toMusicXmlString $ asScore $ pseq [c,d,e]
     </score-partwise>
 
 
-## ABC Notation
+### ABC Notation
 
-ABC notation (for use with [abcjs](https://github.com/paulrosen/abcjs) or similar engines) is still experimental.
-
+TODO ABC notation (for use with [abcjs](https://github.com/paulrosen/abcjs) or similar engines) is still experimental.
 
 ## Sibelius
 
-The [music-sibelius](http://hackage.haskell.org/package/music-sibelius) package provides experimental import of Sibelius scores (as MusicXML import is [not supported](#musicxml)).
+TODO
 
-
-
-
-
-# Customizing
-
-TODO defining new types and instances
 
 
 # Acknowledgements
