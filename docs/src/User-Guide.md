@@ -699,7 +699,9 @@ TODO rolls (see tremolo above)
 
 TODO
 
-# Free form text
+# Text and Color
+
+TODO warning: free form text is semantically questionable, but we provide it for cases where no other suitable representation exists.
 
 TODO e.g. expressive marks ("dolce")
 
@@ -708,6 +710,9 @@ TODO e.g. expressive marks ("dolce")
 ```music+haskell
 text "pizz." $ c|/2
 ```
+
+TODO color
+
 
 
 
@@ -1339,33 +1344,9 @@ The [music-sibelius](http://hackage.haskell.org/package/music-sibelius) package 
 
 
 
-# Customizing music representation
+# Customizing
 
-TODO explain 'Aspect' vs 'Meta'
-
-## Adding an new representation
-
-
-TODO
-
-## Adding a new aspect
-
-It is also possible to make Music Suite work with completely *new* aspects.
-
-TODO
-
-## Adding meta
-
-TODO
-
-## Adding a time structure
-
-TODO
-
-- Create a type of kind `* -> *`.
-- Add instances for the standard classes @[Functor], @[Applicative] and (if possible) @[Monad] or @[Comonad].
-- If your representation supports *parallel* composition it should be a trivial (non-lifted) @[Monoid]. It it also supports sequential composition, it should support @[Transformable] and @[HasPosition].
-- Optionally, add instances for @[Splittable] and @[Reversible].
+TODO defining new types and instances
 
 
 # Acknowledgements
@@ -1378,11 +1359,9 @@ TODO thanks
 
 The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [PWGL][pwgl], [nyquist][nyquist], [music21][music21], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
 
-The work of Paul Hudak and the the Yale Haskell group, including [Haskore][haskore], [Euterpea][euterpea] is a major influence. The  and [temporal-media][temporal-media] package is a similar take on these ideas. The popular [Tidal][tidal] language provide a way of expressing infinite time structures, similar to the ones defined in `music-score`.
+The work of Paul Hudak and the the Yale Haskell group, including [Haskore][haskore], [Euterpea][euterpea] is a major influence. The  and [temporal-media][temporal-media] package is a similar take on these ideas. The [TidalCycles][tidal] library provided the pattern structure.
 
-The idea of defining a custom internal representation, but relying on standardized formats for input and output is influenced by [Pandoc][pandoc]. The idea of splitting the library into a set of packages (and the name) comes from the [Haskell Suite][haskell-suite].
-
-The temporal structures, their instances and more general design philosophy comes from Conal Elliott's [Reactive][reactive] (and its predecessors). Brent Yorgey's [Diagrams][diagrams] provided the separation of points and vectors which was a main influence.
+The temporal structures, their instances and more general design philosophy comes from Conal Elliott's [Reactive][reactive] (and its predecessors). Brent Yorgey's [Diagrams][diagrams] provided the separation of points and vectors and was another main influence.
 
 
 ```music-extra
