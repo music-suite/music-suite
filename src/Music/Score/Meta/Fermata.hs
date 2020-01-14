@@ -27,7 +27,6 @@
 -- Provides fermatas.
 module Music.Score.Meta.Fermata
   ( -- * Fermata type
-    FermataType (..),
     Fermata,
 
     -- ** Adding fermatas to scores
