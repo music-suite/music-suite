@@ -1389,6 +1389,8 @@ TODO MonadLogic example?
 
 TODO FD-constraint example? http://overtond.blogspot.com/2008/07/pre.html
 
+TODO "native Haskell" example, with search tree pruning, a la Sodoku example in Bird's "Pearls of Functional Algorithm Design"
+
 TODO others?
 
 
@@ -1400,9 +1402,12 @@ TODO detecting parallel, constant and contrary motion
 
 TODO parallel fifths/octaves
 
-TODO hidden parallel
+TODO hidden parallels
 
-TODO search tree pruning?
+TODO working with repetitions/cues etc
+
+TODO canon example (search for fitting melody)
+
 
 
 # Orchestration
