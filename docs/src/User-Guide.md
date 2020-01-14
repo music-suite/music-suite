@@ -848,7 +848,10 @@ TODO rolls (see tremolo above)
 
 # Lyrics and Vocals
 
-TODO
+TODO adding lyrics (including syllables/word boundaries/melismas)
+
+TODO soloists/character name
+
 
 # Text and Color
 
@@ -1358,25 +1361,41 @@ Non-repeating/self-repeating scales (e.g. the overtone series)
 
 
 
-# Counterpoint
+# Constraints
 
 TODO
 
+# Counterpoint
+
+TODO example melodic constraints (no tritones, including outlines, no adjacent jump)
+
+TODO parallel fifths/octaves
+
+TODO hidden parallel
+
+TODO pruning?
+
+
 # Orchestration
+
+TODO working with ensembles
+
+TODO dynamics in ensembles
+
+TODO combining ensembles/voicing/playing technique (even spectral combinations?)
+
+TODO warning/rejecting out-of range notes
 
 TODO
 
 # Randomness
 
-TODO
+TODO Reader monad of seed/Random generator state
 
-# Constraints
-
-TODO
 
 # Space
 
-TODO
+TODO very simple space representation (e.g. Angle), minimal example using Ambisonics?
 
 
 
