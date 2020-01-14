@@ -1345,6 +1345,19 @@ TODO all types above are also *voiced*, in other words:
     - Note this is *not* the same as inversion. `[c,e,g]` and `[e,g,c']` are related by inversion, but `[c,e,g]` and `[c,g,e']` are related by revoicing.
 
 
+TODO looking up notes in a scale/chord (infinitely, Integer ->, 0 being the tonic)
+
+TODO getting exactly the "voiced" notes
+
+TODO type-level sepration of voiced/unvoiced (currently this is muddled). New type for voiced chords (this does not seem to appy to scales).
+  "Free X" for building sets of pitches?
+
+Calculate dissonance of a chord (classical/"objective", by higest common fundamental)
+
+Non-repeating/self-repeating scales (e.g. the overtone series)
+
+
+
 # Counterpoint
 
 TODO
