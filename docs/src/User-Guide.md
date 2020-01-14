@@ -1299,7 +1299,7 @@ TODO more idiomatic pattern use:
 renderPattern (a <> b) (0 <-> 4)
   where
     a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
-    b = newPattern $ fmap (set parts' flutes $ const c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+    b = newPattern $ fmap (const $ parts' .~ flutes c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
 ```
 
 
