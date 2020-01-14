@@ -1385,7 +1385,11 @@ Non-repeating/self-repeating scales (e.g. the overtone series)
 
 # Constraints
 
-TODO
+TODO MonadLogic example?
+
+TODO FD-constraint example? http://overtond.blogspot.com/2008/07/pre.html
+
+TODO others?
 
 
 # Counterpoint
