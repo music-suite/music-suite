@@ -1033,11 +1033,12 @@ TODO representation should be: meta-mark at the first strong beat *after* the fe
 @[fermata]
 
 ```music+haskell
-fermata (ppar [c,e,g])
+fermata StandardFermata (ppar [c,e,g])
 ```
 
-```music+haskell
-fermata (ppar [pseq[c,d] |/ 2,e,g]) |/ 4
+TODO overlapping events:
+```TODOmusic+haskell
+fermata StandardFermata (ppar [pseq[c,d] |/ 2,e,g]) |/ 4
 ```
 
 
@@ -1291,6 +1292,16 @@ in trackToScore (1/8) y
 TODO a Pattern can be throught of as a generalization of a rhythm or beat. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself, though the repetition frequence may be very long.
 
 
+TODO use proper percussion here:
+TODO more idiomatic pattern use:
+
+```music+haskell
+renderPattern (a <> b) (0 <-> 4)
+  where
+    a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
+    b = newPattern $ fmap (set parts' flutes $ const c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+```
+
 
 
 
@@ -1471,7 +1482,10 @@ TODO
 
 ## Prelude/Inspectable
 
-TODO this is
+TODO point here is to fix a "default" type for rendering/export purposes. This is used to monomorphize expressions written in the polymorphic combinators of the library. The default type is knonw as `Music`.
+
+Inspectable renders a type by converting it into an exportable type. See TODO.md re: defaulting.
+
 
 ## Overview of formats
 
