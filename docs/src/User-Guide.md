@@ -1365,15 +1365,18 @@ Non-repeating/self-repeating scales (e.g. the overtone series)
 
 TODO
 
+
 # Counterpoint
 
 TODO example melodic constraints (no tritones, including outlines, no adjacent jump)
+
+TODO detecting parallel, constant and contrary motion
 
 TODO parallel fifths/octaves
 
 TODO hidden parallel
 
-TODO pruning?
+TODO search tree pruning?
 
 
 # Orchestration
