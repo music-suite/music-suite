@@ -1386,7 +1386,12 @@ TODO combining ensembles/voicing/playing technique (even spectral combinations?)
 
 TODO warning/rejecting out-of range notes
 
-TODO
+TODO combining short attack sounds with sustain
+
+TODO dovetailing (e.g. for winds), with 1 note overlap
+
+TODO wind slurs vs string legato
+
 
 # Randomness
 
