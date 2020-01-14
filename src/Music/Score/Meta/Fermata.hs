@@ -68,7 +68,7 @@ data Fermata = StandardFermata | LongFermata | VeryLongFermata
   deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a fermata over the whole score.
-fermata :: (HasMeta a, HasPosition a) => Fermata -> a -> a
+fermata :: (HasMeta a, HasPosition a, Transformable a) => Fermata -> a -> a
 fermata c x = fermataAt (_onset x) c x
 
 -- | Add a fermata to the given score.
