@@ -846,12 +846,34 @@ TODO working with instruments for percussion
 
 TODO rolls (see tremolo above)
 
+TODO render e.g. snare drum parts correctly
+
+TODO render "drum kit" staff
+
 # Lyrics and Vocals
 
 TODO adding lyrics (including syllables/word boundaries/melismas)
 
 TODO soloists/character name
 
+
+# Non-note Actions
+
+While most music notation is conerned with making sound, a score may call for events which are not meant to directly produce sound. We represent these things using special events called *actions*. Like with percussion actions have no pitch.
+
+TODO representation? Some kind of sum type in the note stack?
+
+## Piano/Vibraphone pedalling
+
+TODO
+
+## Instrument change warnings
+
+TODO
+
+## Cues
+
+TODO
 
 # Text and Color
 
