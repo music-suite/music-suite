@@ -1025,7 +1025,22 @@ timeSignature (3/8) $ compress 2 waltz
 
 ### Fermatas, caesuras and breathing marks
 
-TODO
+Fermatas indicate a certain time point (usually a strong beat) should be prolonged.
+
+TODO representation should be: meta-mark at the first strong beat *after* the fermata-signed notes (e.g. the one to break *before*). This means we can render fermata signs on all notes where whose span overlaps the break point (including offset, not including onset).
+
+
+@[fermata]
+
+```music+haskell
+fermata (ppar [c,e,g])
+```
+
+```music+haskell
+fermata (ppar [pseq[c,d] |/ 2,e,g]) |/ 4
+```
+
+
 
 ### Ritardando and accellerando
 

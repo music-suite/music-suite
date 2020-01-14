@@ -32,7 +32,7 @@ module Music.Score.Meta.Fermata
 
     -- ** Adding fermatas to scores
     fermata,
-    fermataDuring,
+    fermataAt,
 
     -- ** Extracting fermatas
     withFermata,
@@ -64,20 +64,16 @@ import Music.Time.Reactive
 
 -- | Represents a fermata.
 --
--- TODO where is the fermata added if the score contains multiple notes. Always the last?
-data Fermata = Fermata FermataType
-  deriving (Eq, Ord, Show, Typeable)
-
-data FermataType = StandardFermata | LongFermata | VeryLongFermata
+data Fermata = StandardFermata | LongFermata | VeryLongFermata
   deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a fermata over the whole score.
 fermata :: (HasMeta a, HasPosition a) => Fermata -> a -> a
-fermata c x = fermataDuring (_era x) c x
+fermata c x = fermataAt (_onset x) c x
 
 -- | Add a fermata to the given score.
-fermataDuring :: HasMeta a => Span -> Fermata -> a -> a
-fermataDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
+fermataAt :: HasMeta a => Time -> Fermata -> a -> a
+fermataAt s c = addMetaNote $ view event (s <-> s, (Option $ Just $ Last c))
 
 -- | Extract fermatas in from the given score, using the given default fermata.
 withFermata :: (Fermata -> Score a -> Score a) -> Score a -> Score a
