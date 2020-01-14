@@ -1291,18 +1291,31 @@ in trackToScore (1/8) y
 
 TODO a Pattern can be throught of as a generalization of a rhythm or beat. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself, though the repetition frequence may be very long.
 
+TODO more idiomatic ways of buildings patterns
+
 
 TODO use proper percussion here:
-TODO more idiomatic pattern use:
 
 ```music+haskell
 renderPattern (a <> b) (0 <-> 4)
   where
     a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
-    b = newPattern $ fmap (const $ parts' .~ flutes c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+    b = newPattern $ fmap (const $ parts' .~ flutes $ c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
 ```
 
+```music+haskell
+renderPattern (a <> b) (0.5 <-> 1.5)
+  where
+    a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
+    b = newPattern $ fmap (const $ parts' .~ flutes $ c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+```
 
+TODO Patterns are Transformable
+
+
+TODO renderPatternsRel
+
+TODO renderPatternsAbs
 
 
 
@@ -1320,15 +1333,31 @@ renderPattern (a <> b) (0 <-> 4)
 
 TODO traverals are a powerful concept
 
+Can be used to:
+
+- Visit elements in a score
+- Querying/folding
+- Updating aspects
+
+In the functional programming commonity, traverals have a powerful generalization known as optics, which also includes concepts such as lenses, prisms, folds and isomorphisms. Music Suite defines lenses and traversals compatible with `lens` and `microlens`.
+
+TODO monomorphic and polymorphic traversals
+
 ## Traversing all the events in a score
 
 TODO
 
 ## Traversing pitches
 
+TODO
+
 ## Traversing dynamics and articulation
 
+TODO
+
 ## Traversing parts
+
+TODO
 
 ## Phrase traversals
 
