@@ -1023,23 +1023,13 @@ timeSignature (3/8) $ compress 2 waltz
 
 @[renderTempo]
 
-## Fermatas, caesuras and breathing marks
+### Fermatas, caesuras and breathing marks
 
 TODO
 
-## Ritardando and accellerando
+### Ritardando and accellerando
 
 TODO
-
-## Rehearsal marks
-
-TODO
-
-@[rehearsalMark]
-
-@[rehearsalMarkDuring]
-
-@[withRehearsalMark]
 
 ## Barlines and repeats
 
@@ -1073,6 +1063,21 @@ To set the clef for a whole passage, use @[clef]. The clef is used by most notat
 To set the clef for a preexisting passage in an existing score, use @[clefDuring].
 
 TODO example
+
+## Multi-movement scores
+
+TODO
+
+## Rehearsal marks
+
+TODO
+
+@[rehearsalMark]
+
+@[rehearsalMarkDuring]
+
+@[withRehearsalMark]
+
 
 ## Annotations
 
