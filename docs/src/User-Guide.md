@@ -1562,6 +1562,18 @@ pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 ```
 
 
+# Wall of Shame
+
+TODO this is not documentation, move to some other location. Listing all "bad rendering" examplesas a visual issue tracker
+
+### Quantization
+
+TODO
+
+### Staves
+
+### Misc
+
 
 # Acknowledgements
 
