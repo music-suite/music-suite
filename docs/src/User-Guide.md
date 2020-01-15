@@ -1308,6 +1308,8 @@ TODO empty scores and rests (see (HasPosition Score) in TODO.md)
 
 TODO Behavior and Reactive, Sampling
 
+TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
+
 TODO HasPosition for scores (see TODO.d)
 
 TODO Aligned, "floaters"
