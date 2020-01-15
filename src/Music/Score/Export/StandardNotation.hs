@@ -1831,9 +1831,11 @@ type StandardNotationExportM m = (MonadLog String m, MonadError String m)
 
 fromAspects :: (StandardNotationExportM m) => Asp -> m Work
 fromAspects sc = do
+  -- Simplify pitch spelling
+  let postPitchSimplification = Music.Score.Pitch.simplifyPitches normScore
   -- Part extraction
   say "Extracting parts"
-  let postPartExtract :: [(Music.Parts.Part, Score Asp1)] = Music.Score.Part.extractPartsWithInfo normScore
+  let postPartExtract :: [(Music.Parts.Part, Score Asp1)] = Music.Score.Part.extractPartsWithInfo postPitchSimplification
   say $ "Done, " ++ show (length postPartExtract) ++ " parts"
   -- postPartExtract :: [(Music.Parts.Part,Score Asp1)]
 

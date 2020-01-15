@@ -40,7 +40,7 @@ cabal run TEST_NAME -- TEST_ARGS...
 ### Development shell
 
 ```
-cabal exec --package music-suite ghci
+cabal build && cabal exec --package music-suite ghci
 ```
 
 ### Generate documentation

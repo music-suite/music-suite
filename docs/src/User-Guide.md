@@ -367,19 +367,6 @@ in pseq $ fmap (`up` c) intervals
 You can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
 operators, think of pitches and points `.` and intervals as vectors `^`.
 
-### Spelling and normalization
-
-TODO auto-spelling/normalization
-
-```music+haskell
-pseq $ fmap (`alter` c) [-2..2]
-```
-
-TODO this breaks Lilypond output (and XML?). Add auto-normalization in export
-
-```TODO
-pseq $ fmap (`alter` c) [-5..5]
-```
 
 ### Where the literals are defined
 
@@ -485,7 +472,19 @@ in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 
 TODO Ambitus, Chord and Scale
 
-TODO spelling
+Double sharps/flats are supported:
+
+```music+haskell
+pseq $ fmap (`alter` c) [-2..2]
+```
+
+In fact we generalize the notion of double sharps/flats to an arbitrary number of alterations. As there are no symbols for these in standard notation, they are automatically re-spelled in exported music.
+
+```music+haskell
+pseq $ fmap (`alter` c) [-4..4]
+```
+
+TODO spell, usingSharps, usingFlats, simplifyPitches
 
 ## Adding pitches and intervals
 
