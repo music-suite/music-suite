@@ -1,4 +1,5 @@
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE DerivingStrategies #-}
 
 module Music.Time.Pattern
@@ -147,7 +148,10 @@ instance HasPitches a b => HasPitches (Pattern a) (Pattern b) where
   pitches = _Wrapped . pitches
 
 instance HasPitches a b => HasPitches (Lunga a) (Lunga b) where
-  pitches = error "HasPitches Lunga"
+  pitches visit (Lunga (dur, back, front)) = do
+    back' <- pitches visit $ back
+    front' <- pitches visit $ front
+    pure $ Lunga (dur, front', back')
 
 
 -- What sort of Applicative is Pattern?
