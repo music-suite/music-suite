@@ -1205,17 +1205,6 @@ See issue 103
 
 # Time and structure
 
-
-@[Transformable]
-
-@[Splittable]
-
-@[Reversible]
-
-@[HasPosition]
-
-@[HasDuration]
-
 ## Basic time types
 
 Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
@@ -1224,13 +1213,29 @@ Time points form an affine space over durations, so we can use the operators @[.
 
 The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
 
-### Span as a transformation
+TODO time/span/duration examples
 
+### Spans as transformations
+
+TODO explain
+
+@[Transformable]
+
+TODO Transformable laws
 
 
 ## Position and duration
 
-TODO instead of using Transformable, show how to set duration explicitly
+@[HasDuration]
+
+Inspecting the duration
+
+
+@[HasPosition]
+
+Inspecting the position
+
+TODO instead of using Transformable, show how to set duration explicitly via lens
 
 ```music+haskell
 let
@@ -1239,19 +1244,25 @@ let
 in compress 4 $ melody </> pedal
 ```
 
-TODO example with stretchRelative
+TODO example with stretchRelative, stretchTo
 
-
-
-
-
+TODO HasPosition/HasDuration laws
 
 
 ## Times with values
 
-The Note, Placed and Event types are similar to Duration, Time and Span respectively, except they also contain a *payload* of an arbitrary type. In practice the payload will usually contain information such as part, pitch.
+The Note and Event types are similar to Duration, Time and Span respectively, except they also contain a *payload* of an arbitrary type. This is expressed as a type parameter (often written using a lowercase letter, as in `Note a`).  In practice the payload will usually contain (possibly overloaded) *aspects* such as part, pitch, dynamics and so on.
 
 @[Note]
+
+```music+haskell
+inspectableToMusic @(Note Pitch) $
+
+  c
+```
+
+
+@[Event]
 
 ## Voices
 
@@ -1259,16 +1270,19 @@ A @[Voice] represents a sequence of values, each tagged with duration.
 
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
+
 stretch (1/4) $ [cs, bb, a |* 2]^.voice
 ```
 
 ```music+haskell
 inspectableToMusic @(Voice (Maybe Pitch)) $
+
 stretch (1/4) $ [c |* 2, rest, e]^.voice
 ```
 
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
+
 stretch (1/4) $ do
   x <- [c, d, e]^.voice |/ 2
   y <- [c', b, bb]^.voice |/ 2
@@ -1278,6 +1292,7 @@ stretch (1/4) $ do
 
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
+
 stretch (1/4) $ do
   x <- [c, d, e]^.voice |/ 2
   [x, b, c' |*4 ]^.voice
@@ -1459,6 +1474,7 @@ TODO why does thirdMode not work?
 
 ```music+haskell
 inspectableToMusic $
+
 [ phrygian
 , majorScale
 -- , bluesMajor
@@ -1470,6 +1486,7 @@ inspectableToMusic $
 
 ```music+haskell
 inspectableToMusic $
+
 [ modeToScale c phrygian
 , modeToScale d majorScale
 -- , modeToScale e bluesMajor
@@ -1484,6 +1501,7 @@ inspectableToMusic $
 
 ```music+haskell
 inspectableToMusic $
+
 [ majorTriad
 , minorTriad
 , augmentedChord
@@ -1494,6 +1512,7 @@ inspectableToMusic $
 
 ```music+haskell
 inspectableToMusic $
+
 [ functionToChord g majorTriad
 , functionToChord c minorTriad
 , functionToChord f augmentedChord

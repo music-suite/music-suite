@@ -43,8 +43,8 @@ class InspectableNote a where
   inspectableToMusicNote :: a -> Music
   inspectableToMusicNote = pure . inspectableToNote
 
-instance Inspectable (Score StandardNote) where
-  inspectableToMusic = id
+-- instance Inspectable (Score StandardNote) where
+--   inspectableToMusic = id
 
 -- TODO not just Pitch
 instance Inspectable (Pattern Pitch) where
@@ -57,11 +57,12 @@ instance (IsPitch a, Reversible a) => IsPitch (Pattern a) where
 instance Inspectable a => Inspectable (Maybe a) where
   inspectableToMusic = maybe mempty id . fmap inspectableToMusic
 
-instance Inspectable (Score Pitch) where
-  inspectableToMusic = inspectableToMusic . asScore . fmap fromPitch
+instance InspectableNote a => Inspectable (Score a) where
+  inspectableToMusic = join . fmap inspectableToMusicNote
 
 instance InspectableNote Pitch where
   inspectableToNote = fromPitch
+
 instance InspectableNote a => InspectableNote (Maybe a) where
   inspectableToMusicNote = maybe mempty pure . fmap inspectableToNote
 
@@ -69,7 +70,10 @@ instance InspectableNote () where
   inspectableToNote () = fromPitch c
 
 instance InspectableNote a => Inspectable (Voice a) where
-  inspectableToMusic = inspectableToMusic . join . fmap  inspectableToMusicNote . renderAlignedVoice . aligned 0 0
+  inspectableToMusic = join . fmap  inspectableToMusicNote . renderAlignedVoice . aligned 0 0
+
+instance InspectableNote a => Inspectable (Note a) where
+  inspectableToMusic x = inspectableToMusic $ [x]^.voice
 
 -- instance Inspectable (Voice ()) where
 -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
