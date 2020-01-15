@@ -1470,6 +1470,24 @@ Calculate dissonance of a chord (classical/"objective", by higest common fundame
 
 Non-repeating/self-repeating scales (e.g. the overtone series)
 
+### Triadic harmony
+
+Basic triads, seventh and ninth chords
+
+### Quartal and quintal
+
+TODO
+
+### Scales as chords
+
+TODO scale-chord texture, e.g. whole tone extending augmented,
+
+### Non-diatonic scales
+
+TODO the Common.Pitch type has built-in support for chromatic/diatonic harmony. We can construct types that support other system instead.
+
+
+
 
 
 # Constraints
@@ -1665,6 +1683,11 @@ TODO
 
 
 # Tips and tricks
+
+### Lists and streams
+
+TODO
+
 
 ### Complex rhythms
 
