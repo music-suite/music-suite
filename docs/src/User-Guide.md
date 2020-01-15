@@ -1237,9 +1237,6 @@ in compress 4 $ melody </> pedal
 
 TODO example with stretchRelative
 
-TODO HasPosition for scores (see TODO.d)
-
-TODO Aligned, "floaters"
 
 
 
@@ -1283,11 +1280,6 @@ in stretch (1/8) $ voiceToScore $ y
 ```
 -->
 
-## Behavior and Reactive
-
-## Alignment
-
-@[Aligned]
 
 
 ## Tracks
@@ -1311,6 +1303,18 @@ in trackToScore (1/8) y
 ## Scores
 
 @[Score]
+
+TODO empty scores and rests (see (HasPosition Score) in TODO.md)
+
+TODO Behavior and Reactive, Sampling
+
+TODO HasPosition for scores (see TODO.d)
+
+TODO Aligned, "floaters"
+
+TODO sequential composition of aligned voices "snap to next stressed beat".
+Natural way of modelling pickups/upbeats etc. Can be combined with "beat hierarchy" model
+
 
 ## Patterns
 
