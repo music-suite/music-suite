@@ -1224,24 +1224,8 @@ Time points form an affine space over durations, so we can use the operators @[.
 
 The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
 
+### Span as a transformation
 
-## Time transformations
-
-@[rev]
-
-```music+haskell
-let
-    melody = accent $ legato $ pseq [d, pseq [g,fs]|/2,bb|*2]|/4
-in melody |> rev melody
-```
-
-@[times]
-
-```music+haskell
-let
-    melody = legato $ pseq [c,d,e,c]|/16
-in times 4 $ melody
-```
 
 
 ## Position and duration
@@ -1323,6 +1307,7 @@ in stretch (1/8) $ voiceToScore $ y
 -->
 
 
+<!--
 
 ## Tracks
 
@@ -1330,7 +1315,6 @@ A @[Track] is similar to a score, except that it events have no offset or durati
 
 It can be converted into a score by delaying each element and composing in parallel. An explicit duration has to be provided.
 
-<!--
 ```music+haskellx
 let
     x = [ (0, c), (1, d), (2, e) ]^.track
@@ -1396,8 +1380,27 @@ TODO renderPatternsRel
 TODO renderPatternsAbs
 
 
+## Splitting and reversing
 
+@[split]
 
+@[rev]
+
+```music+haskell
+let
+    melody = accent $ legato $ pseq [d, pseq [g,fs]|/2,bb|*2]|/4
+in melody |> rev melody
+```
+
+## Repetition and variation
+
+@[times]
+
+```music+haskell
+let
+    melody = legato $ pseq [c,d,e,c]|/16
+in times 4 $ melody
+```
 
 
 
