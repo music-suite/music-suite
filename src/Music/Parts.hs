@@ -204,16 +204,16 @@ tuba = fromMidiProgram 58
 
 timpani = fromMidiProgram 47
 
-snareDrum = fromMusicXmlSoundId "drum.snare-drum"
+snareDrum = tutti $ fromMusicXmlSoundId "drum.snare-drum"
 
-kickDrum = fromMusicXmlSoundId "drum.kick-drum"
+kickDrum = tutti $ fromMusicXmlSoundId "drum.kick-drum"
 
-baseDrum = fromMusicXmlSoundId "drum.bass-drum"
+baseDrum = tutti $ fromMusicXmlSoundId "drum.bass-drum"
 
-crashCymbal = fromMusicXmlSoundId "cymbal.crash"
+crashCymbal = tutti $ fromMusicXmlSoundId "cymbal.crash"
 suspendedCymbal = crashCymbal
-rideCymbal = fromMusicXmlSoundId "cymbal.ride"
-clashCymbal = fromMusicXmlSoundId "cymbal.clash"
+rideCymbal = tutti $ fromMusicXmlSoundId "cymbal.ride"
+clashCymbal = tutti $ fromMusicXmlSoundId "cymbal.clash"
 orchestralCymbal = clashCymbal
 piatti = orchestralCymbal
 

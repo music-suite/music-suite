@@ -857,8 +857,10 @@ TODO mutes
 
 TODO working with instruments for percussion (much like normal instruments, though pitch may be ignored)
 
+Note: for percussion we break the singular/plural convention and export a `Part` in the singular form.
+
 ```music+haskell
-parts' .~ snareDrum $ c $> rh [1,rh [1,1,1],1,1]
+parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
   where
     rh = stretchTo 1 . pseq -- TODO put this in the library?
 ```
@@ -1723,7 +1725,11 @@ TODO this is not documentation, move to some other location. Listing all "bad re
 
 ### Quantization
 
-TODO
+```music+haskell
+(`stretch` c) <$> rh [1,rh [1,1,1],1,1]
+  where
+    rh = stretchTo 1 . pseq
+```
 
 ### Staves
 
