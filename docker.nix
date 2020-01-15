@@ -54,7 +54,7 @@ musicSuite = pkgs.stdenv.mkDerivation {
       installPhase = ''
         # TODO copy artefacts
         mkdir -p "$out"
-        cp dist-newstyle "$out/dist123"
+        cp -r dist-newstyle "$out/"
       '';
 
       shellHook = '';
