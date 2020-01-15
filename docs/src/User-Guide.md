@@ -1041,7 +1041,7 @@ timeSignature (3/8) $ compress 2 waltz
 @[tempo]
 
 ```music+haskell
-tempo adagio $ pseq [c,d,e,b,c] |/ (5*16) |> d |* 3/4
+tempo adagio $ pseq [c,d,e,b,c] |/ (5*16) |> d |* (3/4)
 ```
 
 ```music+haskell
