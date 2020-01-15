@@ -1278,9 +1278,9 @@ inspectableToMusic @(Voice Pitch) $
 stretch (1/4) $ [cs, bb, a |* 2]^.voice
 ```
 
-```TODOmusic+haskell
+```music+haskell
 inspectableToMusic @(Voice (Maybe Pitch)) $
-stretch (1/4) $ [c, d, empty]^.voice
+stretch (1/4) $ [c |* 2, rest, e]^.voice
 ```
 
 ```music+haskell

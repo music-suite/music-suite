@@ -40,6 +40,9 @@ class Inspectable a where
 class InspectableNote a where
   inspectableToNote :: a -> StandardNote
 
+  inspectableToMusicNote :: a -> Music
+  inspectableToMusicNote = pure . inspectableToNote
+
 instance Inspectable (Score StandardNote) where
   inspectableToMusic = id
 
@@ -59,12 +62,14 @@ instance Inspectable (Score Pitch) where
 
 instance InspectableNote Pitch where
   inspectableToNote = fromPitch
+instance InspectableNote a => InspectableNote (Maybe a) where
+  inspectableToMusicNote = maybe mempty pure . fmap inspectableToNote
 
 instance InspectableNote () where
   inspectableToNote () = fromPitch c
 
 instance InspectableNote a => Inspectable (Voice a) where
-  inspectableToMusic = inspectableToMusic . fmap inspectableToNote . renderAlignedVoice . aligned 0 0
+  inspectableToMusic = inspectableToMusic . join . fmap  inspectableToMusicNote . renderAlignedVoice . aligned 0 0
 
 -- instance Inspectable (Voice ()) where
 -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
