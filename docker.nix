@@ -73,7 +73,7 @@ dockerTools.buildImage {
                 # Later: Remove build env, just runtime dependencies
                 musicSuite
                 pkgs.lilypond
-                (pkgs.haskellPackages.ghcWithPackages [])
+                (pkgs.haskellPackages.ghcWithPackages (p: []))
              ];
 
   config = {
