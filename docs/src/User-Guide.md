@@ -857,7 +857,7 @@ TODO mutes
 
 TODO working with instruments for percussion (much like normal instruments, though pitch may be ignored)
 
-Note: for percussion we break the singular/plural convention and export a `Part` in the singular form.
+Note: for percussion we break the singular/plural naming convention and export a `Part` in the singular form. Note that the solo/tutti component is set to `Tutti` by default even though there might only be one performer in the group (the distinction would still make sense e.g. in a percussion concerto).
 
 ```music+haskell
 parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
@@ -865,8 +865,7 @@ parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
     rh = stretchTo 1 . pseq -- TODO put this in the library?
 ```
 
-
-TODO rolls (see tremolo above)
+For rolls see [the previous section](tremolo-trills-and-rolls).
 
 TODO render e.g. snare drum parts correctly
 
@@ -1041,8 +1040,21 @@ timeSignature (3/8) $ compress 2 waltz
 
 @[tempo]
 
-@[tempoDuring]
+```music+haskell
+tempo adagio $ pseq [c,d,e,b,c] |/ (5*16) |> d |* 3/4
+```
 
+```music+haskell
+tempo (metronome (1/4) 80) $ pseq [c,d,e,b,c] |/ (5*16) |> d |* (3/4)
+```
+
+```music+haskell
+(tempo (metronome (1/4) 80) $ pseq [c,d,e,b,c] |/ (5*16) |> d |* (3/4))
+  |>
+(tempo (allegro (1/4) 80) $ pseq [c..g] |/ 4 )
+```
+
+TODO rendering tempo
 @[renderTempo]
 
 ### Fermatas, caesuras and breathing marks
