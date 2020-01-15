@@ -317,6 +317,12 @@ Consider switching to a decentralized issue tracker such as:
     trigger a preview (visual/audial) in an editor window, as if the expression had been applied to
     defaultMain (see above).
 
+- [ ] Deprecate Track/Placed?
+  - It's rarely useful to just 'delay'
+  - Score/Event/Aligned/Pattern usually more compelling
+  - Placed is currently used in the definition of Pattern, but that could be changed to Aligned (which is a
+    strict generalization of Placed)
+
 - [X] $reactiveSemantics
   - Briefly: Simultaneous events should not be allowed with Reactive. Semantically:
       type Reactive a = ([Time], Time -> a)
