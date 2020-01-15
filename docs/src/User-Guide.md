@@ -1740,6 +1740,11 @@ pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
 pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 ```
 
+```music+haskell
+stretch (1/2) $ pseq [c..e]|/3 |> f |> g|*2
+```
+
+
 ### Staves
 
 ### Misc
