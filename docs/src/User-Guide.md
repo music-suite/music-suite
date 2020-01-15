@@ -786,13 +786,26 @@ extractPart violas fullScore
 
 TODO measured vs unmeasured
 
-TODO realising tremolo/trills
-
 @[tremolo]
+
+```TODOmusic+haskell
+tremolo 2 $ times 2 $ (c |> d)|/2
+```
+
+@[fastTremolo]
+
+```TODOmusic+haskell
+fastTremolo $ times 2 $ (c |> d)|/2
+```
+
+TODO realising tremolo/trills
 
 ### Slides and glissando
 
 @[slide]
+
+TODO
+
 @[glissando]
 
 ```music+haskell
@@ -820,8 +833,8 @@ TODO artificial harmonics
 
 TODO pizz/arco
 
-```music+haskell
-tremolo 2 $ times 2 $ (c |> d)|/2
+```TODOmusic+haskell
+pizz $ pseq [c,c,c,c, arco d |* 2] |/ 4
 ```
 
 TODO chord tremolo
