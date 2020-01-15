@@ -1708,7 +1708,6 @@ Nested tuplets.
 stretch (2/3) (pseq [c,d,e]) |> f |*2
 ```
 
-TODO this should use nested tuplets:
 
 ```music+haskell
 pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
@@ -1729,6 +1728,16 @@ TODO this is not documentation, move to some other location. Listing all "bad re
 (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
   where
     rh = stretchTo 1 . pseq
+```
+
+TODO this should use nested tuplets:
+
+```music+haskell
+pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
+```
+
+```music+haskell
+pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 ```
 
 ### Staves
