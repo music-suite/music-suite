@@ -1362,7 +1362,7 @@ renderPattern (a <> b) (0.5 <-> 1.5)
 TODO Patterns are Transformable, Transposing, Attenuable and so on, so many expressions that work for scores and voices also work for patterns.
 
 ```music+haskell
-renderPattern (up m3 p) (0 <-> 2)
+renderPattern (stretch 0.5 $ up m3 p) (0 <-> 2)
   where
     p = a <> b
     a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8

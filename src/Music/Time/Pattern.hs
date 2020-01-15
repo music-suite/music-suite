@@ -64,6 +64,15 @@ instance Applicative Lunga where
 instance Transformable (Lunga a) where
   transform t (Lunga (d,a,b)) = Lunga (transform t d, transform t a, transform t b)
 
+type instance Pitch (Lunga a)           = Pitch a
+type instance SetPitch b (Lunga a)      = Lunga (SetPitch b a)
+
+instance HasPitches a b => HasPitches (Lunga a) (Lunga b) where
+  pitches visit (Lunga (dur, back, front)) = do
+    back' <- pitches visit $ back
+    front' <- pitches visit $ front
+    pure $ Lunga (dur, front', back')
+
 nominalDuration :: Lunga a -> Duration
 nominalDuration (Lunga (d,_,_)) = d
 
@@ -123,11 +132,7 @@ renderLunga s (Lunga (d,_,b))
     takeM = beginning
     dropM = ending
 
-type instance Pitch (Lunga a)           = Pitch a
-type instance SetPitch b (Lunga a)      = Lunga (SetPitch b a)
 
-type instance Pitch (Pattern a)           = Pitch a
-type instance SetPitch b (Pattern a)      = Pattern (SetPitch b a)
 
 -- List of repeated voices
 -- TODO we could possibly lose the Reversible constriant alltogether
@@ -144,14 +149,12 @@ instance Wrapped (Pattern a) where
 
 instance Rewrapped (Pattern a) (Pattern b)
 
+type instance Pitch (Pattern a)           = Pitch a
+type instance SetPitch b (Pattern a)      = Pattern (SetPitch b a)
+
 instance HasPitches a b => HasPitches (Pattern a) (Pattern b) where
   pitches = _Wrapped . pitches
 
-instance HasPitches a b => HasPitches (Lunga a) (Lunga b) where
-  pitches visit (Lunga (dur, back, front)) = do
-    back' <- pitches visit $ back
-    front' <- pitches visit $ front
-    pure $ Lunga (dur, front', back')
 
 
 -- What sort of Applicative is Pattern?
