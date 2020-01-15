@@ -10,8 +10,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -131,14 +131,16 @@ notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ 
     EQ -> ([], False)
     GT -> ([EndDim], True)
 
-removeCloseDynMarks :: forall s a . (HasPhrases' s a, HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => s -> s
+removeCloseDynMarks :: forall s a. (HasPhrases' s a, HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => s -> s
 removeCloseDynMarks = mapPhrasesWithPrevAndCurrentOnset f
   where
     f :: Maybe (Time, Phrase a) -> Time -> Phrase a -> Phrase a
     f Nothing t x = x
-    f (Just (t1, x1)) t2 x = if (t2 .-. t1) > 1.5
-      || ((x1^?(_last . dynamics')) /= (x^?(_head . dynamics')))
-      then x else over (_head . mapped) removeDynMark x
+    f (Just (t1, x1)) t2 x =
+      if (t2 .-. t1) > 1.5
+        || ((x1 ^? (_last . dynamics')) /= (x ^? (_head . dynamics')))
+        then x
+        else over (_head . mapped) removeDynMark x
 
 removeDynMark :: (HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => a -> a
 removeDynMark x = set (dynamics' . _Wrapped' . _2) Nothing x

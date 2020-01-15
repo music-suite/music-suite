@@ -33,11 +33,11 @@ import qualified System.Info
 import qualified System.Process
 import qualified System.Process
 
-
 class Inspectable a where
   inspectableToMusic :: a -> Music
 
 class InspectableNote a where
+
   inspectableToNote :: a -> StandardNote
 
   inspectableToMusicNote :: a -> Music
@@ -48,11 +48,10 @@ class InspectableNote a where
 
 -- TODO not just Pitch
 instance Inspectable (Pattern Pitch) where
-  inspectableToMusic = fmap fromPitch'' . flip renderPattern (0<->1)
+  inspectableToMusic = fmap fromPitch'' . flip renderPattern (0 <-> 1)
 
 instance (IsPitch a, Reversible a) => IsPitch (Pattern a) where
   fromPitch = pureP . fromPitch
-
 
 instance Inspectable a => Inspectable (Maybe a) where
   inspectableToMusic = maybe mempty id . fmap inspectableToMusic
@@ -70,16 +69,15 @@ instance InspectableNote () where
   inspectableToNote () = fromPitch c
 
 instance InspectableNote a => Inspectable (Voice a) where
-  inspectableToMusic = join . fmap  inspectableToMusicNote . renderAlignedVoice . aligned 0 0
+  inspectableToMusic = join . fmap inspectableToMusicNote . renderAlignedVoice . aligned 0 0
 
 instance InspectableNote a => Inspectable (Note a) where
-  inspectableToMusic x = inspectableToMusic $ [x]^.voice
+  inspectableToMusic x = inspectableToMusic $ [x] ^. voice
 
 -- instance Inspectable (Voice ()) where
 -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
 instance Inspectable (Ambitus Pitch) where
   inspectableToMusic x = let (m, n) = x ^. from ambitus in glissando $ fromPitch m |> fromPitch n
-
 
 instance Inspectable (Mode Pitch) where
   inspectableToMusic = inspectableToMusic . modeToScale c

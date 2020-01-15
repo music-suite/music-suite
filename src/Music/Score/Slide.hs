@@ -27,8 +27,8 @@ import Music.Pitch.Literal
 import Music.Score.Part
 import Music.Score.Phrases
 import Music.Time.Note
-import Music.Time.Voice
 import Music.Time.Score
+import Music.Time.Voice
 
 class HasSlide a where
 

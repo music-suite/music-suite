@@ -84,7 +84,6 @@ import qualified Data.Set as Set
 import Data.VectorSpace hiding (Sum (..))
 import Music.Time.Types
 
-
 -- |
 -- Class of values that can be transformed (i.e. scaled and moved) in time.
 --

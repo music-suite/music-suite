@@ -27,7 +27,7 @@
 -- Provides fermatas.
 module Music.Score.Meta.Fermata
   ( -- * Fermata type
-    Fermata(..),
+    Fermata (..),
 
     -- ** Adding fermatas to scores
     fermata,
@@ -62,7 +62,6 @@ import Music.Time
 import Music.Time.Reactive
 
 -- | Represents a fermata.
---
 data Fermata = StandardFermata | LongFermata | VeryLongFermata
   deriving (Eq, Ord, Show, Typeable)
 

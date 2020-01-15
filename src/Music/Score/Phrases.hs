@@ -44,14 +44,14 @@ import Data.VectorSpace hiding (Sum (..))
 import Music.Score.Part
 import Music.Time.Aligned
 import Music.Time.Event
-import Music.Time.Placed
-import Music.Time.Track
-import Music.Time.Note
-import Music.Time.Voice
-import Music.Time.Score
-import Music.Time.Reverse
 import Music.Time.Internal.Convert ()
 import Music.Time.Internal.Util
+import Music.Time.Note
+import Music.Time.Placed
+import Music.Time.Reverse
+import Music.Time.Score
+import Music.Time.Track
+import Music.Time.Voice
 
 -- |
 -- For a phrase, we simply use a voice without rests.

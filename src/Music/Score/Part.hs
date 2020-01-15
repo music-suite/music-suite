@@ -45,6 +45,7 @@ import Control.Comonad
 import Control.Lens hiding ((&), parts, transform)
 import Data.Functor.Couple
 import qualified Data.List as List
+import qualified Data.Maybe
 import Data.Ord (comparing)
 import Data.PairMonad
 import Data.Semigroup
@@ -53,14 +54,13 @@ import Music.Parts.Subpart (BoundIncr (..), HasSubpart (..))
 import Music.Pitch.Literal
 import Music.Score.Internal.Util (through)
 import Music.Score.Ties
-import qualified Data.Maybe
 import Music.Time.Aligned
 import Music.Time.Event
-import Music.Time.Note
-import Music.Time.Voice
-import Music.Time.Score
-import Music.Time.Reverse
 import Music.Time.Internal.Transform
+import Music.Time.Note
+import Music.Time.Reverse
+import Music.Time.Score
+import Music.Time.Voice
 
 -- |
 -- Parts type.
@@ -227,7 +227,7 @@ allParts = List.nub . List.sort . toListOf parts
 replaceParts :: (HasParts' a, Eq (Part a)) => [(Part a, Part a)] -> a -> a
 replaceParts xs = over parts' (`lookupPos` xs)
   where
-    lookupPos x ys = Data.Maybe.fromMaybe x $ lookup x ys
+    lookupPos x ys = Data.Maybe.fromMaybe x $ lookup x ys
 
 arrangeFor :: (HasParts' a, Ord (Part a)) => [Part a] -> a -> a
 arrangeFor ps x = replaceParts (zip (allParts x) (cycle ps)) x

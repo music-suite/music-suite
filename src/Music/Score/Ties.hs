@@ -28,11 +28,11 @@ import Data.Semigroup
 import Data.VectorSpace hiding (Sum, getSum)
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
-import Music.Time.Transform
-import Music.Time.Reverse
 import Music.Time.Behavior
-import Music.Time.Voice
 import Music.Time.Note (note)
+import Music.Time.Reverse
+import Music.Time.Transform
+import Music.Time.Voice
 
 -- |
 -- Class of types that can be tied. Ties are added to a score by splitting a single note

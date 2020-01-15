@@ -83,7 +83,6 @@ instance Monoid RehearsalMark where
 
   mappend = (<>)
 
-
 -- metronome :: Duration -> Bpm -> Tempo
 -- metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
 

@@ -9,6 +9,7 @@ module Music.Time.Voice
     notes,
     pairs,
     durationsAsVoice,
+
     -- * Conversion
     noteToVoice,
 
@@ -336,17 +337,17 @@ durationsAsVoice :: Iso' [Duration] (Voice ())
 durationsAsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
 
 mapWithOffsetRelative :: Time -> (Time -> a -> b) -> Voice a -> Voice b
-mapWithOffsetRelative t f = mapWithEraRelative t (\s x -> f (s^.offset) x)
+mapWithOffsetRelative t f = mapWithEraRelative t (\s x -> f (s ^. offset) x)
 
 mapWithOnsetRelative :: Time -> (Time -> a -> b) -> Voice a -> Voice b
-mapWithOnsetRelative t f = mapWithEraRelative t (\s x -> f (s^.onset) x)
+mapWithOnsetRelative t f = mapWithEraRelative t (\s x -> f (s ^. onset) x)
 
 -- >>> mapWithEraRelative 0 (\s x -> s) $ asVoice $ mconcat [c,d^*2,e]
 -- [(1,0 <-> 1)^.note,(2,1 <-> 3)^.note,(1,3 <-> 4)^.note]^.voice
 mapWithEraRelative :: Time -> (Span -> a -> b) -> Voice a -> Voice b
 mapWithEraRelative t f v = set valuesV newValues v
   where
-    newValues = zipWith f (erasRelative t v) (v^.valuesV)
+    newValues = zipWith f (erasRelative t v) (v ^. valuesV)
 
 -- |
 -- Unzip the given voice.

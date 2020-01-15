@@ -51,4 +51,4 @@ showDivision = show . getDivision
 
 -- | Get all possible divisions for a given divisor in ascending order.
 divisions :: Int -> [Division]
-divisions n = take n [0..]
+divisions n = take n [0 ..]

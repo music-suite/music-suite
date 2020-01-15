@@ -44,11 +44,11 @@ import Data.Semigroup
 import Data.String
 import Data.Traversable
 import Data.VectorSpace
-import Music.Time.Types
-import Music.Time.Placed
-import Music.Time.Track
 import Music.Time.Note
+import Music.Time.Placed
 import Music.Time.Reactive
+import Music.Time.Track
+import Music.Time.Types
 import Music.Time.Voice
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a

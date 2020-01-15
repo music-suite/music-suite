@@ -10,7 +10,6 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : non-portable
---
 module Music.Prelude
   ( module Music.Prelude.Standard,
     module Music.Prelude.Inspectable,
@@ -18,6 +17,6 @@ module Music.Prelude
   )
 where
 
+import Control.Applicative
 import Music.Prelude.Inspectable
 import Music.Prelude.Standard
-import Control.Applicative

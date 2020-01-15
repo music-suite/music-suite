@@ -21,13 +21,12 @@ import Data.Traversable (traverse)
 -- import qualified Distribution.Verbosity
 import Language.Haskell.Interpreter (ModuleElem (..), ModuleName)
 import qualified Language.Haskell.Interpreter as Hint
+import Music.Prelude ()
 import System.Environment
 import System.IO
 import System.IO.Unsafe
 import System.Process
 import Text.Regex
-
-import Music.Prelude ()
 
 type Identifier = String
 

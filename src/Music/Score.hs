@@ -24,7 +24,6 @@ module Music.Score
     module Music.Score.Import.Abc,
     module Music.Score.Import.Lilypond,
     module Music.Score.Import.Midi,
-
     module Music.Time,
     module Control.Lens.Operators,
     module Control.Applicative,
@@ -39,7 +38,6 @@ module Music.Score
     view,
   )
 where
-
 
 import Control.Applicative
 import Control.Lens (from, toListOf, view)

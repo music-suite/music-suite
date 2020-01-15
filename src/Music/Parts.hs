@@ -211,10 +211,15 @@ kickDrum = tutti $ fromMusicXmlSoundId "drum.kick-drum"
 baseDrum = tutti $ fromMusicXmlSoundId "drum.bass-drum"
 
 crashCymbal = tutti $ fromMusicXmlSoundId "cymbal.crash"
+
 suspendedCymbal = crashCymbal
+
 rideCymbal = tutti $ fromMusicXmlSoundId "cymbal.ride"
+
 clashCymbal = tutti $ fromMusicXmlSoundId "cymbal.clash"
+
 orchestralCymbal = clashCymbal
+
 piatti = orchestralCymbal
 
 piano = fromMidiProgram 0
