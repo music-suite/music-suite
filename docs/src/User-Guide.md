@@ -1271,10 +1271,32 @@ The Note, Placed and Event types are similar to Duration, Time and Span respecti
 
 ## Voices
 
-A @[Voice] represents a single voice of music. It consists of a sequence of values with duration.
+A @[Voice] represents a sequence of values, each tagged with duration.
 
 ```music+haskell
-stretch (1/4) $ pseq [c..a]|/2 |> b |> c'|*4
+inspectableToMusic @(Voice Pitch) $
+stretch (1/4) $ [cs, bb, a |* 2]^.voice
+```
+
+```TODOmusic+haskell
+inspectableToMusic @(Voice (Maybe Pitch)) $
+stretch (1/4) $ [c, d, empty]^.voice
+```
+
+```music+haskell
+inspectableToMusic @(Voice Pitch) $
+stretch (1/4) $ do
+  x <- [c, d, e]^.voice |/ 2
+  y <- [c', b, bb]^.voice |/ 2
+  [x, g, y |*4 ]^.voice
+```
+
+
+```music+haskell
+inspectableToMusic @(Voice Pitch) $
+stretch (1/4) $ do
+  x <- [c, d, e]^.voice |/ 2
+  [x, b, c' |*4 ]^.voice
 ```
 
 ```music+haskell

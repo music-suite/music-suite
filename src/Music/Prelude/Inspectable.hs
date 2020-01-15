@@ -37,6 +37,9 @@ import qualified System.Process
 class Inspectable a where
   inspectableToMusic :: a -> Music
 
+class InspectableNote a where
+  inspectableToNote :: a -> StandardNote
+
 instance Inspectable (Score StandardNote) where
   inspectableToMusic = id
 
@@ -54,11 +57,14 @@ instance Inspectable a => Inspectable (Maybe a) where
 instance Inspectable (Score Pitch) where
   inspectableToMusic = inspectableToMusic . asScore . fmap fromPitch
 
-instance Inspectable (Voice StandardNote) where
-  inspectableToMusic = inspectableToMusic . renderAlignedVoice . aligned 0 0
+instance InspectableNote Pitch where
+  inspectableToNote = fromPitch
 
-instance Inspectable (Voice Pitch) where
-  inspectableToMusic = inspectableToMusic . asScore . renderAlignedVoice . aligned 0 0 . fmap fromPitch
+instance InspectableNote () where
+  inspectableToNote () = fromPitch c
+
+instance InspectableNote a => Inspectable (Voice a) where
+  inspectableToMusic = inspectableToMusic . fmap inspectableToNote . renderAlignedVoice . aligned 0 0
 
 -- instance Inspectable (Voice ()) where
 -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
