@@ -55,6 +55,13 @@ module Music.Parts
     bassTrombone,
     tuba,
     timpani,
+    snareDrum,
+    kickDrum,
+    crashCymbal,
+    rideCymbal,
+    clashCymbal,
+    orchestralCymbal,
+    piatti,
     piano,
     celesta,
     glockenspiel,
@@ -196,6 +203,19 @@ bassTrombone = fromMusicXmlSoundId "brass.trombone.bass"
 tuba = fromMidiProgram 58
 
 timpani = fromMidiProgram 47
+
+snareDrum = fromMusicXmlSoundId "drum.snare-drum"
+
+kickDrum = fromMusicXmlSoundId "drum.kick-drum"
+
+baseDrum = fromMusicXmlSoundId "drum.bass-drum"
+
+crashCymbal = fromMusicXmlSoundId "cymbal.crash"
+suspendedCymbal = crashCymbal
+rideCymbal = fromMusicXmlSoundId "cymbal.ride"
+clashCymbal = fromMusicXmlSoundId "cymbal.clash"
+orchestralCymbal = clashCymbal
+piatti = orchestralCymbal
 
 piano = fromMidiProgram 0
 
