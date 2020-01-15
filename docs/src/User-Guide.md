@@ -858,7 +858,7 @@ TODO mutes
 TODO working with instruments for percussion (much like normal instruments, though pitch may be ignored)
 
 ```music+haskell
-set parts' snareDrum .~ $ fmap (const c) $ rh [1,rh [1,1,1],1,1]
+parts' .~ snareDrum $ c $> rh [1,rh [1,1,1],1,1]
   where
     rh = stretchTo 1 . pseq -- TODO put this in the library?
 ```

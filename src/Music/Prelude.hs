@@ -11,14 +11,13 @@
 -- Stability   : experimental
 -- Portability : non-portable
 --
--- The Music Suite comes with many standard preludes.
---
--- This module reexports "Music.Prelude.Standard" for convenience.
 module Music.Prelude
   ( module Music.Prelude.Standard,
     module Music.Prelude.Inspectable,
+    module Control.Applicative,
   )
 where
 
 import Music.Prelude.Inspectable
 import Music.Prelude.Standard
+import Control.Applicative
