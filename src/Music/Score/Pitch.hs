@@ -3,6 +3,7 @@
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE DerivingStrategies         #-}
 
 -- | Provides generic functions for inspecting and manipulating pitch.
 --
@@ -102,7 +103,14 @@ import           Music.Score.Slide
 import           Music.Score.Text
 import           Music.Score.Ties
 import           Music.Score.Phrases
-import           Music.Time
+import           Music.Time.Track
+import           Music.Time.Voice
+import           Music.Time.Aligned
+import           Music.Time.Event
+import           Music.Time.Note
+import           Music.Time.Placed
+import           Music.Time.Score
+import           Music.Time.Behavior
 import           Music.Time.Internal.Transform
 
 -- | A type function that returns the pitch type associated with a given type.

@@ -32,7 +32,7 @@ import BasePrelude hiding ((<>), Dynamic, first, second)
 import Control.Lens hiding ((&), rewrite)
 import Control.Monad.Plus
 import Data.AffineSpace
-import Data.AffineSpace
+import Data.AffineSpace.Point.Offsets (offsetPoints)
 import Data.Bifunctor
 import Data.Colour.Names as Color
 import Data.Functor.Context
@@ -42,7 +42,14 @@ import qualified Data.List as List
 import Data.Semigroup
 import Data.VectorSpace hiding (Sum (..))
 import Music.Score.Part
-import Music.Time
+import Music.Time.Aligned
+import Music.Time.Event
+import Music.Time.Placed
+import Music.Time.Track
+import Music.Time.Note
+import Music.Time.Voice
+import Music.Time.Score
+import Music.Time.Reverse
 import Music.Time.Internal.Convert ()
 import Music.Time.Internal.Util
 

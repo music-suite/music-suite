@@ -44,7 +44,12 @@ import Data.Semigroup
 import Data.String
 import Data.Traversable
 import Data.VectorSpace
-import Music.Time
+import Music.Time.Types
+import Music.Time.Placed
+import Music.Time.Track
+import Music.Time.Note
+import Music.Time.Reactive
+import Music.Time.Voice
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a
 reactiveToVoice' (view onsetAndOffset -> (u, v)) r = (^. voice) $ fmap (^. note) $ durs `zip` (fmap (r `atTime`) times)

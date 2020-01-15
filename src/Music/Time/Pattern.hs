@@ -1,8 +1,11 @@
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DerivingStrategies #-}
 
 module Music.Time.Pattern
  -- TODO export list
 where
 
+import Music.Score.Pitch
 import Music.Time.Voice
 import Music.Time.Score
 import Music.Time.Reverse
@@ -16,7 +19,7 @@ import Control.Monad (join)
 import Data.VectorSpace
 import Data.AffineSpace
 import Music.Time.Juxtapose
-import Control.Lens (from, view, over, (^.))
+import Control.Lens (Wrapped(..), Rewrapped(..), _Wrapped, iso, from, view, over, (^.))
 
 
 sppar = pseq . fmap ppar
@@ -119,13 +122,33 @@ renderLunga s (Lunga (d,_,b))
     takeM = beginning
     dropM = ending
 
+type instance Pitch (Lunga a)           = Pitch a
+type instance SetPitch b (Lunga a)      = Lunga (SetPitch b a)
+
+type instance Pitch (Pattern a)           = Pitch a
+type instance SetPitch b (Pattern a)      = Pattern (SetPitch b a)
 
 -- List of repeated voices
 -- TODO we could possibly lose the Reversible constriant alltogether
 -- TODO is this isomorphic to Tidal's pattern (i.e. Span -> Score a)
 newtype Pattern a
-  = Pattern [Placed (Lunga a)] -- origo, pattern
+  = Pattern { getPattern :: [Placed (Lunga a)] }  -- origo, pattern
   deriving (Semigroup, Monoid, Transformable, Functor)
+
+instance Wrapped (Pattern a) where
+
+  type Unwrapped (Pattern a) = [Placed (Lunga a)]
+
+  _Wrapped' = iso getPattern Pattern
+
+instance Rewrapped (Pattern a) (Pattern b)
+
+instance HasPitches a b => HasPitches (Pattern a) (Pattern b) where
+  pitches = _Wrapped . pitches
+
+instance HasPitches a b => HasPitches (Lunga a) (Lunga b) where
+  pitches = error "HasPitches Lunga"
+
 
 -- What sort of Applicative is Pattern?
 -- instance Applicative Pattern where

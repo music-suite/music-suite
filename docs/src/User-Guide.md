@@ -37,7 +37,7 @@ The purpose of the `import` line is to allow you to use Music Suite, as Haskell 
 
     $ cabal exec runhaskell -- Test.hs
 
-TODO you can copy-paste all examples from this file into the above template.
+You can copy-paste all examples from this file into the above template. Whatever value `music` is assigned to will be exported when you run the file.
 
 
 ### Using an interactive environment
@@ -1330,8 +1330,6 @@ TODO Behavior and Reactive, Sampling
 
 TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
 
-TODO HasPosition for scores (see TODO.d)
-
 TODO Aligned, "floaters"
 
 TODO sequential composition of aligned voices "snap to next stressed beat".
@@ -1361,8 +1359,15 @@ renderPattern (a <> b) (0.5 <-> 1.5)
     b = newPattern $ fmap (const $ parts' .~ flutes $ c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
 ```
 
-TODO Patterns are Transformable
+TODO Patterns are Transformable, Transposing, Attenuable and so on, so many expressions that work for scores and voices also work for patterns.
 
+```music+haskell
+renderPattern (up m3 p) (0 <-> 2)
+  where
+    p = a <> b
+    a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
+    b = newPattern $ fmap (const $ parts' .~ flutes $ c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+```
 
 TODO renderPatternsRel
 

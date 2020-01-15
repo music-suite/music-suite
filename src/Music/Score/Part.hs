@@ -33,11 +33,6 @@ module Music.Score.Part
 
     -- * Part representation
     PartT (..),
-    -- Part,
-    -- HasPart(..),
-    -- HasPart',
-    -- PartT(..),
-    -- getParts,
 
     -- * Part composition
     (</>),
@@ -58,8 +53,13 @@ import Music.Parts.Subpart (BoundIncr (..), HasSubpart (..))
 import Music.Pitch.Literal
 import Music.Score.Internal.Util (through)
 import Music.Score.Ties
-import Music.Time
 import qualified Data.Maybe
+import Music.Time.Aligned
+import Music.Time.Event
+import Music.Time.Note
+import Music.Time.Voice
+import Music.Time.Score
+import Music.Time.Reverse
 import Music.Time.Internal.Transform
 
 -- |

@@ -307,6 +307,10 @@ Consider switching to a decentralized issue tracker such as:
 
 - If possible, derive everything in Music.Score.Internal.Instances
 
+- Replace Wrapped/Rewrapped with newtype/via where possible
+
+- Generic derivation of HasPitch etc. Case study: Time.Pattern.Lunga.
+
 - IDE allowing "preview on hover"
   - Normal text editor
   - When moving around in a single file (with/without a 'main' function) any hovered expression should

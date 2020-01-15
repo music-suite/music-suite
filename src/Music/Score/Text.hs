@@ -25,7 +25,9 @@ import Music.Pitch.Augmentable
 import Music.Pitch.Literal
 import Music.Score.Part
 import Music.Score.Phrases
-import Music.Time
+import Music.Time.Note
+import Music.Time.Voice
+import Music.Time.Score
 
 class HasText a where
   addText :: String -> a -> a

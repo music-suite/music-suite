@@ -28,7 +28,7 @@ import Music.Pitch.Augmentable
 import Music.Pitch.Literal
 import Music.Score.Part
 import Music.Score.Phrases
-import Music.Time
+import Music.Time.Score
 import Numeric.Natural
 
 -- 0 for none, positive for natural, negative for artificial
