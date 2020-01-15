@@ -1049,9 +1049,9 @@ tempo (metronome (1/4) 80) $ pseq [c,d,e,b,c] |/ (5*16) |> d |* (3/4)
 ```
 
 ```music+haskell
-(tempo (metronome (1/4) 80) $ pseq [c,d,e,b,c] |/ (5*16) |> d |* (3/4))
+(tempo adagio $ pseq [c,d,e,b,c] |/ (5*16) |> d |* (3/4))
   |>
-(tempo (allegro (1/4) 80) $ pseq [c..g] |/ 4 )
+(tempo allegro $ pseq [c..g] |/ 4 )
 ```
 
 TODO rendering tempo
