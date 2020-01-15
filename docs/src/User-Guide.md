@@ -1054,11 +1054,21 @@ TODO overlapping events:
 fermata StandardFermata (ppar [pseq[c,d] |/ 2,e,g]) |/ 4
 ```
 
+TODO apply at specific position
+
 
 
 ### Ritardando and accellerando
 
-TODO
+```TODOmusic+haskell
+(rit (pseq [c,d] |> e |* 2) |/ 4)
+```
+
+```TODOmusic+haskell
+(acc (pseq [c,d] |> e |* 2) |/ 4)
+```
+
+TODO apply at specific position
 
 ## Barlines and repeats
 
@@ -1089,9 +1099,7 @@ TODO repeats
 
 To set the clef for a whole passage, use @[clef]. The clef is used by most notation backends and ignored by audio backends.
 
-To set the clef for a preexisting passage in an existing score, use @[clefDuring].
-
-TODO example
+TODO override the default clef selection
 
 ## Multi-movement scores
 
@@ -1099,13 +1107,17 @@ TODO
 
 ## Rehearsal marks
 
-TODO
-
 @[rehearsalMark]
 
-@[rehearsalMarkDuring]
+```music+haskell
+rehearsalMark $ pseq [c,d,e,d,f,e,d,c] |/ 3
+```
 
-@[withRehearsalMark]
+@[rehearsalMarkAt]
+
+```music+haskell
+rehearsalMarkAt 2 $ pseq [c,d,e,d,f,e,d,c] |/3
+```
 
 
 ## Annotations

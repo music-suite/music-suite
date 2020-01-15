@@ -33,7 +33,7 @@ module Music.Score.Meta.RehearsalMark
 
     -- * Adding rehearsal marks to scores
     rehearsalMark,
-    rehearsalMarkDuring,
+    rehearsalMarkAt,
 
     -- * Extracting rehearsal marks
     withRehearsalMark,
@@ -64,8 +64,8 @@ import Music.Time
 import Music.Time.Reactive
 
 -- | Represents a rehearsal mark.
-data RehearsalMark = RehearsalMark (Maybe String) Int
-  deriving (Eq, Ord, Typeable)
+data RehearsalMark = RehearsalMark
+  deriving (Eq, Ord, Show, Typeable)
 
 -- name level(0=standard)
 
@@ -75,25 +75,23 @@ instance Default RehearsalMark where
 -}
 
 instance Semigroup RehearsalMark where
-  RehearsalMark n1 l1 <> RehearsalMark n2 l2 = RehearsalMark (n1 <> n2) (l1 `max` l2)
+  RehearsalMark <> RehearsalMark = RehearsalMark
 
 instance Monoid RehearsalMark where
 
-  mempty = RehearsalMark Nothing 0
+  mempty = RehearsalMark
 
   mappend = (<>)
 
-instance Show RehearsalMark where
-  show (RehearsalMark name level) = "A" -- TODo
 
 -- metronome :: Duration -> Bpm -> Tempo
 -- metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
 
-rehearsalMark :: (HasMeta a, HasPosition a) => RehearsalMark -> a -> a
-rehearsalMark c x = rehearsalMarkDuring (_era x) c x
+rehearsalMark :: (HasMeta a, HasPosition a, Transformable a) => a -> a
+rehearsalMark x = rehearsalMarkAt (_onset x) x
 
-rehearsalMarkDuring :: HasMeta a => Span -> RehearsalMark -> a -> a
-rehearsalMarkDuring s x = addMetaNote $ view event (s, x)
+rehearsalMarkAt :: HasMeta a => Time -> a -> a
+rehearsalMarkAt t = addMetaNote $ view event (t <-> t, RehearsalMark)
 
 withRehearsalMark :: (RehearsalMark -> Score a -> Score a) -> Score a -> Score a
 withRehearsalMark = withMeta
