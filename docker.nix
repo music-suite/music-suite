@@ -39,19 +39,24 @@ musicSuite = pkgs.stdenv.mkDerivation {
             ])
         )
        ];
-      # src = [ ./src ./music-suite.cabal ./cabal.project ./cabal.project.freeze ];
-      src = ./src;
-      # builder = "${bash}/bin/bash"; args = [ ./builder.sh ];
+      src = builtins.filterSource
+                (path: type:
+                        (baseNameOf path != ".git")
+                        && (baseNameOf path != "dist-newstyle")
+                        )
+                ./.;
       buildPhase = ''
-        export HOME=$TMP # https://github.com/NixOS/nixpkgs/issues/16144#issuecomment-225422439
-        cabal install && cabal build
+        export HOME=$TMP
+        set -e
+        cabal update
+        cabal build
       '';
       installPhase = ''
-        # TODO should work? cabal build
-        mkdir -p "$out/bin"
+        # TODO copy artefacts
+        mkdir -p "$out"
+        cp dist-newstyle "$out/dist123"
       '';
 
-      # TODO remove?
       shellHook = '';
         export PS1="music-suite-build> "
       '';
@@ -67,6 +72,8 @@ dockerTools.buildImage {
                 # TODO add Music Suite build env + products here
                 # Later: Remove build env, just runtime dependencies
                 musicSuite
+                pkgs.lilypond
+                (pkgs.haskellPackages.ghcWithPackages [])
              ];
 
   config = {
