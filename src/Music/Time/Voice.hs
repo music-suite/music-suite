@@ -282,7 +282,7 @@ noteToVoice :: Note a -> Voice a
 noteToVoice = view voice . pure
 
 -- | View a 'Voice' as a list of 'Note' values.
-notes :: Lens (Voice a) (Voice b) [Note a] [Note b]
+notes :: Iso (Voice a) (Voice b) [Note a] [Note b]
 notes = notesIgnoringMeta
 
 -- $smartConstructors
@@ -319,7 +319,7 @@ notes = notesIgnoringMeta
 -- @
 
 -- | View a score as a list of duration-value pairs. Analogous to 'triples'.
-pairs :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+pairs :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
 pairs = pairsIgnoringMeta
 
 -- | A voice is a list of notes up to meta-data. To preserve meta-data, use the more

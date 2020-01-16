@@ -1240,7 +1240,7 @@ TODO instead of using Transformable, show how to set duration explicitly via len
 ```music+haskell
 let
     melody = legato $ pseq [pseq [c,d,e,c], pseq [e,f], g|*2]
-    pedal = set era (melody^.era) g_
+    pedal = c `during` melody
 in compress 4 $ melody </> pedal
 ```
 
