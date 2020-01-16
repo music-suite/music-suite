@@ -1084,9 +1084,9 @@ TODO overlapping events:
 fermata StandardFermata (ppar [pseq[c,d] |/ 2,e,g]) |/ 4
 ```
 
-TODO apply at specific position
+TODO add fermata at specific position
 
-
+A fermata usually implies a unison cutoff of the prolonged notes, followed by a short break before continouing to the next beat. This can be made explicit by addng caesuras or breathing marks (commas). TODO
 
 ### Ritardando and accellerando
 
