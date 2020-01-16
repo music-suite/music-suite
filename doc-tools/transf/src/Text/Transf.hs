@@ -224,7 +224,8 @@ runTransform = go
     go (SingTrans (start, stop) f) as = do
       let bs = (sections start stop . lines) as :: [([Line], Maybe [Line])]
       let cs = fmap (first unlines . second (fmap unlines)) bs :: [(String, Maybe String)]
-      -- TODO parallelize!
+      -- TODO parallelize
+      -- Should be basically mapConcurrently except in the Context monad
       ds <- Traversable.mapM (secondM (Traversable.mapM f)) cs :: Context [(String, Maybe String)]
       return $ concatMap (\(a, b) -> a ++ fromMaybe [] b ++ "\n") ds
 
