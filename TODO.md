@@ -336,6 +336,9 @@ Consider switching to a decentralized issue tracker such as:
   - Cons:
     - No defaulting. Simple expressions like `c` will be ambigous.
       Ideally we would accept any type and default to Music/Score StandardNotate iff there is ambiguity.
+      In lieue of proper compiler support, we could do something like the following (for expressions in 'transf'):
+        - First try the general form (any Inspectable, no custom type hint). This will succeed if the user provided an expression with an unambigious type.
+        - Then try adding (Score StandardNote) and possibly other types in sequence. If they all fail, fail with the message from the original failure ("ambigous type").
 
 - Restore hslinks functoriality (commented out in source), maybe using hasktags
 
