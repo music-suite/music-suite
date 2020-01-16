@@ -355,7 +355,7 @@ header =
   --------------------------------------------------------------------------------
   -- Header added by transf begins here
   --------------------------------------------------------------------------------
-  {-# LANGUAGE TypeApplications, GADTs, FlexibleContexts, OverloadedStrings #-}
+  {-# LANGUAGE TypeApplications, GADTs, FlexibleContexts, OverloadedStrings, OverloadedLists, MonadComprehensions, ParallelListComp, TransformListComp #-}
   {- cabal:
       build-depends: base, music-suite
   -}

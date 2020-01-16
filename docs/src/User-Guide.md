@@ -1302,6 +1302,29 @@ stretch (1/4) $ do
 stretch (1/2) $ pseq [c..e]|/3 |> f |> g|*2
 ```
 
+TODO monad comprehensions:
+
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y] | x <- [c], y <- [d,e] ]
+```
+
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y] | x <- [c] | y <- [d,e] ]
+```
+
+TODO names of isMelodicConsonance/isConsonance is confusing
+
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y] | x <- view voice (fmap fromPitch $ enumChromaticFromTo c c''), y <- [d,e]
+  , isMelodicConsonance (x .-. y) && isConsonance (x .-. y) ]
+```
+
 
 It can be converted into a score by stretching each element and composing in sequence.
 

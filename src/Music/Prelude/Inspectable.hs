@@ -38,10 +38,9 @@ class Inspectable a where
 
 class InspectableNote a where
 
-  inspectableToNote :: a -> StandardNote
+  -- inspectableToNote :: a -> StandardNote
 
   inspectableToMusicNote :: a -> Music
-  inspectableToMusicNote = pure . inspectableToNote
 
 -- instance Inspectable (Score StandardNote) where
 --   inspectableToMusic = id
@@ -60,19 +59,22 @@ instance InspectableNote a => Inspectable (Score a) where
   inspectableToMusic = join . fmap inspectableToMusicNote
 
 instance InspectableNote Pitch where
-  inspectableToNote = fromPitch
+  inspectableToMusicNote = pure . fromPitch
 
 instance InspectableNote a => InspectableNote (Maybe a) where
-  inspectableToMusicNote = maybe mempty pure . fmap inspectableToNote
+  inspectableToMusicNote = maybe mempty id . fmap inspectableToMusicNote
 
 instance InspectableNote () where
-  inspectableToNote () = fromPitch c
+  inspectableToMusicNote () = fromPitch c
+
+instance InspectableNote a => InspectableNote [a] where
+  inspectableToMusicNote = mconcat . fmap inspectableToMusicNote
 
 instance InspectableNote a => Inspectable (Voice a) where
   inspectableToMusic = join . fmap inspectableToMusicNote . renderAlignedVoice . aligned 0 0
 
 instance InspectableNote a => Inspectable [Aligned (Voice a)] where
-  inspectableToMusic = rcat . fmap (fmap inspectableToNote . renderAlignedVoice)
+  inspectableToMusic = rcat . fmap (join . fmap inspectableToMusicNote . renderAlignedVoice)
   -- inspectableToMusic . rcat . fmap (preserveMeta $ asScore . fmap fromPitch . mcatMaybes . renderAlignedVoice)
 
 instance InspectableNote a => Inspectable (Note a) where
