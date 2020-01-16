@@ -17,7 +17,7 @@ music = id
   $ composer "Anonymous"
   $ timeSignature (3/8)
   $ timeSignatureDuring ((14*3/8) <-> 200) (4/8)
-  $ over (phrases . valuesV) (rotate 1)
+  $ over phrases (rotateValues 1)
   -- $ over (phrases.middleV) (octavesAbove 1)
   -- $ over phrases fuse
   $ catSep
@@ -25,6 +25,11 @@ music = id
   $ map voca [0..3]
 
 main  = defaultMain music
+
+rotateValues :: Int -> Voice a -> Voice a
+rotateValues n x = view voice $ fmap (view note) $ zip ds vs
+  where
+    (ds, vs) = unzip $ fmap (view $ from note) $ view notes x
 
 rotate :: Int -> [a] -> [a]
 rotate n xs = iterate rotate1 xs !! n
