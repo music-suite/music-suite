@@ -400,8 +400,9 @@ zipVoiceNoScale5 a b c d e = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoSca
 
 
 {-
-Naturality law:
 [NOTE this proof ignores meta-data and newtypes]
+
+Naturality law:
 
   ∀ f g ma mb.
   fmap@Voice (f *** g) (mzip ma mb)
@@ -468,7 +469,7 @@ Naturality law:
      in (zip cd cs)
 
   ∀ f g ma mb.
-  map (f *** g)
+  map (second (f *** g))
   (
     let
         (ad, as) = unzip ma
@@ -479,13 +480,104 @@ Naturality law:
   )
   =
     let
-        (ad, as) = unzip (fmap@Voice f ma)
-        (bd, bs) = unzip (fmap@Voice g mb)
+        (ad, as) = unzip (map (second f ma))
+        (bd, bs) = unzip (map (second g mb))
         cd = zipWith (*) ad bd
         cs = zipWith (,) as bs
      in (zip cd cs)
 
+  ∀ f g ma mb.
+  let
+      (ad, as) = unzip ma
+      (bd, bs) = unzip mb
+      cd = zipWith (*) ad bd
+      cs = zipWith (,) as bs
+   in map (second (f ***g)) (zip cd cs)
+  =
+  let
+      (ad, as) = unzip (map (second f ma))
+      (bd, bs) = unzip (map (second g mb))
+      cd = zipWith (*) ad bd
+      cs = zipWith (,) as bs
+   in zip cd cs
 
+  ∀ f g ma mb.
+  let
+      (ad, as) = unzip ma
+      (bd, bs) = unzip mb
+      cd = zipWith (*) ad bd
+      cs = zipWith (,) as bs
+   in zip cd (map (f *** g) cs)
+  =
+  let
+      (ad, as) = unzip (map (second f ma))
+      (bd, bs) = unzip (map (second g mb))
+      cd = zipWith (*) ad bd
+      cs = zipWith (,) as bs
+   in zip cd cs
+
+
+  ∀ f g ma mb.
+  let
+      (ad, as) = unzip ma
+      (bd, bs) = unzip mb
+      cd = zipWith (*) ad bd
+      cs = map (f *** g) (zipWith (,) as bs)
+   in zip cd cs
+  =
+  let
+      (ad, as) = unzip (map (second f ma))
+      (bd, bs) = unzip (map (second g mb))
+      cd = zipWith (*) ad bd
+      cs = zipWith (,) as bs
+   in zip cd cs
+
+  ∀ f g ma mb.
+  let
+      (ad, as) = unzip ma
+      (bd, bs) = unzip mb
+      cd = zipWith (*) ad bd
+      cs = zipWith (,) (map f as) (map g bs)
+   in zip cd cs
+  =
+  let
+      (ad, as) = unzip (map (second f ma))
+      (bd, bs) = unzip (map (second g mb))
+      cd = zipWith (*) ad bd
+      cs = zipWith (,) as bs
+   in zip cd cs
+
+  ∀ f g ma mb.
+  let
+      (ad, as) = unzip ma
+      (bd, bs) = unzip mb
+      cd = zipWith (*) ad bd
+      cs = zipWith (,) (map f as) (map g bs)
+   in zip cd cs
+  =
+  let
+      (ad, as) = second (map f) (unzip ma)
+      (bd, bs) = second (map g) (unzip mb)
+      cd = zipWith (*) ad bd
+      cs = zipWith (,) as bs
+   in zip cd cs
+
+  ∀ f g ma mb.
+  let
+      (ad, as) = unzip ma
+      (bd, bs) = unzip mb
+      cd = zipWith (*) ad bd
+      cs = zipWith (,) (map f as) (map g bs)
+   in zip cd cs
+  =
+  let
+      (ad, as) = unzip ma
+      (bd, bs) = unzip mb
+      cd = zipWith (*) ad bd
+      cs = zipWith (,) (map f as) (map g bs)
+   in zip cd cs
+
+   QED.
 
 Information preservation:
 
