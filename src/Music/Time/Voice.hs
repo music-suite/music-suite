@@ -104,6 +104,7 @@ import Data.String
 import Data.Traversable (Traversable)
 import Data.Typeable (Typeable)
 import Data.VectorSpace
+import GHC.Exts (IsList(..))
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Time.Internal.Util
@@ -161,6 +162,12 @@ instance MonadPlus Voice where
   mzero = mempty
 
   mplus = mappend
+
+instance IsList (Voice a) where
+  -- NOTE "ignoring meta" is a misnomer, see TODO.md
+  type Item (Voice a) = Note a
+  toList = view notesIgnoringMeta
+  fromList = view (re notesIgnoringMeta)
 
 instance Wrapped (Voice a) where
 
@@ -409,11 +416,11 @@ Naturality law:
     = mzip (fmap@Voice f ma) (fmap@Voice g mb)
 
   ∀ f g ma mb.
-  fmap@Voice (f *** g) (zipVoiceWith' (*) (,) ma mb)
-    = zipVoiceWith' (*) (,) (fmap@Voice f ma) (fmap@Voice g mb)
+  fmap@Voice (f *** g) (zipVoiceWith' (const) (,) ma mb)
+    = zipVoiceWith' (const) (,) (fmap@Voice f ma) (fmap@Voice g mb)
 
   ∀ f g ma mb.
-  fmap@Voice (f *** g) (zipVoiceWith' (*) (,) ma mb) = (
+  fmap@Voice (f *** g) (zipVoiceWith' (const) (,) ma mb) = (
     \f' g' xs ys -> let
         (ad, as) = unzip xs
         (bd, bs) = unzip ys
@@ -421,32 +428,14 @@ Naturality law:
         cs = zipWith g' as bs
      in (zip cd cs)
     )
-    (*) (,) (fmap@Voice f ma) (fmap@Voice g mb)
+    (const) (,) (fmap@Voice f ma) (fmap@Voice g mb)
 
   ∀ f g ma mb.
-  fmap@Voice (f *** g) (zipVoiceWith' (*) (,) ma mb) =
+  fmap@Voice (f *** g) (zipVoiceWith' (const) (,) ma mb) =
     let
         (ad, as) = unzip (fmap@Voice f ma)
         (bd, bs) = unzip (fmap@Voice g mb)
-        cd = zipWith (*) ad bd
-        cs = zipWith (,) as bs
-     in (zip cd cs)
-
-  ∀ f g ma mb.
-  fmap@Voice (f *** g)
-  (
-    let
-        (ad, as) = unzip ma
-        (bd, bs) = unzip mb
-        cd = zipWith (*) ad bd
-        cs = zipWith (,) as bs
-     in (zip cd cs)
-  )
-  =
-    let
-        (ad, as) = unzip (fmap@Voice f ma)
-        (bd, bs) = unzip (fmap@Voice g mb)
-        cd = zipWith (*) ad bd
+        cd = zipWith (const) ad bd
         cs = zipWith (,) as bs
      in (zip cd cs)
 
@@ -456,7 +445,7 @@ Naturality law:
     let
         (ad, as) = unzip ma
         (bd, bs) = unzip mb
-        cd = zipWith (*) ad bd
+        cd = zipWith (const) ad bd
         cs = zipWith (,) as bs
      in (zip cd cs)
   )
@@ -464,7 +453,25 @@ Naturality law:
     let
         (ad, as) = unzip (fmap@Voice f ma)
         (bd, bs) = unzip (fmap@Voice g mb)
-        cd = zipWith (*) ad bd
+        cd = zipWith (const) ad bd
+        cs = zipWith (,) as bs
+     in (zip cd cs)
+
+  ∀ f g ma mb.
+  fmap@Voice (f *** g)
+  (
+    let
+        (ad, as) = unzip ma
+        (bd, bs) = unzip mb
+        cd = zipWith (const) ad bd
+        cs = zipWith (,) as bs
+     in (zip cd cs)
+  )
+  =
+    let
+        (ad, as) = unzip (fmap@Voice f ma)
+        (bd, bs) = unzip (fmap@Voice g mb)
+        cd = zipWith (const) ad bd
         cs = zipWith (,) as bs
      in (zip cd cs)
 
@@ -474,7 +481,7 @@ Naturality law:
     let
         (ad, as) = unzip ma
         (bd, bs) = unzip mb
-        cd = zipWith (*) ad bd
+        cd = zipWith (const) ad bd
         cs = zipWith (,) as bs
      in (zip cd cs)
   )
@@ -482,7 +489,7 @@ Naturality law:
     let
         (ad, as) = unzip (map (second f ma))
         (bd, bs) = unzip (map (second g mb))
-        cd = zipWith (*) ad bd
+        cd = zipWith (const) ad bd
         cs = zipWith (,) as bs
      in (zip cd cs)
 
@@ -490,14 +497,14 @@ Naturality law:
   let
       (ad, as) = unzip ma
       (bd, bs) = unzip mb
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = zipWith (,) as bs
    in map (second (f ***g)) (zip cd cs)
   =
   let
       (ad, as) = unzip (map (second f ma))
       (bd, bs) = unzip (map (second g mb))
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = zipWith (,) as bs
    in zip cd cs
 
@@ -505,14 +512,14 @@ Naturality law:
   let
       (ad, as) = unzip ma
       (bd, bs) = unzip mb
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = zipWith (,) as bs
    in zip cd (map (f *** g) cs)
   =
   let
       (ad, as) = unzip (map (second f ma))
       (bd, bs) = unzip (map (second g mb))
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = zipWith (,) as bs
    in zip cd cs
 
@@ -521,14 +528,14 @@ Naturality law:
   let
       (ad, as) = unzip ma
       (bd, bs) = unzip mb
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = map (f *** g) (zipWith (,) as bs)
    in zip cd cs
   =
   let
       (ad, as) = unzip (map (second f ma))
       (bd, bs) = unzip (map (second g mb))
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = zipWith (,) as bs
    in zip cd cs
 
@@ -536,14 +543,14 @@ Naturality law:
   let
       (ad, as) = unzip ma
       (bd, bs) = unzip mb
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = zipWith (,) (map f as) (map g bs)
    in zip cd cs
   =
   let
       (ad, as) = unzip (map (second f ma))
       (bd, bs) = unzip (map (second g mb))
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = zipWith (,) as bs
    in zip cd cs
 
@@ -551,14 +558,14 @@ Naturality law:
   let
       (ad, as) = unzip ma
       (bd, bs) = unzip mb
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = zipWith (,) (map f as) (map g bs)
    in zip cd cs
   =
   let
       (ad, as) = second (map f) (unzip ma)
       (bd, bs) = second (map g) (unzip mb)
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = zipWith (,) as bs
    in zip cd cs
 
@@ -566,25 +573,42 @@ Naturality law:
   let
       (ad, as) = unzip ma
       (bd, bs) = unzip mb
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = zipWith (,) (map f as) (map g bs)
    in zip cd cs
   =
   let
       (ad, as) = unzip ma
       (bd, bs) = unzip mb
-      cd = zipWith (*) ad bd
+      cd = zipWith (const) ad bd
       cs = zipWith (,) (map f as) (map g bs)
    in zip cd cs
 
    QED.
 
 Information preservation:
+  ∀ ma mb.
+  fmap@Voice (const ()) ma = fmap@Voice (const ()) mb
+  ->
+  munzip (mzip ma mb) = (ma, mb)
+
+  ∀ ma mb.
+  map (second (const ())) ma = map (second (const ())) mb
+  ->
+  munzip (mzip ma mb) = (ma, mb)
+
+  ∀ ma mb.
+  map (second (const ())) ma = map (second (const ())) mb
+  ->
+  munzip (mzip ma mb) = (ma, mb)
+
+  TODO finish proof
+
+Note that MonadZip can not use zipVoiceScale: that would break Information preservation.
 
  -}
 instance MonadZip Voice where
-  mzip = zipVoiceScale
-  mzipWith = zipVoiceScaleWith
+  mzip = zipVoiceNoScale
 
 -- |
 -- Join the given voices by multiplying durations and combining values using the given function.
