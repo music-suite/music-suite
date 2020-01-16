@@ -78,7 +78,7 @@ transform:
 		pwd && \
 		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/About.md 		>About.md  && \
 		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/Usage.md 		>Usage.md   && \
-		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
+		( $(TRANSFORM) | $(RESOLVE_LINKS) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
 		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/Tutorial.md  	>Tutorial.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
