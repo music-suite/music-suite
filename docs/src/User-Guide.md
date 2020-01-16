@@ -1496,7 +1496,7 @@ TODO rename (Function -> ChordType or similar). Function implies context/directi
 TODO why does thirdMode not work?
 
 ```music+haskell
-inspectableToMusic $
+inspectableToMusic @[Mode Pitch] $
 
 [ phrygian
 , majorScale
@@ -1508,7 +1508,7 @@ inspectableToMusic $
 ```
 
 ```music+haskell
-inspectableToMusic $
+inspectableToMusic @[Scale Pitch] $
 
 [ modeToScale c phrygian
 , modeToScale d majorScale
@@ -1523,7 +1523,7 @@ inspectableToMusic $
 
 
 ```music+haskell
-inspectableToMusic $
+inspectableToMusic @[Function Pitch] $
 
 [ majorTriad
 , minorTriad
@@ -1534,7 +1534,7 @@ inspectableToMusic $
 ```
 
 ```music+haskell
-inspectableToMusic $
+inspectableToMusic @[Chord Pitch] $
 
 [ functionToChord g majorTriad
 , functionToChord c minorTriad
