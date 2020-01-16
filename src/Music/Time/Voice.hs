@@ -54,10 +54,6 @@ module Music.Time.Voice
     -- TODO clean
     withContext,
     -- voiceLens,
-
-    -- * Unsafe versions
-    notesIgnoringMeta,
-    pairsIgnoringMeta,
   )
 where
 
