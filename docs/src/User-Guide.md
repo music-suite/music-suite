@@ -98,7 +98,7 @@ c
 
 ## Duration and onset
 
-To change the duration of a note, use @[stretch] or @[compress]
+All notes we enter have duration `1` by default. To change this, we use @[stretch] and @[compress]
 
 
 ```music+haskell
@@ -113,16 +113,34 @@ stretch 2 c
 stretch (4+1/2) c
 ```
 
-We can also change the *onset* of a note using @[delay]:
+
+We count positions from the first beat in the first bar, so in 4/4 time, `0` means the first beat, `1/4` (or `0.25`) means the second beat and so on.
+
+All notes start at position `0` by default. We can use use @[delay] to move the onset of notes to the right.
 
 ```music+haskell
 delay 1 c
 ```
 
-TODO stretch/compress are related as follows:
+Negative numbers work too:
+
+```music+haskell
+delay (-0.25) $ delay 1 $ c
+```
+
+<!--
+Law: stretch/compress are related as follows:
 
 ```haskell
 compress x = stretch (1/x)
+```
+-->
+
+
+The `|*` and `|/` operators can be used as shorthands for `delay` and `compress`.
+
+```music+haskell
+(c |> d |> e |> c |> d|*2 |> d|*2)|/16
 ```
 
 ## Tuplets and ties
@@ -133,15 +151,7 @@ TODO these are added automatically
 c|*(9/8) |> d|*(7/8)
 ```
 
-
-### Shorthands
-
-
-The `|*` and `|/` operators can be used as shorthands for `delay` and `compress`.
-
-```music+haskell
-(c |> d |> e |> c |> d|*2 |> d|*2)|/16
-```
+## A few examples
 
 Here is a more complex example using function composition. The dot operator `.` is used to compose the function `up _P8` (transpose the music up one octave), `compress 2` ("compress" or "diminish" the music by a factor of two) and `delay 3` (delay the music by the duration of three whole notes). The composition applies the in left to right order.
 
