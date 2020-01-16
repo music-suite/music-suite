@@ -24,12 +24,8 @@ module Music.Time.Voice
     -- ** Zips
     unzipVoice,
     zipVoiceScale,
-    zipVoiceScale3,
-    zipVoiceScale4,
     zipVoiceNoScale,
     -- FIXME compose with (lens assoc unassoc) for the 3 and 4 versions
-    zipVoiceNoScale3,
-    zipVoiceNoScale4,
     zipVoiceScaleWith,
     zipVoiceWithNoScale,
     zipVoiceWith',
@@ -368,39 +364,9 @@ zipVoiceScale :: Voice a -> Voice b -> Voice (a, b)
 zipVoiceScale = zipVoiceScaleWith (,)
 
 -- |
--- Join the given voices by multiplying durations and pairing values.
-zipVoiceScale3 :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
-zipVoiceScale3 a b c = zipVoiceScale a (zipVoiceScale b c)
-
--- |
--- Join the given voices by multiplying durations and pairing values.
-zipVoiceScale4 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
-zipVoiceScale4 a b c d = zipVoiceScale a (zipVoiceScale b (zipVoiceScale c d))
-
--- |
--- Join the given voices by multiplying durations and pairing values.
-zipVoiceScale5 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice e -> Voice (a, (b, (c, (d, e))))
-zipVoiceScale5 a b c d e = zipVoiceScale a (zipVoiceScale b (zipVoiceScale c (zipVoiceScale d e)))
-
--- |
 -- Join the given voices by pairing values and selecting the first duration.
 zipVoiceNoScale :: Voice a -> Voice b -> Voice (a, b)
 zipVoiceNoScale = zipVoiceWithNoScale (,)
-
--- |
--- Join the given voices by pairing values and selecting the first duration.
-zipVoiceNoScale3 :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
-zipVoiceNoScale3 a b c = zipVoiceNoScale a (zipVoiceNoScale b c)
-
--- |
--- Join the given voices by pairing values and selecting the first duration.
-zipVoiceNoScale4 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
-zipVoiceNoScale4 a b c d = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale c d))
-
--- |
--- Join the given voices by pairing values and selecting the first duration.
-zipVoiceNoScale5 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice e -> Voice (a, (b, (c, (d, e))))
-zipVoiceNoScale5 a b c d e = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale c (zipVoiceNoScale d e)))
 
 
 {-
