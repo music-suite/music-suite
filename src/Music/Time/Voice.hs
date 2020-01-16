@@ -85,6 +85,7 @@ import Control.Lens hiding
 import Control.Monad
 import Control.Monad.Compose
 import Control.Monad.Plus
+import Control.Monad.Zip
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson as JSON
 import Data.AffineSpace
@@ -397,13 +398,110 @@ zipVoiceNoScale4 a b c d = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale
 zipVoiceNoScale5 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice e -> Voice (a, (b, (c, (d, e))))
 zipVoiceNoScale5 a b c d e = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale c (zipVoiceNoScale d e)))
 
+
+{-
+Naturality law:
+[NOTE this proof ignores meta-data and newtypes]
+
+  ∀ f g ma mb.
+  fmap@Voice (f *** g) (mzip ma mb)
+    = mzip (fmap@Voice f ma) (fmap@Voice g mb)
+
+  ∀ f g ma mb.
+  fmap@Voice (f *** g) (zipVoiceWith' (*) (,) ma mb)
+    = zipVoiceWith' (*) (,) (fmap@Voice f ma) (fmap@Voice g mb)
+
+  ∀ f g ma mb.
+  fmap@Voice (f *** g) (zipVoiceWith' (*) (,) ma mb) = (
+    \f' g' xs ys -> let
+        (ad, as) = unzip xs
+        (bd, bs) = unzip ys
+        cd = zipWith f' ad bd
+        cs = zipWith g' as bs
+     in (zip cd cs)
+    )
+    (*) (,) (fmap@Voice f ma) (fmap@Voice g mb)
+
+  ∀ f g ma mb.
+  fmap@Voice (f *** g) (zipVoiceWith' (*) (,) ma mb) =
+    let
+        (ad, as) = unzip (fmap@Voice f ma)
+        (bd, bs) = unzip (fmap@Voice g mb)
+        cd = zipWith (*) ad bd
+        cs = zipWith (,) as bs
+     in (zip cd cs)
+
+  ∀ f g ma mb.
+  fmap@Voice (f *** g)
+  (
+    let
+        (ad, as) = unzip ma
+        (bd, bs) = unzip mb
+        cd = zipWith (*) ad bd
+        cs = zipWith (,) as bs
+     in (zip cd cs)
+  )
+  =
+    let
+        (ad, as) = unzip (fmap@Voice f ma)
+        (bd, bs) = unzip (fmap@Voice g mb)
+        cd = zipWith (*) ad bd
+        cs = zipWith (,) as bs
+     in (zip cd cs)
+
+  ∀ f g ma mb.
+  fmap@Voice (f *** g)
+  (
+    let
+        (ad, as) = unzip ma
+        (bd, bs) = unzip mb
+        cd = zipWith (*) ad bd
+        cs = zipWith (,) as bs
+     in (zip cd cs)
+  )
+  =
+    let
+        (ad, as) = unzip (fmap@Voice f ma)
+        (bd, bs) = unzip (fmap@Voice g mb)
+        cd = zipWith (*) ad bd
+        cs = zipWith (,) as bs
+     in (zip cd cs)
+
+  ∀ f g ma mb.
+  map (f *** g)
+  (
+    let
+        (ad, as) = unzip ma
+        (bd, bs) = unzip mb
+        cd = zipWith (*) ad bd
+        cs = zipWith (,) as bs
+     in (zip cd cs)
+  )
+  =
+    let
+        (ad, as) = unzip (fmap@Voice f ma)
+        (bd, bs) = unzip (fmap@Voice g mb)
+        cd = zipWith (*) ad bd
+        cs = zipWith (,) as bs
+     in (zip cd cs)
+
+
+
+Information preservation:
+
+ -}
+instance MonadZip Voice where
+  mzip = zipVoiceScale
+  mzipWith = zipVoiceScaleWith
+
 -- |
 -- Join the given voices by multiplying durations and combining values using the given function.
 zipVoiceScaleWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceScaleWith = zipVoiceWith' (*)
 
 -- |
--- Join the given voices without combining durations.
+-- Join the given voices without combining durations. The durations are taken from the first
+-- voice.
 zipVoiceWithNoScale :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWithNoScale = zipVoiceWith' const
 
