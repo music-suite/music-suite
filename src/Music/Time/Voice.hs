@@ -15,9 +15,6 @@ module Music.Time.Voice
 
     -- * Traversal
 
-    -- ** Separating rhythms and values
-    valuesV,
-    durationsV,
 
     -- ** Maps
     mapWithOnsetRelative,
@@ -680,12 +677,7 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy me
 withContext :: Voice a -> Voice (Ctxt a)
 withContext = over valuesV addCtxt
 
--- durationsV and valuesV are useful, but slightly odd
--- What happens if the user changes the length of the list?
--- Is there a more safe idiom that can be used instead?
--- TODO more elegant definition?
-
--- | A lens to the durations in a voice.
+-- Warning: Breaks the lens laws, unless the length of the list is unmodified.
 durationsV :: Lens' (Voice a) [Duration]
 durationsV = lens getDurs (flip setDurs)
   where
@@ -695,7 +687,7 @@ durationsV = lens getDurs (flip setDurs)
     setDurs ds as = zipVoiceWith' (\a b -> a) (\a b -> b) (mconcat $ map durToVoice ds) as
     durToVoice d = stretch d $ pure ()
 
--- | A lens to the values in a voice.
+-- Warning: Breaks the lens laws, unless the length of the list is unmodified.
 valuesV :: Lens (Voice a) (Voice b) [a] [b]
 valuesV = lens getValues (flip setValues)
   where
