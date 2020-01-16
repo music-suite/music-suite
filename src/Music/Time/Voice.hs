@@ -5,6 +5,7 @@ module Music.Time.Voice
     Voice,
 
     -- * Construction
+    -- $smartConstructors
     voice,
     notes,
     pairs,
@@ -14,7 +15,6 @@ module Music.Time.Voice
     noteToVoice,
 
     -- * Traversal
-
 
     -- ** Maps
     mapWithOnsetRelative,
@@ -277,13 +277,15 @@ voice :: Getter [Note a] (Voice a)
 voice = from notesIgnoringMeta
 {-# INLINE voice #-}
 
+-- | Create a single-note score.
+noteToVoice :: Note a -> Voice a
+noteToVoice = view voice . pure
+
 -- | View a 'Voice' as a list of 'Note' values.
 notes :: Lens (Voice a) (Voice b) [Note a] [Note b]
 notes = notesIgnoringMeta
 
-noteToVoice :: Note a -> Voice a
-noteToVoice = view voice . pure
-
+-- $smartConstructors
 --
 -- @
 -- 'view' 'notes'                        :: 'Voice' a -> ['Note' a]

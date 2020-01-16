@@ -21,7 +21,6 @@ module Music.Score.Phrases
 
     -- ** Utility
     mVoicePVoice,
-    mVoicePVoiceIgnoringMeta,
     singleMVoice,
     -- oldSingleMVoice,
     mapPhrasesWithPrevAndCurrentOnset,
@@ -150,7 +149,7 @@ mVoicePVoiceIgnoringMeta = iso mvoiceToPVoice pVoiceToMVoice
     mvoiceToPVoice =
       map
         ( bimap voiceToRest voiceToPhrase
-            . bimap (^. from pairsIgnoringMeta) (^. from pairsIgnoringMeta)
+            . bimap (^. from pairs) (^. from pairs)
         )
         . groupDiff' (isJust . snd)
         . view pairs
