@@ -1316,6 +1316,21 @@ inspectableToMusic @(Voice [Pitch]) $
 [ [x,y] | x <- [c] | y <- [d,e] ]
 ```
 
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y,z] | x <- [c] | y <- [d,e] | z <- [f,g] ]
+```
+
+```music+haskell
+inspectableToMusic @(Voice [StandardNote]) $
+
+[ dynamics' .~ d $ p
+  | p <- [c, ab, fs, g]
+  | d <- [ppp, ff, mp, mf]
+  ]
+```
+
 TODO names of isMelodicConsonance/isConsonance is confusing
 
 ```music+haskell
