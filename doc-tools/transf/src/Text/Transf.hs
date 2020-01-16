@@ -63,6 +63,10 @@ import Data.Maybe
 import Data.Either (partitionEithers)
 import Data.Semigroup
 -- import qualified Music.Prelude.Basic as Music
+import GHC.Conc (numCapabilities)
+import Control.Concurrent.QSem
+import Control.Concurrent.QSem
+import System.IO.Unsafe (unsafePerformIO)
 
 import qualified Data.Text
 import Data.Traversable
@@ -129,14 +133,22 @@ runContext x = do
   where
     runC = runWriterT . runErrorT . runContextT_
 
+-- | Like 'traverse', but parallelize up to numCapabilities threads.
 traverseC :: (a -> Context b) -> [a] -> Context [b]
 traverseC f xs = do
-  rs <- liftIO $ mapConcurrently (runWriterT . runErrorT . runContextT_ . f) xs
+  rs <- liftIO $ mapConcurrently (withCapLock . runWriterT . runErrorT . runContextT_ . f) xs
   case requireAll rs of
     Left e -> throwError e
     Right xs -> for xs $ \(x, actions) -> do
       tell actions
       pure x
+
+
+withCapLock :: IO a -> IO a
+withCapLock = bracket_ (waitQSem _maxThreadLock) (signalQSem _maxThreadLock)
+
+_maxThreadLock :: QSem
+_maxThreadLock = unsafePerformIO $ newQSem numCapabilities
 
 -- | Return first 'Left' case, or all the right values if there are no left cases.
 requireAll :: [(Either e a, b)] -> Either e [(a, b)]
@@ -399,7 +411,8 @@ musicT opts = transform "music" $ \input -> do
   exists <- liftIO $ System.Directory.doesFileExist (name ++ ".png")
   unless exists $ do
     writeFile (name ++ ".hs") (header <> indent 2 input)
-    liftIO $ void $ readProcess "cabal" ["run", name ++ ".hs", "--", "-f", "ly", "--layout=inline", "-o", name ++ ".ly"] ""
+    liftIO $ void $ readProcess "cabal" ["exec", "--", "ghc", "--make", name ++ ".hs"] ""
+    liftIO $ void $ readProcess name ["-f", "ly", "--layout=inline", "-o", name ++ ".ly"] ""
     --  For the source of these flags, see:
     --    https://music.stackexchange.com/questions/15544/lilypond-how-to-control-the-paper-size-to-create-images
     let makeLy = do
