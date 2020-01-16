@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Text.Transf
@@ -59,6 +60,7 @@ import Data.Default
 import Data.Hashable
 import qualified Data.List as List
 import Data.Maybe
+import Data.Either (partitionEithers)
 import Data.Semigroup
 -- import qualified Music.Prelude.Basic as Music
 
@@ -126,6 +128,22 @@ runContext x = do
   return r
   where
     runC = runWriterT . runErrorT . runContextT_
+
+traverseC :: (a -> Context b) -> [a] -> Context [b]
+traverseC f xs = do
+  rs <- liftIO $ mapConcurrently (runWriterT . runErrorT . runContextT_ . f) xs
+  case requireAll rs of
+    Left e -> throwError e
+    Right xs -> for xs $ \(x, actions) -> do
+      tell actions
+      pure x
+
+-- | Return first 'Left' case, or all the right values if there are no left cases.
+requireAll :: [(Either e a, b)] -> Either e [(a, b)]
+requireAll xs =
+  case partitionEithers $ fmap (\(e,b) -> fmap (, b) e) xs of
+    (e : _, _)  -> Left e
+    ([],    xs) -> Right xs
 
 runContextT :: Monad m => ContextT m a -> m (Either String a)
 runContextT = runContextT' True
@@ -224,9 +242,7 @@ runTransform = go
     go (SingTrans (start, stop) f) as = do
       let bs = (sections start stop . lines) as :: [([Line], Maybe [Line])]
       let cs = fmap (first unlines . second (fmap unlines)) bs :: [(String, Maybe String)]
-      -- TODO parallelize
-      -- Should be basically mapConcurrently except in the Context monad
-      ds <- Traversable.mapM (secondM (Traversable.mapM f)) cs :: Context [(String, Maybe String)]
+      ds <- traverseC (secondM (traverse f)) cs :: Context [(String, Maybe String)]
       return $ concatMap (\(a, b) -> a ++ fromMaybe [] b ++ "\n") ds
 
 ----------------------------------------------------------------------------------------------------
@@ -501,6 +517,7 @@ oneOf p q x = p x || q x
 
 parallel_ :: [IO ()] -> IO ()
 parallel_ = foldb concurrently_ (return ())
+
 
 -- concurrently_ :: IO a -> IO b -> IO ()
 -- concurrently_ = concurrentlyWith (\x y -> ())
