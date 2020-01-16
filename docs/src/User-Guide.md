@@ -1271,22 +1271,22 @@ A @[Voice] represents a sequence of values, each tagged with duration.
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
 
-stretch (1/4) $ [cs, bb, a |* 2]^.voice
+stretch (1/4) $ [cs, bb, a |* 2]
 ```
 
 ```music+haskell
 inspectableToMusic @(Voice (Maybe Pitch)) $
 
-stretch (1/4) $ [c |* 2, rest, e]^.voice
+(1/4) *| [c |* 2, rest, e]
 ```
 
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
 
 stretch (1/4) $ do
-  x <- [c, d, e]^.voice |/ 2
-  y <- [c', b, bb]^.voice |/ 2
-  [x, g, y |*4 ]^.voice
+  x <- [c, d, e] |/ 2
+  y <- [c', b, bb] |/ 2
+  [x, g, y |*4 ]
 ```
 
 
@@ -1294,8 +1294,8 @@ stretch (1/4) $ do
 inspectableToMusic @(Voice Pitch) $
 
 stretch (1/4) $ do
-  x <- [c, d, e]^.voice |/ 2
-  [x, b, c' |*4 ]^.voice
+  x <- [c, d, e] |/ 2
+  [x, b, c' |*4 ]
 ```
 
 ```music+haskell
