@@ -389,6 +389,7 @@ header =
       build-depends: base, music-suite
   -}
   import Music.Prelude
+  import qualified Data.List
   main :: IO ()
   main = defaultMain $ id @Music $
   --------------------------------------------------------------------------------

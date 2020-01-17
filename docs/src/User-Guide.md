@@ -1519,15 +1519,16 @@ traverseOf t _ [d,d,d |* 2,d]
 canon </> renderAlignedVoice rh
   where
     rh :: IsPitch a => Aligned (Voice a)
-    rh = fmap (const c) $ aligned 0 0 $ view durationsAsVoice (toRelativeTime onsets)
+    rh = fmap (fmap $ const c) $ aligned 0 0 $ view durationsAsVoice (tail $ toRelativeTime onsets)
+
 
     onsets :: [Time]
-    onsets = view onset <$> toListOf events canon
+    onsets = Data.List.nub $ toListOf (events . each . onset) canon
 
     canon = rcat
       [ theme
       , theme |* (3/2)
-      , theme |* (4/3)
+      , theme |* 2
       ]
     theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
 ```
