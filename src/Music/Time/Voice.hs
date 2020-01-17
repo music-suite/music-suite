@@ -14,21 +14,16 @@ module Music.Time.Voice
     -- * Conversion
     noteToVoice,
 
-    -- * Traversal
-
-    -- ** Maps
+    -- * Maps
     mapWithOnsetRelative,
     mapWithOffsetRelative,
     mapWithEraRelative,
 
-    -- ** Zips
-    unzipVoice,
-    zipVoiceScale,
-    zipVoiceNoScale,
-    -- FIXME compose with (lens assoc unassoc) for the 3 and 4 versions
-    zipVoiceScaleWith,
-    zipVoiceWithNoScale,
-    zipVoiceWith',
+    -- * Points in a voice
+    onsetsRelative,
+    offsetsRelative,
+    midpointsRelative,
+    erasRelative,
 
     -- * Fusion
     fuse,
@@ -39,16 +34,20 @@ module Music.Time.Voice
     coverRests,
 
     -- * Homophonic/Polyphonic texture
+    -- ** Zips and unzip
+    zipVoiceScale,
+    zipVoiceNoScale,
+    -- FIXME compose with (lens assoc unassoc) for the 3 and 4 versions
+    zipVoiceScaleWith,
+    zipVoiceWithNoScale,
+    zipVoiceWith',
+    unzipVoice,
+
+    -- ** Merge
     sameDurations,
     mergeIfSameDuration,
     mergeIfSameDurationWith,
     homoToPolyphonic,
-
-    -- * Points in a voice
-    onsetsRelative,
-    offsetsRelative,
-    midpointsRelative,
-    erasRelative,
 
     -- * Context
     -- TODO clean
