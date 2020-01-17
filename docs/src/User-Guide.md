@@ -1490,8 +1490,27 @@ In the functional programming commonity, traverals have a powerful generalizatio
 
 TODO monomorphic and polymorphic traversals
 
+Folds: `toListOf`, `anyOf`, `allOf`
+
+Traversals: `over`, `traverseOf/forOf`, arbitrary effects (e.g. State, Writer, Maybe)
+
 ## Traversing the notes in a voice
 
+```music+haskell
+inspectableToMusic @(Voice [StandardNote]) $
+
+over t (\x -> if x^.duration > 1 then up m2 x else x) [d,d,d |* 2,d]
+  where
+    t = notes . each
+```
+
+```TODOmusic+haskell
+inspectableToMusic @(Voice [StandardNote]) $
+
+traverseOf t _ [d,d,d |* 2,d]
+  where
+    t = notes . each
+```
 
 
 ## Traversing all the events in a score
