@@ -1894,6 +1894,15 @@ TODO this is not documentation, move to some other location. Listing all "bad re
     rh = stretchTo 1 . pseq
 ```
 
+```music+haskell
+rcat
+      [ theme
+      , theme |* (3/2)
+      , theme |* 2
+      ]
+    theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
+```
+
 TODO this should use nested tuplets:
 
 ```music+haskell
