@@ -1534,17 +1534,15 @@ Another example is the notion of scales and chords. These are (conceptually) inf
 
 TODO rename (Function -> ChordType or similar). Function implies context/direction and is confusing for other reasons too.
 
-TODO why does thirdMode not work?
-
 ```music+haskell
 inspectableToMusic @[Mode Pitch] $
 
 [ phrygian
 , majorScale
--- , bluesMajor
+, bluesMajor
 , wholeTone
 , octatonic
--- , thirdMode
+, thirdMode
 ]
 ```
 
@@ -1553,10 +1551,10 @@ inspectableToMusic @[Scale Pitch] $
 
 [ modeToScale c phrygian
 , modeToScale d majorScale
--- , modeToScale e bluesMajor
+, modeToScale e bluesMajor
 , modeToScale f wholeTone
 , modeToScale g octatonic
--- , modeToScale a thirdMode
+, modeToScale a thirdMode
 ]
 ```
 
