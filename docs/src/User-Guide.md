@@ -1515,7 +1515,22 @@ traverseOf t _ [d,d,d |* 2,d]
 
 ## Traversing all the events in a score
 
-TODO
+```music+haskell
+canon </> renderAlignedVoice rh
+  where
+    rh :: IsPitch a => Aligned (Voice a)
+    rh = fmap (const c) $ aligned 0 0 $ view durationsAsVoice (toRelativeTime onsets)
+
+    onsets :: [Time]
+    onsets = view onset <$> toListOf events canon
+
+    canon = rcat
+      [ theme
+      , theme |* (3/2)
+      , theme |* (4/3)
+      ]
+    theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
+```
 
 ## Traversing pitches
 
@@ -1658,7 +1673,11 @@ TODO others?
 
 # Melody and counterpoint
 
-TODO example melodic constraints (no tritones, including outlines, no adjacent jump)
+TODO example melodic constraints (no tritones, including outlines, no adjacent jump). See e.g. Jeppesen.
+
+TODO curves/functions for melodic shapes, mapped to a scale
+
+TODO representing upbeats with (Aligned Voice), preferably with smart constructor
 
 TODO detecting parallel, constant and contrary motion
 
