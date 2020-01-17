@@ -551,44 +551,29 @@ Information preservation:
   ∀ ma mb.
   fmap@Voice (const ()) ma = fmap@Voice (const ()) mb
   ->
-  munzip (mzip ma mb) = (ma, mb)
-
-  ∀ ma mb.
-  map (second (const ())) ma = map (second (const ())) mb
-  ->
-  munzip (mzip ma mb) = (ma, mb)
-
-  ∀ ma mb.
-  map (second (const ())) ma = map (second (const ())) mb
-  ->
-  munzip (mzip ma mb) = (ma, mb)
-
-  ∀ ma mb.
-  zip (durations ma [()..]) = zip (durations mb [()..])
-  ->
-  munzip (mzip ma mb) = (ma, mb)
+  munzip@Voice (mzip@Voice ma mb) = (ma, mb)
 
   ∀ ma mb.
   durations ma = durations mb
   ->
-  munzip (mzip ma mb) = (ma, mb)
+  munzip@Voice (mzip@Voice ma mb) = (ma, mb)
 
   ∀ ma mb.
   durations ma = durations mb
   ->
-  munzip (zipVoiceWith const (,) ma mb) = (ma, mb)
+  munzip@Voice (zipVoiceWith const (,) ma mb) = (ma, mb)
 
   ∀ ma mb.
   durations ma = durations mb
   ->
-  fmap@Voice (zipVoiceWith const (,) ma mb) = ma
+  fmap@Voice fst (zipVoiceWith const (,) ma mb) = ma
     /\
-  fmap@Voice (zipVoiceWith const (,) ma mb) = mb
+  fmap@Voice snd (zipVoiceWith const (,) ma mb) = mb
 
   ∀ ma mb.
   durations ma = durations mb
   ->
-  fmap@Voice (
+  fmap@Voice fst (
              let
                 (ad, as) = unzip ma
                 (bd, bs) = unzip mb
@@ -597,7 +582,7 @@ Information preservation:
              in zip cd cs
     ) = ma
     /\
-  fmap@Voice (
+  fmap@Voice snd (
              let
                 (ad, as) = unzip ma
                 (bd, bs) = unzip mb
