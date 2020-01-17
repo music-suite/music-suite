@@ -1900,6 +1900,7 @@ rcat
       , theme |* (3/2)
       , theme |* 2
       ]
+  where
     theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
 ```
 
