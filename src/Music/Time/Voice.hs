@@ -563,7 +563,117 @@ Information preservation:
   ->
   munzip (mzip ma mb) = (ma, mb)
 
-  TODO finish proof
+  ∀ ma mb.
+  zip (durations ma [()..]) = zip (durations mb [()..])
+  ->
+  munzip (mzip ma mb) = (ma, mb)
+
+  ∀ ma mb.
+  durations ma = durations mb
+  ->
+  munzip (mzip ma mb) = (ma, mb)
+
+  ∀ ma mb.
+  durations ma = durations mb
+  ->
+  munzip (zipVoiceWith const (,) ma mb) = (ma, mb)
+
+  ∀ ma mb.
+  durations ma = durations mb
+  ->
+  fmap@Voice (zipVoiceWith const (,) ma mb) = ma
+    /\
+  fmap@Voice (zipVoiceWith const (,) ma mb) = mb
+
+  ∀ ma mb.
+  durations ma = durations mb
+  ->
+  fmap@Voice (
+             let
+                (ad, as) = unzip ma
+                (bd, bs) = unzip mb
+                cd = zipWith const ad bd
+                cs = zipWith (,) as bs
+             in zip cd cs
+    ) = ma
+    /\
+  fmap@Voice (
+             let
+                (ad, as) = unzip ma
+                (bd, bs) = unzip mb
+                cd = zipWith const ad bd
+                cs = zipWith (,) as bs
+             in zip cd cs
+    ) = mb
+
+  ∀ ma mb.
+  durations ma = durations mb
+  ->
+  map (second fst) (
+             let
+                (ad, as) = unzip ma
+                (bd, bs) = unzip mb
+                cd = zipWith const ad bd
+                cs = zipWith (,) as bs
+             in zip cd cs
+    ) = ma
+    /\
+  map (second snd) (
+             let
+                (ad, as) = unzip ma
+                (bd, bs) = unzip mb
+                cd = zipWith const ad bd
+                cs = zipWith (,) as bs
+             in zip cd cs
+    ) = mb
+
+  ∀ ad as bd bs.
+  ad = bd
+  ->
+  map (second fst) (
+             let
+                cd = zipWith const ad bd
+                cs = zipWith (,) as bs
+             in zip cd cs
+    ) = zip ad as
+    /\
+  map (second snd) (
+             let
+                cd = zipWith const ad bd
+                cs = zipWith (,) as bs
+             in zip cd cs
+    ) = zip bd bs
+
+  ∀ ad as bd bs.
+  ad = bd
+  ->
+  map (second fst) (
+             let
+                cs = zipWith (,) as bs
+             in zip ad cs
+    ) = zip ad as
+    /\
+  map (second snd) (
+             let
+                cs = zipWith (,) as bs
+             in zip ad cs
+    ) = zip bd bs
+
+  ∀ ad as bd bs.
+  ad = bd
+  ->
+  map (second fst) (zip ad (zip as bs)) = zip ad as
+    /\
+  map (second snd) (zip ad (zip as bs)) = zip bd bs
+
+  ∀ ad as bd bs.
+  ad = bd
+  ->
+  zip ad as = zip ad as
+    /\
+  zip ad bs = zip bd bs
+
+  QED.
 
 Note that MonadZip can not use zipVoiceScale: that would break Information preservation.
 
