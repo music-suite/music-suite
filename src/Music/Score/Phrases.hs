@@ -102,6 +102,11 @@ instance (HasPart' a, Ord (Part a), a ~ b) => HasPhrases (Score a) (Score b) a b
   mvoices = extracted . each . singleMVoice
 
 {-
+instance HasPhrases (Note a) (Note b) a b where
+  mvoices f (Note (d, x)) = f (Voice [
+-}
+
+{-
 TODO get rid of the (a ~ b) restriction
 
 To understand why it is there in the first place:

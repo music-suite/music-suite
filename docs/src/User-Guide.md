@@ -1332,6 +1332,9 @@ inspectableToMusic @(Voice [Pitch]) $
 [ [x,y,z] | x <- [c] | y <- [d,e] | z <- [f,g] ]
 ```
 
+
+TODO we should never see Music/StandardNote in the user guide (specific/nice-looking types instead). The only purpose of Music/StandardNote is to be defaults/final objects.
+
 ```music+haskell
 inspectableToMusic @(Voice [StandardNote]) $
 
@@ -1487,6 +1490,10 @@ In the functional programming commonity, traverals have a powerful generalizatio
 
 TODO monomorphic and polymorphic traversals
 
+## Traversing the notes in a voice
+
+
+
 ## Traversing all the events in a score
 
 TODO
@@ -1507,6 +1514,15 @@ TODO
 
 TODO
 
+## Filtered traversals
+
+```music+haskell
+inspectableToMusic @(Voice [StandardNote]) $
+
+over t (up m2) [d,d,d |* 2,d]
+  where
+    t = notes . each . filtered (\x -> x^.duration < 2)
+```
 
 # Harmony
 

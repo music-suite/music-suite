@@ -31,6 +31,9 @@ module Music.Prelude.Standard
     set,
     over,
     view,
+    mapped,
+    each,
+    filtered,
 
     -- ** Orchestration
     singleParts,
@@ -47,7 +50,7 @@ module Music.Prelude.Standard
 where
 
 import qualified Codec.Midi
-import Control.Lens (mapped, over, set, view)
+import Control.Lens (mapped, over, set, view, each, filtered)
 import qualified Data.Music.MusicXml
 import Data.Typeable
 import Music.Articulation
