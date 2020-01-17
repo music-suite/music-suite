@@ -1543,6 +1543,9 @@ over t (up m2) [d,d,d |* 2,d]
     t = notes . each . filtered (\x -> x^.duration < 2)
 ```
 
+
+
+
 # Harmony
 
 ## Scales and modes
@@ -1653,7 +1656,7 @@ TODO "native Haskell" example, with search tree pruning, a la Sodoku example in 
 TODO others?
 
 
-# Counterpoint
+# Melody and counterpoint
 
 TODO example melodic constraints (no tritones, including outlines, no adjacent jump)
 
