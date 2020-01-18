@@ -1692,7 +1692,18 @@ TODO the Common.Pitch type has built-in support for chromatic/diatonic harmony. 
 
 # Constraints
 
+
+## Logic programming
+
 TODO MonadLogic example?
+
+Generate two melodies from a set of pitches and compose iff there are no dissonances.
+
+TODO
+
+Generate/distribute notes/phrases for two musicians and compose iff and nobody is asked to play more than one actions simultaneously.
+
+## Constraint programming
 
 TODO FD-constraint example? http://overtond.blogspot.com/2008/07/pre.html
 
