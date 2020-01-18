@@ -1424,7 +1424,7 @@ delay 2 -- TODO lose, see wall of shame
 
 [ av |/ 2
 , av |/ 4
-, delay 1 (av |* (2/3))
+, av |* (2/3)
 ]
   where
     av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
