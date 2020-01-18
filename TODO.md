@@ -115,7 +115,11 @@ Consider switching to a decentralized issue tracker such as:
 
 - [ ] Do not draw cresc/dim for voices like `[mf, f, p, mf]` (e.g. only a single note local max/min)
   - In other words, for a line to be drawn there must be a monotonic increase/decrease spanning >2 notes
+  - OTOH, if the durations are long enough (e.g. all >1/2) we can render the marks as we do now:
+    - Draw cresc/dim: `pseq [c,level ff d,level _p e, d] |* (3/4)`
+    - Should not draw cresc/dim:  `pseq [c,level ff d,level _p e, d] |* (1/8)`
   - Levels should be drawn as they are now
+
 
 - [X] Improve rcat: do not use Enum
   - [X] Make Common.Part use NonEmpty division list for Subpart (part I is the default for all instruments)
