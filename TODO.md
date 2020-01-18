@@ -113,6 +113,10 @@ Consider switching to a decentralized issue tracker such as:
 
 - Replace (Option :. Last) with Maybe now that Semigroup is a superclass of Monoid
 
+- [ ] Do not draw cresc/dim for voices like `[mf, f, p, mf]` (e.g. only a single note local max/min)
+  - In other words, for a line to be drawn there must be a monotonic increase/decrease spanning >2 notes
+  - Levels should be drawn as they are now
+
 - [X] Improve rcat: do not use Enum
   - [X] Make Common.Part use NonEmpty division list for Subpart (part I is the default for all instruments)
   - [X] New type and impl of rcat and </>

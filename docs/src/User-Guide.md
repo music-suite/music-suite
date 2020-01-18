@@ -1450,13 +1450,20 @@ TODO renderPatternsAbs
 
 @[split]
 
-@[rev]
+@[rev] reverse, retrograde
 
 ```music+haskell
 let
     melody = accent $ legato $ pseq [d, pseq [g,fs]|/2,bb|*2]|/4
 in melody |> rev melody
 ```
+
+```music+haskell
+music |> rev music
+  where
+    music = (1/16) *| pseq [c|*3, legato $ pseq [accent eb, fs|*3, a, level ff b|*3], gs, f|*3, d]
+```
+
 
 ## Repetition and variation
 
