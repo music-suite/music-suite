@@ -1430,6 +1430,8 @@ delay 2 -- TODO lose, see wall of shame
     av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
 ```
 
+TODO `snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]`
+
 
 ## Patterns
 
@@ -1609,6 +1611,7 @@ inspectableToMusic @[Mode Pitch] $
 [ phrygian
 , majorScale
 , bluesMajor
+, bluesMinor
 , wholeTone
 , octatonic
 , thirdMode
