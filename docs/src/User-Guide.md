@@ -1414,18 +1414,20 @@ Here is an example. Without upbeat:
 (pseq [g_,a_,b_]|/2 |> pseq [c, c, d, d]) |/ 4
 ```
 
-TODO intuitive way of setting alignment...
+
+With upbeat.
 
 ```music+haskell
 inspectableToMusic @[Aligned (Voice Pitch)] $
 
-delay 1
+delay 2 -- TODO lose, see wall of shame
 
-[ aligned 0 0 c
-, aligned 0 (1.5/view duration v) v |/ 4
+[ av |/ 2
+, av |/ 4
+, delay 1 (av |* (2/3))
 ]
   where
-    v = ([g_,a_,b_]|/2 <> [c, c, d, d])
+    av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
 ```
 
 
