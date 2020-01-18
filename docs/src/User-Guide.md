@@ -1947,6 +1947,29 @@ pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 stretch (1/2) $ pseq [c..e]|/3 |> f |> g|*2
 ```
 
+### Alignment/pickups
+
+This should render
+
+```music+haskell
+rcat $ fmap renderAlignedVoice $
+[ aligned 0 0 c
+, aligned 0 (1.5/view duration v) v |/ 4
+]
+  where
+    v = ([g_,a_,b_]|/2 <> [c, c, d, d])
+```
+very much like this (except without the initial rests):
+```music+haskell
+rcat $ fmap renderAlignedVoice $ delay 1
+[ aligned 0 0 c
+, aligned 0 (1.5/view duration v) v |/ 4
+]
+  where
+    v = ([g_,a_,b_]|/2 <> [c, c, d, d])
+```
+In other words, scores with events before time 0 should be treated as pickups and rendered in the same time signature as the first bar (starting at 0).
+
 
 ### Staves
 
