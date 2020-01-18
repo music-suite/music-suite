@@ -121,6 +121,10 @@ Consider switching to a decentralized issue tracker such as:
   - Levels should be drawn as they are now
 
 
+- hslinks steals syntax from TypeApplications
+  - E.g. `inspectableToMusic @[Pitch]`
+
+
 - [X] Improve rcat: do not use Enum
   - [X] Make Common.Part use NonEmpty division list for Subpart (part I is the default for all instruments)
   - [X] New type and impl of rcat and </>

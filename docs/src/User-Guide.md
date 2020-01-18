@@ -1408,6 +1408,27 @@ TODO sequential composition of aligned voices "snap to next stressed beat".
 Natural way of modelling pickups/upbeats etc. Can be combined with "beat hierarchy" model
 
 
+Here is an example. Without upbeat:
+
+```music+haskell
+(pseq [g_,a_,b_]|/2 |> pseq [c, c, d, d]) |/ 4
+```
+
+TODO intuitive way of setting alignment...
+
+```music+haskell
+inspectableToMusic @[Aligned (Voice Pitch)] $
+
+delay 1
+
+[ aligned 0 0 c
+, aligned 0 (1.5/view duration v) v |/ 4
+]
+  where
+    v = ([g_,a_,b_]|/2 <> [c, c, d, d])
+```
+
+
 ## Patterns
 
 TODO a Pattern can be throught of as a generalization of a rhythm or beat. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself, though the repetition frequence may be very long.
