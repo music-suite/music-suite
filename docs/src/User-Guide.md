@@ -1461,7 +1461,7 @@ in melody |> rev melody
 ```music+haskell
 music |> rev music
   where
-    music = (1/16) *| pseq [c|*3, legato $ pseq [accent eb, fs|*3, a, level ff b|*3], gs, f|*3, d]
+    music = (1/16) *| pseq [c|*3, legato $ pseq [accent eb, fs|*3, a, b|*3], gs, f|*3, d]
 ```
 
 
