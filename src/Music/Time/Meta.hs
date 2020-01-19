@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- |
@@ -124,7 +125,7 @@ instance Monoid Meta where
 wrapTMeta :: forall a. TAttributeClass a => a -> Meta
 wrapTMeta a = Meta $ Map.singleton key $ wrapTAttr a
   where
-    key = show $ typeOf (undefined :: a)
+    key = show $ typeRep (Proxy @a)
 
 -- | Convert something from meta-data.
 unwrapMeta :: forall a. AttributeClass a => Meta -> Maybe a
@@ -132,14 +133,14 @@ unwrapMeta (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
   where
     -- Note: unwrapAttr should never fail
 
-    key = show . typeOf $ (undefined :: a)
+    key = show $ typeRep (Proxy @a)
 
 -- | Convert something from meta-data.
 --   Also works with transformable attributes
 wrapMeta :: forall a. AttributeClass a => a -> Meta
 wrapMeta a = Meta $ Map.singleton key $ wrapAttr a
   where
-    key = show $ typeOf (undefined :: a)
+    key = show $ typeRep (Proxy @a)
 
 -- | Type class for things which have meta-data.
 --
