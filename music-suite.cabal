@@ -124,7 +124,6 @@ library
                         Music.Pitch.Literal.Interval
                         Music.Pitch.Augmentable
                         Music.Pitch.Alterable
-                        Data.PairMonad
                         Data.AffineSpace.Point.Offsets
                         Data.Functor.Couple
                         Data.Functor.Context
