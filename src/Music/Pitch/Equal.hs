@@ -31,6 +31,7 @@ module Music.Pitch.Equal
   )
 where
 
+import Data.Proxy
 import Control.Applicative
 import Control.Monad
 import Data.AffineSpace
@@ -94,18 +95,17 @@ instance IsNat a => VectorSpace (Equal a) where
 
   (*^) = (*)
 
--- Convenience to avoid ScopedTypeVariables etc
-getSize :: IsNat a => Equal a -> Nat a
+getSize :: IsNat a => f a -> Nat a
 getSize _ = nat
 
 -- | Size of this type (value not evaluated).
 --
--- >>> size (undefined :: Equal N2)
+-- >>> size (Proxy :: N2)
 -- 2
 --
--- >>> size (undefined :: Equal N12)
+-- >>> size (Proxy :: N12)
 -- 12
-size :: IsNat a => Equal a -> Int
+size :: IsNat a => proxy a -> Int
 size = natToZ . getSize
 
 -- TODO I got this part wrong
@@ -156,10 +156,10 @@ equalToRatio x = 2 ** (realToFrac (fromEqual x) / realToFrac (size x))
 -- >>> (2 :: Equal12) + cast (2 :: Equal24)
 -- 3 :: Equal12
 cast :: (IsNat a, IsNat b) => Equal a -> Equal b
-cast = cast' undefined
+cast = cast' Proxy
 
-cast' :: (IsNat a, IsNat b) => Equal b -> Equal a -> Equal b
-cast' bDummy aDummy@(Equal a) = Equal $ (a * size bDummy) `div` size aDummy
+cast' :: (IsNat a, IsNat b) => proxy b -> Equal a -> Equal b
+cast' p aDummy@(Equal a) = Equal $ (a * size p) `div` size aDummy
 
 type Equal6 = Equal N6
 
