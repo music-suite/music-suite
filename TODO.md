@@ -40,7 +40,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - Fix all compiler warnings
 
-- Get rid of all CPP
+- [X] Get rid of all CPP
 
 - Remove/fix code stubs/undefined
 
