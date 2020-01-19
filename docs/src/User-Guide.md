@@ -1404,7 +1404,6 @@ TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" o
 
 TODO Aligned, "floaters"
 
-TODO sequential composition of aligned voices "snap to next stressed beat".
 Natural way of modelling pickups/upbeats etc. Can be combined with "beat hierarchy" model
 
 
@@ -1430,7 +1429,8 @@ delay 2 -- TODO lose, see wall of shame
     av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
 ```
 
-TODO `snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]`
+TODO sequential composition of aligned voices "snap to next stressed beat":
+`snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]`
 
 
 ## Patterns
@@ -1473,7 +1473,31 @@ TODO renderPatternsAbs
 
 ## Splitting and reversing
 
+@[Splittable]
+
 @[split]
+@[beginning]
+@[ending]
+
+```music+haskell
+inspectableToMusic @[Voice Pitch] $
+
+[ beginning 0.5 melody
+, ending 0.5 melody
+]
+  where
+    melody = {- accent $ legato -} mconcat [d, mconcat [g,fs]|/2,bb|*2]|/4
+```
+
+```music+haskell
+inspectableToMusic @[Voice Pitch] $
+
+[ beginning (1/2+1/8) melody
+, ending (1/2+1/8) melody
+]
+  where
+    melody = {- accent $ legato -} mconcat [d, mconcat [g,fs]|/2,bb|*2]|/4
+```
 
 @[rev] reverse, retrograde
 
