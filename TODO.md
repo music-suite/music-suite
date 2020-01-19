@@ -326,6 +326,8 @@ Consider switching to a decentralized issue tracker such as:
 
 - Generic derivation of HasPitch etc. Case study: Time.Pattern.Lunga.
 
+- Make doc generation work in CI (again)
+
 - IDE allowing "preview on hover"
   - Normal text editor
   - When moving around in a single file (with/without a 'main' function) any hovered expression should
