@@ -301,7 +301,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - Get rid of duplication in music-suite.cabal
 
-- https://github.com/music-suite/music-score/issues/340
+- [X] https://github.com/music-suite/music-score/issues/340
 
 - https://github.com/music-suite/music-score/issues/298
 
