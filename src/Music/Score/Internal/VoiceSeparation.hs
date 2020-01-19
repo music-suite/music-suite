@@ -51,9 +51,9 @@ It is essentially brute-force at is has to generate all partitions
 (using setPartitionsWithKParts or similar), and then filter.
 
 Yes we have lazy evalutation, but look at the numbers below.
+
+    partitionWeighted :: Set a -> (Set a -> Bool) -> (Set a -> Double) -> Set (Set a)
 -}
-partitionWeighted :: Set a -> (Set a -> Bool) -> (Set a -> Double) -> Set (Set a)
-partitionWeighted = undefined
 
 {-
 When applied to (bar/part-wise) voice sep, k will almost always be in [1..4].
