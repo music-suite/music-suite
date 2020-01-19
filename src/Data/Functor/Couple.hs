@@ -1,7 +1,7 @@
 
 
-{-# LANGUAGE CPP,
-             GeneralizedNewtypeDeriving,
+{-# LANGUAGE
+    GeneralizedNewtypeDeriving,
              DeriveDataTypeable,
              DeriveFunctor,
              DeriveTraversable,
