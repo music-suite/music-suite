@@ -183,7 +183,6 @@ library
                         Music.Time.Internal.Convert
                         Music.Time.Internal.Util
                         Music.Time.Internal.Transform
-                        Music.Score.Internal.Data
                         Music.Score.Internal.Quantize
                         Music.Score.Internal.VoiceSeparation
                         Music.Score.Internal.Instances
