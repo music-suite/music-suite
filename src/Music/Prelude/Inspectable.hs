@@ -37,7 +37,6 @@ class Inspectable a where
   inspectableToMusic :: a -> Music
 
 class InspectableNote a where
-
   -- inspectableToNote :: a -> StandardNote
 
   inspectableToMusicNote :: a -> Music
@@ -81,7 +80,8 @@ instance InspectableNote a => Inspectable (Aligned (Voice a)) where
 
 instance InspectableNote a => Inspectable [Aligned (Voice a)] where
   inspectableToMusic = rcat . fmap (join . fmap inspectableToMusicNote . renderAlignedVoice)
-  -- inspectableToMusic . rcat . fmap (preserveMeta $ asScore . fmap fromPitch . mcatMaybes . renderAlignedVoice)
+
+-- inspectableToMusic . rcat . fmap (preserveMeta $ asScore . fmap fromPitch . mcatMaybes . renderAlignedVoice)
 
 instance InspectableNote a => Inspectable (Note a) where
   inspectableToMusic x = inspectableToMusic $ [x] ^. voice
@@ -144,7 +144,6 @@ instance Inspectable Duration where
 
 instance Inspectable [Span] where
   inspectableToMusic xs = rcat $ fmap inspectableToMusic xs
-
 
 instance Inspectable [Voice Pitch] where
   inspectableToMusic = asScore . rcat . fmap (fmap fromPitch) . fmap (renderAlignedVoice . aligned 0 0)

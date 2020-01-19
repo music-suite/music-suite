@@ -50,7 +50,7 @@ module Music.Prelude.Standard
 where
 
 import qualified Codec.Midi
-import Control.Lens (mapped, over, set, view, each, filtered)
+import Control.Lens (each, filtered, mapped, over, set, view)
 import qualified Data.Music.MusicXml
 import Data.Typeable
 import Music.Articulation

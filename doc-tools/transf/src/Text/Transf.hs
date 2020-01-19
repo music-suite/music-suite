@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TupleSections #-}
 
 module Text.Transf
   ( -- * Basic types
@@ -50,6 +50,10 @@ where
 
 import Control.Applicative
 import Control.Concurrent.Async
+-- import qualified Music.Prelude.Basic as Music
+
+import Control.Concurrent.QSem
+import Control.Concurrent.QSem
 import Control.Exception
 import Control.Monad
 import Control.Monad.Error
@@ -57,26 +61,22 @@ import Control.Monad.Plus
 import Control.Monad.Writer hiding ((<>))
 import qualified Data.Char as Char
 import Data.Default
+import Data.Either (partitionEithers)
 import Data.Hashable
 import qualified Data.List as List
 import Data.Maybe
-import Data.Either (partitionEithers)
 import Data.Semigroup
--- import qualified Music.Prelude.Basic as Music
-import GHC.Conc (numCapabilities)
-import Control.Concurrent.QSem
-import Control.Concurrent.QSem
-import System.IO.Unsafe (unsafePerformIO)
-
 import qualified Data.Text
 import Data.Traversable
 import qualified Data.Traversable as Traversable
 import Data.Typeable
+import GHC.Conc (numCapabilities)
 import Language.Haskell.Interpreter hiding (eval)
 import NeatInterpolation (text)
 import Numeric
 import qualified System.Directory
 import System.IO (hPutStr, hPutStrLn, stderr)
+import System.IO.Unsafe (unsafePerformIO)
 import System.Process
 import Prelude hiding (mapM, readFile, writeFile)
 import qualified Prelude
@@ -143,7 +143,6 @@ traverseC f xs = do
       tell actions
       pure x
 
-
 withCapLock :: IO a -> IO a
 withCapLock = bracket_ (waitQSem _maxThreadLock) (signalQSem _maxThreadLock)
 
@@ -153,9 +152,9 @@ _maxThreadLock = unsafePerformIO $ newQSem numCapabilities
 -- | Return first 'Left' case, or all the right values if there are no left cases.
 requireAll :: [(Either e a, b)] -> Either e [(a, b)]
 requireAll xs =
-  case partitionEithers $ fmap (\(e,b) -> fmap (, b) e) xs of
-    (e : _, _)  -> Left e
-    ([],    xs) -> Right xs
+  case partitionEithers $ fmap (\(e, b) -> fmap (,b) e) xs of
+    (e : _, _) -> Left e
+    ([], xs) -> Right xs
 
 runContextT :: Monad m => ContextT m a -> m (Either String a)
 runContextT = runContextT' True
@@ -531,7 +530,6 @@ oneOf p q x = p x || q x
 
 parallel_ :: [IO ()] -> IO ()
 parallel_ = foldb concurrently_ (return ())
-
 
 -- concurrently_ :: IO a -> IO b -> IO ()
 -- concurrently_ = concurrentlyWith (\x y -> ())

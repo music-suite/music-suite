@@ -65,14 +65,13 @@ aligned t d a = Aligned ((t, d), a)
 
 -- | Align so that the given local duration occurs at the given time.
 alignTo :: (Transformable a, HasDuration a) => Time -> Duration -> a -> Aligned a
-alignTo t d x = aligned 0 (d/view duration x) x
+alignTo t d x = aligned 0 (d / view duration x) x
 
 -- | Upbeat composition.
 --
 -- @a ||> b@ is the same as @a <> b@ aligned to the offset of @b@ (and therefore also onset of @b@).
 (||>) :: (Transformable a, HasDuration a, Semigroup a) => a -> a -> Aligned a
 a ||> b = alignTo 0 (view duration a) (a <> b)
-
 
 instance Show a => Show (Aligned a) where
   show (Aligned ((t, d), v)) = "aligned (" ++ show t ++ ") (" ++ show d ++ ") (" ++ show v ++ ")"

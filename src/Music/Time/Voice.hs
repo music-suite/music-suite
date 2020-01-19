@@ -34,6 +34,7 @@ module Music.Time.Voice
     coverRests,
 
     -- * Homophonic/Polyphonic texture
+
     -- ** Zips and unzip
     zipVoiceScale,
     zipVoiceNoScale,
@@ -52,9 +53,10 @@ module Music.Time.Voice
     -- * Context
     -- TODO clean
     withContext,
-    -- voiceLens,
   )
 where
+
+-- voiceLens,
 
 import Control.Applicative
 import Control.Lens hiding
@@ -92,7 +94,7 @@ import Data.String
 import Data.Traversable (Traversable)
 import Data.Typeable (Typeable)
 import Data.VectorSpace
-import GHC.Exts (IsList(..))
+import GHC.Exts (IsList (..))
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Time.Internal.Util
@@ -152,9 +154,12 @@ instance MonadPlus Voice where
   mplus = mappend
 
 instance IsList (Voice a) where
+
   -- NOTE "ignoring meta" is a misnomer, see TODO.md
   type Item (Voice a) = Note a
+
   toList = view notesIgnoringMeta
+
   fromList = view (re notesIgnoringMeta)
 
 instance Wrapped (Voice a) where
@@ -364,7 +369,6 @@ zipVoiceScale = zipVoiceScaleWith (,)
 -- Join the given voices by pairing values and selecting the first duration.
 zipVoiceNoScale :: Voice a -> Voice b -> Voice (a, b)
 zipVoiceNoScale = zipVoiceWithNoScale (,)
-
 
 {-
 [NOTE this proof ignores meta-data and newtypes]
