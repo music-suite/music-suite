@@ -91,7 +91,6 @@ class HasDuration a => HasPosition a where
 instance HasPosition Span where
   _era = id
 
-#ifndef GHCI
 instance (HasPosition a, Transformable a) => HasDuration [a] where
   _duration x = _offset x .-. _onset x
 
@@ -100,8 +99,6 @@ instance (HasPosition a, Transformable a) => HasPosition [a] where
     where
       f  = foldr min 0 . fmap _onset
       g = foldr max 0 . fmap _offset
-#endif
-#line 123
 
 -- |
 -- Position of the given value.

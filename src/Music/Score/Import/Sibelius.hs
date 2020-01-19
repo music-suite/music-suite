@@ -1,6 +1,6 @@
 
 {-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving, NoMonomorphismRestriction,
-             ConstraintKinds, FlexibleContexts, TypeFamilies, CPP, ViewPatterns #-}
+             ConstraintKinds, FlexibleContexts, TypeFamilies, ViewPatterns #-}
 
 module Music.Score.Import.Sibelius (
         IsSibelius(..),
