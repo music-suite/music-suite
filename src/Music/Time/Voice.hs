@@ -797,13 +797,10 @@ mergeIfSameDurationWith f a b
 --     dup x = (x,x)
 --
 -- splitLatterToAssureSameDurationWith :: (b -> (b, b)) -> Voice b -> Voice b -> Voice b
--- splitLatterToAssureSameDurationWith = undefined
 
 -- polyToHomophonic      :: [Voice a] -> Maybe (Voice [a])
--- polyToHomophonic = undefined
 --
 -- polyToHomophonicForce :: [Voice a] -> Voice [a]
--- polyToHomophonicForce = undefined
 
 -- | Split a homophonic texture into a polyphonic one. The returned voice list will
 -- have as many elements as the chord with the fewest number of notes.
@@ -818,16 +815,12 @@ homoToPolyphonic xs = case nvoices xs of
     maybeMinimum xs = if null xs then Nothing else Just (minimum xs)
 
 -- changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
--- changeCrossing = undefined
 --
 -- changeCrossingBy :: Ord b => (a -> b) -> Voice a -> Voice a -> (Voice a, Voice a)
--- changeCrossingBy = undefined
 --
 -- processExactOverlaps :: (a -> a -> (a, a)) -> Voice a -> Voice a -> (Voice a, Voice a)
--- processExactOverlaps = undefined
 --
 -- processExactOverlaps' :: (a -> b -> Either (a,b) (b,a)) -> Voice a -> Voice b -> (Voice (Either b a), Voice (Either a b))
--- processExactOverlaps' = undefined
 
 -- | Returns the onsets of all notes in a voice given the onset of the first note.
 onsetsRelative :: Time -> Voice a -> [Time]
