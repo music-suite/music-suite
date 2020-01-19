@@ -30,9 +30,6 @@ module Music.Score.Import.Midi
 where
 
 import Codec.Midi (Midi)
--- import           Control.Reactive          hiding (Event)
--- import qualified Control.Reactive          as R
--- import           Control.Reactive.Midi
 
 import qualified Codec.Midi as Midi
 import Control.Applicative
@@ -83,7 +80,6 @@ type IsMidi a =
 -- -- type SimpleMidi2 = [[(Span, Int, Int)]] -- outer: track, inner: channel, time, pitch, vel
 -- --
 -- -- foo :: SimpleMidi2
--- -- foo = undefined
 --
 -- mapWithIndex :: (Int -> a -> b) -> [a] -> [b]
 -- mapWithIndex f = zipWith f [0..]
@@ -98,45 +94,40 @@ type IsMidi a =
 -- -- Convert a score from a Midi representation.
 -- --
 fromMidi :: IsMidi a => Midi -> Score a
-fromMidi m = undefined
+fromMidi = error "TODO midi import" . getMidi
 
---   where
---
--- toAspects :: [[Event (Midi.Channel,Midi.Key,Midi.Velocity)]] -> [Event (Part,Int,Int)]
--- toAspects = mapWithIndex (\trackN events -> over (mapped.event) (\(s,(ch,key,vel)) -> undefined))
---
--- getMidi :: Midi.Midi -> [[Event (Midi.Channel,Midi.Key,Midi.Velocity)]]
--- getMidi (Midi.Midi fileType timeDiv tracks) = id
---       $ compress (ticksp timeDiv)
---       $ fmap mcatMaybes
---       $ fmap snd
---       $ fmap (List.mapAccumL g mempty)
---       $ fmap mcatMaybes $ over (mapped.mapped) getMsg tracks
---   where
---     g keyStatus (t,onOff,c,p,v) =
---       ( updateKeys onOff p (fromIntegral t) keyStatus
---       , (if onOff then Nothing else Just (
---         (Data.Maybe.fromMaybe 0 (Map.lookup (fromIntegral t) keyStatus)<->fromIntegral t,(c,p,60))^.event))
---       )
---     -- TODO also store dynamics in pitch map (to use onset value rather than offset value)
---     -- For now just assume 60
---     updateKeys True  p t = Map.insert p t
---     updateKeys False p _ = Map.delete p
---
---     -- Amount to compress time (after initially treating each tick as duration 1)
---     ticksp (Midi.TicksPerBeat n)     = 1 / fromIntegral n
---     ticksp (Midi.TicksPerSecond _ _) = error "fromMidi: Can not parse TickePerSecond-based files"
---
--- getMsg (t, Midi.NoteOff c p v) = Just (t,False,c,p,v)
--- getMsg (t, Midi.NoteOn c p 0)  = Just (t,False,c,p,0)
--- getMsg (t, Midi.NoteOn c p v)  = Just (t,True,c,p,v)
--- -- TODO key pressure
--- -- control change
--- -- program change
--- -- channel pressure
--- -- pitch wheel
--- -- etc.
--- getMsg _ = Nothing
+getMidi :: Midi.Midi -> [[Event (Midi.Channel,Midi.Key,Midi.Velocity)]]
+getMidi (Midi.Midi fileType timeDiv tracks) = id
+      $ compress (ticksp timeDiv)
+      $ fmap mcatMaybes
+      $ fmap snd
+      $ fmap (List.mapAccumL g mempty)
+      $ fmap mcatMaybes $ over (mapped.mapped) getMsg tracks
+  where
+    g keyStatus (t,onOff,c,p,v) =
+      ( updateKeys onOff p (fromIntegral t) keyStatus
+      , (if onOff then Nothing else Just (
+        (Data.Maybe.fromMaybe 0 (Map.lookup (fromIntegral t) keyStatus)<->fromIntegral t,(c,p,60))^.event))
+      )
+    -- TODO also store dynamics in pitch map (to use onset value rather than offset value)
+    -- For now just assume 60
+    updateKeys True  p t = Map.insert p t
+    updateKeys False p _ = Map.delete p
+
+    -- Amount to compress time (after initially treating each tick as duration 1)
+    ticksp (Midi.TicksPerBeat n)     = 1 / fromIntegral n
+    ticksp (Midi.TicksPerSecond _ _) = error "fromMidi: Can not parse TickePerSecond-based files"
+
+getMsg (t, Midi.NoteOff c p v) = Just (t,False,c,p,v)
+getMsg (t, Midi.NoteOn c p 0)  = Just (t,False,c,p,0)
+getMsg (t, Midi.NoteOn c p v)  = Just (t,True,c,p,v)
+-- TODO key pressure
+-- control change
+-- program change
+-- channel pressure
+-- pitch wheel
+-- etc.
+getMsg _ = Nothing
 --
 
 -- Map each track to a part (scanning for ProgramChange, name etc)
