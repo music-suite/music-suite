@@ -12,7 +12,6 @@ module Music.Pitch.Clef
     symbolName,
     symbolPitch,
     positionPitch,
-    pitchPosition,
 
     -- ** Properties
     isModernClef,
@@ -101,13 +100,7 @@ symbolPitch CClef = Just c
 symbolPitch FClef = Just d_
 symbolPitch _ = Nothing
 
--- TODO consolidate with common
-pitchPosition :: Clef -> Pitch -> Maybe StaffLines
-pitchPosition (Clef (s, o, l)) x = undefined
-  where
-    numbersPerOctave = 7
-    referencePitch = symbolPitch s :: Maybe Pitch
-
+-- TODO also define the inverse of (positionPitch c) for any c
 positionPitch :: Clef -> StaffLines -> Maybe Pitch
 positionPitch (Clef (s, o, l)) x = fmap (upDiatonic relativePosition) referencePitch
   where
