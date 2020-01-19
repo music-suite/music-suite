@@ -29,13 +29,10 @@
 -- (Ordinary barlines are generated automatically, see also "Music.Score.Meta.Time").
 module Music.Score.Meta.Barline
   ( -- * Barline type
-    BarlineType (..),
-    Barline,
+    Barline(..),
 
     -- ** Adding barlines to scores
     barline,
-    doubleBarline,
-    finalBarline,
     barlineDuring,
 
     -- ** Extracting barlines
@@ -66,26 +63,13 @@ import Music.Score.Pitch
 import Music.Time
 import Music.Time.Reactive
 
--- | Represents a barline.
---
--- TODO repeats
-data Barline = Barline BarlineType
-  deriving (Eq, Ord, Show, Typeable)
-
-data BarlineType = StandardBarline | DoubleBarline | FinalBarline
+-- | Represents an explicitly added barline.
+data Barline = StandardBarline | DoubleBarline | FinalBarline
   deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a barline over the whole score.
 barline :: (HasMeta a, HasPosition a) => Barline -> a -> a
 barline c x = barlineDuring (_era x) c x
-
--- | Add a barline over the whole score.
-doubleBarline :: (HasMeta a, HasPosition a) => Barline -> a -> a
-doubleBarline = undefined
-
--- | Add a barline over the whole score.
-finalBarline :: (HasMeta a, HasPosition a) => Barline -> a -> a
-finalBarline = undefined
 
 -- | Add a barline to the given score.
 barlineDuring :: HasMeta a => Span -> Barline -> a -> a
