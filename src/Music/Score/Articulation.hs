@@ -1,6 +1,5 @@
 
 {-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
@@ -127,28 +126,6 @@ articulation' = articulation
 --
 articulations' :: (HasArticulations s t, s ~ t) => Traversal' s (Articulation s)
 articulations' = articulations
-
-#define PRIM_ARTICULATION_INSTANCE(TYPE)       \
-                                               \
-type instance Articulation TYPE = TYPE;        \
-type instance SetArticulation a TYPE = a;      \
-                                               \
-instance (Transformable a, a ~ Articulation a, SetArticulation TYPE a ~ TYPE) \
-  => HasArticulation TYPE a where {            \
-  articulation = ($)              } ;          \
-                                               \
-instance (Transformable a, a ~ Articulation a, SetArticulation TYPE a ~ TYPE) \
-  => HasArticulations TYPE a where {           \
-  articulations = ($)               } ;        \
-
-PRIM_ARTICULATION_INSTANCE(())
-PRIM_ARTICULATION_INSTANCE(Bool)
-PRIM_ARTICULATION_INSTANCE(Ordering)
-PRIM_ARTICULATION_INSTANCE(Char)
-PRIM_ARTICULATION_INSTANCE(Int)
-PRIM_ARTICULATION_INSTANCE(Integer)
-PRIM_ARTICULATION_INSTANCE(Float)
-PRIM_ARTICULATION_INSTANCE(Double)
 
 
 type instance Articulation (c,a)              = Articulation a

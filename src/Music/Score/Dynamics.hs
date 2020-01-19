@@ -1,6 +1,5 @@
 
 {-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 
@@ -121,28 +120,6 @@ dynamic' = dynamic
 -- | Access all dynamics.
 dynamics' :: (HasDynamics s t, s ~ t) => Traversal' s (Dynamic s)
 dynamics' = dynamics
-
-#define PRIM_DYNAMIC_INSTANCE(TYPE)       \
-                                          \
-type instance Dynamic TYPE = TYPE;        \
-type instance SetDynamic a TYPE = a;      \
-                                          \
-instance (Transformable a, a ~ Dynamic a, SetDynamic TYPE a ~ TYPE) \
-  => HasDynamic TYPE a where {            \
-  dynamic = ($)              } ;          \
-                                          \
-instance (Transformable a, a ~ Dynamic a, SetDynamic TYPE a ~ TYPE) \
-  => HasDynamics TYPE a where {           \
-  dynamics = ($)               } ;        \
-
-PRIM_DYNAMIC_INSTANCE(())
-PRIM_DYNAMIC_INSTANCE(Bool)
-PRIM_DYNAMIC_INSTANCE(Ordering)
-PRIM_DYNAMIC_INSTANCE(Char)
-PRIM_DYNAMIC_INSTANCE(Int)
-PRIM_DYNAMIC_INSTANCE(Integer)
-PRIM_DYNAMIC_INSTANCE(Float)
-PRIM_DYNAMIC_INSTANCE(Double)
 
 type instance Dynamic (c,a)               = Dynamic a
 type instance SetDynamic b (c,a)          = (c,SetDynamic b a)
