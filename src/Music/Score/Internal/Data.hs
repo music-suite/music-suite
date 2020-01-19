@@ -1,6 +1,4 @@
 
-{-# LANGUAGE CPP #-}
-
 module Music.Score.Internal.Data (getData) where
 
 import qualified System.IO.Unsafe
