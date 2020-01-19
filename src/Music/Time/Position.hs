@@ -1,5 +1,4 @@
 
-{-# LANGUAGE CPP                        #-}
 
 -- |
 -- Provides a way to query a value for its 'position'.
