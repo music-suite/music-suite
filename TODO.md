@@ -93,9 +93,8 @@ Consider switching to a decentralized issue tracker such as:
   - [ ] Make CI validate MusicXML 3.0 output (using its XSD schema)
   - [ ] Make CI run Lilypond on all examples to assure there are no errors
 
-- [ ] Make documentation generation compile/work with the new build system
+- [X] Make documentation generation compile/work with the new build system
   - [X] Make sure doc generation/doctests are run in CI
-  - [ ] Use hslinks or similar (disabled in Makefile for now)
   - [X] Make transf generate music files:
     - [X] Use [entry-point] as per above.
     - [X] Add something to Transf.hs to turn E into "main = Music.IO.defaultMain (E)"
@@ -120,9 +119,10 @@ Consider switching to a decentralized issue tracker such as:
     - Should not draw cresc/dim:  `pseq [c,level ff d,level _p e, d] |* (1/8)`
   - Levels should be drawn as they are now
 
-
-- hslinks steals syntax from TypeApplications
-  - E.g. `inspectableToMusic @[Pitch]`
+- hslinks:
+  - Restore hslinks functionality (commented out in source), maybe using hasktags
+    - hslinks steals syntax from TypeApplications
+      - E.g. `inspectableToMusic @[Pitch]`
 
 
 - [X] Improve rcat: do not use Enum
@@ -357,7 +357,6 @@ Consider switching to a decentralized issue tracker such as:
         - First try the general form (any Inspectable, no custom type hint). This will succeed if the user provided an expression with an unambigious type.
         - Then try adding (Score StandardNote) and possibly other types in sequence. If they all fail, fail with the message from the original failure ("ambigous type").
 
-- Restore hslinks functionality (commented out in source), maybe using hasktags
 
 - [X] For each instrument we want to know:
         - Classification:
