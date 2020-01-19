@@ -24,6 +24,11 @@ module Music.Pitch.Intonation
     -- * Specific intonations
     -- standardTuning,
     standardIntonation,
+
+    just,
+
+    -- * Spectral dissonance
+    chordDiss,
   )
 where
 
@@ -41,6 +46,7 @@ import Data.VectorSpace
 import Music.Pitch.Absolute
 import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Pitch
+import Music.Pitch.Common.Spell
 import Music.Pitch.Literal as Intervals
 
 newtype Tuning i = Tuning {getTuning :: i -> Double}
@@ -114,6 +120,29 @@ fiftyThreeToneEqual = tetTune ddddddd6 where ddddddd6 = 31 *^ _P8 ^-^ 53 *^ _P5 
 -- |  Modern standard intonation, i.e. 12-TET with @a = 440 Hz@.
 standardIntonation :: Intonation Pitch
 standardIntonation = intone (a, 440) twelveToneEqual
+
+-- TODO partial
+just :: Tuning Interval
+just = Tuning justT'
+
+justT' i = 2**(fromIntegral o) * go (spell usingSharps s)
+  where
+    (o,s) = separate i
+    go i | i == _P1 = 1
+         | i == _M2 = 9/8
+         | i == _M3 = 5/4
+         | i == _P4 = 4/3
+         | i == _P5 = 3/2
+         | i == _M6 = 5/3
+         | i == _M7 = 15/8
+         | i == _A1 = (5/3)*(5/4)/2
+         | i == _A2 = (15/8)*(5/4)/2 -- or minor third
+         | i == _A4 = (9/8)*(5/4)
+         | i == _A5 = (5/4)*(5/4)
+         | i == _A6 = (7/4)
+         | otherwise = error $ "justT got" ++ show i
+
+
 {-
 Possible instances for numeric types based on standard intonation.
 
@@ -132,3 +161,12 @@ instance HasResolution a => IsInterval (Fixed a) where
 instance Integral a => IsInterval (Ratio a) where
     fromInterval x = realToFrac (fromInterval x :: Double)
 -}
+
+-- Sort a chord based on dissonance, in C major just intonation
+-- Higher value means more dissonant
+chordDiss :: Tuning Interval -> [Pitch] -> Hertz
+chordDiss tuning = diss . fmap inton
+  where
+    inton = (getIntonation $ intone (c,264) tuning)
+    -- inton = standardIntonation
+

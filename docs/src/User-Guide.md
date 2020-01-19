@@ -1715,6 +1715,14 @@ TODO scale-chord texture, e.g. whole tone extending augmented,
 
 TODO the Common.Pitch type has built-in support for chromatic/diatonic harmony. We can construct types that support other system instead.
 
+## Tuning and intonation
+
+TODO Hertz, absolute representation
+
+TODO tuning systems
+
+TODO spectral dissonance using chordDiss. Show how this corresponds to traditional ideas of dissonance.
+
 
 
 
