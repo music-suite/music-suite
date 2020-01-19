@@ -47,7 +47,6 @@ import Data.Functor.Couple
 import qualified Data.List as List
 import qualified Data.Maybe
 import Data.Ord (comparing)
-import Data.PairMonad
 import Data.Semigroup
 import Music.Dynamics.Literal
 import Music.Parts.Subpart (BoundIncr (..), HasSubpart (..))

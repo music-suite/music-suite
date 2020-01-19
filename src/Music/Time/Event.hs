@@ -34,7 +34,6 @@ import qualified Data.Foldable as Foldable
 import Data.Functor.Classes
 import Data.Functor.Compose
 import Data.Functor.Couple
-import Data.PairMonad
 import Data.Semigroup
 import Data.String
 import Data.Typeable

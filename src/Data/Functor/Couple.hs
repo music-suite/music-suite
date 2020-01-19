@@ -31,7 +31,6 @@ import Data.Bifunctor
 import Data.Foldable
 import Data.Functor.Identity
 import Data.Functor.Product
-import Data.PairMonad ()
 import Data.Semigroup
 import Data.Traversable
 import Data.Typeable
