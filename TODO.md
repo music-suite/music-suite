@@ -42,7 +42,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] Get rid of all CPP
 
-- Remove/fix code stubs/undefined
+- [X] Remove/fix code stubs/undefined
 
 - Port issues from the old tracker
 
@@ -355,7 +355,7 @@ Consider switching to a decentralized issue tracker such as:
         - First try the general form (any Inspectable, no custom type hint). This will succeed if the user provided an expression with an unambigious type.
         - Then try adding (Score StandardNote) and possibly other types in sequence. If they all fail, fail with the message from the original failure ("ambigous type").
 
-- Restore hslinks functoriality (commented out in source), maybe using hasktags
+- Restore hslinks functionality (commented out in source), maybe using hasktags
 
 - [X] For each instrument we want to know:
         - Classification:
