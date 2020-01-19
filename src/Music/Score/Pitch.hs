@@ -1,6 +1,5 @@
 
 {-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE DerivingStrategies         #-}
@@ -168,28 +167,8 @@ pitches' :: HasPitches' s => Traversal' s (Pitch s)
 pitches' = pitches
 
 
-#define PRIM_PITCH_INSTANCE(TYPE)       \
-                                        \
-type instance Pitch TYPE = TYPE;        \
-type instance SetPitch a TYPE = a;      \
-                                        \
-instance (Transformable a, a ~ Pitch a) \
-  => HasPitch TYPE a where {            \
-  pitch = ($)              } ;          \
-                                        \
-instance (Transformable a, a ~ Pitch a) \
-  => HasPitches TYPE a where {          \
-  pitches = ($)              } ;        \
+type instance Pitch () = (); type instance SetPitch a () = a; instance (Transformable a, a ~ Pitch a) => HasPitch () a where { pitch = ($) } ; instance (Transformable a, a ~ Pitch a) => HasPitches () a where { pitches = ($) } ;
 
-
-PRIM_PITCH_INSTANCE(())
-PRIM_PITCH_INSTANCE(Bool)
-PRIM_PITCH_INSTANCE(Ordering)
-PRIM_PITCH_INSTANCE(Char)
-PRIM_PITCH_INSTANCE(Int)
-PRIM_PITCH_INSTANCE(Integer)
-PRIM_PITCH_INSTANCE(Float)
-PRIM_PITCH_INSTANCE(Double)
 
 
 type instance Pitch (c,a)                 = Pitch a
