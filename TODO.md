@@ -61,7 +61,7 @@ Consider switching to a decentralized issue tracker such as:
 - In Parts: extracted/extractedWithInfo should be Traversals, not lenses to lists (the latter
   is generally law-breaking)
 
-- Cache in transf uses hash of expression only (should be expr + music-suite itself)
+- [ ] Cache in transf uses hash of expression only (should be expr + music-suite itself)
 
 - New features:
   - Constraints
@@ -75,7 +75,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - Render all examples (see music-suite.cabal and examples/ directory for documentation/web site)
 
-- Articualtion
+- Articulation
   - [ ] Make sure tenuto/portato is rendered
   - [ ] Remove 'separated'
 
