@@ -1,3 +1,15 @@
+{-# OPTIONS_GHC
+  -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports
+  #-}
+{-# LANGUAGE DefaultSignatures #-}
+-- {-# LANGUAGE StandaloneDeriving, DerivingStrategies, DeriveAnyClass #-}
 -- | Provides a way of adding text to notes.
 module Music.Score.Text
   ( -- * Text
@@ -32,6 +44,9 @@ import Music.Time.Voice
 class HasText a where
   addText :: String -> a -> a
 
+  default addText :: forall f b . (a ~ f b, Functor f, HasText b) => String -> a -> a
+  addText s = fmap (addText s)
+
 newtype TextT a = TextT {getTextT :: Couple [String] a}
   deriving
     ( Eq,
@@ -48,23 +63,18 @@ newtype TextT a = TextT {getTextT :: Couple [String] a}
 runTextT :: TextT a -> ([String], a)
 runTextT (TextT (Couple (ts, x))) = (ts, x)
 
-instance HasText a => HasText (b, a) where
-  addText s = fmap (addText s)
 
-instance HasText a => HasText (Couple b a) where
-  addText s = fmap (addText s)
+instance HasText a => HasText (b, a)
 
-instance HasText a => HasText [a] where
-  addText s = fmap (addText s)
+instance HasText a => HasText (Couple b a)
 
-instance HasText a => HasText (Note a) where
-  addText s = fmap (addText s)
+instance HasText a => HasText [a]
 
-instance HasText a => HasText (Voice a) where
-  addText s = fmap (addText s)
+instance HasText a => HasText (Note a)
 
-instance HasText a => HasText (Score a) where
-  addText s = fmap (addText s)
+instance HasText a => HasText (Voice a)
+
+instance HasText a => HasText (Score a)
 
 instance Wrapped (TextT a) where
 
@@ -77,7 +87,6 @@ instance Rewrapped (TextT a) (TextT b)
 instance HasText (TextT a) where
   addText s (TextT (Couple (t, x))) = TextT (Couple (t ++ [s], x))
 
--- Lifted instances
 deriving instance Num a => Num (TextT a)
 
 deriving instance Fractional a => Fractional (TextT a)

@@ -224,22 +224,6 @@ instance Rewrapped (TieT a) (TieT b)
 isTieEndBeginning :: TieT a -> (Bool, Bool)
 isTieEndBeginning (TieT (ties, _)) = over both getAny $ ties
 
-{-
--- |
--- Split all notes that cross a barlines into a pair of tied notes.
---
-splitTies :: Tiable a => Voice a -> Voice a
-splitTies = (^. voice) . map (^. note)
-  . concat . snd . List.mapAccumL g 0
-  . map (^. from note) . (^. notes)
-  where
-    g t (d, x) = (t + d, occs)
-      where
-        (_, barTime) = properFraction t
-        remBarTime   = 1 - barTime
-        occs         = splitDurThen remBarTime 1 (d,x)
--}
-
 -- |
 -- Split all voice into bars, using the given bar durations. Music that does not
 -- fit into the given durations is discarded.
