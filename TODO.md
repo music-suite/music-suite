@@ -89,6 +89,10 @@ Consider switching to a decentralized issue tracker such as:
   - Articulation should track agogic prolongation in addition to shortining/separation and accentuation
     https://github.com/music-suite/music-articulation/issues/3
 
+  - Phrase traversals currently fail at runtime if there are overlapping notes in a single part.
+    https://github.com/music-suite/music-score/issues/208
+
+
   - Issues from the following repos have been ported to this file:
     - music-pitch
     - music-suite

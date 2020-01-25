@@ -1604,14 +1604,39 @@ TODO
 
 ## Phrase traversals
 
-TODO
+TODO explain how they work
+
+
+Any consequtive sequence of notes will be trated as a phrase. Rests separate phrases:
+
+```music+haskell
+over (phrases' . Control.Lens._head) (up m2) $ bar <> delay 1 bar <> delay 2 bar
+  where
+    bar = pseq [c,c,c] |/ 4
+```
+
+In a multi-part score phrases are traversed per part, so this works:
+
+```music+haskell
+over (phrases' . Control.Lens._head) (up m2) $ bar </> delay (3/4) bar </> delay (5/8) bar
+  where
+    bar = pseq [c,c,c] |/ 4
+```
+
+TODO phrase traversals currently fail at runtime if there are overlapping notes in a single part.
+
+```TODOmusic+haskell
+over (phrases' . Control.Lens._head) (up m2) $ bar <> delay (1/8) bar
+  where
+    bar = pseq [c,c,c] |/ 4
+```
 
 ## Filtered traversals
 
 ```music+haskell
 inspectableToMusic @(Voice [StandardNote]) $
 
-over t (up m2) [d,d,d |* 2,d]
+over t (up m2) [d,d,d |* 2,d] |/ 4
   where
     t = notes . each . filtered (\x -> x^.duration < 2)
 ```

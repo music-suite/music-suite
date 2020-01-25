@@ -389,6 +389,7 @@ header =
   -}
   import Music.Prelude
   import qualified Data.List
+  import qualified Control.Lens
   main :: IO ()
   main = defaultMain $ id @Music $
   --------------------------------------------------------------------------------
