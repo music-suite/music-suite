@@ -79,16 +79,44 @@ import Prelude hiding
   )
 
 extractTimeSignatures :: Score a -> ([Maybe TimeSignature], [Duration])
-extractTimeSignatures score = (barTimeSignatures, barDurations)
+extractTimeSignatures score = (retainUpdates barTimeSignatures, barDurations)
   where
     defaultTimeSignature = time 4 4
+
+    -- | The time signature changes with their actual durations (which may
+    -- span many bars).
+    timeSignatures :: [(TimeSignature, Duration)]
     timeSignatures =
-      fmap swap
+        fmap swap
         $ view pairs . fuse . reactiveToVoice' (0 <-> (score ^. offset))
         $ getTimeSignatures defaultTimeSignature score
-    -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
-    barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
-    barDurations = getBarDurations timeSignatures
+
+    -- The time signature of each bar.
+    --
+    -- TODO alternative combinator that returns barTimeSignatures as this has all
+    -- the information
+    barTimeSignatures =
+      prolongLastBarIfDifferent
+      $ getBarTimeSignatures timeSignatures
+
+    barDurations = fmap realToFrac barTimeSignatures
+
+    -- Allow the last bar to be shorter than the indicated time signature
+    -- To prevent e.g. this from having an unexpected time signature change
+    --
+    -- @
+    -- timeSignatures (3/4) c
+    -- @
+    prolongLastBarIfDifferent :: [TimeSignature] -> [TimeSignature]
+    prolongLastBarIfDifferent = reverse . go . reverse
+      where
+        go [] = []
+        go [x] = [x]
+        go (last : penult : xs)
+          | last < penult = penult : penult : xs
+          | otherwise     = last   : penult : xs
+
+
 --
 -- -- | Convert a voice to a list of bars using the given bar durations.
 -- voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]

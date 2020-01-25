@@ -316,7 +316,7 @@ Consider switching to a decentralized issue tracker such as:
     - Export/Import: move to Music.Export, Music.Import
     - Music.Score.ASPECT (e.g. where ASPECT is Pitch etc): merge with Music.ASPECT
 
-- [ ] In `fromAspects`, never change time signature in the last bar
+- [X] $timeSignatureInLastBar In `fromAspects`, never change time signature in the last bar
   - E.g. in the example `pseq [c,d,e,f,g] |/ 4`, this should render as two 4/4 bars, not as one 4/4 followed by 1/4
 
 - Better syntax for entering pitch/time, maybe using a quasi-quoter
