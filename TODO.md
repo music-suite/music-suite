@@ -46,6 +46,9 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] Remove/fix code stubs/undefined
 
+- [ ] Unify DynamicLensLaws, ArticulationLensLaws etc, if possible
+  - Note Pitch only states one of the laws (because it usually is the innermost?)
+
 - Articulation representation can't handle consequtive legato phrases
   E.g. `legato a |> legato b` is transformed into `legato (a |> b)` which is not always right
 

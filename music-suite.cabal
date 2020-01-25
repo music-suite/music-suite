@@ -170,6 +170,7 @@ library
                         Music.Score.Pitch
                         Music.Score.Articulation
                         Music.Score.Dynamics
+                        Music.Score.Technique
                         Music.Score.Slide
                         Music.Score.Tremolo
                         Music.Score.StaffNumber
