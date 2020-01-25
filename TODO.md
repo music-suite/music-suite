@@ -106,7 +106,6 @@ Consider switching to a decentralized issue tracker such as:
 - Never fail export on overlapping/simultaneously events
   $needsTests
   - What is the correct behavior if a score is exported where a some part has overlapping notes?
-  - Also test phrase traverals in the precense of overlapping
   - Generally this should be fine, though currently the backend/export code does not handle it
     correctly.
   - Putting overlapping events in monophonic instruments (e.g. flute) should be a linting error,
@@ -362,7 +361,8 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] https://github.com/music-suite/music-score/issues/340
 
-- https://github.com/music-suite/music-score/issues/298
+- Try alternative quantization algorithms, e.g. fomus or ksquant2
+  https://github.com/music-suite/music-score/issues/298
 
 - [X] Replace ucat with (new) rcat
 
