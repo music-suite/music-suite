@@ -8,6 +8,7 @@
   -fno-warn-unused-matches
   -fno-warn-unused-imports
   #-}
+{-# LANGUAGE DefaultSignatures #-}
 module Music.Score.Tremolo
   ( -- * Tremolo
     HasTremolo (..),
@@ -53,17 +54,16 @@ import Music.Time
 class HasTremolo a where
   setTrem :: Int -> a -> a
 
-instance HasTremolo a => HasTremolo (b, a) where
-  setTrem n = fmap (setTrem n)
+  default setTrem :: forall f b . (a ~ f b, Functor f, HasTremolo b) => Int -> a -> a
+  setTrem s = fmap (setTrem s)
 
-instance HasTremolo a => HasTremolo (Couple b a) where
-  setTrem n = fmap (setTrem n)
+instance HasTremolo a => HasTremolo (b, a)
 
-instance HasTremolo a => HasTremolo [a] where
-  setTrem n = fmap (setTrem n)
+instance HasTremolo a => HasTremolo (Couple b a)
 
-instance HasTremolo a => HasTremolo (Score a) where
-  setTrem n = fmap (setTrem n)
+instance HasTremolo a => HasTremolo [a]
+
+instance HasTremolo a => HasTremolo (Score a)
 
 -- |
 -- Set the number of tremolo divisions for all notes in the score.
