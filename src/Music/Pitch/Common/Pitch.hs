@@ -59,7 +59,7 @@ import Music.Pitch.Common.Number
 import Music.Pitch.Common.Semitones
 import Music.Pitch.Common.Types
 import Music.Pitch.Literal
-import Music.Time.Transform (Transformable(..))
+import Music.Time.Transform (Transformable (..))
 
 sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
 

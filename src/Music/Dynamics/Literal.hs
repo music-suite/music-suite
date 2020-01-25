@@ -46,9 +46,9 @@ where
 
 import Control.Applicative
 import Data.Fixed
+import Data.Functor.Couple
 import Data.Ratio
 import Data.Semigroup
-import Data.Functor.Couple
 
 -- |
 -- Dynamics literal.

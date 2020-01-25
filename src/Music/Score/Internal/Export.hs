@@ -1,17 +1,15 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies #-}
+  -fno-warn-unused-imports #-}
 {-# OPTIONS_GHC -Wwarn #-}
 
 -------------------------------------------------------------------------------------
@@ -92,25 +90,19 @@ extractTimeSignatures :: Score a -> ([Maybe TimeSignature], [Duration])
 extractTimeSignatures score = (retainUpdates barTimeSignatures, barDurations)
   where
     defaultTimeSignature = time 4 4
-
-    -- | The time signature changes with their actual durations (which may
-    -- span many bars).
     timeSignatures :: [(TimeSignature, Duration)]
     timeSignatures =
-        fmap swap
+      fmap swap
         $ view pairs . fuse . reactiveToVoice' (0 <-> (score ^. offset))
         $ getTimeSignatures defaultTimeSignature score
-
     -- The time signature of each bar.
     --
     -- TODO alternative combinator that returns barTimeSignatures as this has all
     -- the information
     barTimeSignatures =
-      prolongLastBarIfDifferent
-      $ getBarTimeSignatures timeSignatures
-
+      prolongLastBarIfDifferent $
+        getBarTimeSignatures timeSignatures
     barDurations = fmap realToFrac barTimeSignatures
-
     -- Allow the last bar to be shorter than the indicated time signature
     -- To prevent e.g. this from having an unexpected time signature change
     --
@@ -124,5 +116,4 @@ extractTimeSignatures score = (retainUpdates barTimeSignatures, barDurations)
         go [x] = [x]
         go (last : penult : xs)
           | last < penult = penult : penult : xs
-          | otherwise     = last   : penult : xs
-
+          | otherwise = last : penult : xs

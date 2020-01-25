@@ -29,8 +29,8 @@ where
 import Control.Lens hiding ((<|), (|>))
 import Data.AffineSpace
 import Data.AffineSpace.Point
-import Data.Stream.Infinite
 import Data.Semigroup
+import Data.Stream.Infinite
 import Data.VectorSpace
 import Music.Time.Reverse
 import Music.Time.Split
@@ -112,7 +112,6 @@ x `sustain` y = x <> y `during` x
 times :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => Int -> a -> a
 times n = pseq . replicate n
 
-
 -- |
 -- Compose sequentially by aligning the nominal position of each value to the
 -- first available time value.
@@ -125,4 +124,3 @@ times n = pseq . replicate n
 -- @
 snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]
 snapTo = undefined
-

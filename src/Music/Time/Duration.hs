@@ -26,11 +26,11 @@ import Control.Lens hiding
     transform,
     (|>),
   )
+import Data.Functor.Contravariant (Op (..))
 import Data.NumInstances ()
 import Data.Semigroup hiding ()
 import Data.VectorSpace hiding (Sum (..))
 import Music.Time.Transform
-import Data.Functor.Contravariant (Op (..))
 
 -- |
 -- Class of values that have a duration.

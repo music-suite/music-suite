@@ -24,7 +24,6 @@ module Music.Pitch.Intonation
     -- * Specific intonations
     -- standardTuning,
     standardIntonation,
-
     just,
 
     -- * Spectral dissonance
@@ -125,23 +124,23 @@ standardIntonation = intone (a, 440) twelveToneEqual
 just :: Tuning Interval
 just = Tuning justT'
 
-justT' i = 2**(fromIntegral o) * go (spell usingSharps s)
+justT' i = 2 ** (fromIntegral o) * go (spell usingSharps s)
   where
-    (o,s) = separate i
-    go i | i == _P1 = 1
-         | i == _M2 = 9/8
-         | i == _M3 = 5/4
-         | i == _P4 = 4/3
-         | i == _P5 = 3/2
-         | i == _M6 = 5/3
-         | i == _M7 = 15/8
-         | i == _A1 = (5/3)*(5/4)/2
-         | i == _A2 = (15/8)*(5/4)/2 -- or minor third
-         | i == _A4 = (9/8)*(5/4)
-         | i == _A5 = (5/4)*(5/4)
-         | i == _A6 = (7/4)
-         | otherwise = error $ "justT got" ++ show i
-
+    (o, s) = separate i
+    go i
+      | i == _P1 = 1
+      | i == _M2 = 9 / 8
+      | i == _M3 = 5 / 4
+      | i == _P4 = 4 / 3
+      | i == _P5 = 3 / 2
+      | i == _M6 = 5 / 3
+      | i == _M7 = 15 / 8
+      | i == _A1 = (5 / 3) * (5 / 4) / 2
+      | i == _A2 = (15 / 8) * (5 / 4) / 2 -- or minor third
+      | i == _A4 = (9 / 8) * (5 / 4)
+      | i == _A5 = (5 / 4) * (5 / 4)
+      | i == _A6 = (7 / 4)
+      | otherwise = error $ "justT got" ++ show i
 
 {-
 Possible instances for numeric types based on standard intonation.
@@ -167,6 +166,5 @@ instance Integral a => IsInterval (Ratio a) where
 chordDiss :: Tuning Interval -> [Pitch] -> Hertz
 chordDiss tuning = diss . fmap inton
   where
-    inton = (getIntonation $ intone (c,264) tuning)
-    -- inton = standardIntonation
-
+    inton = (getIntonation $ intone (c, 264) tuning)
+-- inton = standardIntonation

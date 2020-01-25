@@ -79,8 +79,8 @@ import Music.Score.Part
 import Music.Score.Phrases
 import Music.Score.Pitch
 import Music.Score.Slide
+import Music.Score.StaffNumber
 import Music.Score.Text
 import Music.Score.Ties
 import Music.Score.Tremolo
-import Music.Score.StaffNumber
 import Music.Time hiding (time)

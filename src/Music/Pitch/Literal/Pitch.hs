@@ -232,11 +232,11 @@ where
 import Control.Applicative
 import Data.AffineSpace ((.-.))
 import Data.Fixed
+import Data.Functor.Couple
 import Data.Int
 import Data.Ratio
 import Data.Semigroup
 import Data.Word
-import Data.Functor.Couple
 import Music.Pitch.Common.Types
 
 -- Pitch literal, defined as @(class, alteration, octave)@, where

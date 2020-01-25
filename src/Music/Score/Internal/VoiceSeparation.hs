@@ -1,14 +1,12 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE PackageImports #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE PackageImports #-}
+  -fno-warn-unused-imports #-}
 
 module Music.Score.Internal.VoiceSeparation
   ( partitionSimplistic,
@@ -138,7 +136,6 @@ partitionSimplistic p = recur []
             (chooseSuchThat (\picked -> p (picked : alreadyPicked)) $ aShuffle toConsider)
             (\(picked, notPicked) -> recur (picked : alreadyPicked) notPicked)
             (return (alreadyPicked, toConsider))
-
 {-
 -- For testing
 

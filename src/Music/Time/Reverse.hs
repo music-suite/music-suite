@@ -30,6 +30,7 @@ import Data.AffineSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.AffineSpace.Point
+import Data.Functor.Couple
 import Data.Map (Map)
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -45,7 +46,6 @@ import Data.Typeable
 import Data.VectorSpace
 import Data.VectorSpace hiding (Sum (..))
 import Music.Time.Position
-import Data.Functor.Couple
 
 -- |
 -- Class of values that can be reversed (retrograded).

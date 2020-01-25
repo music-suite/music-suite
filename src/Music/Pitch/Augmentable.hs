@@ -20,8 +20,8 @@ module Music.Pitch.Augmentable
   )
 where
 
-import Data.Ratio
 import Data.Functor.Couple
+import Data.Ratio
 
 -- |
 -- Class of types that can be augmented.

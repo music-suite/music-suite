@@ -1,14 +1,12 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE FlexibleContexts #-}
+  -fno-warn-unused-imports #-}
 
 module Music.Time.Voice
   ( -- * Voice type
@@ -96,9 +94,9 @@ import Data.Maybe
 import Data.Semigroup
 import Data.Sequence (Seq)
 import Data.String
-import GHC.Exts(IsList(..))
 import Data.Traversable (Traversable)
 import Data.Typeable (Typeable)
+import GHC.Exts (IsList (..))
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Time.Internal.Util
@@ -770,7 +768,6 @@ valuesV = lens getValues (flip setValues)
 voiceLens :: Lens s t a b -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
 voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
 -}
-
 
 -- | Whether two notes have exactly the same duration pattern.
 -- Two empty voices are considered to have the same duration pattern.

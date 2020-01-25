@@ -20,8 +20,8 @@ module Music.Pitch.Alterable
   )
 where
 
-import Data.Ratio
 import Data.Functor.Couple
+import Data.Ratio
 
 -- |
 -- Class of things that can be altered.

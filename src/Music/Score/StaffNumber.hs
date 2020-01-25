@@ -1,14 +1,13 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE DefaultSignatures #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE DefaultSignatures #-}
+  -fno-warn-unused-imports #-}
+
 module Music.Score.StaffNumber
   ( -- * StaffNumber
     HasStaffNumber (..),
@@ -26,11 +25,10 @@ import Control.Lens hiding (transform)
 import Data.Foldable
 import Data.Foldable
 import Data.Functor.Couple
-import Data.Ratio
 import Data.Monoid
+import Data.Ratio
 import Data.Typeable
 import Data.Word
-import Numeric.Natural
 import Music.Dynamics.Literal
 import Music.Dynamics.Literal
 import Music.Pitch.Alterable
@@ -51,12 +49,13 @@ import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
 import Music.Time
-
+import Numeric.Natural
 
 class HasStaffNumber a where
+
   setStaffNumber :: Natural -> a -> a
 
-  default setStaffNumber :: forall f b . (a ~ f b, Functor f, HasStaffNumber b) => Natural -> a -> a
+  default setStaffNumber :: forall f b. (a ~ f b, Functor f, HasStaffNumber b) => Natural -> a -> a
   setStaffNumber s = fmap (setStaffNumber s)
 
 instance HasStaffNumber a => HasStaffNumber (b, a)
@@ -69,7 +68,6 @@ instance HasStaffNumber a => HasStaffNumber (Score a)
 
 technique :: HasStaffNumber a => Natural -> a -> a
 technique = setStaffNumber
-
 
 newtype StaffNumberT a = StaffNumberT {getStaffNumberT :: Couple (First Natural) a}
   deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
@@ -159,7 +157,6 @@ instance (HasArticulation a b) => HasArticulation (StaffNumberT a) (StaffNumberT
 
 runStaffNumberT :: StaffNumberT a -> (Natural, a)
 runStaffNumberT (StaffNumberT (Couple (First n, a))) = (maybe 0 id n, a)
-
 {-
 TODO
   - Add Tecnique as a polymorphic transformer

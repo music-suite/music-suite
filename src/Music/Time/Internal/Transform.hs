@@ -72,6 +72,7 @@ import Control.Lens hiding
   )
 import Data.AffineSpace
 import Data.AffineSpace.Point
+import Data.Functor.Couple
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Ratio
@@ -83,7 +84,6 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.VectorSpace hiding (Sum (..))
 import Music.Time.Types
-import Data.Functor.Couple
 
 -- |
 -- Class of values that can be transformed (i.e. scaled and moved) in time.

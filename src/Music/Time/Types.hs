@@ -1,13 +1,12 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
+  -fno-warn-unused-imports #-}
+
 module Music.Time.Types
   ( -- * Basic types
     Time,
@@ -155,7 +154,7 @@ type LocalDuration = Alignment
 -- |
 -- Duration, corresponding to note values in standard notation.
 -- The standard names can be used: @1\/2@ for half note @1\/4@ for a quarter note and so on.
-newtype Duration = Duration { _getDuration :: TimeBase }
+newtype Duration = Duration {_getDuration :: TimeBase}
   deriving (Eq, Ord, Typeable, Enum, Num, Fractional, Real, RealFrac)
 
 -- Duration is a one-dimensional 'VectorSpace', and is the associated vector space of time points.
@@ -180,9 +179,7 @@ instance Semigroup Duration where
   (<>) = (*^)
 
 instance Monoid Duration where
-
   mempty = 1
-
 
 instance AdditiveGroup Duration where
 
@@ -229,7 +226,6 @@ instance Semigroup Time where
   (<>) = (+)
 
 instance Monoid Time where
-
   mempty = 0
 
 instance AdditiveGroup Time where
@@ -351,7 +347,6 @@ instance Semigroup Span where
   (<>) = (^+^)
 
 instance Monoid Span where
-
   mempty = zeroV
 
 instance AdditiveGroup Span where
@@ -513,7 +508,6 @@ normalizeSpan :: Span -> Span
 normalizeSpan s = if isForwardSpan s then s else reverseSpan s
 
 -- TODO Duplicate as normalizeNoteSpan
-
 
 infixl 5 `inside`
 

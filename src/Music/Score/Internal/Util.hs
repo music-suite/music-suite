@@ -1,15 +1,13 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ViewPatterns #-}
+  -fno-warn-unused-imports #-}
 
 module Music.Score.Internal.Util
   ( unRatio,
@@ -33,7 +31,9 @@ module Music.Score.Internal.Util
     breakList,
     mapIndexed,
     unf,
-    mapF, mapT, mapFTL,
+    mapF,
+    mapT,
+    mapFTL,
     mapL,
     dup,
     mergeBy,
@@ -366,7 +366,6 @@ single = prism' return $ \xs -> case xs of
   [x] -> Just x
   _ -> Nothing
 {-# INLINE single #-}
-
 
 -- Like Data.Ord.comparing
 -- (Are both variants of contramap?)

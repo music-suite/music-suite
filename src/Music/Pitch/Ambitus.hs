@@ -63,7 +63,7 @@ ambitusHighest x = let (m, n) = x ^. from ambitus in n
 inAmbitus :: (Ord a, Num a) => Ambitus a -> a -> Bool
 inAmbitus amb p = m <= p && p <= n
   where
-    (m,n) = amb^.from ambitus
+    (m, n) = amb ^. from ambitus
 {-
 Misc stuff from data-interval and friends. What is relevant?
 

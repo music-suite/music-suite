@@ -1,14 +1,13 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE DefaultSignatures #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE DefaultSignatures #-}
+  -fno-warn-unused-imports #-}
+
 module Music.Score.Tremolo
   ( -- * Tremolo
     HasTremolo (..),
@@ -52,9 +51,10 @@ import Music.Score.Ties
 import Music.Time
 
 class HasTremolo a where
+
   setTrem :: Int -> a -> a
 
-  default setTrem :: forall f b . (a ~ f b, Functor f, HasTremolo b) => Int -> a -> a
+  default setTrem :: forall f b. (a ~ f b, Functor f, HasTremolo b) => Int -> a -> a
   setTrem s = fmap (setTrem s)
 
 instance HasTremolo a => HasTremolo (b, a)
@@ -69,8 +69,6 @@ instance HasTremolo a => HasTremolo (Score a)
 -- Set the number of tremolo divisions for all notes in the score.
 tremolo :: HasTremolo a => Int -> a -> a
 tremolo = setTrem
-
-
 
 newtype TremoloT a = TremoloT {getTremoloT :: Couple (Max Word) a}
   deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)

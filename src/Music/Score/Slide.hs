@@ -1,14 +1,13 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE DefaultSignatures #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE DefaultSignatures #-}
+  -fno-warn-unused-imports #-}
+
 -- | Provides a representation of musical /slides/, commonly known as /glissando/ or
 -- /portamento/.
 module Music.Score.Slide
@@ -51,19 +50,21 @@ class HasSlide a where
 
   setEndSlide :: Bool -> a -> a
 
-  default setBeginGliss :: forall f b . (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
+  default setBeginGliss :: forall f b. (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
   setBeginGliss s = fmap (setBeginGliss s)
-  default setBeginSlide :: forall f b . (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
+
+  default setBeginSlide :: forall f b. (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
   setBeginSlide s = fmap (setBeginSlide s)
-  default setEndGliss :: forall f b . (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
+
+  default setEndGliss :: forall f b. (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
   setEndGliss s = fmap (setEndGliss s)
-  default setEndSlide :: forall f b . (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
+
+  default setEndSlide :: forall f b. (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
   setEndSlide s = fmap (setEndSlide s)
 
 instance HasSlide a => HasSlide (b, a)
 
 instance HasSlide a => HasSlide (Couple b a)
-
 
 instance HasSlide a => HasSlide [a]
 
@@ -71,9 +72,7 @@ instance HasSlide a => HasSlide (Score a)
 
 instance HasSlide a => HasSlide (Voice a)
 
-
 instance HasSlide a => HasSlide (Note a)
-
 
 -- (eg,es,a,bg,bs)
 newtype SlideT a = SlideT {getSlideT :: Couple ((Any, Any), (Any, Any)) a}

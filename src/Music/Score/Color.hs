@@ -1,14 +1,13 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE DefaultSignatures #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE DefaultSignatures #-}
+  -fno-warn-unused-imports #-}
+
 -- | Provides colored note heads.
 module Music.Score.Color
   ( -- ** HasColor class
@@ -52,9 +51,10 @@ import Music.Time
 import Music.Time.Internal.Transform
 
 class HasColor a where
+
   setColor :: Colour Double -> a -> a
 
-  default setColor :: forall f b . (a ~ f b, Functor f, HasColor b) => Colour Double -> a -> a
+  default setColor :: forall f b. (a ~ f b, Functor f, HasColor b) => Colour Double -> a -> a
   setColor s = fmap (setColor s)
 
 instance HasColor a => HasColor (b, a)

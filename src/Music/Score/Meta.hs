@@ -1,14 +1,12 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE ViewPatterns #-}
+  -fno-warn-unused-imports #-}
 
 module Music.Score.Meta
   ( module Music.Time.Meta,
@@ -76,12 +74,11 @@ withMetaAtStart f x =
   let m = view meta x
    in f (fromMetaReactive m `atTime` (x ^. onset)) x
 
-
 -- withSpan :: Score a -> Score (Span, a)
 -- withSpan = mapWithSpan (,)
 
 withTime :: Score a -> Score (Time, a)
-withTime = mapWithSpan (\s x -> (s^.onset, x))
+withTime = mapWithSpan (\s x -> (s ^. onset, x))
 
 inSpan :: Time -> Span -> Bool
 inSpan t' (view onsetAndOffset -> (t, u)) = t <= t' && t' < u
@@ -109,4 +106,3 @@ activate (view (from event) -> (view onsetAndOffset -> (start, stop), x)) y = y 
   where
     turnOn = switchR start
     turnOff = switchR stop
-

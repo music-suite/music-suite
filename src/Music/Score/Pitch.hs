@@ -1,17 +1,15 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+  -fno-warn-unused-imports #-}
 
 -- |  Provides generic functions for inspecting and manipulating pitch.
 --
@@ -664,7 +662,6 @@ simplifyPitches = over pitches' simplifyPitch
   where
     simplifyPitch p = if (accidental p < doubleFlat || accidental p > doubleSharp) then relative c (spell usingSharps) p else p
 
-
 type instance Pitch Common.Pitch = Common.Pitch
 
 type instance SetPitch a Common.Pitch = a
@@ -674,7 +671,6 @@ instance (Transformable a, a ~ Pitch a) => HasPitch Common.Pitch a where
 
 instance (Transformable a, a ~ Pitch a) => HasPitches Common.Pitch a where
   pitches = ($)
-
 
 type instance Pitch Hertz = Hertz
 

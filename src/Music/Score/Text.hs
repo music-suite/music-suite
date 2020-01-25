@@ -1,14 +1,12 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE DefaultSignatures #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE DefaultSignatures #-}
+  -fno-warn-unused-imports #-}
 
 -- | Provides a way of adding text to notes.
 module Music.Score.Text
@@ -42,9 +40,10 @@ import Music.Time.Score
 import Music.Time.Voice
 
 class HasText a where
+
   addText :: String -> a -> a
 
-  default addText :: forall f b . (a ~ f b, Functor f, HasText b) => String -> a -> a
+  default addText :: forall f b. (a ~ f b, Functor f, HasText b) => String -> a -> a
   addText s = fmap (addText s)
 
 newtype TextT a = TextT {getTextT :: Couple [String] a}
@@ -62,7 +61,6 @@ newtype TextT a = TextT {getTextT :: Couple [String] a}
 
 runTextT :: TextT a -> ([String], a)
 runTextT (TextT (Couple (ts, x))) = (ts, x)
-
 
 instance HasText a => HasText (b, a)
 

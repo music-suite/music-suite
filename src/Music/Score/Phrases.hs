@@ -1,19 +1,17 @@
-{-# OPTIONS_GHC
-  -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -- | Provides phrase-wise traversal.
@@ -150,7 +148,6 @@ phrases = mvoices . mVoicePVoice . each . _Right
 mVoicePVoice :: Lens (MVoice a) (MVoice b) (PVoice a) (PVoice b)
 mVoicePVoice = mVoicePVoiceIgnoringMeta
 
-
 -- TODO meta
 
 -- |
@@ -253,13 +250,11 @@ mkTrack = view track . map (view placed)
 withDurationR :: (Functor f, HasDuration a) => f a -> f (Duration, a)
 withDurationR = fmap $ \x -> (_duration x, x)
 
-
 -- |
 -- Group contigous sequences matching/not-matching the predicate.
 --
 -- >>> groupDiff (== 0) [0,1,2,3,5,0,0,6,7]
 -- [Right [0], Left [1,2,3,5], Right [0,0], Left [6,7]]
-
 groupDiff :: (a -> Bool) -> [a] -> [Either [a] [a]]
 groupDiff p [] = []
 groupDiff p (x : xs)

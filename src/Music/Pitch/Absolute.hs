@@ -23,11 +23,11 @@ import Data.AdditiveGroup
 import Data.AffineSpace
 import Data.Either
 import Data.Maybe
+import qualified Data.Ratio
 import Data.Semigroup
 import Data.VectorSpace
 import Music.Pitch.Literal
-import Music.Time.Transform (Transformable(..))
-import qualified Data.Ratio
+import Music.Time.Transform (Transformable (..))
 
 -- |
 -- Absolute frequency in Hertz.
@@ -125,12 +125,13 @@ diss :: RealFrac a => [a] -> a
 diss xs = lcms xs / minimum xs
 
 gcdG :: RealFrac a => a -> a -> a
+
 lcmG :: RealFrac a => a -> a -> a
-lcmG a b = let f = (unRatio.toRational); (a1,a2)=f a; (b1,b2)=f b in fromIntegral (lcm a1 b1)/fromIntegral (gcd a2 b2)
-gcdG a b = let f = (unRatio.toRational); (a1,a2)=f a; (b1,b2)=f b in fromIntegral (gcd a1 b1)/fromIntegral (lcm a2 b2)
+lcmG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (lcm a1 b1) / fromIntegral (gcd a2 b2)
+
+gcdG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (gcd a1 b1) / fromIntegral (lcm a2 b2)
 
 lcms :: RealFrac a => [a] -> a
 lcms = foldr lcmG 1
 
 unRatio x = (Data.Ratio.numerator x, Data.Ratio.denominator x)
-

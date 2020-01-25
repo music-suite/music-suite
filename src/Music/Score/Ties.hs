@@ -1,14 +1,12 @@
-{-# OPTIONS_GHC
-  -Wall
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports
-  #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+  -fno-warn-unused-imports #-}
 
 -- |
 -- Provides a representation for tied notes, and a class to split a single note
@@ -32,6 +30,7 @@ import Control.Comonad
 import Control.Lens hiding ((&), transform)
 import Data.AffineSpace
 import Data.Bifunctor
+import Data.Functor.Couple
 import qualified Data.List as List
 import Data.Monoid.Average
 import Data.Semigroup
@@ -43,7 +42,6 @@ import Music.Time.Note (note)
 import Music.Time.Reverse
 import Music.Time.Transform
 import Music.Time.Voice
-import Data.Functor.Couple
 
 -- |
 -- Class of types that can be tied. Ties are added to a score by splitting a single note
@@ -239,7 +237,6 @@ splitTiesAt' (barDur : rbarDur) occs = case splitDurFor barDur occs of
   (barOccs, []) -> barOccs : []
   (barOccs, restOccs) -> barOccs : splitTiesAt' rbarDur restOccs
 
-
 -- |
 -- Split an event into one chunk of the duration @s@, followed parts shorter than duration @t@.
 --
@@ -271,8 +268,6 @@ splitDurFor remDur (x : xs) = case splitDur remDur x of
       else-- d == remDur
         ([x], xs)
   (x@(d, _), Just rest) -> ([x], rest : xs)
-
-
 
 -- |
 -- Split a event if it is longer than the given duration. Returns the first part of the

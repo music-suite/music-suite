@@ -29,7 +29,7 @@
 -- (Ordinary barlines are generated automatically, see also "Music.Score.Meta.Time").
 module Music.Score.Meta.Barline
   ( -- * Barline type
-    Barline(..),
+    Barline (..),
 
     -- ** Adding barlines to scores
     barline,

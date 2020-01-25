@@ -50,7 +50,6 @@ data InstrumentTopCategory
   | Other
   deriving (Show)
 
-
 data InstrumentDef
   = InstrumentDef
       { _soundId :: SoundId, -- ID
