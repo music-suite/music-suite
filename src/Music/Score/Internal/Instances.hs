@@ -54,7 +54,6 @@ import qualified Music.Pitch.Common as Common
 import Music.Pitch.Literal
 import Music.Score.Articulation
 import Music.Score.Color
-import Music.Score.Technique
 import Music.Score.Dynamics
 import Music.Score.Harmonics
 import Music.Score.Meta
@@ -62,6 +61,7 @@ import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Slide
 import Music.Score.StaffNumber
+import Music.Score.Technique
 import Music.Score.Text
 import Music.Score.Ties
 import Music.Score.Tremolo
@@ -124,10 +124,6 @@ instance HasArticulation a b => HasArticulation (TechniqueT p a) (TechniqueT p b
 
 instance HasArticulations a b => HasArticulations (TechniqueT p a) (TechniqueT p b) where
   articulations = _Wrapped . _2 . articulations
-
-
-
-
 
 type instance Pitch (PartT p a) = Pitch a
 
@@ -233,9 +229,6 @@ deriving instance HasSlide a => HasSlide (PartT n a)
 
 deriving instance HasText a => HasText (PartT n a)
 
-
-
-
 deriving instance HasTremolo a => HasTremolo (TechniqueT n a)
 
 deriving instance HasHarmonic a => HasHarmonic (TechniqueT n a)
@@ -243,11 +236,6 @@ deriving instance HasHarmonic a => HasHarmonic (TechniqueT n a)
 deriving instance HasSlide a => HasSlide (TechniqueT n a)
 
 deriving instance HasText a => HasText (TechniqueT n a)
-
-
-
-
-
 
 deriving instance HasTremolo a => HasTremolo (TieT a)
 
@@ -362,6 +350,7 @@ deriving instance Alterable a => Alterable (TieT a)
 deriving instance Alterable a => Alterable (PartT n a)
 
 deriving instance Alterable a => Alterable (TechniqueT n a)
+
 deriving instance Alterable a => Alterable (DynamicT n a)
 
 deriving instance Alterable a => Alterable (ArticulationT n a)
@@ -375,6 +364,7 @@ instance Augmentable a => Augmentable (Score a) where
 deriving instance Augmentable a => Augmentable (TieT a)
 
 deriving instance Augmentable a => Augmentable (PartT n a)
+
 deriving instance Augmentable a => Augmentable (TechniqueT n a)
 
 deriving instance Augmentable a => Augmentable (DynamicT n a)

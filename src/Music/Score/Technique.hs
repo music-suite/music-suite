@@ -25,8 +25,7 @@ module Music.Score.Technique
     HasTechnique',
     technique',
     techniques',
-
-    TechniqueT(..),
+    TechniqueT (..),
 
     -- * Context
     vtechnique,
@@ -273,7 +272,6 @@ instance (HasTechniques a b) => HasTechniques (SlideT a) (SlideT b) where
 
 instance (HasTechnique a b) => HasTechnique (SlideT a) (SlideT b) where
   technique = _Wrapped . technique
-
 
 newtype TechniqueT n a = TechniqueT {getTechniqueT :: (n, a)}
   deriving
