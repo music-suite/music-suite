@@ -63,7 +63,7 @@ import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
 import Music.Score.Tremolo
-import Music.Score.Technique
+import Music.Score.StaffNumber
 import Music.Time
 
 -- -------------------------------------------------------------------------------------
@@ -189,7 +189,7 @@ instance (HasArticulation a b) => HasArticulation (ColorT a) (ColorT b) where
 -- -------------------------------------------------------------------------------------
 deriving instance HasColor a => HasColor (TremoloT a)
 
-deriving instance HasColor a => HasColor (TechniqueT a)
+deriving instance HasColor a => HasColor (StaffNumberT a)
 
 deriving instance HasTremolo a => HasTremolo (PartT n a)
 
@@ -448,7 +448,7 @@ instance HasDuration a => HasDuration (ColorT a) where
 instance HasDuration a => HasDuration (TextT a) where
   _duration = _duration . extract
 
-instance HasDuration a => HasDuration (TechniqueT a) where
+instance HasDuration a => HasDuration (StaffNumberT a) where
   _duration = _duration . extract
 
 instance HasDuration a => HasDuration (TremoloT a) where
@@ -481,7 +481,7 @@ instance Splittable a => Splittable (ColorT a) where
 instance Splittable a => Splittable (TextT a) where
   split t = unzipR . fmap (split t)
 
-instance Splittable a => Splittable (TechniqueT a) where
+instance Splittable a => Splittable (StaffNumberT a) where
   split t = unzipR . fmap (split t)
 
 instance Splittable a => Splittable (TremoloT a) where

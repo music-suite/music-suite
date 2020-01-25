@@ -172,7 +172,7 @@ library
                         Music.Score.Dynamics
                         Music.Score.Slide
                         Music.Score.Tremolo
-                        Music.Score.Technique
+                        Music.Score.StaffNumber
                         Music.Score.Text
                         Music.Score.Harmonics
                         Music.Score.Color

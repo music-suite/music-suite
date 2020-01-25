@@ -5,7 +5,7 @@ module Music.Score
     module Music.Score.Articulation,
     module Music.Score.Slide,
     module Music.Score.Tremolo,
-    module Music.Score.Technique,
+    module Music.Score.StaffNumber,
     module Music.Score.Text,
     module Music.Score.Harmonics,
     module Music.Score.Color,
@@ -82,5 +82,5 @@ import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
 import Music.Score.Tremolo
-import Music.Score.Technique
+import Music.Score.StaffNumber
 import Music.Time hiding (time)
