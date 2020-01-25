@@ -151,3 +151,24 @@ instance (HasArticulation a b) => HasArticulation (TechniqueT a) (TechniqueT b) 
 
 runTechniqueT :: TechniqueT a -> (SomeTechnique, a)
 runTechniqueT (TechniqueT (Couple (n, a))) = (n, a)
+
+{-
+TODO needs polymorphic transformer for this to work...
+
+addArtCon ::
+  ( HasPhrases s t a b,
+    HasTechnique a,
+    HasTechnique b,
+    Articulation a ~ d,
+    Articulation b ~ Ctxt d
+  ) =>
+  s ->
+  t
+addArtCon = over (phrases . varticulation) withContext
+
+varticulation ::
+  (HasArticulation s s, HasArticulation s t) =>
+  Lens (Voice s) (Voice t) (Voice (Articulation s)) (Voice (Articulation t))
+varticulation = lens (fmap $ viewTechnique) (flip $ zipVoiceWithNoScale (setTechnique ))
+
+-}

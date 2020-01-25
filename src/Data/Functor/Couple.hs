@@ -7,17 +7,17 @@
 {-# LANGUAGE TypeFamilies #-}
 
 -- |
--- Defines two variants of @(,)@ with lifted instances for the standard type classes.
+-- Defines two variants of @(,)@ with lifted instances for the standard type
+-- classes.
 --
--- The 'Functor', 'Applicative' and 'Comonad' instances are the standard instances. The
--- 'Monad' instances are not in base (but should argubly be there). All of these instances
--- are equivalent to 'Writer' in transformers.
+-- The 'Functor', 'Applicative' and 'Comonad' instances are the standard
+-- instances.  'Applicative' is used to lift 'Monoid' and the standard numeric
+-- classes.
 --
--- 'Applicative' is used to lift 'Monoid' and the standard numeric classes.
---
--- The only difference between 'Twain' and 'Couple' is the handling of 'Eq' and 'Ord':
--- 'Twain' compares only the second value, while 'Couple' compares both. Thus 'Couple' needs
--- an extra @Ord b@ constraint for all sub-classes of 'Ord'.
+-- The only difference between 'Twain' and 'Couple' is the handling of 'Eq' and
+-- 'Ord': 'Twain' compares only the second value, while 'Couple' compares both.
+-- Thus 'Couple' needs an extra @Ord b@ constraint for all sub-classes of
+-- 'Ord'.
 module Data.Functor.Couple
   ( Twain (..),
     Couple (..),
