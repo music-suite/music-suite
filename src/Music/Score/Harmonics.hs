@@ -9,6 +9,7 @@
   -fno-warn-unused-imports
   #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE DefaultSignatures #-}
 
 -- | Provides a representation of harmonics.
 module Music.Score.Harmonics
@@ -49,6 +50,12 @@ class HasHarmonic a where
   setHarmonic :: Int -> a -> a
 
 -- (isNatural, overtone series index where 0 is fundamental)
+  default setNatural :: forall f b . (a ~ f b, Functor f, HasHarmonic b) => Bool -> a -> a
+  setNatural s = fmap (setNatural s)
+
+  default setHarmonic :: forall f b . (a ~ f b, Functor f, HasHarmonic b) => Int -> a -> a
+  setHarmonic s = fmap (setHarmonic s)
+
 newtype HarmonicT a = HarmonicT {getHarmonicT :: Couple (Any, Sum Int) a}
   deriving
     ( Eq,
@@ -72,29 +79,15 @@ runHarmonicT (HarmonicT (Couple (hs, x))) = (,x) $ case hs of
   (Any False, Sum n) -> ArtificialHarmonic (fromIntegral n)
   (Any True, Sum n) -> NaturalHarmonic (fromIntegral n)
 
-instance HasHarmonic a => HasHarmonic (b, a) where
+instance HasHarmonic a => HasHarmonic (b, a)
 
-  setNatural b = fmap (setNatural b)
+instance HasHarmonic a => HasHarmonic (Couple b a)
 
-  setHarmonic n = fmap (setHarmonic n)
+instance HasHarmonic a => HasHarmonic [a]
 
-instance HasHarmonic a => HasHarmonic (Couple b a) where
 
-  setNatural b = fmap (setNatural b)
+instance HasHarmonic a => HasHarmonic (Score a)
 
-  setHarmonic n = fmap (setHarmonic n)
-
-instance HasHarmonic a => HasHarmonic [a] where
-
-  setNatural b = fmap (setNatural b)
-
-  setHarmonic n = fmap (setHarmonic n)
-
-instance HasHarmonic a => HasHarmonic (Score a) where
-
-  setNatural b = fmap (setNatural b)
-
-  setHarmonic n = fmap (setHarmonic n)
 
 instance Wrapped (HarmonicT a) where
 

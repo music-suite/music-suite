@@ -8,6 +8,7 @@
   -fno-warn-unused-matches
   -fno-warn-unused-imports
   #-}
+{-# LANGUAGE DefaultSignatures #-}
 module Music.Score.StaffNumber
   ( -- * StaffNumber
     HasStaffNumber (..),
@@ -55,17 +56,16 @@ import Music.Time
 class HasStaffNumber a where
   setStaffNumber :: Natural -> a -> a
 
-instance HasStaffNumber a => HasStaffNumber (b, a) where
-  setStaffNumber n = fmap (setStaffNumber n)
+  default setStaffNumber :: forall f b . (a ~ f b, Functor f, HasStaffNumber b) => Natural -> a -> a
+  setStaffNumber s = fmap (setStaffNumber s)
 
-instance HasStaffNumber a => HasStaffNumber (Couple b a) where
-  setStaffNumber n = fmap (setStaffNumber n)
+instance HasStaffNumber a => HasStaffNumber (b, a)
 
-instance HasStaffNumber a => HasStaffNumber [a] where
-  setStaffNumber n = fmap (setStaffNumber n)
+instance HasStaffNumber a => HasStaffNumber (Couple b a)
 
-instance HasStaffNumber a => HasStaffNumber (Score a) where
-  setStaffNumber n = fmap (setStaffNumber n)
+instance HasStaffNumber a => HasStaffNumber [a]
+
+instance HasStaffNumber a => HasStaffNumber (Score a)
 
 technique :: HasStaffNumber a => Natural -> a -> a
 technique = setStaffNumber
