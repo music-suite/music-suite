@@ -1721,8 +1721,8 @@ TODO Hertz, absolute representation
 
 TODO tuning systems
 
-TODO spectral dissonance using chordDiss. Show how this corresponds to traditional ideas of dissonance.
-
+TODO spectral dissonance using HCF
+(https://harmonicratio.blogspot.com/2018/10/pursuing-clarity-through-openness-part_80.html)
 
 
 
