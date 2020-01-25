@@ -270,6 +270,8 @@ import Music.Score.Phrases (MVoice (..))
 import qualified Music.Score.Pitch
 import Music.Score.Pitch ()
 import Music.Score.Slide (SlideT, runSlideT)
+import Music.Score.StaffNumber (StaffNumberT, runStaffNumberT)
+import Music.Score.Technique (TechniqueT (..))
 import Music.Score.Text (TextT, runTextT)
 import qualified Music.Score.Ties
 import Music.Score.Ties (Tiable (..))
@@ -1679,8 +1681,9 @@ toMidi = pure . finalizeExport . fmap (exportNote) . exportScore
     -- For now we throw all of this away using 'snd'
     --
     -- Arguably these should be retought, see $minorAspect in TODO.md
-    exportNote (PartT (_, ((snd . runSlideT . snd . runHarmonicT . snd . runTextT . snd . runColorT . snd . runTremoloT) -> x))) = exportNoteA x
+    exportNote (PartT (_, ((snd . runSlideT . snd . runHarmonicT . snd . runTextT . snd . runColorT . snd . runTremoloT . snd . runStaffNumberT) -> x))) = exportNoteT x
       where
+        exportNoteT (TechniqueT (_, x)) = exportNoteA x
         exportNoteA (ArticulationT (_, x)) = exportNoteD x
         exportNoteD (DynamicT (realToFrac -> d, x)) = setV (dynLevel d) <$> exportNoteP x
         exportNoteP pv = mkMidiNote (pitchToInt pv)
@@ -1764,16 +1767,19 @@ toFomus work = error "Not implemented"
 
 type Asp1 =
   ( PartT Part
-      ( TremoloT
-          ( ColorT
-              ( TextT
-                  ( HarmonicT
-                      ( SlideT
-                          ( ( ArticulationT Articulation
-                                ( DynamicT Dynamics
-                                    Pitch
-                                )
-                            )
+      ( StaffNumberT
+          ( TremoloT
+              ( ColorT
+                  ( TextT
+                      ( HarmonicT
+                          ( SlideT
+                              ( TechniqueT SomeTechnique
+                                  ( ArticulationT Articulation
+                                      ( DynamicT Dynamics
+                                          Pitch
+                                      )
+                                  )
+                              )
                           )
                       )
                   )
@@ -1786,16 +1792,19 @@ type Asp1 =
 type Asp2 =
   TieT
     ( PartT Part
-        ( TremoloT
-            ( ColorT
-                ( TextT
-                    ( HarmonicT
-                        ( SlideT
-                            ( ( ArticulationT Articulation
-                                  ( DynamicT Dynamics
-                                      [Pitch]
-                                  )
-                              )
+        ( StaffNumberT
+            ( TremoloT
+                ( ColorT
+                    ( TextT
+                        ( HarmonicT
+                            ( SlideT
+                                ( TechniqueT SomeTechnique
+                                    ( ArticulationT Articulation
+                                        ( DynamicT Dynamics
+                                            [Pitch]
+                                        )
+                                    )
+                                )
                             )
                         )
                     )
@@ -1807,14 +1816,18 @@ type Asp2 =
 type Asp3 =
   TieT
     ( PartT Part
-        ( TremoloT
-            ( ColorT
-                ( TextT
-                    ( HarmonicT
-                        ( SlideT
-                            ( ArticulationT AN.ArticulationNotation
-                                ( DynamicT DN.DynamicNotation
-                                    [Pitch]
+        ( StaffNumberT
+            ( TremoloT
+                ( ColorT
+                    ( TextT
+                        ( HarmonicT
+                            ( SlideT
+                                ( TechniqueT TechniqueNotation
+                                    ( ArticulationT AN.ArticulationNotation
+                                        ( DynamicT DN.DynamicNotation
+                                            [Pitch]
+                                        )
+                                    )
                                 )
                             )
                         )
@@ -1823,6 +1836,10 @@ type Asp3 =
             )
         )
     )
+
+type SomeTechnique = () -- TODO
+
+type TechniqueNotation = () -- TODO
 
 type Asp = Score Asp1
 
@@ -1900,12 +1917,12 @@ fromAspects sc = do
         $ mempty
     systemStaff :: SystemStaff
     systemStaff = fmap (\ts -> timeSignature .~ Option (fmap First ts) $ mempty) timeSignatureMarks
-    (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
+    (timeSignatureMarks, barDurations) = Music.Score.Internal.Export.extractTimeSignatures normScore
     -- Make this more prominent!
     -- This is being used for the actual score!
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
     asp1ToAsp2 :: Asp1 -> Asp2
-    asp1ToAsp2 = pure . (fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap) pure
+    asp1ToAsp2 = pure . (fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap) pure
     toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
     toLayer p =
       maybe
@@ -1954,9 +1971,6 @@ fromAspects sc = do
             soloStr = if (part ^. (Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
             nameStr = (part ^. (Music.Parts.instrument) . (to Music.Parts.fullName))
             subpartStr = Just $ show (part ^. (Music.Parts.subpart))
-    extractTimeSignatures ::
-      Score a -> ([Maybe Music.Score.Meta.Time.TimeSignature], [Duration])
-    extractTimeSignatures = Music.Score.Internal.Export.extractTimeSignatures
     partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
     partDefault xs = Music.Parts.groupDefault $ fmap (\(p, x) -> (p ^. (Music.Parts.instrument), (p, x))) xs
     groupToLabelTree :: Group a -> LabelTree (BracketType) a

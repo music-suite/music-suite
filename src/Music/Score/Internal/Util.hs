@@ -1,5 +1,13 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
 
 module Music.Score.Internal.Util
   ( unRatio,
@@ -9,6 +17,36 @@ module Music.Score.Internal.Util
     divideList,
     retainUpdates,
     swap,
+    inspecting,
+    single,
+    withNext,
+    rotr,
+    rotated,
+    tripr,
+    tripl,
+    merge,
+    rots,
+    splitWhile,
+    filterOnce,
+    breakList,
+    mapIndexed,
+    unf,
+    mapF,
+    mapT,
+    mapFTL,
+    mapL,
+    dup,
+    mergeBy,
+    mergeBy',
+    partial,
+    partial2,
+    partial3,
+    list,
+    showRatio,
+    mapWithNext,
+    mapWithPrevNext,
+    mapWithPrev,
+    toDouble,
   )
 where
 
@@ -231,15 +269,15 @@ composed = Prelude.foldr (.) id
 -- | Separate a ratio.
 -- > category: Math
 -- > depends: base
-unRatio :: Integral a => Data.Ratio.Ratio a -> (a, a)
+unRatio :: Data.Ratio.Ratio a -> (a, a)
 unRatio x = (Data.Ratio.numerator x, Data.Ratio.denominator x)
 
 -- | Nicer printing of ratio as ordinary fractions.
 -- > category: Math
 -- > depends: base
-showRatio :: (Integral a, Show a) => Data.Ratio.Ratio a -> String
-showRatio (realToFrac -> (unRatio -> (x, 1))) = show x
-showRatio (realToFrac -> (unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
+showRatio :: Data.Ratio.Ratio Integer -> String
+showRatio (id -> (unRatio -> (x, 1))) = show x
+showRatio (id -> (unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
 
 -- Replace all contigous ranges of equal values with [Just x, Nothing, Nothing ...]
 -- > category: List
@@ -328,9 +366,6 @@ single = prism' return $ \xs -> case xs of
   [x] -> Just x
   _ -> Nothing
 {-# INLINE single #-}
-
-floor' :: RealFrac a => a -> a
-floor' = fromIntegral . floor
 
 -- Like Data.Ord.comparing
 -- (Are both variants of contramap?)

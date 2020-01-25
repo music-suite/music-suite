@@ -39,15 +39,6 @@ import qualified System.IO.Unsafe
 
 type SoundId = String
 
-type TechniqueId = String
-
-{-
-instance Num Clef where
-  fromInteger 0 = trebleClef
-  fromInteger 1 = altoClef
-  fromInteger 2 = bassClef
--}
-
 data InstrumentTopCategory
   = Woodwind
   | Brass
@@ -57,16 +48,6 @@ data InstrumentTopCategory
   | Vocal
   | Strings
   | Other
-  deriving (Show)
-
-data TechniqueDef
-  = TechniqueDef
-      { _techniqueId :: TechniqueId, -- ID
-        _instruments :: [String],
-        _musicXmlTechnique :: Maybe String,
-        _musicXmlDirection :: Maybe String
-        -- TODO rest
-      }
   deriving (Show)
 
 data InstrumentDef

@@ -60,6 +60,8 @@ import Music.Score.Meta
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Slide
+import Music.Score.StaffNumber
+import Music.Score.Technique
 import Music.Score.Text
 import Music.Score.Ties
 import Music.Score.Tremolo
@@ -93,6 +95,35 @@ instance Semigroup a => Semigroup (PartT n a) where
 -- Aspect instaces (Pitch, Dynamics and Articulation) for PartT needs to go here,
 -- as the other aspects depends on partwise traversals etc
 --
+type instance Pitch (TechniqueT p a) = Pitch a
+
+type instance SetPitch b (TechniqueT p a) = TechniqueT p (SetPitch b a)
+
+instance HasPitch a b => HasPitch (TechniqueT p a) (TechniqueT p b) where
+  pitch = _Wrapped . _2 . pitch
+
+instance HasPitches a b => HasPitches (TechniqueT p a) (TechniqueT p b) where
+  pitches = _Wrapped . _2 . pitches
+
+type instance Dynamic (TechniqueT p a) = Dynamic a
+
+type instance SetDynamic b (TechniqueT p a) = TechniqueT p (SetDynamic b a)
+
+instance HasDynamic a b => HasDynamic (TechniqueT p a) (TechniqueT p b) where
+  dynamic = _Wrapped . _2 . dynamic
+
+instance HasDynamics a b => HasDynamics (TechniqueT p a) (TechniqueT p b) where
+  dynamics = _Wrapped . _2 . dynamics
+
+type instance Articulation (TechniqueT p a) = Articulation a
+
+type instance SetArticulation b (TechniqueT p a) = TechniqueT p (SetArticulation b a)
+
+instance HasArticulation a b => HasArticulation (TechniqueT p a) (TechniqueT p b) where
+  articulation = _Wrapped . _2 . articulation
+
+instance HasArticulations a b => HasArticulations (TechniqueT p a) (TechniqueT p b) where
+  articulations = _Wrapped . _2 . articulations
 
 type instance Pitch (PartT p a) = Pitch a
 
@@ -188,6 +219,8 @@ instance (HasArticulation a b) => HasArticulation (ColorT a) (ColorT b) where
 -- -------------------------------------------------------------------------------------
 deriving instance HasColor a => HasColor (TremoloT a)
 
+deriving instance HasColor a => HasColor (StaffNumberT a)
+
 deriving instance HasTremolo a => HasTremolo (PartT n a)
 
 deriving instance HasHarmonic a => HasHarmonic (PartT n a)
@@ -195,6 +228,14 @@ deriving instance HasHarmonic a => HasHarmonic (PartT n a)
 deriving instance HasSlide a => HasSlide (PartT n a)
 
 deriving instance HasText a => HasText (PartT n a)
+
+deriving instance HasTremolo a => HasTremolo (TechniqueT n a)
+
+deriving instance HasHarmonic a => HasHarmonic (TechniqueT n a)
+
+deriving instance HasSlide a => HasSlide (TechniqueT n a)
+
+deriving instance HasText a => HasText (TechniqueT n a)
 
 deriving instance HasTremolo a => HasTremolo (TieT a)
 
@@ -308,6 +349,8 @@ deriving instance Alterable a => Alterable (TieT a)
 
 deriving instance Alterable a => Alterable (PartT n a)
 
+deriving instance Alterable a => Alterable (TechniqueT n a)
+
 deriving instance Alterable a => Alterable (DynamicT n a)
 
 deriving instance Alterable a => Alterable (ArticulationT n a)
@@ -321,6 +364,8 @@ instance Augmentable a => Augmentable (Score a) where
 deriving instance Augmentable a => Augmentable (TieT a)
 
 deriving instance Augmentable a => Augmentable (PartT n a)
+
+deriving instance Augmentable a => Augmentable (TechniqueT n a)
 
 deriving instance Augmentable a => Augmentable (DynamicT n a)
 
@@ -445,6 +490,9 @@ instance HasDuration a => HasDuration (ColorT a) where
 instance HasDuration a => HasDuration (TextT a) where
   _duration = _duration . extract
 
+instance HasDuration a => HasDuration (StaffNumberT a) where
+  _duration = _duration . extract
+
 instance HasDuration a => HasDuration (TremoloT a) where
   _duration = _duration . extract
 
@@ -460,6 +508,9 @@ instance HasDuration a => HasDuration (ArticulationT b a) where
 instance HasDuration a => HasDuration (DynamicT b a) where
   _duration = _duration . extract
 
+instance HasDuration a => HasDuration (TechniqueT b a) where
+  _duration = _duration . extract
+
 instance HasDuration a => HasDuration (TieT a) where
   _duration = _duration . extract
 
@@ -469,10 +520,16 @@ instance Splittable Common.Pitch where
 instance Splittable a => Splittable (PartT p a) where
   split t = unzipR . fmap (split t)
 
+instance Splittable a => Splittable (TechniqueT p a) where
+  split t = unzipR . fmap (split t)
+
 instance Splittable a => Splittable (ColorT a) where
   split t = unzipR . fmap (split t)
 
 instance Splittable a => Splittable (TextT a) where
+  split t = unzipR . fmap (split t)
+
+instance Splittable a => Splittable (StaffNumberT a) where
   split t = unzipR . fmap (split t)
 
 instance Splittable a => Splittable (TremoloT a) where

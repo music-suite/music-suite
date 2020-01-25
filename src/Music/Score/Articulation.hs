@@ -2,6 +2,14 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
 
 -- |  Provides functions for manipulating articulation.
 module Music.Score.Articulation
@@ -51,7 +59,7 @@ where
 
 import BasePrelude hiding ((<>), Dynamic, first, second)
 import Control.Comonad
-import Control.Lens hiding ((&), above, below, transform)
+import Control.Lens hiding ((&), below, transform)
 import Data.AffineSpace
 import Data.Functor.Context
 import Data.Functor.Couple
@@ -311,10 +319,10 @@ marcatoAll :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
 marcatoAll = set (articulations . accentuation) 2
 
 tenuto :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
-tenuto = id
+tenuto = legato -- TODO
 
 spiccato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
-spiccato = id
+spiccato = legato -- TODO
 
 legatissimo :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
 legatissimo = set (articulations . separation) (-2)

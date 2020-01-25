@@ -1,4 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
 
 -- |
 -- Provides a representation for tied notes, and a class to split a single note
@@ -8,8 +16,8 @@ module Music.Score.Ties
     Tiable (..),
 
     -- * Splitting tied notes in scores
-    -- splitTies,
     splitTiesAt,
+    splitDurThen,
 
     -- * TieT note transformer
     TieT (..),
@@ -22,6 +30,7 @@ import Control.Comonad
 import Control.Lens hiding ((&), transform)
 import Data.AffineSpace
 import Data.Bifunctor
+import Data.Functor.Couple
 import qualified Data.List as List
 import Data.Monoid.Average
 import Data.Semigroup
@@ -93,6 +102,9 @@ instance Tiable a => Tiable (Behavior a) where
 -- This restriction assures all chord notes are in the same part
 --
 instance Tiable a => Tiable (c, a) where
+  toTied = unzipR . fmap toTied
+
+instance Tiable a => Tiable (Couple b a) where
   toTied = unzipR . fmap toTied
 
 instance Tiable a => Tiable (Maybe a) where
@@ -210,22 +222,6 @@ instance Rewrapped (TieT a) (TieT b)
 isTieEndBeginning :: TieT a -> (Bool, Bool)
 isTieEndBeginning (TieT (ties, _)) = over both getAny $ ties
 
-{-
--- |
--- Split all notes that cross a barlines into a pair of tied notes.
---
-splitTies :: Tiable a => Voice a -> Voice a
-splitTies = (^. voice) . map (^. note)
-  . concat . snd . List.mapAccumL g 0
-  . map (^. from note) . (^. notes)
-  where
-    g t (d, x) = (t + d, occs)
-      where
-        (_, barTime) = properFraction t
-        remBarTime   = 1 - barTime
-        occs         = splitDurThen remBarTime 1 (d,x)
--}
-
 -- |
 -- Split all voice into bars, using the given bar durations. Music that does not
 -- fit into the given durations is discarded.
@@ -240,9 +236,6 @@ splitTiesAt' _ [] = []
 splitTiesAt' (barDur : rbarDur) occs = case splitDurFor barDur occs of
   (barOccs, []) -> barOccs : []
   (barOccs, restOccs) -> barOccs : splitTiesAt' rbarDur restOccs
-
-tsplitTiesAt :: [Duration] -> [Duration] -> [[(Duration, Char)]]
-tsplitTiesAt barDurs = fmap (map (^. from note) . (^. notes)) . splitTiesAt barDurs . ((^. voice) . map (^. note)) . fmap (\x -> (x, '_'))
 
 -- |
 -- Split an event into one chunk of the duration @s@, followed parts shorter than duration @t@.
@@ -275,12 +268,6 @@ splitDurFor remDur (x : xs) = case splitDur remDur x of
       else-- d == remDur
         ([x], xs)
   (x@(d, _), Just rest) -> ([x], rest : xs)
-
-tsplitDurFor :: Duration -> [Duration] -> ([(Duration, Char)], [(Duration, Char)])
-tsplitDurFor maxDur xs = splitDurFor maxDur $ fmap (\x -> (x, '_')) xs
-
--- instance Tiable Char where
--- toTied _ = ('(',')')
 
 -- |
 -- Split a event if it is longer than the given duration. Returns the first part of the

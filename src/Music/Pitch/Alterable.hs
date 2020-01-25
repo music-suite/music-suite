@@ -20,6 +20,7 @@ module Music.Pitch.Alterable
   )
 where
 
+import Data.Functor.Couple
 import Data.Ratio
 
 -- |
@@ -73,6 +74,8 @@ instance Alterable a => Alterable (b, a) where
   sharpen = fmap sharpen
 
   flatten = fmap flatten
+
+deriving instance (Alterable a) => Alterable (Couple b a)
 
 {-
 sharpened :: Alterable a => Iso' a a

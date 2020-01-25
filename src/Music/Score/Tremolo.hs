@@ -1,3 +1,13 @@
+{-# LANGUAGE DefaultSignatures #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
+
 module Music.Score.Tremolo
   ( -- * Tremolo
     HasTremolo (..),
@@ -41,42 +51,24 @@ import Music.Score.Ties
 import Music.Time
 
 class HasTremolo a where
+
   setTrem :: Int -> a -> a
 
-instance HasTremolo a => HasTremolo (b, a) where
-  setTrem n = fmap (setTrem n)
+  default setTrem :: forall f b. (a ~ f b, Functor f, HasTremolo b) => Int -> a -> a
+  setTrem s = fmap (setTrem s)
 
-instance HasTremolo a => HasTremolo (Couple b a) where
-  setTrem n = fmap (setTrem n)
+instance HasTremolo a => HasTremolo (b, a)
 
-instance HasTremolo a => HasTremolo [a] where
-  setTrem n = fmap (setTrem n)
+instance HasTremolo a => HasTremolo (Couple b a)
 
-instance HasTremolo a => HasTremolo (Score a) where
-  setTrem n = fmap (setTrem n)
+instance HasTremolo a => HasTremolo [a]
+
+instance HasTremolo a => HasTremolo (Score a)
 
 -- |
 -- Set the number of tremolo divisions for all notes in the score.
 tremolo :: HasTremolo a => Int -> a -> a
 tremolo = setTrem
-
--- TODO these must be moved upwards
-deriving instance (Monoid b, IsPitch a) => IsPitch (Couple b a)
-
-deriving instance (Monoid b, IsDynamics a) => IsDynamics (Couple b a)
-
-deriving instance (Monoid b, Transformable a) => Transformable (Couple b a)
-
-deriving instance (Monoid b, Reversible a) => Reversible (Couple b a)
-
-deriving instance (Monoid b, Alterable a) => Alterable (Couple b a)
-
-deriving instance (Monoid b, Augmentable a) => Augmentable (Couple b a)
-
-instance Tiable a => Tiable (Couple b a) where
-  toTied = unzipR . fmap toTied
-    where
-      unzipR x = (fmap fst x, fmap snd x)
 
 newtype TremoloT a = TremoloT {getTremoloT :: Couple (Max Word) a}
   deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
@@ -97,7 +89,6 @@ instance Rewrapped (TremoloT a) (TremoloT b)
 instance HasTremolo (TremoloT a) where
   setTrem n = set (_Wrapped . _Wrapped . _1) (Max $ fromIntegral n)
 
--- Lifted instances
 deriving instance Num a => Num (TremoloT a)
 
 deriving instance Fractional a => Fractional (TremoloT a)

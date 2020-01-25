@@ -16,6 +16,7 @@ Consider switching to a decentralized issue tracker such as:
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
 - [ ] New (current) export does not render tremolo/gliss/harmonics/text/color
+  - See also $playingTechniques
 
 - [X] Add more examples (e.g from Piece1, Piece2 etc)
   - [ ] Make them all compile (add to cabal file!)
@@ -23,6 +24,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] Can not build docs in CI (pushd missing from shell). Why? The nix-shell is meant to be reproducible.
   - This might work post 6694359cbe17bf3880714f8b3cd8b018da083b43, try reverting b11b2593b12a9d3014b36651f5094a12be0631f8 and test in CI again
+    - Could be due to "bash from env" warning shown when entring the nix-shell locally
 
 - [X] Restore all examples in User-Guide.md (marked TODO)
 
@@ -44,12 +46,81 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] Remove/fix code stubs/undefined
 
-- Port issues from the old tracker
+- [ ] Unify DynamicLensLaws, ArticulationLensLaws etc, if possible
+  - Note Pitch only states one of the laws (because it usually is the innermost?)
 
-- Never fail export on overlapping/simultaneously events
+- Articulation representation can't handle consequtive legato phrases
+  E.g. `legato a |> legato b` is transformed into `legato (a |> b)` which is not always right
+
+- Add log levels/warnings to fromAspects log. Use cases:
+  - Overlapping notes when not expected (e.g. solo monophonic instrument)
+  - Playing techniques not support for an instrument (see $playingTechniques)
+  - Other unplayable things
+
+- [ ] $playingTechniques Playing techniques
+  - Design:
+    - Separate aspect from part
+    - Make instrument types (woodwind, brass) etc into a kind using DataKinds
+      - Aside: Recast PercussionInstrument etc to be (Instr Percussion) or similar.
+    - Make `Technique` a typecon `[InstrumentFamily] -> Type`, e.g:
+        - `Pizz :: Technique '[Strings]`
+        - `FlutterTongue :: Technique '[Brass, Woodwind]`
+        - etc.
+    - For `StandardNote/TechniqueT`, use `SomeTechnique ~ (exists xs . Technique xs)` for now.
+      - Gather technique along with parts and throw away unplayable techniques in fromAspects (emitting warnings)
+    - Checking playability, for example:
+      - String natural harmonics
+      - String double stops
+    - Stateful notations
+      - Examples
+        - Mutes (none, straight mute, plunger etc)
+        - Plenty others in strings, e.g. pizz/arco, sul tasto/nat/pont etc
+      - As with dynamics we notate these "per note" in the logical representation
+        - In fromAspects, traverse each part looking for changes
+
+- [ ] Replace note transformer stack with Vinyl or similar (when possible)
+  - Try a polymorphic transformer first, e.g. PitchT (the rest should be easy)
+
+
+- Issues from the old tracker
+  - We have a CLI interface for dynamically exporting to various backends and providing options.
+  - Could use typed serialization for providing this. Would allowing combination of files/CLI etc
+    and safer invocation from warapper programs (e.g. transf).
+    - https://github.com/music-suite/music-suite/issues/11
+
+  - More 12-tone/equal temperament stuff
+    - Set theory concepts
+    - Binary scales (?)
+    https://github.com/music-suite/music-pitch/issues/56
+  - Pitch normalization which preserves spelling direction
+    https://github.com/music-suite/music-pitch/issues/55
+  - Parse Helmholtz, SPN etc
+    https://github.com/music-suite/music-pitch/issues/54
+  - Pitch invert should be called invertChromatic
+    https://github.com/music-suite/music-pitch/issues/51
+  - Iso `interval` is partial
+    https://github.com/music-suite/music-pitch/issues/46
+  - Harmony support
+    https://github.com/music-suite/music-pitch/issues/35
+  - More seamless conversions between 12-TET/Semitones and Pitch/Interval
+  - Articulation should track agogic prolongation in addition to shortining/separation and accentuation
+    https://github.com/music-suite/music-articulation/issues/3
+
+  - Phrase traversals currently fail at runtime if there are overlapping notes in a single part.
+    https://github.com/music-suite/music-score/issues/208
+
+  - $reversibleMeta
+    https://github.com/music-suite/music-score/issues/119
+
+  - Issues from the following repos have been ported to this file:
+    - music-pitch
+    - music-suite
+    - music-dynamics
+    - music-articulation
+
+- [ ] Never fail export on overlapping/simultaneously events
   $needsTests
   - What is the correct behavior if a score is exported where a some part has overlapping notes?
-  - Also test phrase traverals in the precense of overlapping
   - Generally this should be fine, though currently the backend/export code does not handle it
     correctly.
   - Putting overlapping events in monophonic instruments (e.g. flute) should be a linting error,
@@ -199,7 +270,7 @@ Consider switching to a decentralized issue tracker such as:
   - Graphical backends
     - Piano roll
 
-
+- Save example data from https://github.com/hanshoglund/.stash
 
 - [X]  $entrypoint Decide on top-level interface
   - By default recommend *no IO*
@@ -213,6 +284,8 @@ Consider switching to a decentralized issue tracker such as:
     - Overloaded function rendering `Score Asp1` or `Work`, suitable for preview use (e.g. show chords as a simple one-chord score, vocal ranges as a simple two note score with a slide, etc.). Similarly for audio preview. These functions have a role similar to `Show` and should not be used for "real" export (warn about this in the docs!).
     - Finally, some basic utilities for IO: `Score Asp1 -> IO ()` to render a score as a CLI program taking output format, etc. Similarly for the various intermediate types.
 
+- Add WTC C major prelude example
+  - Data: https://gist.github.com/hanshoglund/4058cfb08906379fd2da
 
 - Interactive editing/preview (see also preview class in $entrypoint).
   - MVP: When moving cursor to an expression, show it visualized in Window, with caching.
@@ -258,7 +331,7 @@ Consider switching to a decentralized issue tracker such as:
     - Export/Import: move to Music.Export, Music.Import
     - Music.Score.ASPECT (e.g. where ASPECT is Pitch etc): merge with Music.ASPECT
 
-- [ ] In `fromAspects`, never change time signature in the last bar
+- [X] $timeSignatureInLastBar In `fromAspects`, never change time signature in the last bar
   - E.g. in the example `pseq [c,d,e,f,g] |/ 4`, this should render as two 4/4 bars, not as one 4/4 followed by 1/4
 
 - Better syntax for entering pitch/time, maybe using a quasi-quoter
@@ -303,20 +376,20 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] https://github.com/music-suite/music-score/issues/340
 
-- https://github.com/music-suite/music-score/issues/298
+- Try alternative quantization algorithms, e.g. fomus or ksquant2
+  https://github.com/music-suite/music-score/issues/298
 
 - [X] Replace ucat with (new) rcat
 
-- $minorAspect
-  - There's a philosophical difference between "major" aspects (pitch, dynamics, articulation, part)
-    and "minor" ones (tremolo, slide/gq
-    liss, freeform text, colour, harmonics).
-  - Some of these are being abused in current examples, e.g. freeform text is used to denote pizz/arco
+- [X] $minorAspects
+  - Definition: the "major" aspects are (pitch, dynamics, articulation, part)
+  - Some minor aspects these are being abused in current examples, e.g. freeform text is used to denote pizz/arco
   - The representation of tremolo, slide/gliss, harmonics could be smarter. E.g. we should maybe use
     (Reactive Pitch) or similar instead of context-specific begin/end marks. Note this might require
     countext-bound rewriting as we currently do with dynamics and articulation.
   - Simple playing techniques should be standarized, similarly to what we do with instruments.
     The technique/instrument/rage relations should be availible somewhere.
+  - Closing this as actions are tracked under $playingTechniques
 
 - Purge lawless instances, do more property testing
 

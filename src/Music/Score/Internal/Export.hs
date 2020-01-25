@@ -2,6 +2,14 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
 {-# OPTIONS_GHC -Wwarn #-}
 
 -------------------------------------------------------------------------------------
@@ -79,75 +87,33 @@ import Prelude hiding
   )
 
 extractTimeSignatures :: Score a -> ([Maybe TimeSignature], [Duration])
-extractTimeSignatures score = (barTimeSignatures, barDurations)
+extractTimeSignatures score = (retainUpdates barTimeSignatures, barDurations)
   where
     defaultTimeSignature = time 4 4
+    timeSignatures :: [(TimeSignature, Duration)]
     timeSignatures =
       fmap swap
         $ view pairs . fuse . reactiveToVoice' (0 <-> (score ^. offset))
         $ getTimeSignatures defaultTimeSignature score
-    -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
-    barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
-    barDurations = getBarDurations timeSignatures
---
--- -- | Convert a voice to a list of bars using the given bar durations.
--- voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
--- voiceToBars' barDurs = fmap (map (^. from note) . (^. notes)) . splitTiesAt barDurs
--- -- TODO remove prime from name
---
--- -- | Basic spelling for integral types.
--- spellPitch :: Integral a => a -> (a, a, a)
--- spellPitch p = (
---     pitchClass,
---     alteration,
---     octave
---     )
---     where
---         octave     = (p `div` 12) - 1
---         semitone   = p `mod` 12
---         pitchClass = fromStep major semitone
---         alteration = semitone - step major pitchClass
---
---         step xs p = xs !! (fromIntegral p `mod` length xs)
---         fromStep xs p = fromIntegral $ fromMaybe (length xs - 1) $ List.findIndex (>= p) xs
---         scaleFromSteps = snd . List.mapAccumL add 0
---             where
---                 add a x = (a + x, a + x)
---         major = scaleFromSteps [0,2,2,1,2,2,2,1]
---
---
--- type MVoice a = Voice (Maybe a)
---
--- -- toMVoice :: (Semigroup a, Transformable a) => Score a -> MVoice a
--- -- toMVoice = scoreToVoice . simultaneous
---
--- unvoice :: Voice b -> [(Duration, b)]
--- unvoice = toListOf (notes . traverse . from note)
--- -- unvoice = fmap (^. from note) . (^. notes)
--- {-# DEPRECATED unvoice "Use 'unsafeEventsV'" #-}
---
---
--- openCommand :: String
--- openCommand = case Info.os of
---   "darwin" -> "open"
---   "linux"  -> "xdg-open"
---
--- {-
--- -- TODO any version and/or OS
--- hasMuseScore = do
---   result <- try (readProcess "ls" ["/Applications/MuseScore.app"] "")
---   return $ case result of
---     Left e   -> (e::SomeException) `assumed` False
---     Right _ ->  True
---
--- hasSibelius = do
---   result <- try (readProcess "ls" ["/Applications/Sibelius 7.app"] "")
---   return $ case result of
---     Left e   -> (e::SomeException) `assumed` False
---     Right _ ->  True
---
---
--- assumed = flip const
--- -}
---
--- -- JUNK
+    -- The time signature of each bar.
+    --
+    -- TODO alternative combinator that returns barTimeSignatures as this has all
+    -- the information
+    barTimeSignatures =
+      prolongLastBarIfDifferent $
+        getBarTimeSignatures timeSignatures
+    barDurations = fmap realToFrac barTimeSignatures
+    -- Allow the last bar to be shorter than the indicated time signature
+    -- To prevent e.g. this from having an unexpected time signature change
+    --
+    -- @
+    -- timeSignatures (3/4) c
+    -- @
+    prolongLastBarIfDifferent :: [TimeSignature] -> [TimeSignature]
+    prolongLastBarIfDifferent = reverse . go . reverse
+      where
+        go [] = []
+        go [x] = [x]
+        go (last : penult : xs)
+          | last < penult = penult : penult : xs
+          | otherwise = last : penult : xs

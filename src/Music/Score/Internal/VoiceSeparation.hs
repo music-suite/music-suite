@@ -1,7 +1,15 @@
 {-# LANGUAGE PackageImports #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
 
 module Music.Score.Internal.VoiceSeparation
-  (
+  ( partitionSimplistic,
   )
 where
 
@@ -128,7 +136,7 @@ partitionSimplistic p = recur []
             (chooseSuchThat (\picked -> p (picked : alreadyPicked)) $ aShuffle toConsider)
             (\(picked, notPicked) -> recur (picked : alreadyPicked) notPicked)
             (return (alreadyPicked, toConsider))
-
+{-
 -- For testing
 
 -- NOTE all predicates used here should satisfy
@@ -146,6 +154,8 @@ noDuplicates (x : xs) = all (/= x) xs
 
 testShuffle :: forall a. [a] -> [a]
 testShuffle xs = evalRand (shuffleM xs) (mkStdGen 1828372878)
+-}
+
 {-
 TODO test correctness, i.e. that
   concat (partitionSimplistic p xs) =:= xs

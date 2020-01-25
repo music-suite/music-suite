@@ -1,6 +1,7 @@
 constraints: any.Boolean ==0.2.4,
              any.Cabal ==2.4.0.1,
              any.HCodecs ==0.5.1,
+             any.streams ==3.3,
              any.MemoTrie ==0.6.9,
              MemoTrie -examples,
              any.MonadRandom ==0.5.1.1,

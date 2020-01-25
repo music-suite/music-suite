@@ -23,10 +23,11 @@ import Data.AdditiveGroup
 import Data.AffineSpace
 import Data.Either
 import Data.Maybe
+import qualified Data.Ratio
 import Data.Semigroup
 import Data.VectorSpace
 import Music.Pitch.Literal
-import qualified Data.Ratio
+import Music.Time.Transform (Transformable (..))
 
 -- |
 -- Absolute frequency in Hertz.
@@ -101,6 +102,9 @@ instance HasFrequency Fifths where
 instance HasFrequency Cents where
   frequency (Cents f) = (2 / 1) ** (f / 1200)
 
+instance Transformable Hertz where
+  transform _ = id
+
 -- |  Convert a frequency to octaves.
 octaves :: HasFrequency a => a -> Octaves
 octaves a = Octaves $ logBase (2 / 1) (frequency a)
@@ -121,12 +125,13 @@ diss :: RealFrac a => [a] -> a
 diss xs = lcms xs / minimum xs
 
 gcdG :: RealFrac a => a -> a -> a
+
 lcmG :: RealFrac a => a -> a -> a
-lcmG a b = let f = (unRatio.toRational); (a1,a2)=f a; (b1,b2)=f b in fromIntegral (lcm a1 b1)/fromIntegral (gcd a2 b2)
-gcdG a b = let f = (unRatio.toRational); (a1,a2)=f a; (b1,b2)=f b in fromIntegral (gcd a1 b1)/fromIntegral (lcm a2 b2)
+lcmG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (lcm a1 b1) / fromIntegral (gcd a2 b2)
+
+gcdG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (gcd a1 b1) / fromIntegral (lcm a2 b2)
 
 lcms :: RealFrac a => [a] -> a
 lcms = foldr lcmG 1
 
 unRatio x = (Data.Ratio.numerator x, Data.Ratio.denominator x)
-

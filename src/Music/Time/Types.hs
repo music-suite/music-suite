@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
+
 module Music.Time.Types
   ( -- * Basic types
     Time,
@@ -88,7 +97,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,
@@ -146,7 +154,7 @@ type LocalDuration = Alignment
 -- |
 -- Duration, corresponding to note values in standard notation.
 -- The standard names can be used: @1\/2@ for half note @1\/4@ for a quarter note and so on.
-newtype Duration = Duration {getDuration :: TimeBase}
+newtype Duration = Duration {_getDuration :: TimeBase}
   deriving (Eq, Ord, Typeable, Enum, Num, Fractional, Real, RealFrac)
 
 -- Duration is a one-dimensional 'VectorSpace', and is the associated vector space of time points.
@@ -171,10 +179,7 @@ instance Semigroup Duration where
   (<>) = (*^)
 
 instance Monoid Duration where
-
   mempty = 1
-
-  mappend = (*^)
 
 instance AdditiveGroup Duration where
 
@@ -200,7 +205,7 @@ instance InnerSpace Duration where
 -- Time has an origin (zero) which usually represents the beginning of the musical
 -- performance, but this may not always be the case, as the modelled music may be
 -- infinite, or contain a musical pickup. Hence 'Time' values can be negative.
-newtype Time = Time {getTime :: TimeBase}
+newtype Time = Time {_getTime :: TimeBase}
   deriving (Eq, Ord, Typeable, Enum, Num, Fractional, Real, RealFrac)
 
 -- Time forms an affine space with durations as the underlying vector space, that is, we
@@ -221,10 +226,7 @@ instance Semigroup Time where
   (<>) = (+)
 
 instance Monoid Time where
-
   mempty = 0
-
-  mappend = (+)
 
 instance AdditiveGroup Time where
 
@@ -345,10 +347,7 @@ instance Semigroup Span where
   (<>) = (^+^)
 
 instance Monoid Span where
-
   mempty = zeroV
-
-  mappend = (^+^)
 
 instance AdditiveGroup Span where
 
@@ -509,12 +508,6 @@ normalizeSpan :: Span -> Span
 normalizeSpan s = if isForwardSpan s then s else reverseSpan s
 
 -- TODO Duplicate as normalizeNoteSpan
-
--- |
--- Whether this is a proper span, i.e. whether @'_onset' x '<' '_offset' x@.
-isProper :: Span -> Bool
-isProper (view onsetAndOffset -> (t, u)) = t < u
-{-# DEPRECATED isProper "Use 'isForwardSpan'" #-}
 
 infixl 5 `inside`
 

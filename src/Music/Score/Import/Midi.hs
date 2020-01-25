@@ -30,7 +30,6 @@ module Music.Score.Import.Midi
 where
 
 import Codec.Midi (Midi)
-
 import qualified Codec.Midi as Midi
 import Control.Applicative
 import Control.Lens
@@ -96,31 +95,37 @@ type IsMidi a =
 fromMidi :: IsMidi a => Midi -> Score a
 fromMidi = error "TODO midi import" . getMidi
 
-getMidi :: Midi.Midi -> [[Event (Midi.Channel,Midi.Key,Midi.Velocity)]]
-getMidi (Midi.Midi fileType timeDiv tracks) = id
-      $ compress (ticksp timeDiv)
-      $ fmap mcatMaybes
-      $ fmap snd
-      $ fmap (List.mapAccumL g mempty)
-      $ fmap mcatMaybes $ over (mapped.mapped) getMsg tracks
+getMidi :: Midi.Midi -> [[Event (Midi.Channel, Midi.Key, Midi.Velocity)]]
+getMidi (Midi.Midi fileType timeDiv tracks) =
+  id
+    $ compress (ticksp timeDiv)
+    $ fmap mcatMaybes
+    $ fmap snd
+    $ fmap (List.mapAccumL g mempty)
+    $ fmap mcatMaybes
+    $ over (mapped . mapped) getMsg tracks
   where
-    g keyStatus (t,onOff,c,p,v) =
-      ( updateKeys onOff p (fromIntegral t) keyStatus
-      , (if onOff then Nothing else Just (
-        (Data.Maybe.fromMaybe 0 (Map.lookup (fromIntegral t) keyStatus)<->fromIntegral t,(c,p,60))^.event))
+    g keyStatus (t, onOff, c, p, v) =
+      ( updateKeys onOff p (fromIntegral t) keyStatus,
+        ( if onOff
+            then Nothing
+            else
+              Just
+                ( (Data.Maybe.fromMaybe 0 (Map.lookup (fromIntegral t) keyStatus) <-> fromIntegral t, (c, p, 60)) ^. event
+                )
+        )
       )
     -- TODO also store dynamics in pitch map (to use onset value rather than offset value)
     -- For now just assume 60
-    updateKeys True  p t = Map.insert p t
+    updateKeys True p t = Map.insert p t
     updateKeys False p _ = Map.delete p
-
     -- Amount to compress time (after initially treating each tick as duration 1)
-    ticksp (Midi.TicksPerBeat n)     = 1 / fromIntegral n
+    ticksp (Midi.TicksPerBeat n) = 1 / fromIntegral n
     ticksp (Midi.TicksPerSecond _ _) = error "fromMidi: Can not parse TickePerSecond-based files"
 
-getMsg (t, Midi.NoteOff c p v) = Just (t,False,c,p,v)
-getMsg (t, Midi.NoteOn c p 0)  = Just (t,False,c,p,0)
-getMsg (t, Midi.NoteOn c p v)  = Just (t,True,c,p,v)
+getMsg (t, Midi.NoteOff c p v) = Just (t, False, c, p, v)
+getMsg (t, Midi.NoteOn c p 0) = Just (t, False, c, p, 0)
+getMsg (t, Midi.NoteOn c p v) = Just (t, True, c, p, v)
 -- TODO key pressure
 -- control change
 -- program change
@@ -128,6 +133,7 @@ getMsg (t, Midi.NoteOn c p v)  = Just (t,True,c,p,v)
 -- pitch wheel
 -- etc.
 getMsg _ = Nothing
+
 --
 
 -- Map each track to a part (scanning for ProgramChange, name etc)

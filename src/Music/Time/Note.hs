@@ -75,7 +75,7 @@ instance Transformable (Note a) where
   transform t = over (from note . _1) (transform t)
 
 instance HasDuration (Note a) where
-  _duration = _duration . view (from note)
+  _duration = fst . view (from note)
 
 {-
   Splitting a note is surprisingly difficult because of the recursive nature of split.

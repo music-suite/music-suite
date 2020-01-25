@@ -31,12 +31,12 @@ module Music.Pitch.Equal
   )
 where
 
-import Data.Proxy
 import Control.Applicative
 import Control.Monad
 import Data.AffineSpace
 import Data.Either
 import Data.Maybe
+import Data.Proxy
 import Data.Semigroup
 import Data.VectorSpace
 import Music.Pitch.Absolute

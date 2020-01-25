@@ -72,6 +72,7 @@ import Control.Lens hiding
   )
 import Data.AffineSpace
 import Data.AffineSpace.Point
+import Data.Functor.Couple
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Ratio
@@ -169,6 +170,8 @@ instance Transformable a => Transformable (Product a) where
 
 instance Transformable a => Transformable (b, a) where
   transform t = fmap (transform t)
+
+deriving instance (Monoid b, Transformable a) => Transformable (Couple b a)
 
 instance Transformable a => Transformable [a] where
   transform t = fmap (transform t)

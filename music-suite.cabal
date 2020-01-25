@@ -29,6 +29,7 @@ library
                         split,
                         containers,
                         comonad,
+                        streams,
                         vector-space,
                         vector-space-points,
                         process,
@@ -169,8 +170,10 @@ library
                         Music.Score.Pitch
                         Music.Score.Articulation
                         Music.Score.Dynamics
+                        Music.Score.Technique
                         Music.Score.Slide
                         Music.Score.Tremolo
+                        Music.Score.StaffNumber
                         Music.Score.Text
                         Music.Score.Harmonics
                         Music.Score.Color

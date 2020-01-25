@@ -20,6 +20,7 @@ module Music.Pitch.Augmentable
   )
 where
 
+import Data.Functor.Couple
 import Data.Ratio
 
 -- |
@@ -67,6 +68,8 @@ instance Augmentable a => Augmentable (b, a) where
   augment = fmap augment
 
   diminish = fmap diminish
+
+deriving instance (Augmentable a) => Augmentable (Couple b a)
 
 {-
 augmented :: Augmentable a => Iso' a a

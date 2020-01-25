@@ -1,3 +1,13 @@
+{-# LANGUAGE DefaultSignatures #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
+
 -- | Provides colored note heads.
 module Music.Score.Color
   ( -- ** HasColor class
@@ -17,7 +27,7 @@ where
 
 import Control.Applicative
 import Control.Comonad
-import Control.Lens hiding (above, below, transform)
+import Control.Lens hiding (below, transform)
 import Data.AffineSpace
 import Data.Colour
 import qualified Data.Colour.Names as C
@@ -41,30 +51,27 @@ import Music.Time
 import Music.Time.Internal.Transform
 
 class HasColor a where
+
   setColor :: Colour Double -> a -> a
 
-instance HasColor a => HasColor (b, a) where
+  default setColor :: forall f b. (a ~ f b, Functor f, HasColor b) => Colour Double -> a -> a
   setColor s = fmap (setColor s)
+
+instance HasColor a => HasColor (b, a)
 
 deriving instance HasColor a => HasColor (Couple b a)
 
-instance HasColor a => HasColor [a] where
-  setColor s = fmap (setColor s)
+instance HasColor a => HasColor [a]
 
-instance HasColor a => HasColor (Score a) where
-  setColor s = fmap (setColor s)
+instance HasColor a => HasColor (Score a)
 
-instance HasColor a => HasColor (Voice a) where
-  setColor s = fmap (setColor s)
+instance HasColor a => HasColor (Voice a)
 
-instance HasColor a => HasColor (Note a) where
-  setColor s = fmap (setColor s)
+instance HasColor a => HasColor (Note a)
 
-instance HasColor a => HasColor (PartT n a) where
-  setColor s = fmap (setColor s)
+instance HasColor a => HasColor (PartT n a)
 
-instance HasColor a => HasColor (TieT a) where
-  setColor s = fmap (setColor s)
+instance HasColor a => HasColor (TieT a)
 
 newtype ColorT a = ColorT {getColorT :: Couple (Option (Last (Colour Double))) a}
   deriving (Eq {-Ord,-}, Show, Functor, Foldable {-Typeable,-}, Applicative, Monad, Comonad)
@@ -72,7 +79,6 @@ newtype ColorT a = ColorT {getColorT :: Couple (Option (Last (Colour Double))) a
 runColorT :: ColorT a -> (Colour Double, a)
 runColorT (ColorT (Couple (_, a))) = (error "TODO color export", a)
 
--- Lifted instances
 deriving instance Num a => Num (ColorT a)
 
 deriving instance Fractional a => Fractional (ColorT a)

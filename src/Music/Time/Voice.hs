@@ -1,4 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
 
 module Music.Time.Voice
   ( -- * Voice type
@@ -56,14 +64,11 @@ module Music.Time.Voice
   )
 where
 
--- voiceLens,
-
 import Control.Applicative
 import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,
@@ -74,7 +79,6 @@ import Control.Lens hiding
   )
 import Control.Monad
 import Control.Monad.Compose
-import Control.Monad.Plus
 import Control.Monad.Zip
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson as JSON
@@ -89,11 +93,9 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe
 import Data.Semigroup
 import Data.Sequence (Seq)
-import Data.Set (Set)
 import Data.String
 import Data.Traversable (Traversable)
 import Data.Typeable (Typeable)
-import Data.VectorSpace
 import GHC.Exts (IsList (..))
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
@@ -277,7 +279,7 @@ instance Num a => Num (Voice a) where
   (*) = liftA2 (*)
 
 -- | Create a 'Voice' from a list of 'Note's.
-voice :: Getter [Note a] (Voice a)
+voice :: Iso' [Note a] (Voice a)
 voice = from notesIgnoringMeta
 {-# INLINE voice #-}
 
@@ -727,7 +729,7 @@ fuseRests = fuseBy (\x y -> isNothing x && isNothing y)
 coverRests :: Voice (Maybe a) -> Maybe (Voice a)
 coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy merge x)
   where
-    norm = fuseRests x
+    -- norm = fuseRests x
     merge Nothing Nothing = error "Voice normalized, so consecutive rests are impossible"
     merge (Just x) Nothing = True
     merge Nothing (Just x) = True
@@ -746,7 +748,7 @@ durationsV = lens getDurs (flip setDurs)
     getDurs :: Voice a -> [Duration]
     getDurs = map fst . view pairs
     setDurs :: [Duration] -> Voice a -> Voice a
-    setDurs ds as = zipVoiceWith' (\a b -> a) (\a b -> b) (mconcat $ map durToVoice ds) as
+    setDurs ds as = zipVoiceWith' (\a b_ -> a) (\a_ b -> b) (mconcat $ map durToVoice ds) as
     durToVoice d = stretch d $ pure ()
 
 -- Warning: Breaks the lens laws, unless the length of the list is unmodified.
@@ -756,14 +758,16 @@ valuesV = lens getValues (flip setValues)
     -- getValues :: Voice a -> [a]
     getValues = map snd . view pairs
     -- setValues :: [a] -> Voice b -> Voice a
-    setValues as bs = zipVoiceWith' (\a b -> b) (\a b -> a) (listToVoice as) bs
+    setValues as bs = zipVoiceWith' (\_a b -> b) (\a _b -> a) (listToVoice as) bs
     listToVoice = mconcat . map pure
 
--- Lens "filtered" through a voice
-voiceLens :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
+{-
+-- | A lens filtered through a voice.
+--
+-- /Warning/ This is only a lens if the length of the voice is not altered.
+voiceLens :: Lens s t a b -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
 voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
-
--- TODO could also use (zipVoiceWith' max) or (zipVoiceWith' min)
+-}
 
 -- | Whether two notes have exactly the same duration pattern.
 -- Two empty voices are considered to have the same duration pattern.

@@ -2,6 +2,14 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
 
 -- |  Provides generic functions for inspecting and manipulating pitch.
 --
@@ -73,8 +81,7 @@ module Music.Score.Pitch
 where
 
 import BasePrelude hiding ((<>))
-import Control.Lens hiding (above, below, transform)
--- mfilter)
+import Control.Lens hiding (below, transform)
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.Functor.Couple
@@ -296,10 +303,10 @@ type instance Pitch (Behavior a) = Behavior a
 
 type instance SetPitch b (Behavior a) = b
 
-instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitches (Behavior a) b where
+instance (Transformable b, b ~ Pitch b) => HasPitches (Behavior a) b where
   pitches = ($)
 
-instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitch (Behavior a) b where
+instance (Transformable b, b ~ Pitch b) => HasPitch (Behavior a) b where
   pitch = ($)
 
 type instance Pitch (Couple c a) = Pitch a
@@ -655,9 +662,6 @@ simplifyPitches = over pitches' simplifyPitch
   where
     simplifyPitch p = if (accidental p < doubleFlat || accidental p > doubleSharp) then relative c (spell usingSharps) p else p
 
-instance Transformable Common.Pitch where
-  transform _ = id
-
 type instance Pitch Common.Pitch = Common.Pitch
 
 type instance SetPitch a Common.Pitch = a
@@ -667,9 +671,6 @@ instance (Transformable a, a ~ Pitch a) => HasPitch Common.Pitch a where
 
 instance (Transformable a, a ~ Pitch a) => HasPitches Common.Pitch a where
   pitches = ($)
-
-instance Transformable Hertz where
-  transform _ = id
 
 type instance Pitch Hertz = Hertz
 

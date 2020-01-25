@@ -1,3 +1,13 @@
+{-# LANGUAGE DefaultSignatures #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
+
 -- | Provides a representation of musical /slides/, commonly known as /glissando/ or
 -- /portamento/.
 module Music.Score.Slide
@@ -40,65 +50,29 @@ class HasSlide a where
 
   setEndSlide :: Bool -> a -> a
 
-instance HasSlide a => HasSlide (b, a) where
+  default setBeginGliss :: forall f b. (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
+  setBeginGliss s = fmap (setBeginGliss s)
 
-  setBeginGliss n = fmap (setBeginGliss n)
+  default setBeginSlide :: forall f b. (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
+  setBeginSlide s = fmap (setBeginSlide s)
 
-  setBeginSlide n = fmap (setBeginSlide n)
+  default setEndGliss :: forall f b. (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
+  setEndGliss s = fmap (setEndGliss s)
 
-  setEndGliss n = fmap (setEndGliss n)
+  default setEndSlide :: forall f b. (a ~ f b, Functor f, HasSlide b) => Bool -> a -> a
+  setEndSlide s = fmap (setEndSlide s)
 
-  setEndSlide n = fmap (setEndSlide n)
+instance HasSlide a => HasSlide (b, a)
 
-instance HasSlide a => HasSlide (Couple b a) where
+instance HasSlide a => HasSlide (Couple b a)
 
-  setBeginGliss n = fmap (setBeginGliss n)
+instance HasSlide a => HasSlide [a]
 
-  setBeginSlide n = fmap (setBeginSlide n)
+instance HasSlide a => HasSlide (Score a)
 
-  setEndGliss n = fmap (setEndGliss n)
+instance HasSlide a => HasSlide (Voice a)
 
-  setEndSlide n = fmap (setEndSlide n)
-
-instance HasSlide a => HasSlide [a] where
-
-  setBeginGliss n = fmap (setBeginGliss n)
-
-  setBeginSlide n = fmap (setBeginSlide n)
-
-  setEndGliss n = fmap (setEndGliss n)
-
-  setEndSlide n = fmap (setEndSlide n)
-
-instance HasSlide a => HasSlide (Score a) where
-
-  setBeginGliss n = fmap (setBeginGliss n)
-
-  setBeginSlide n = fmap (setBeginSlide n)
-
-  setEndGliss n = fmap (setEndGliss n)
-
-  setEndSlide n = fmap (setEndSlide n)
-
-instance HasSlide a => HasSlide (Voice a) where
-
-  setBeginGliss n = fmap (setBeginGliss n)
-
-  setBeginSlide n = fmap (setBeginSlide n)
-
-  setEndGliss n = fmap (setEndGliss n)
-
-  setEndSlide n = fmap (setEndSlide n)
-
-instance HasSlide a => HasSlide (Note a) where
-
-  setBeginGliss n = fmap (setBeginGliss n)
-
-  setBeginSlide n = fmap (setBeginSlide n)
-
-  setEndGliss n = fmap (setEndGliss n)
-
-  setEndSlide n = fmap (setEndSlide n)
+instance HasSlide a => HasSlide (Note a)
 
 -- (eg,es,a,bg,bs)
 newtype SlideT a = SlideT {getSlideT :: Couple ((Any, Any), (Any, Any)) a}

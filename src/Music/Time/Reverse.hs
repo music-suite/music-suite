@@ -30,6 +30,7 @@ import Data.AffineSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.AffineSpace.Point
+import Data.Functor.Couple
 import Data.Map (Map)
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -141,6 +142,8 @@ instance Reversible Span where
 
 instance Reversible a => Reversible (b, a) where
   rev (s, a) = (s, rev a)
+
+deriving instance (Monoid b, Reversible a) => Reversible (Couple b a)
 
 -- |
 -- A default implementation of 'rev'
