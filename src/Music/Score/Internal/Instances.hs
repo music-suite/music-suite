@@ -54,6 +54,7 @@ import qualified Music.Pitch.Common as Common
 import Music.Pitch.Literal
 import Music.Score.Articulation
 import Music.Score.Color
+import Music.Score.Technique
 import Music.Score.Dynamics
 import Music.Score.Harmonics
 import Music.Score.Meta
@@ -94,6 +95,39 @@ instance Semigroup a => Semigroup (PartT n a) where
 -- Aspect instaces (Pitch, Dynamics and Articulation) for PartT needs to go here,
 -- as the other aspects depends on partwise traversals etc
 --
+type instance Pitch (TechniqueT p a) = Pitch a
+
+type instance SetPitch b (TechniqueT p a) = TechniqueT p (SetPitch b a)
+
+instance HasPitch a b => HasPitch (TechniqueT p a) (TechniqueT p b) where
+  pitch = _Wrapped . _2 . pitch
+
+instance HasPitches a b => HasPitches (TechniqueT p a) (TechniqueT p b) where
+  pitches = _Wrapped . _2 . pitches
+
+type instance Dynamic (TechniqueT p a) = Dynamic a
+
+type instance SetDynamic b (TechniqueT p a) = TechniqueT p (SetDynamic b a)
+
+instance HasDynamic a b => HasDynamic (TechniqueT p a) (TechniqueT p b) where
+  dynamic = _Wrapped . _2 . dynamic
+
+instance HasDynamics a b => HasDynamics (TechniqueT p a) (TechniqueT p b) where
+  dynamics = _Wrapped . _2 . dynamics
+
+type instance Articulation (TechniqueT p a) = Articulation a
+
+type instance SetArticulation b (TechniqueT p a) = TechniqueT p (SetArticulation b a)
+
+instance HasArticulation a b => HasArticulation (TechniqueT p a) (TechniqueT p b) where
+  articulation = _Wrapped . _2 . articulation
+
+instance HasArticulations a b => HasArticulations (TechniqueT p a) (TechniqueT p b) where
+  articulations = _Wrapped . _2 . articulations
+
+
+
+
 
 type instance Pitch (PartT p a) = Pitch a
 

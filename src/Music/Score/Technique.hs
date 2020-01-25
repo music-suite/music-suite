@@ -26,6 +26,8 @@ module Music.Score.Technique
     technique',
     techniques',
 
+    TechniqueT(..),
+
     -- * Context
     vtechnique,
     addTechniqueCon,
