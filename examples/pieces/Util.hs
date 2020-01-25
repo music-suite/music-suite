@@ -317,21 +317,20 @@ showDynamicT (DynamicT (l,x))
 showDynamics :: Dynamics -> String
 showDynamics x
   | x == mempty = "mempty"
-  | x == ffffff = "ffffff"
-  | x == fffff  = "fffff"
-  | x == ffff   = "ffff"
-  | x == fff    = "fff"
-  | x == ff     = "ff"
-  | x == _f     = "_f"
-  | x == mf     = "mf"
-  | x == mp     = "mp"
-  | x == _p     = "_p"
-  | x == pp     = "pp"
-  | x == ppp    = "ppp"
-  | x == pppp   = "pppp"
-  | x == ppppp  = "ppppp"
-  | x == pppppp = "pppppp"
-  -- What if none works?
+  | x >= ffffff = "ffffff"
+  | x >= fffff  = "fffff"
+  | x >= ffff   = "ffff"
+  | x >= fff    = "fff"
+  | x >= ff     = "ff"
+  | x >= _f     = "_f"
+  | x >= mf     = "mf"
+  | x >= mp     = "mp"
+  | x >= _p     = "_p"
+  | x >= pp     = "pp"
+  | x >= ppp    = "ppp"
+  | x >= pppp   = "pppp"
+  | x >= ppppp  = "ppppp"
+  | otherwise   = "pppppp"
 
 roundDuration, ceilingDuration, floorDuration :: Duration -> Duration
 roundDuration = fromInteger . round
