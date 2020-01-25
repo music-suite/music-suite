@@ -304,10 +304,6 @@ mapWithTimeR f' = let f = uncurry f' in over rendered (bimap (\x -> f (Nothing,x
 widenAmbitus :: (Ord a, Num a) => a -> Ambitus a -> Ambitus a
 widenAmbitus p = under ambitus (\(m,n) -> (m `min` p, n `max` p))
 
-inAmbitus :: (Ord a, Num a) => Ambitus a -> a -> Bool
-inAmbitus amb p = m <= p && p <= n
-  where
-    (m,n) = amb^.from ambitus
 
 
 
@@ -1192,13 +1188,15 @@ getMsg _ = Nothing
 
 unRatio x = (Data.Ratio.numerator x, Data.Ratio.denominator x)
 
+
+lcms = foldr lcmG 1
 gcdG :: RealFrac a => a -> a -> a
 lcmG :: RealFrac a => a -> a -> a
 lcmG a b = let f = (unRatio.toRational); (a1,a2)=f a; (b1,b2)=f b in fromIntegral (lcm a1 b1)/fromIntegral (gcd a2 b2)
 gcdG a b = let f = (unRatio.toRational); (a1,a2)=f a; (b1,b2)=f b in fromIntegral (gcd a1 b1)/fromIntegral (lcm a2 b2)
-
-lcms = foldr lcmG 1
-
+lcmm :: Integral a => [a] -> a
+lcmm [] = 1
+lcmm (x:xs) = lcm x (lcmm xs)
 
 asPitch :: Pitch -> Pitch
 asPitch = id
