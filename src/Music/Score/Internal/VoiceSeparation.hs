@@ -11,7 +11,7 @@
 {-# LANGUAGE PackageImports #-}
 
 module Music.Score.Internal.VoiceSeparation
-  (
+  ( partitionSimplistic,
   )
 where
 
@@ -139,6 +139,7 @@ partitionSimplistic p = recur []
             (\(picked, notPicked) -> recur (picked : alreadyPicked) notPicked)
             (return (alreadyPicked, toConsider))
 
+{-
 -- For testing
 
 -- NOTE all predicates used here should satisfy
@@ -156,6 +157,8 @@ noDuplicates (x : xs) = all (/= x) xs
 
 testShuffle :: forall a. [a] -> [a]
 testShuffle xs = evalRand (shuffleM xs) (mkStdGen 1828372878)
+-}
+
 {-
 TODO test correctness, i.e. that
   concat (partitionSimplistic p xs) =:= xs
