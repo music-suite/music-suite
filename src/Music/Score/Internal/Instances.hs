@@ -63,6 +63,7 @@ import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
 import Music.Score.Tremolo
+import Music.Score.Technique
 import Music.Time
 
 -- -------------------------------------------------------------------------------------
@@ -187,6 +188,8 @@ instance (HasArticulation a b) => HasArticulation (ColorT a) (ColorT b) where
 
 -- -------------------------------------------------------------------------------------
 deriving instance HasColor a => HasColor (TremoloT a)
+
+deriving instance HasColor a => HasColor (TechniqueT a)
 
 deriving instance HasTremolo a => HasTremolo (PartT n a)
 

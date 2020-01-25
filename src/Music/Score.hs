@@ -5,6 +5,7 @@ module Music.Score
     module Music.Score.Articulation,
     module Music.Score.Slide,
     module Music.Score.Tremolo,
+    module Music.Score.Technique,
     module Music.Score.Text,
     module Music.Score.Harmonics,
     module Music.Score.Color,
@@ -58,17 +59,6 @@ import Data.VectorSpace hiding (Sum, getSum)
 import Music.Score.Articulation
 import Music.Score.Color
 import Music.Score.Dynamics
--- import           Music.Score.Export.Backend
--- import           Music.Score.Export.NoteList
--- import           Music.Score.Export.Midi
--- import           Music.Score.Export.SuperCollider
--- import           Music.Score.Export.Abc
--- import           Music.Score.Export.Lilypond
--- import           Music.Score.Export.Midi
--- import           Music.Score.Export.MusicXml
-
--- import           Music.Score.Export.StandardNotation()
-
 import Music.Score.Harmonics
 import Music.Score.Import.Abc
 import Music.Score.Import.Lilypond
@@ -92,4 +82,5 @@ import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
 import Music.Score.Tremolo
+import Music.Score.Technique
 import Music.Time hiding (time)

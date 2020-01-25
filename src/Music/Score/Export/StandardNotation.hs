@@ -275,6 +275,7 @@ import qualified Music.Score.Ties
 import Music.Score.Ties (Tiable (..))
 import Music.Score.Ties (TieT (..))
 import Music.Score.Tremolo (TremoloT, runTremoloT)
+import Music.Score.Technique (TechniqueT, runTechniqueT)
 import Music.Time
 import Music.Time.Meta (meta)
 import qualified System.Directory
@@ -1679,7 +1680,7 @@ toMidi = pure . finalizeExport . fmap (exportNote) . exportScore
     -- For now we throw all of this away using 'snd'
     --
     -- Arguably these should be retought, see $minorAspect in TODO.md
-    exportNote (PartT (_, ((snd . runSlideT . snd . runHarmonicT . snd . runTextT . snd . runColorT . snd . runTremoloT) -> x))) = exportNoteA x
+    exportNote (PartT (_, ((snd . runSlideT . snd . runHarmonicT . snd . runTextT . snd . runColorT . snd . runTremoloT . snd . runTechniqueT) -> x))) = exportNoteA x
       where
         exportNoteA (ArticulationT (_, x)) = exportNoteD x
         exportNoteD (DynamicT (realToFrac -> d, x)) = setV (dynLevel d) <$> exportNoteP x
@@ -1764,7 +1765,7 @@ toFomus work = error "Not implemented"
 
 type Asp1 =
   ( PartT Part
-      ( TremoloT
+      ( TechniqueT ( TremoloT
           ( ColorT
               ( TextT
                   ( HarmonicT
@@ -1779,14 +1780,14 @@ type Asp1 =
                   )
               )
           )
-      )
+      ))
   )
 
 -- We require all notes in a chords to have the same kind of ties
 type Asp2 =
   TieT
     ( PartT Part
-        ( TremoloT
+        ( TechniqueT ( TremoloT
             ( ColorT
                 ( TextT
                     ( HarmonicT
@@ -1801,13 +1802,13 @@ type Asp2 =
                     )
                 )
             )
-        )
+        ))
     )
 
 type Asp3 =
   TieT
     ( PartT Part
-        ( TremoloT
+        ( TechniqueT ( TremoloT
             ( ColorT
                 ( TextT
                     ( HarmonicT
@@ -1821,7 +1822,7 @@ type Asp3 =
                     )
                 )
             )
-        )
+        ))
     )
 
 type Asp = Score Asp1
@@ -1904,8 +1905,10 @@ fromAspects sc = do
     -- Make this more prominent!
     -- This is being used for the actual score!
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
+
     asp1ToAsp2 :: Asp1 -> Asp2
-    asp1ToAsp2 = pure . (fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap) pure
+    asp1ToAsp2 = pure . (fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap) pure
+
     toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
     toLayer p =
       maybe

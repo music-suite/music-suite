@@ -75,6 +75,9 @@ Consider switching to a decentralized issue tracker such as:
       - As with dynamics we notate these "per note" in the logical representation
         - In fromAspects, traverse each part looking for changes
 
+- [ ] Replace note transformer stack with Vinyl or similar (when possible)
+  - Try a polymorphic transformer first, e.g. PitchT (the rest should be easy)
+
 
 - Issues from the old tracker
   - We have a CLI interface for dynamically exporting to various backends and providing options.
