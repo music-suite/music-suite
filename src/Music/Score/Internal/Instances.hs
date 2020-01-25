@@ -448,6 +448,9 @@ instance HasDuration a => HasDuration (ColorT a) where
 instance HasDuration a => HasDuration (TextT a) where
   _duration = _duration . extract
 
+instance HasDuration a => HasDuration (TechniqueT a) where
+  _duration = _duration . extract
+
 instance HasDuration a => HasDuration (TremoloT a) where
   _duration = _duration . extract
 
@@ -476,6 +479,9 @@ instance Splittable a => Splittable (ColorT a) where
   split t = unzipR . fmap (split t)
 
 instance Splittable a => Splittable (TextT a) where
+  split t = unzipR . fmap (split t)
+
+instance Splittable a => Splittable (TechniqueT a) where
   split t = unzipR . fmap (split t)
 
 instance Splittable a => Splittable (TremoloT a) where
