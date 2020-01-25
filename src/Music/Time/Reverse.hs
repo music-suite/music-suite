@@ -45,6 +45,7 @@ import Data.Typeable
 import Data.VectorSpace
 import Data.VectorSpace hiding (Sum (..))
 import Music.Time.Position
+import Data.Functor.Couple
 
 -- |
 -- Class of values that can be reversed (retrograded).
@@ -141,6 +142,8 @@ instance Reversible Span where
 
 instance Reversible a => Reversible (b, a) where
   rev (s, a) = (s, rev a)
+
+deriving instance (Monoid b, Reversible a) => Reversible (Couple b a)
 
 -- |
 -- A default implementation of 'rev'

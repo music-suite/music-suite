@@ -48,6 +48,7 @@ import Control.Applicative
 import Data.Fixed
 import Data.Ratio
 import Data.Semigroup
+import Data.Functor.Couple
 
 -- |
 -- Dynamics literal.
@@ -77,6 +78,8 @@ instance IsDynamics a => IsDynamics (Maybe a) where
 
 instance (Monoid b, IsDynamics a) => IsDynamics (b, a) where
   fromDynamics = pure . fromDynamics
+
+deriving instance (Monoid b, IsDynamics a) => IsDynamics (Couple b a)
 
 instance IsDynamics a => IsDynamics [a] where
   fromDynamics = pure . fromDynamics

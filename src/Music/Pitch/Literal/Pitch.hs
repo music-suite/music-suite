@@ -236,6 +236,7 @@ import Data.Int
 import Data.Ratio
 import Data.Semigroup
 import Data.Word
+import Data.Functor.Couple
 import Music.Pitch.Common.Types
 
 -- Pitch literal, defined as @(class, alteration, octave)@, where
@@ -270,6 +271,8 @@ instance IsPitch a => IsPitch [a] where
 
 instance (Monoid b, IsPitch a) => IsPitch (b, a) where
   fromPitch = pure . fromPitch
+
+deriving instance (Monoid b, IsPitch a) => IsPitch (Couple b a)
 
 -- TODO clean by inlining this whole thing or similar
 viaPitchL :: (Int, Int, Int) -> Pitch

@@ -33,6 +33,7 @@ import Music.Time.Note (note)
 import Music.Time.Reverse
 import Music.Time.Transform
 import Music.Time.Voice
+import Data.Functor.Couple
 
 -- |
 -- Class of types that can be tied. Ties are added to a score by splitting a single note
@@ -93,6 +94,9 @@ instance Tiable a => Tiable (Behavior a) where
 -- This restriction assures all chord notes are in the same part
 --
 instance Tiable a => Tiable (c, a) where
+  toTied = unzipR . fmap toTied
+
+instance Tiable a => Tiable (Couple b a) where
   toTied = unzipR . fmap toTied
 
 instance Tiable a => Tiable (Maybe a) where

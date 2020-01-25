@@ -83,6 +83,7 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.VectorSpace hiding (Sum (..))
 import Music.Time.Types
+import Data.Functor.Couple
 
 -- |
 -- Class of values that can be transformed (i.e. scaled and moved) in time.
@@ -169,6 +170,8 @@ instance Transformable a => Transformable (Product a) where
 
 instance Transformable a => Transformable (b, a) where
   transform t = fmap (transform t)
+
+deriving instance (Monoid b, Transformable a) => Transformable (Couple b a)
 
 instance Transformable a => Transformable [a] where
   transform t = fmap (transform t)
