@@ -9,7 +9,7 @@
   -fno-warn-unused-imports
   #-}
 {-# LANGUAGE DefaultSignatures #-}
--- {-# LANGUAGE StandaloneDeriving, DerivingStrategies, DeriveAnyClass #-}
+
 -- | Provides a way of adding text to notes.
 module Music.Score.Text
   ( -- * Text
