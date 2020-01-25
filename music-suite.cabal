@@ -29,6 +29,7 @@ library
                         split,
                         containers,
                         comonad,
+                        streams,
                         vector-space,
                         vector-space-points,
                         process,
