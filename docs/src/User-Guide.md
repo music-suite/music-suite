@@ -807,6 +807,8 @@ tremolo 2 $ times 2 $ (c |> d)|/2
 fastTremolo $ times 2 $ (c |> d)|/2
 ```
 
+TODO repeat trem vs. alternation trem. The former is rare but happen e.g. when double-stopped strings play bow tremolo (without bariolage). The more common one is a rapid alteration among a set of notes. Logically we should treat both as an optional the property of a single chord. Alas in StandardNotation the latter is commonly written as two chords with half the duration (OR as a trill).
+
 TODO realising tremolo/trills
 
 ### Slides and glissando
@@ -846,9 +848,13 @@ TODO pizz/arco
 pizz $ pseq [c,c,c,c, arco d |* 2] |/ 4
 ```
 
+TODO bow position (sul tasto, sul pont, nat)
+
+TODO col legno (bat, tratto)
+
 TODO chord tremolo
 
-TODO stopping?
+TODO mutes
 
 ### Wind techniques
 
@@ -858,7 +864,7 @@ TODO key sounds, percussive attacks ("pizz"), haromonics/whistle tones
 
 ### Brass techniques
 
-TODO stopping
+TODO hand stopping
 
 TODO mutes
 

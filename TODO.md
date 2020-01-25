@@ -16,6 +16,7 @@ Consider switching to a decentralized issue tracker such as:
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
 - [ ] New (current) export does not render tremolo/gliss/harmonics/text/color
+  - See also $playingTechniques
 
 - [X] Add more examples (e.g from Piece1, Piece2 etc)
   - [ ] Make them all compile (add to cabal file!)
@@ -53,7 +54,7 @@ Consider switching to a decentralized issue tracker such as:
   - Playing techniques not support for an instrument (see $playingTechniques)
   - Other unplayable things
 
-- $playingTechniques Playing techniques
+- [ ] $playingTechniques Playing techniques
   - Design:
     - Separate aspect from part
     - Make instrument types (woodwind, brass) etc into a kind using DataKinds
@@ -64,7 +65,15 @@ Consider switching to a decentralized issue tracker such as:
         - etc.
     - For `StandardNote/TechniqueT`, use `SomeTechnique ~ (exists xs . Technique xs)` for now.
       - Gather technique along with parts and throw away unplayable techniques in fromAspects (emitting warnings)
-
+    - Checking playability, for example:
+      - String natural harmonics
+      - String double stops
+    - Stateful notations
+      - Examples
+        - Mutes (none, straight mute, plunger etc)
+        - Plenty others in strings, e.g. pizz/arco, sul tasto/nat/pont etc
+      - As with dynamics we notate these "per note" in the logical representation
+        - In fromAspects, traverse each part looking for changes
 
 
 - Issues from the old tracker
@@ -103,7 +112,7 @@ Consider switching to a decentralized issue tracker such as:
     - music-dynamics
     - music-articulation
 
-- Never fail export on overlapping/simultaneously events
+- [ ] Never fail export on overlapping/simultaneously events
   $needsTests
   - What is the correct behavior if a score is exported where a some part has overlapping notes?
   - Generally this should be fine, though currently the backend/export code does not handle it
@@ -366,16 +375,15 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] Replace ucat with (new) rcat
 
-- $minorAspect
-  - There's a philosophical difference between "major" aspects (pitch, dynamics, articulation, part)
-    and "minor" ones (tremolo, slide/gq
-    liss, freeform text, colour, harmonics).
-  - Some of these are being abused in current examples, e.g. freeform text is used to denote pizz/arco
+- [X] $minorAspects
+  - Definition: the "major" aspects are (pitch, dynamics, articulation, part)
+  - Some minor aspects these are being abused in current examples, e.g. freeform text is used to denote pizz/arco
   - The representation of tremolo, slide/gliss, harmonics could be smarter. E.g. we should maybe use
     (Reactive Pitch) or similar instead of context-specific begin/end marks. Note this might require
     countext-bound rewriting as we currently do with dynamics and articulation.
   - Simple playing techniques should be standarized, similarly to what we do with instruments.
     The technique/instrument/rage relations should be availible somewhere.
+  - Closing this as actions are tracked under $playingTechniques
 
 - Purge lawless instances, do more property testing
 
