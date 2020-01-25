@@ -327,19 +327,19 @@ data SystemBar
   = SystemBar
       {-
       We treat all the following information as global.
-      
+
       This is more restrictive than most classical notations, but greatly
       simplifies representation. In this view, a score is a matrix of bars
       (each belonging to a single staff). Each bar must have a single
       time sig/key sig/rehearsal mark/tempo mark.
-      
+
       ----
       Note: Option First ~ Maybe
-      
+
       Alternatively we could just make these things into Monoids such that
       mempty means "no notation at this point", and remove the "Option First"
       part here.
-      
+
       Actually I'm pretty sure this is the right approach. See also #242
       -}
       { _barNumbers :: Option (First BarNumber),
@@ -382,11 +382,11 @@ data StaffInfo
         _sibeliusFriendlyName :: SibeliusFriendlyName,
         {-
         See also clefChanges
-        
+
         TODO change name of _instrumentDefaultClef
         More accurately, it represents the first clef to be used on the staff
         (and the only one if there are no changes.)
-        
+
         OTOH having clef in the staff at all is redundant, specifying clef
         is optional (along with everything else) in this representation anyway.
         This is arguably wrong, as stanard notation generally requires a clef.
@@ -394,7 +394,7 @@ data StaffInfo
         _instrumentDefaultClef :: Music.Pitch.Clef,
         {-
         I.e. -P5 for horn
-        
+
         Note that this representation indicates *written pitch*, not sounding (as does MusicXML),
         so this value is redundant when rendering a graphical score. OTOH if this representation
         is used to render *sound*, pitches need to be transposed acconrdingly.
@@ -1321,16 +1321,16 @@ toXml work = do
     {-
       Returns a matrix of bars in in row-major order, i.e. each inner list
       represents the bars of one particular MusicXML part[1].
-    
+
       This is suitable for a "partwise" MusicXML score. The transpose of the
       returned matrix is suitable for a "timewise" score.
-    
+
       [1]: Note that a MusicXML part can be rendered as 1 staff (default) or more,
       so there are two ways to render a piano staff:
         1) Use two MusicXML parts grouped with a brace.
         2) Use one MusicXML part with 2 staves. In this case each note must
            have a staff child element.
-    
+
     -}
     movementToPartwiseXml :: (MusicXmlExportM m) => Movement -> m [[MusicXml.Music]]
     movementToPartwiseXml movement = music
@@ -1345,7 +1345,7 @@ toXml work = do
                 We could also prepend it to other staves, but that is reduntant and makes the
                 generated XML file much larger.
           Trying a new approach here by including this in all parts.
-        
+
           ---
           Again, this definition is a sequnce of elements to be prepended to each bar
           (typically divisions and attributes).
@@ -1388,7 +1388,7 @@ toXml work = do
         {-
           A matrix similar to the one returned from movementToPartwiseXml, but
           not including information from the system staff.
-        
+
           TODO we use movementAssureSameNumberOfBars
           We should do a sumilar check on the transpose of the bar/staff matrix
           to assure that all /bars/ have the same duration.
@@ -1437,12 +1437,12 @@ toXml work = do
                about this, are we always emitting the voice?)
                 YES, see setDefaultVoice below?
                 How about staff, are we always emitting that?
-            
+
               - TODO how does this interact with the staff-crossing feature?
                 (are we always emitting staff?)
               - TODO how does it interact with clefs/other in-measure elements not
                 connected to chords?
-            
+
                 Lots of meta-stuff here about how a bar is represented, would be nice to write up music-score
                 eloquently!
             -}
@@ -1479,7 +1479,7 @@ toXml work = do
             renderPitchLayer = renderBarMusic . fmap renderChord . getPitchLayer
             {-
             Render a rest/note/chord.
-            
+
             This returns a series of <note> elements, with appropriate <chord> tags.
             -}
             renderChord :: Chord -> Duration -> MusicXml.Music
@@ -1847,7 +1847,7 @@ fromAspects sc = do
   {-
     Separate voices (called "layers" to avoid confusion)
     This is currently a trivial algorithm that assumes overlapping notes are in different parts
-  
+
     TODO layer sepration (which, again, does not actually happen in current code)
     should happen after ties have been split.
   -}
@@ -1900,7 +1900,7 @@ fromAspects sc = do
         $ mempty
     systemStaff :: SystemStaff
     systemStaff = fmap (\ts -> timeSignature .~ Option (fmap First ts) $ mempty) timeSignatureMarks
-    (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
+    (timeSignatureMarks, barDurations) = Music.Score.Internal.Export.extractTimeSignatures normScore
     -- Make this more prominent!
     -- This is being used for the actual score!
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
@@ -1954,9 +1954,7 @@ fromAspects sc = do
             soloStr = if (part ^. (Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
             nameStr = (part ^. (Music.Parts.instrument) . (to Music.Parts.fullName))
             subpartStr = Just $ show (part ^. (Music.Parts.subpart))
-    extractTimeSignatures ::
-      Score a -> ([Maybe Music.Score.Meta.Time.TimeSignature], [Duration])
-    extractTimeSignatures = Music.Score.Internal.Export.extractTimeSignatures
+
     partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
     partDefault xs = Music.Parts.groupDefault $ fmap (\(p, x) -> (p ^. (Music.Parts.instrument), (p, x))) xs
     groupToLabelTree :: Group a -> LabelTree (BracketType) a
