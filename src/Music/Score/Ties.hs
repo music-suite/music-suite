@@ -1,3 +1,13 @@
+{-# OPTIONS_GHC
+  -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports
+  #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
 -- |
@@ -8,8 +18,8 @@ module Music.Score.Ties
     Tiable (..),
 
     -- * Splitting tied notes in scores
-    -- splitTies,
     splitTiesAt,
+    splitDurThen,
 
     -- * TieT note transformer
     TieT (..),
@@ -245,8 +255,6 @@ splitTiesAt' (barDur : rbarDur) occs = case splitDurFor barDur occs of
   (barOccs, []) -> barOccs : []
   (barOccs, restOccs) -> barOccs : splitTiesAt' rbarDur restOccs
 
-tsplitTiesAt :: [Duration] -> [Duration] -> [[(Duration, Char)]]
-tsplitTiesAt barDurs = fmap (map (^. from note) . (^. notes)) . splitTiesAt barDurs . ((^. voice) . map (^. note)) . fmap (\x -> (x, '_'))
 
 -- |
 -- Split an event into one chunk of the duration @s@, followed parts shorter than duration @t@.
@@ -280,11 +288,7 @@ splitDurFor remDur (x : xs) = case splitDur remDur x of
         ([x], xs)
   (x@(d, _), Just rest) -> ([x], rest : xs)
 
-tsplitDurFor :: Duration -> [Duration] -> ([(Duration, Char)], [(Duration, Char)])
-tsplitDurFor maxDur xs = splitDurFor maxDur $ fmap (\x -> (x, '_')) xs
 
--- instance Tiable Char where
--- toTied _ = ('(',')')
 
 -- |
 -- Split a event if it is longer than the given duration. Returns the first part of the
