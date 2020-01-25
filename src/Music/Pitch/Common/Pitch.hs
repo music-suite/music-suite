@@ -59,6 +59,7 @@ import Music.Pitch.Common.Number
 import Music.Pitch.Common.Semitones
 import Music.Pitch.Common.Types
 import Music.Pitch.Literal
+import Music.Time.Transform (Transformable(..))
 
 sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
 
@@ -171,6 +172,9 @@ middleC = c
 
 instance FromJSON Pitch where
   parseJSON = fmap (middleC .+^) . parseJSON
+
+instance Transformable Pitch where
+  transform _ = id
 
 -- |
 -- Creates a pitch from name accidental.

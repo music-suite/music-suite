@@ -26,6 +26,7 @@ import Data.Maybe
 import Data.Semigroup
 import Data.VectorSpace
 import Music.Pitch.Literal
+import Music.Time.Transform (Transformable(..))
 import qualified Data.Ratio
 
 -- |
@@ -100,6 +101,9 @@ instance HasFrequency Fifths where
 
 instance HasFrequency Cents where
   frequency (Cents f) = (2 / 1) ** (f / 1200)
+
+instance Transformable Hertz where
+  transform _ = id
 
 -- |  Convert a frequency to octaves.
 octaves :: HasFrequency a => a -> Octaves

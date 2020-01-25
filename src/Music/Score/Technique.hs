@@ -1,3 +1,13 @@
+{-# OPTIONS_GHC
+  -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports
+  #-}
 module Music.Score.Technique
   ( -- * Technique
     HasTechnique (..),

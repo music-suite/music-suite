@@ -1,3 +1,13 @@
+{-# OPTIONS_GHC
+  -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports
+  #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -35,7 +45,6 @@ import Data.AffineSpace.Point.Offsets (offsetPoints)
 import Data.Bifunctor
 import Data.Colour.Names as Color
 import Data.Functor.Context
-import Data.Functor.Contravariant (Op (..))
 import Data.Functor.Couple
 import qualified Data.List as List
 import Data.Semigroup
@@ -156,7 +165,7 @@ mVoicePVoiceIgnoringMeta = iso mvoiceToPVoice pVoiceToMVoice
         ( bimap voiceToRest voiceToPhrase
             . bimap (^. from pairs) (^. from pairs)
         )
-        . groupDiff' (isJust . snd)
+        . groupDiff (isJust . snd)
         . view pairs
     voiceToRest :: MVoice a -> Duration
     voiceToRest = sumOf (pairs . each . _1) . fmap (\x -> assert (isNothing x) x)
@@ -243,34 +252,18 @@ mkTrack = view track . map (view placed)
 withDurationR :: (Functor f, HasDuration a) => f a -> f (Duration, a)
 withDurationR = fmap $ \x -> (_duration x, x)
 
--- TODO generalize and move
-mapWithDuration :: HasDuration a => (Duration -> a -> b) -> a -> b
-mapWithDuration = over dual withDurationL . uncurry
-  where
-    withDurationL :: (Contravariant f, HasDuration a) => f (Duration, a) -> f a
-    withDurationL = contramap $ \x -> (_duration x, x)
-    dual :: Iso (a -> b) (c -> d) (Op b a) (Op d c)
-    dual = iso Op getOp
-
-dursToVoice :: [Duration] -> Voice ()
-dursToVoice = mconcat . map (\d -> stretch d $ return ())
 
 -- |
 -- Group contigous sequences matching/not-matching the predicate.
 --
 -- >>> groupDiff (== 0) [0,1,2,3,5,0,0,6,7]
--- [[0],[1,2,3,5],[0,0],[6,7]]
-groupDiff :: (a -> Bool) -> [a] -> [[a]]
+-- [Right [0], Left [1,2,3,5], Right [0,0], Left [6,7]]
+
+groupDiff :: (a -> Bool) -> [a] -> [Either [a] [a]]
 groupDiff p [] = []
 groupDiff p (x : xs)
-  | p x = (x : List.takeWhile p xs) : groupDiff p (List.dropWhile p xs)
-  | not (p x) = (x : List.takeWhile (not . p) xs) : groupDiff p (List.dropWhile (not . p) xs)
-
-groupDiff' :: (a -> Bool) -> [a] -> [Either [a] [a]]
-groupDiff' p [] = []
-groupDiff' p (x : xs)
-  | not (p x) = Left (x : List.takeWhile (not . p) xs) : groupDiff' p (List.dropWhile (not . p) xs)
-  | p x = Right (x : List.takeWhile p xs) : groupDiff' p (List.dropWhile p xs)
+  | not (p x) = Left (x : List.takeWhile (not . p) xs) : groupDiff p (List.dropWhile (not . p) xs)
+  | p x = Right (x : List.takeWhile p xs) : groupDiff p (List.dropWhile p xs)
 
 unzipR :: Functor f => f (a, b) -> (f a, f b)
 unzipR x = (fmap fst x, fmap snd x)
