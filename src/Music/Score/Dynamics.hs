@@ -1,3 +1,13 @@
+{-# OPTIONS_GHC
+  -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports
+  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
@@ -28,9 +38,10 @@ module Music.Score.Dynamics
     softer,
     cresc,
     dim,
+    volume,
+    compressor,
     compressUp,
     compressDown,
-    -- compressor,
     fadeIn,
     fadeOut,
     DynamicT (..),
@@ -215,7 +226,7 @@ type instance Dynamic (Behavior a) = Behavior a
 type instance SetDynamic b (Behavior a) = b
 
 instance
-  ( Transformable a,
+  (
     Transformable b,
     b ~ Dynamic b,
     SetDynamic (Behavior a) b ~ Behavior a
@@ -225,7 +236,7 @@ instance
   dynamics = ($)
 
 instance
-  ( Transformable a,
+  (
     Transformable b,
     b ~ Dynamic b,
     SetDynamic (Behavior a) b ~ Behavior a
@@ -392,8 +403,7 @@ cresc' a b = setLevelWithAlignment (\t -> alerp a b (realToFrac t))
 setLevelWithAlignment :: (Attenuable a) => (Duration -> Dynamic a) -> Voice a -> Voice a
 setLevelWithAlignment f = mapWithOnsetRelative 0 (\t x -> level (f (t .-. 0)) x)
 
--- TODO more general mapWithLocalTime or similar
-
+dim :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
 dim = cresc
 
 -- |

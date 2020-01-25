@@ -48,7 +48,6 @@ import Music.Score.Pitch
 import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
-import Music.Score.Tremolo () -- TODO because of orphans in Tremolo
 import Music.Time
 
 

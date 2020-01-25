@@ -1,3 +1,13 @@
+{-# OPTIONS_GHC
+  -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports
+  #-}
 -- | Provides colored note heads.
 module Music.Score.Color
   ( -- ** HasColor class
@@ -17,7 +27,7 @@ where
 
 import Control.Applicative
 import Control.Comonad
-import Control.Lens hiding (above, below, transform)
+import Control.Lens hiding (below, transform)
 import Data.AffineSpace
 import Data.Colour
 import qualified Data.Colour.Names as C
