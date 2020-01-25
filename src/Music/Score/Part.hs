@@ -1,3 +1,13 @@
+{-# OPTIONS_GHC
+  -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports
+  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -264,7 +274,7 @@ extractPartsWithInfo x = zip (allParts x) (extractParts x)
 extracted :: (Ord (Part a), HasPart' a {-, HasPart a b-}) => Iso (Score a) (Score b) [Score a] [Score b]
 extracted = iso extractParts mconcat
 
-extractedWithInfo :: (Ord (Part a), Ord (Part b), HasPart' a, HasPart' b) => Iso (Score a) (Score b) [(Part a, Score a)] [(Part b, Score b)]
+extractedWithInfo :: (Ord (Part a), HasPart' a, HasPart' b) => Iso (Score a) (Score b) [(Part a, Score a)] [(Part b, Score b)]
 extractedWithInfo = iso extractPartsWithInfo $ mconcat . fmap (uncurry $ set parts')
 
 newtype PartT n a = PartT {getPartT :: (n, a)}
