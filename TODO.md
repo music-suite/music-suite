@@ -65,6 +65,8 @@ Consider switching to a decentralized issue tracker such as:
     - For `StandardNote/TechniqueT`, use `SomeTechnique ~ (exists xs . Technique xs)` for now.
       - Gather technique along with parts and throw away unplayable techniques in fromAspects (emitting warnings)
 
+
+
 - Issues from the old tracker
   - We have a CLI interface for dynamically exporting to various backends and providing options.
   - Could use typed serialization for providing this. Would allowing combination of files/CLI etc
@@ -92,6 +94,8 @@ Consider switching to a decentralized issue tracker such as:
   - Phrase traversals currently fail at runtime if there are overlapping notes in a single part.
     https://github.com/music-suite/music-score/issues/208
 
+  - $reversibleMeta
+    https://github.com/music-suite/music-score/issues/119
 
   - Issues from the following repos have been ported to this file:
     - music-pitch
