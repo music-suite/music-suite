@@ -1,3 +1,15 @@
+{-# OPTIONS_GHC
+  -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports
+  #-}
+{-# OPTIONS_GHC
+ -fno-warn-orphans #-} -- TODO!
 module Music.Score.Tremolo
   ( -- * Tremolo
     HasTremolo (..),
@@ -65,13 +77,13 @@ deriving instance (Monoid b, IsPitch a) => IsPitch (Couple b a)
 
 deriving instance (Monoid b, IsDynamics a) => IsDynamics (Couple b a)
 
-deriving instance (Monoid b, Transformable a) => Transformable (Couple b a)
+deriving instance (Transformable a) => Transformable (Couple b a)
 
-deriving instance (Monoid b, Reversible a) => Reversible (Couple b a)
+deriving instance (Reversible a) => Reversible (Couple b a)
 
-deriving instance (Monoid b, Alterable a) => Alterable (Couple b a)
+deriving instance (Alterable a) => Alterable (Couple b a)
 
-deriving instance (Monoid b, Augmentable a) => Augmentable (Couple b a)
+deriving instance (Augmentable a) => Augmentable (Couple b a)
 
 instance Tiable a => Tiable (Couple b a) where
   toTied = unzipR . fmap toTied
