@@ -561,3 +561,11 @@ addDynCon ::
   s ->
   t
 addDynCon = over (phrases . vdynamic) withContext
+
+
+{-
+-- | Specialized verion of 'phrases' for
+phrasesVoice :: Traversal (MVoice a) (MVoice b) (Phrase a) (Phrase b)
+phrasesVoice  =
+  mVoicePVoice . each . _Right
+-}

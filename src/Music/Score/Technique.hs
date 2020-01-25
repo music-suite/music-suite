@@ -162,7 +162,14 @@ runTechniqueT :: TechniqueT a -> (SomeTechnique, a)
 runTechniqueT (TechniqueT (Couple (n, a))) = (n, a)
 
 {-
-TODO needs polymorphic transformer for this to work...
+TODO
+  - Recast Technique as a polymorphic transformer
+  - See if the approach for dynamics can be copied exactly for contextual notation
+    (see asp2ToAsp3!)
+  - Will this be partwise
+
+----
+
 
 addArtCon ::
   ( HasPhrases s t a b,
