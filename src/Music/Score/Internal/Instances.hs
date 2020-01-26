@@ -125,6 +125,13 @@ instance HasArticulation a b => HasArticulation (TechniqueT p a) (TechniqueT p b
 instance HasArticulations a b => HasArticulations (TechniqueT p a) (TechniqueT p b) where
   articulations = _Wrapped . _2 . articulations
 
+
+
+
+
+
+
+
 type instance Pitch (PartT p a) = Pitch a
 
 type instance SetPitch b (PartT p a) = PartT p (SetPitch b a)
@@ -155,6 +162,11 @@ instance HasPitch a b => HasPitch (ArticulationT p a) (ArticulationT p b) where
 instance HasPitches a b => HasPitches (ArticulationT p a) (ArticulationT p b) where
   pitches = _Wrapped . _2 . pitches
 
+
+
+
+
+
 type instance Dynamic (PartT p a) = Dynamic a
 
 type instance SetDynamic b (PartT p a) = PartT p (SetDynamic b a)
@@ -175,6 +187,9 @@ instance HasDynamic a b => HasDynamic (ArticulationT p a) (ArticulationT p b) wh
 instance HasDynamics a b => HasDynamics (ArticulationT p a) (ArticulationT p b) where
   dynamics = _Wrapped . _2 . dynamics
 
+
+
+
 type instance Articulation (PartT p a) = Articulation a
 
 type instance SetArticulation b (PartT p a) = PartT p (SetArticulation b a)
@@ -184,6 +199,9 @@ instance HasArticulation a b => HasArticulation (PartT p a) (PartT p b) where
 
 instance HasArticulations a b => HasArticulations (PartT p a) (PartT p b) where
   articulations = _Wrapped . _2 . articulations
+
+
+
 
 -- TODO move up?
 type instance Pitch (ColorT a) = Pitch a
