@@ -61,16 +61,16 @@ import qualified Data.List as List
 import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Music.Pitch.Literal
+import Music.Score.Color (ColorT)
 import Music.Score.Harmonics (HarmonicT)
 import Music.Score.Internal.Util (through)
 import Music.Score.Part
 import Music.Score.Phrases
 import Music.Score.Slide (SlideT)
-import Music.Score.Text (TextT)
-import Music.Score.Ties (Tiable(..), TieT)
 import Music.Score.StaffNumber (StaffNumberT)
-import Music.Score.Tremolo(TremoloT)
-import Music.Score.Color(ColorT)
+import Music.Score.Text (TextT)
+import Music.Score.Ties (Tiable (..), TieT)
+import Music.Score.Tremolo (TremoloT)
 import Music.Time
 import Music.Time.Internal.Transform
 
@@ -136,31 +136,33 @@ type instance Technique (PartT r a) = Technique a
 
 type instance SetTechnique b (PartT r a) = PartT r (SetTechnique b a)
 
-
-
-
 type instance Technique (StaffNumberT a) = Technique a
 
 type instance SetTechnique b (StaffNumberT a) = StaffNumberT (SetTechnique b a)
 
 instance HasTechniques a b => HasTechniques (StaffNumberT a) (StaffNumberT b) where
   techniques = _Wrapped . techniques
+
 instance HasTechnique a b => HasTechnique (StaffNumberT a) (StaffNumberT b) where
   technique = _Wrapped . technique
 
 type instance Technique (TremoloT a) = Technique a
 
 type instance SetTechnique b (TremoloT a) = TremoloT (SetTechnique b a)
+
 instance HasTechniques a b => HasTechniques (TremoloT a) (TremoloT b) where
   techniques = _Wrapped . techniques
+
 instance HasTechnique a b => HasTechnique (TremoloT a) (TremoloT b) where
   technique = _Wrapped . technique
 
 type instance Technique (ColorT a) = Technique a
 
 type instance SetTechnique b (ColorT a) = ColorT (SetTechnique b a)
+
 instance HasTechniques a b => HasTechniques (ColorT a) (ColorT b) where
   techniques = _Wrapped . techniques
+
 instance HasTechnique a b => HasTechnique (ColorT a) (ColorT b) where
   technique = _Wrapped . technique
 
@@ -175,9 +177,6 @@ type instance SetTechnique b (HarmonicT a) = HarmonicT (SetTechnique b a)
 type instance Technique (SlideT a) = Technique a
 
 type instance SetTechnique b (SlideT a) = SlideT (SetTechnique b a)
-
-
-
 
 type instance Technique (Either c a) = Technique a
 
