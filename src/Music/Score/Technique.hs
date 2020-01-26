@@ -61,13 +61,16 @@ import qualified Data.List as List
 import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Music.Pitch.Literal
-import Music.Score.Harmonics
+import Music.Score.Harmonics (HarmonicT)
 import Music.Score.Internal.Util (through)
 import Music.Score.Part
 import Music.Score.Phrases
-import Music.Score.Slide
-import Music.Score.Text
-import Music.Score.Ties
+import Music.Score.Slide (SlideT)
+import Music.Score.Text (TextT)
+import Music.Score.Ties (Tiable(..), TieT)
+import Music.Score.StaffNumber (StaffNumberT)
+import Music.Score.Tremolo(TremoloT)
+import Music.Score.Color(ColorT)
 import Music.Time
 import Music.Time.Internal.Transform
 
@@ -129,6 +132,39 @@ type instance Technique (Maybe a) = Technique a
 
 type instance SetTechnique b (Maybe a) = Maybe (SetTechnique b a)
 
+type instance Technique (PartT r a) = Technique a
+
+type instance SetTechnique b (PartT r a) = PartT r (SetTechnique b a)
+
+
+
+type instance Technique (StaffNumberT a) = Technique a
+
+type instance SetTechnique b (StaffNumberT a) = StaffNumberT (SetTechnique b a)
+
+type instance Technique (TremoloT a) = Technique a
+
+type instance SetTechnique b (TremoloT a) = TremoloT (SetTechnique b a)
+
+type instance Technique (ColorT a) = Technique a
+
+type instance SetTechnique b (ColorT a) = ColorT (SetTechnique b a)
+
+type instance Technique (TextT a) = Technique a
+
+type instance SetTechnique b (TextT a) = TextT (SetTechnique b a)
+
+type instance Technique (HarmonicT a) = Technique a
+
+type instance SetTechnique b (HarmonicT a) = HarmonicT (SetTechnique b a)
+
+type instance Technique (SlideT a) = Technique a
+
+type instance SetTechnique b (SlideT a) = SlideT (SetTechnique b a)
+
+
+
+
 type instance Technique (Either c a) = Technique a
 
 type instance SetTechnique b (Either c a) = Either c (SetTechnique b a)
@@ -160,6 +196,14 @@ type instance SetTechnique b (Score a) = Score (SetTechnique b a)
 type instance Technique (Aligned a) = Technique a
 
 type instance SetTechnique b (Aligned a) = Aligned (SetTechnique b a)
+
+type instance Technique () = ()
+
+type instance SetTechnique a () = a
+
+type instance Technique SomeTechnique = SomeTechnique
+
+type instance SetTechnique a SomeTechnique = a
 
 instance HasTechniques a b => HasTechniques (Aligned a) (Aligned b) where
   techniques = _Wrapped . techniques
