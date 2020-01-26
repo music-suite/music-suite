@@ -1,7 +1,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -99,8 +101,9 @@ type TechniqueLensLaws s t = TechniqueLensLaws' s t (Technique s) (Technique t)
 -- |
 -- Class of types that provide a technique traversal.
 class
-  ( Transformable (Technique s),
-    Transformable (Technique t),
+  (
+    -- Transformable (Technique s),
+    -- Transformable (Technique t),
     -- SetTechnique (Technique t) s ~ t
     TechniqueLensLaws s t
   ) =>
@@ -237,28 +240,31 @@ instance HasTechniques a b => HasTechniques (Either c a) (Either c b) where
   techniques = traverse . techniques
 
 instance (HasTechniques a b) => HasTechniques (Event a) (Event b) where
-  techniques = from event . whilstL techniques
+  techniques = from event . techniques
 
 instance (HasTechnique a b) => HasTechnique (Event a) (Event b) where
-  technique = from event . whilstL technique
+  technique = from event . technique
 
 instance (HasTechniques a b) => HasTechniques (Placed a) (Placed b) where
-  techniques = _Wrapped . whilstLT techniques
+  techniques = _Wrapped . techniques
 
 instance (HasTechnique a b) => HasTechnique (Placed a) (Placed b) where
-  technique = _Wrapped . whilstLT technique
+  technique = _Wrapped . technique
 
 instance (HasTechniques a b) => HasTechniques (Note a) (Note b) where
-  techniques = _Wrapped . whilstLD techniques
+  techniques = _Wrapped . techniques
 
 instance (HasTechnique a b) => HasTechnique (Note a) (Note b) where
-  technique = _Wrapped . whilstLD technique
+  technique = _Wrapped . technique
 
 instance HasTechniques a b => HasTechniques (Voice a) (Voice b) where
   techniques = traverse . techniques
 
 instance HasTechniques a b => HasTechniques (Track a) (Track b) where
   techniques = traverse . techniques
+
+instance HasTechniques a b => HasTechniques (PartT p a) (PartT p b) where
+  techniques = _Wrapped . _2 . techniques
 
 {-
 type instance Technique (Chord a)       = Technique a
@@ -273,14 +279,14 @@ instance (HasTechniques a b) => HasTechniques (Score a) (Score b) where
       . _Wrapped
       . traverse
       . from event -- this needed?
-      . whilstL techniques
+      . techniques
 
 type instance Technique (Behavior a) = Behavior a
 
 type instance SetTechnique b (Behavior a) = b
 
 instance
-  ( Transformable b,
+  (
     b ~ Technique b,
     SetTechnique (Behavior a) b ~ Behavior a
   ) =>
@@ -289,7 +295,7 @@ instance
   techniques = ($)
 
 instance
-  ( Transformable b,
+  (
     b ~ Technique b,
     SetTechnique (Behavior a) b ~ Behavior a
   ) =>
@@ -347,7 +353,7 @@ instance (HasTechniques a b) => HasTechniques (SlideT a) (SlideT b) where
 instance (HasTechnique a b) => HasTechnique (SlideT a) (SlideT b) where
   technique = _Wrapped . technique
 
-newtype TechniqueT n a = TechniqueT {getTechniqueT :: (n, a)}
+newtype TechniqueT n a = TechniqueT {getTechniqueT :: Couple n a }
   deriving
     ( Eq,
       Ord,
@@ -434,7 +440,7 @@ instance (Monoid n, Bounded a) => Bounded (TechniqueT n a) where
 
 instance Wrapped (TechniqueT p a) where
 
-  type Unwrapped (TechniqueT p a) = (p, a)
+  type Unwrapped (TechniqueT p a) = Couple p a
 
   _Wrapped' = iso getTechniqueT TechniqueT
 
@@ -444,29 +450,20 @@ type instance Technique (TechniqueT p a) = p
 
 type instance SetTechnique p' (TechniqueT p a) = TechniqueT p' a
 
-instance
-  (Transformable p, Transformable p') =>
-  HasTechnique (TechniqueT p a) (TechniqueT p' a)
-  where
-  technique = _Wrapped . _1
+instance HasTechnique (TechniqueT p a) (TechniqueT p' a) where
+  technique f (TechniqueT (Couple (t, x))) = fmap (TechniqueT . Couple . (, x)) (f t)
 
 instance
-  (Transformable p, Transformable p') =>
-  HasTechniques (TechniqueT p a) (TechniqueT p' a)
-  where
-  techniques = _Wrapped . _1
+  HasTechniques (TechniqueT p a) (TechniqueT p' a) where
+  techniques = technique
 
 deriving instance (IsPitch a, Monoid n) => IsPitch (TechniqueT n a)
 
 deriving instance (IsInterval a, Monoid n) => IsInterval (TechniqueT n a)
 
-deriving instance Reversible a => Reversible (TechniqueT p a)
+deriving instance (Monoid p, Reversible a) => Reversible (TechniqueT p a)
 
-instance (Tiable n, Tiable a) => Tiable (TechniqueT n a) where
-  toTied (TechniqueT (d, a)) = (TechniqueT (d1, a1), TechniqueT (d2, a2))
-    where
-      (a1, a2) = toTied a
-      (d1, d2) = toTied d
+deriving instance (Tiable a) => Tiable (TechniqueT n a)
 
 {-
 -- TODO move?
@@ -547,7 +544,7 @@ instance Semigroup SomeTechnique where
 instance Tiable SomeTechnique where
   toTied x = (x, x)
 
-pizz, arco :: (HasTechnique' a, Technique a ~ SomeTechnique) => a -> a
+pizz, arco :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
 pizz = set (techniques . pizzicato) Pizz
 arco = set (techniques . pizzicato) Arco
 

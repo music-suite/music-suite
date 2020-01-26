@@ -100,30 +100,30 @@ type instance Pitch (TechniqueT p a) = Pitch a
 type instance SetPitch b (TechniqueT p a) = TechniqueT p (SetPitch b a)
 
 instance HasPitch a b => HasPitch (TechniqueT p a) (TechniqueT p b) where
-  pitch = _Wrapped . _2 . pitch
+  pitch = _Wrapped . pitch
 
 instance HasPitches a b => HasPitches (TechniqueT p a) (TechniqueT p b) where
-  pitches = _Wrapped . _2 . pitches
+  pitches = _Wrapped . pitches
 
 type instance Dynamic (TechniqueT p a) = Dynamic a
 
 type instance SetDynamic b (TechniqueT p a) = TechniqueT p (SetDynamic b a)
 
 instance HasDynamic a b => HasDynamic (TechniqueT p a) (TechniqueT p b) where
-  dynamic = _Wrapped . _2 . dynamic
+  dynamic = _Wrapped . dynamic
 
 instance HasDynamics a b => HasDynamics (TechniqueT p a) (TechniqueT p b) where
-  dynamics = _Wrapped . _2 . dynamics
+  dynamics = _Wrapped . dynamics
 
 type instance Articulation (TechniqueT p a) = Articulation a
 
 type instance SetArticulation b (TechniqueT p a) = TechniqueT p (SetArticulation b a)
 
 instance HasArticulation a b => HasArticulation (TechniqueT p a) (TechniqueT p b) where
-  articulation = _Wrapped . _2 . articulation
+  articulation = _Wrapped . articulation
 
 instance HasArticulations a b => HasArticulations (TechniqueT p a) (TechniqueT p b) where
-  articulations = _Wrapped . _2 . articulations
+  articulations = _Wrapped . articulations
 
 type instance Pitch (PartT p a) = Pitch a
 

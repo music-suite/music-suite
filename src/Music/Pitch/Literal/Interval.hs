@@ -84,6 +84,7 @@ where
 
 import Control.Applicative
 import Data.Fixed
+import Data.Functor.Couple
 import Data.Ratio
 import Data.Semigroup
 import Data.Word
@@ -113,6 +114,8 @@ instance IsInterval a => IsInterval [a] where
 
 instance (Monoid b, IsInterval a) => IsInterval (b, a) where
   fromInterval = pure . fromInterval
+
+deriving instance (Monoid b, IsInterval a) => IsInterval (Couple b a)
 
 instance IsInterval Int where
   fromInterval x = fromIntegral (fromInterval x :: Integer)
