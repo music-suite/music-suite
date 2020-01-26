@@ -11,7 +11,7 @@
 module Music.Score.StaffNumber
   ( -- * StaffNumber
     HasStaffNumber (..),
-    technique,
+    staffNumber,
 
     -- ** StaffNumber note transformer
     StaffNumberT (..),
@@ -66,8 +66,8 @@ instance HasStaffNumber a => HasStaffNumber [a]
 
 instance HasStaffNumber a => HasStaffNumber (Score a)
 
-technique :: HasStaffNumber a => Natural -> a -> a
-technique = setStaffNumber
+staffNumber :: HasStaffNumber a => Natural -> a -> a
+staffNumber = setStaffNumber
 
 newtype StaffNumberT a = StaffNumberT {getStaffNumberT :: Couple (First Natural) a}
   deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)

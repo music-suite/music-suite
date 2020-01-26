@@ -844,7 +844,7 @@ TODO artificial harmonics
 
 TODO pizz/arco
 
-```TODOmusic+haskell
+```music+haskell
 pizz $ pseq [c,c,c,c, arco d |* 2] |/ 4
 ```
 

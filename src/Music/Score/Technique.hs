@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -27,6 +28,22 @@ module Music.Score.Technique
     techniques',
     TechniqueT (..),
 
+    -- * Dynamically typed playing techniques
+    SomeTechnique,
+    PizzArco(..),
+    Legno(..),
+    StringPos(..),
+    StringMute(..),
+    pizzicato,
+    legno,
+    stringPos,
+    stringMute,
+
+    -- ** High level combinators
+    pizz,
+    arco,
+
+
     -- * Context
     vtechnique,
     addTechniqueCon,
@@ -36,6 +53,7 @@ where
 import BasePrelude
 import Control.Comonad
 import Control.Lens hiding ((&), Level, transform)
+import Control.Lens.TH (makeLenses)
 import Data.AffineSpace
 import Data.AffineSpace.Point (relative)
 import Data.Functor.Context
@@ -393,6 +411,83 @@ instance (Tiable n, Tiable a) => Tiable (TechniqueT n a) where
     where
       (a1, a2) = toTied a
       (d1, d2) = toTied d
+
+
+
+{-
+-- TODO move?
+data InstrType = Winds | Strings | Brass | Perc | Keyboard | Vocal
+
+data Technique :: '[InstrType] -> Type where
+  Pizz :: Bool -> Technique Strings
+
+data SomeTechnique where
+  SomeTechnique :: forall ts . Technique ts -> SomeTechnique
+-}
+
+
+data PizzArco = Arco | Pizz
+  deriving (Show, Enum, Bounded, Eq, Ord)
+
+data Legno = NonLegno | ColLegnoTratto | ColLegnoBatt
+  deriving (Show, Enum, Bounded, Eq, Ord)
+data StringPos = MultoSulPont | SulPont | PosNat | SulTasto | MoltoSulTasto
+  deriving (Show, Enum, Bounded, Eq, Ord)
+data StringMute = NoStringMute | StringMute
+  deriving (Show, Enum, Bounded, Eq, Ord)
+instance Monoid PizzArco where mempty = Arco
+instance Monoid Legno where mempty = NonLegno
+instance Monoid StringPos where mempty = PosNat
+instance Monoid StringMute where mempty = NoStringMute
+instance Semigroup PizzArco where
+  x <> y
+    | x == mempty = y
+    | otherwise = x
+instance Semigroup Legno where
+  x <> y
+    | x == mempty = y
+    | otherwise = x
+instance Semigroup StringPos where
+  x <> y
+    | x == mempty = y
+    | otherwise = x
+instance Semigroup StringMute where
+  x <> y
+    | x == mempty = y
+    | otherwise = x
+
+data SomeTechnique = SomeTechnique
+  { _pizzicato  :: PizzArco
+  , _legno :: Legno
+  , _stringPos :: StringPos
+  , _stringMute :: StringMute
+  -- TODO etc
+  }
+  deriving (Show)
+
+makeLenses ''SomeTechnique
+
+instance Monoid SomeTechnique where
+  mempty = SomeTechnique
+    { _pizzicato = mempty
+    , _legno = mempty
+    , _stringPos = mempty
+    , _stringMute = mempty
+    }
+
+instance Semigroup SomeTechnique where
+  SomeTechnique p1 l1 o1 m1 <>
+    SomeTechnique p2 l2 o2 m2 =
+      SomeTechnique (p1 <> p2) (l1 <> l2) (o1 <> o2) (m1 <> m2)
+
+instance Tiable SomeTechnique where
+  toTied x = (x, x)
+
+pizz, arco :: (HasTechnique' a, Technique a ~ SomeTechnique) => a -> a
+pizz = set (techniques . pizzicato) Pizz
+arco = set (techniques . pizzicato) Arco
+
+
 
 -- |
 -- View just the techniquees in a voice.
