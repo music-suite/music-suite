@@ -178,6 +178,7 @@ library
                         Music.Score.Harmonics
                         Music.Score.Color
                         Music.Score.Export.ArticulationNotation
+                        Music.Score.Export.TechniqueNotation
                         Music.Score.Export.DynamicNotation
                         Music.Score.Export.StandardNotation
                         Music.Score.Import.Abc
