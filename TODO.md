@@ -10,7 +10,7 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
-- Remove whilst etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
+- Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
 
 - Do not expose IntervalL (hide or remove completely)
 
@@ -33,6 +33,7 @@ Consider switching to a decentralized issue tracker such as:
 - [X] Restore all examples in User-Guide.md (marked TODO)
 
 - Finish UMTS (Unofficial MusicXML Test Suite)
+  - Move from StandardNotation (and break up that module in general)
   - We have manual Haskell encodings of UMTS data which we used to test the export pipeline from StandardNotation.Work to Lilypond/XML
   - Remaining work:
     - Make sure output look like the official Lilypond output (produced through running musicxml2ly on the official XML files) for both

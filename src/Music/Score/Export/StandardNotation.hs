@@ -204,8 +204,8 @@ import qualified Data.Char
 import Data.Colour (Colour)
 import Data.Colour.Names
 import Data.FileEmbed
-import Data.Functor.Identity (Identity (..))
 import Data.Functor.Couple
+import Data.Functor.Identity (Identity (..))
 import qualified Data.List
 import qualified Data.List.Split
 import Data.Map (Map)
@@ -516,7 +516,7 @@ data Fermata = NoFermata | Fermata | ShortFermata | LongFermata
 -- Rests, single-notes and chords (most attributes are not shown for rests)
 
 -- |
--- A chord. A possibly empty list of pitches, composed sequentially.
+-- A chord. A possibly empty list of pitches, played simultaneously.
 -- Naturally, an empty pitch list renders as a rest and a singleton list as
 -- a single note.
 --

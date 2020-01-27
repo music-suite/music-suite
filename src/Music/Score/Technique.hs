@@ -1,9 +1,9 @@
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -101,8 +101,7 @@ type TechniqueLensLaws s t = TechniqueLensLaws' s t (Technique s) (Technique t)
 -- |
 -- Class of types that provide a technique traversal.
 class
-  (
-    -- Transformable (Technique s),
+  ( -- Transformable (Technique s),
     -- Transformable (Technique t),
     -- SetTechnique (Technique t) s ~ t
     TechniqueLensLaws s t
@@ -286,8 +285,7 @@ type instance Technique (Behavior a) = Behavior a
 type instance SetTechnique b (Behavior a) = b
 
 instance
-  (
-    b ~ Technique b,
+  ( b ~ Technique b,
     SetTechnique (Behavior a) b ~ Behavior a
   ) =>
   HasTechniques (Behavior a) b
@@ -295,8 +293,7 @@ instance
   techniques = ($)
 
 instance
-  (
-    b ~ Technique b,
+  ( b ~ Technique b,
     SetTechnique (Behavior a) b ~ Behavior a
   ) =>
   HasTechnique (Behavior a) b
@@ -353,7 +350,7 @@ instance (HasTechniques a b) => HasTechniques (SlideT a) (SlideT b) where
 instance (HasTechnique a b) => HasTechnique (SlideT a) (SlideT b) where
   technique = _Wrapped . technique
 
-newtype TechniqueT n a = TechniqueT {getTechniqueT :: Couple n a }
+newtype TechniqueT n a = TechniqueT {getTechniqueT :: Couple n a}
   deriving
     ( Eq,
       Ord,
@@ -451,10 +448,9 @@ type instance Technique (TechniqueT p a) = p
 type instance SetTechnique p' (TechniqueT p a) = TechniqueT p' a
 
 instance HasTechnique (TechniqueT p a) (TechniqueT p' a) where
-  technique f (TechniqueT (Couple (t, x))) = fmap (TechniqueT . Couple . (, x)) (f t)
+  technique f (TechniqueT (Couple (t, x))) = fmap (TechniqueT . Couple . (,x)) (f t)
 
-instance
-  HasTechniques (TechniqueT p a) (TechniqueT p' a) where
+instance HasTechniques (TechniqueT p a) (TechniqueT p' a) where
   techniques = technique
 
 deriving instance (IsPitch a, Monoid n) => IsPitch (TechniqueT n a)
