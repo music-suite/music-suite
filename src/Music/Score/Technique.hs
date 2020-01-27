@@ -262,6 +262,9 @@ instance HasTechniques a b => HasTechniques (Voice a) (Voice b) where
 instance HasTechniques a b => HasTechniques (Track a) (Track b) where
   techniques = traverse . techniques
 
+instance HasTechnique a b => HasTechnique (PartT p a) (PartT p b) where
+  technique = _Wrapped . _2 . technique
+
 instance HasTechniques a b => HasTechniques (PartT p a) (PartT p b) where
   techniques = _Wrapped . _2 . techniques
 

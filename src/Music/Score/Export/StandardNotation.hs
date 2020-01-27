@@ -243,6 +243,7 @@ import Music.Score.Dynamics (DynamicT (..))
 import qualified Music.Score.Export.ArticulationNotation
 import Music.Score.Export.ArticulationNotation (marks, slurs)
 import qualified Music.Score.Export.ArticulationNotation as AN
+import qualified Music.Score.Export.TechniqueNotation as TN
 import Music.Score.Export.DynamicNotation (crescDim, dynamicLevel)
 import qualified Music.Score.Export.DynamicNotation
 import qualified Music.Score.Export.DynamicNotation as DN
@@ -272,7 +273,8 @@ import qualified Music.Score.Pitch
 import Music.Score.Pitch ()
 import Music.Score.Slide (SlideT, runSlideT)
 import Music.Score.StaffNumber (StaffNumberT, runStaffNumberT)
-import Music.Score.Technique (SomeTechnique (..), TechniqueT (..))
+import Music.Score.Technique (HasTechniques(techniques), SomeTechnique (..), TechniqueT (..))
+import qualified Music.Score.Technique
 import Music.Score.Text (TextT, runTextT)
 import qualified Music.Score.Ties
 import Music.Score.Ties (Tiable (..))
@@ -1823,7 +1825,7 @@ type Asp3 =
                     ( TextT
                         ( HarmonicT
                             ( SlideT
-                                ( TechniqueT TechniqueNotation
+                                ( TechniqueT TN.TechniqueNotation
                                     ( ArticulationT AN.ArticulationNotation
                                         ( DynamicT DN.DynamicNotation
                                             [Pitch]
@@ -1838,7 +1840,6 @@ type Asp3 =
         )
     )
 
-type TechniqueNotation = SomeTechnique -- TODO
 
 type Asp = Score Asp1
 
@@ -1937,6 +1938,10 @@ fromAspects sc = do
           )
         . ( over Music.Score.Articulation.articulations AN.notateArticulation
               . Music.Score.Articulation.addArtCon
+          )
+        . ( -- TODO do "removeCloseDynMarks for playing techniques"
+            over techniques TN.notateTechnique
+              . Music.Score.Technique.addTechniqueCon
           )
     -- TODO optionally log quantization
     quantizeBar ::
