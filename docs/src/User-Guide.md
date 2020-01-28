@@ -842,31 +842,60 @@ TODO artificial harmonics
 
 ### String techniques
 
-TODO pizz/arco
 
 ```music+haskell
-pseq [pizz $ pseq [c,c,c,c], arco d |* 2] |/ 4
+set parts' violins $
+  pseq [arco $ staccato $ times 4 c, times 4 $ pizz g_ ] |/ 4
 ```
 
 ```music+haskell
-pseq [arco $ pseq [c,c,c,c], pizz d |* 2] |/ 4
+set parts' violins $
+  pseq [pizz $ pseq [c,c,c,c], d |* 2, pizz e |*2 ] |/ 4
 ```
+
 
 TODO bow position (sul tasto, sul pont, nat)
 
 ```music+haskell
-pseq [sulTasto $ pseq [c,c,c,c], posNat d |* 2] |/ 4
+set parts' violins $
+  pseq [sulTasto $ pseq [c,c,c,c], posNat d |* 2] |/ 4
 ```
 
 ```music+haskell
-pseq [posNat $ pseq [c,c,c,c], sulPont d |* 2] |/ 4
+set parts' violins $
+  pseq [posNat $ pseq [c,c,c,c], sulPont d |* 2] |/ 4
 ```
 
-TODO col legno (bat, tratto)
+```music+haskell
+set parts' violins $ pseq
+  [ colLegno c
+  , colLegnoBatt c
+  , senzaLegno c
+  ] |* 2
+```
+
+TODO mutes
+
+```music+haskell
+set parts' violins $ pseq
+  [ conSord c
+  , senzaSord c
+  ]
+  |/ 4
+```
+
+```music+haskell
+set parts' violins $ pseq
+  [ conSord $ arco c
+  , pizz c
+  , pizz $ conSord $ pizz c
+  , conSord $ colLegno $ pizz c
+  ]
+  |* 1.5
+```
 
 TODO chord tremolo
 
-TODO mutes
 
 ### Wind techniques
 
