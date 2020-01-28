@@ -352,7 +352,7 @@ TODO refer back to previous table. For example `Music.Pitch.Common` distinguishe
 
 Interval names are overloaded in a manner similar to pitches, and are consequently referred to as *interval literals*. The corresponding class is called @[IsInterval].
 
-Here and elsewhere in the Music Suite, the convention is to follow standard theoretical
+Here and elsewhere in Music Suite, the convention is to follow standard theoretical
 notation, so *minor* and *diminished* intervals are written in lower-case, while *major*
 and *perfect* intervals are written in upper-case. Unfortunately, Haskell does not support
 overloaded upper-case values, so we have to adopt an underscore prefix:
@@ -973,9 +973,9 @@ TODO color
 TODO define this. Meta-information is presentational and not attached to a specific part. Shorten this intro. All presentational/extra info is meta, all *logical/semantic/sounding* information is not. We represent meta-information dynamically (Typeable).
 
 
-It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In the Music Suite these are grouped together under the common label *meta-information*.
+It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In Music Suite these are grouped together under the common label *meta-information*.
 
-The notion of meta-data used in the Music Suite is more extensive than just static values: any @[Transformable] container can be wrapped, and the meta-data will be transformed when the annotated value is transformed. This is why meta-data is often variable values, such as @[Reactive] or @[Behavior].
+The notion of meta-data used in Music Suite is more extensive than just static values: any @[Transformable] container can be wrapped, and the meta-data will be transformed when the annotated value is transformed. This is why meta-data is often variable values, such as @[Reactive] or @[Behavior].
 
 All time structures in Music Suite support an arbitrary number of meta-data fields, indexed by type. All meta-information is required to satisfy the `Typeable`, so that meta-data can be packed and unpacked dynamically), and `Monoid`, so that values can be created and composed without having to worry about meta-data. The `mempty` value is implicitly chosen if no meta-information of the given type has been entered: for example the default title is empty, the default time signature is `4/4`. If two values annotated with meta-data are composed, their associated meta-data maps are composed as well, using the `<>` operator on each of the types.
 
