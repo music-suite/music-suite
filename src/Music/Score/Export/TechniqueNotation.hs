@@ -46,14 +46,11 @@ import Music.Score.Technique
 import Music.Score.Ties
 import Music.Time
 
--- TODO this works for pizz/arco, col legno etc, but not for all techniques...
 newtype TechniqueNotation = TechniqueNotation [String]
   deriving (Semigroup, Monoid)
 
 textualNotations :: TechniqueNotation -> [String]
 textualNotations (TechniqueNotation xs) = xs
-
-
 
 notateTechnique :: Ctxt SomeTechnique -> TechniqueNotation
 notateTechnique t = TechniqueNotation $ case getCtxt t of
@@ -69,7 +66,6 @@ notateTechnique t = TechniqueNotation $ case getCtxt t of
     ++
     if prev^.stringMute /= cur^.stringMute
       then showStringMute (cur^.stringMute) else []
-    -- TODO add legno etc
   (_, cur, _) ->
        maybe [] showPizz (viewNotEmpty pizzicato cur)
     ++ maybe [] showLegno (viewNotEmpty legno cur)
@@ -79,9 +75,14 @@ notateTechnique t = TechniqueNotation $ case getCtxt t of
     viewNotEmpty l x = if v == mempty then Nothing else Just v
       where v = view l x
 
-    -- TODO show lowercase "pizz" etc
-    -- These should not use Show but a custom function to render e.g. ColLegnoBatt correctly
-    showPizz = pure . show
-    showLegno = pure . show
-    showStringPos = pure . show
-    showStringMute = pure . show
+showPizz :: PizzArco -> [String]
+showPizz = pure . show
+
+showLegno :: Legno -> [String]
+showLegno = pure . show
+
+showStringPos :: StringPos -> [String]
+showStringPos = pure . show
+
+showStringMute :: StringMute -> [String]
+showStringMute = pure . show
