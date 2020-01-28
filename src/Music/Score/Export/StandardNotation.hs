@@ -1877,15 +1877,15 @@ fromAspects sc = do
       $ postChordMerge
   -- Rewrite dynamics and articulation to be context-sensitive
   -- This changes the aspect type again
-  say "Notate dynamics and articulation"
+  say "Notate dynamics, articulation and playing techniques"
   postContextSensitiveNotationRewrite <- return $ fmap2 asp2ToAsp3 $ postVoiceSeparation
   -- postContextSensitiveNotationRewrite :: [(Music.Parts.Part,Voice (Maybe Asp3))]
 
   -- Split each part into bars, splitting notes and adding ties when necessary
   -- Resulting list is list of bars, there is no layering (yet)
   say "Divide score into bars, adding ties where necessary"
-  let postTieSplit = fmap2 (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
-  -- postTieSplit :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
+  let postTieSplit :: [(Part, [Voice (Maybe Asp3)])]
+          = fmap2 (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
 
   -- For each bar, quantize all layers. This is where tuplets/note values are generated.
   say "Quantize rhythms (generating dotted notes and tuplets)"
