@@ -76,13 +76,21 @@ notateTechnique t = TechniqueNotation $ case getCtxt t of
       where v = view l x
 
 showPizz :: PizzArco -> [String]
-showPizz = pure . show
+showPizz Pizz = ["pizz."]
+showPizz Arco = ["arco"]
 
 showLegno :: Legno -> [String]
-showLegno = pure . show
+showLegno NonLegno = ["senza legno"]
+showLegno ColLegnoBatt = ["col legno batt."]
+showLegno ColLegnoTratto = ["col legno tratto"]
 
 showStringPos :: StringPos -> [String]
-showStringPos = pure . show
+showStringPos PosNat = ["pos nat."]
+showStringPos MoltoSulTasto = ["molto sul tasto"]
+showStringPos MoltoSulPont  = ["molto sul pont."]
+showStringPos SulTasto = ["sul tasto"]
+showStringPos SulPont  = ["sul pont."]
 
 showStringMute :: StringMute -> [String]
-showStringMute = pure . show
+showStringMute NoStringMute = ["senza sord."]
+showStringMute StringMute   = ["con sord."]

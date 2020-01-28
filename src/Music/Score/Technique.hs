@@ -484,7 +484,7 @@ data PizzArco = Arco | Pizz
 data Legno = NonLegno | ColLegnoTratto | ColLegnoBatt
   deriving (Show, Enum, Bounded, Eq, Ord)
 
-data StringPos = MultoSulPont | SulPont | PosNat | SulTasto | MoltoSulTasto
+data StringPos = MoltoSulPont | SulPont | PosNat | SulTasto | MoltoSulTasto
   deriving (Show, Enum, Bounded, Eq, Ord)
 
 data StringMute = NoStringMute | StringMute
