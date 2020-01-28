@@ -845,10 +845,22 @@ TODO artificial harmonics
 TODO pizz/arco
 
 ```music+haskell
-pizz $ pseq [c,c,c,c, arco d |* 2] |/ 4
+pseq [pizz $ pseq [c,c,c,c], arco d |* 2] |/ 4
+```
+
+```music+haskell
+pseq [arco $ pseq [c,c,c,c], pizz d |* 2] |/ 4
 ```
 
 TODO bow position (sul tasto, sul pont, nat)
+
+```music+haskell
+pseq [sulTasto $ pseq [c,c,c,c], posNat d |* 2] |/ 4
+```
+
+```music+haskell
+pseq [posNat $ pseq [c,c,c,c], sulPont d |* 2] |/ 4
+```
 
 TODO col legno (bat, tratto)
 

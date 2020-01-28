@@ -44,6 +44,9 @@ module Music.Score.Technique
     -- ** High level combinators
     pizz,
     arco,
+    sulPont,
+    posNat,
+    sulTasto,
 
     -- * Context
     vtechnique,
@@ -546,6 +549,11 @@ instance Tiable SomeTechnique where
 pizz, arco :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
 pizz = set (techniques . pizzicato) Pizz
 arco = set (techniques . pizzicato) Arco
+
+sulPont, posNat, sulTasto :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
+sulPont = set (techniques . stringPos) SulPont
+posNat = set (techniques . stringPos) PosNat
+sulTasto = set (techniques . stringPos) SulTasto
 
 -- |
 -- View just the techniquees in a voice.

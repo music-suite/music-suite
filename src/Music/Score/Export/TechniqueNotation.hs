@@ -30,8 +30,8 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 module Music.Score.Export.TechniqueNotation
-  (
-    TechniqueNotation (..),
+  ( TechniqueNotation (..),
+    textualNotations,
     notateTechnique,
   )
 where
@@ -42,13 +42,46 @@ import Data.Functor.Context
 import Data.Semigroup
 import Music.Score.Dynamics
 import Music.Score.Phrases
+import Music.Score.Technique
 import Music.Score.Ties
 import Music.Time
-import Music.Score.Technique
 
 -- TODO this works for pizz/arco, col legno etc, but not for all techniques...
 newtype TechniqueNotation = TechniqueNotation [String]
   deriving (Semigroup, Monoid)
 
-notateTechnique :: Ctxt SomeTechnique-> TechniqueNotation
-notateTechnique _ = TechniqueNotation ["TODO"]
+textualNotations :: TechniqueNotation -> [String]
+textualNotations (TechniqueNotation xs) = xs
+
+
+
+notateTechnique :: Ctxt SomeTechnique -> TechniqueNotation
+notateTechnique t = TechniqueNotation $ case getCtxt t of
+  (Just prev, cur, _) ->
+    if prev^.pizzicato /= cur^.pizzicato
+      then showPizz (cur^.pizzicato) else []
+    ++
+    if prev^.legno /= cur^.legno
+      then showLegno (cur^.legno) else []
+    ++
+    if prev^.stringPos /= cur^.stringPos
+      then showStringPos (cur^.stringPos) else []
+    ++
+    if prev^.stringMute /= cur^.stringMute
+      then showStringMute (cur^.stringMute) else []
+    -- TODO add legno etc
+  (_, cur, _) ->
+       maybe [] showPizz (viewNotEmpty pizzicato cur)
+    ++ maybe [] showLegno (viewNotEmpty legno cur)
+    ++ maybe [] showStringPos (viewNotEmpty stringPos cur)
+    ++ maybe [] showStringMute (viewNotEmpty stringMute cur)
+  where
+    viewNotEmpty l x = if v == mempty then Nothing else Just v
+      where v = view l x
+
+    -- TODO show lowercase "pizz" etc
+    -- These should not use Show but a custom function to render e.g. ColLegnoBatt correctly
+    showPizz = pure . show
+    showLegno = pure . show
+    showStringPos = pure . show
+    showStringMute = pure . show
