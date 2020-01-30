@@ -2,7 +2,19 @@
 
 ## Installing
 
-TODO
+TODO "easy" install options
+
+### Installing from source
+
+You'll need Git and Nix (2.3.2 or later).
+
+```
+$ git clone https://github.com/hanshoglund/music-suite
+$ cd music-suite
+```
+
+Then follow the instructions in `README.md` to setup the environment and build Music Suite.
+
 
 ## Writing music
 
