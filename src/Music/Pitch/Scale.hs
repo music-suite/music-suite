@@ -24,9 +24,10 @@ module Music.Pitch.Scale
     leadingInterval,
     invertMode,
     modeToScale,
-    scaleToList,
+    scaleToSet,
     index,
     member,
+    scaleToList,
 
     -- * Chords
     Chord,
@@ -94,9 +95,9 @@ where
 import Data.Foldable
 import Data.Stream.Infinite (Stream)
 import qualified Data.Stream.Infinite as Stream
-import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NonEmpty
-import Control.Lens (Lens, Lens')
+import Control.Lens (Lens, Lens', coerced)
 import Data.AffineSpace
 import Data.VectorSpace
 import Music.Pitch.Common hiding (Mode)
@@ -106,7 +107,7 @@ import Data.AffineSpace.Point.Offsets
   ( offsetPoints, offsetPointsS )
 
 -- |  A mode is a list of intervals and a characteristic repeating interval.
-data Mode a = Mode (NonEmpty (Diff a))
+data Mode a = Mode { getMode :: NonEmpty (Diff a) }
 
 -- |
 -- @
@@ -180,9 +181,14 @@ invertMode 0 = id
 invertMode n = invertMode (n - 1) . invertMode1
   where
     invertMode1 :: AffineSpace a => Mode a -> Mode a
-    invertMode1 = error "TODO simple rotation"
+    invertMode1 = Mode . rotate . getMode
 
--- TODO seantically suspevt!
+-- TODO move
+rotate :: NonEmpty a -> NonEmpty a
+rotate (x :| [])     = x :| []
+rotate (x :| y : rs) = y :| (rs ++ [x])
+
+-- TODO semantically suspect!
 scaleToList :: AffineSpace a => Scale a -> [a]
 scaleToList (Scale tonic (Mode leaps)) = offsetPoints tonic $ toList leaps
 
@@ -220,12 +226,12 @@ functionToChord x xs = Chord $ modeToScale x xs
 -- |
 -- > Lens' (Chord Pitch) Pitch
 chordTonic :: Lens' (Chord a) a
-chordTonic = error "TODO"
+chordTonic = coerced . scaleTonic
 
 -- |
 -- > Lens' (Chord Pitch) (Function Pitch)
 chordFunction :: Lens' (Chord a) (Function a)
-chordFunction = error "TODO"
+chordFunction = coerced . scaleMode
 
 -- |
 --
@@ -238,10 +244,10 @@ chordFunction = error "TODO"
 --
 -- > Lens' (Function Pitch) Interval
 complementInterval :: AffineSpace a => Function a -> Diff a
-complementInterval = error "TODO same as leadingInterval"
+complementInterval = leadingInterval
 
-invertChord :: AffineSpace a => Int -> Function a -> Function a
-invertChord = error "TODO same as invertMode"
+invertChord :: AffineSpace a => Integer -> Function a -> Function a
+invertChord = invertMode
 
 {-# DEPRECATED chordToList "TODO alternative?" #-}
 -- | Returns a single inversion of the given chord (no repeats!).
