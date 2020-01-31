@@ -1,10 +1,23 @@
 {-# LANGUAGE OverloadedLists #-}
 -- | Scales and chords.
+--
+-- Semantically is little distinction between a Scale and a Chord. Thus the 'Chord' and 'Scale'
+-- types are synonyms. We use a newtype wrapper to get a more idiomatic 'Inspectable' instance.
+--
+-- Semantically @Chord p@ and @Scale p@ are countable subsets of some pitch space p.
+--
+-- A 'Mode' (or 'Function - TODO rename) is like a Chord/Scale that has forgotten its origin.
+--
 module Music.Pitch.Scale
-  ( -- * Modes and scales
+  ( -- * Modes and Chord types
     Mode,
     modeFromSteps,
     modeIntervals,
+    Function,
+    functionFromSteps,
+    functionIntervals,
+
+    -- * Scales
     Scale,
     scaleTonic,
     scaleMode,
@@ -12,11 +25,10 @@ module Music.Pitch.Scale
     invertMode,
     modeToScale,
     scaleToList,
+    index,
+    member,
 
-    -- * Chord types and chords
-    Function,
-    functionFromSteps,
-    functionIntervals,
+    -- * Chords
     Chord,
     chordTonic,
     chordFunction,
@@ -25,15 +37,17 @@ module Music.Pitch.Scale
     functionToChord,
     chordToList,
 
-    -- * Common modes
 
-    -- ** Classical modes
+
+    -- * Common modes, scales and chords
+
+    -- ** Common practice modes
     majorScale,
     pureMinorScale,
     harmonicMinorScale,
     melodicMinorScaleUp,
 
-    -- ** Church modes
+    -- ** Church/Gregorian modes
     aeolian,
     locrian,
     ionian,
@@ -41,13 +55,13 @@ module Music.Pitch.Scale
     phrygian,
     lydian,
     mixolydian,
+
+    -- ** Other modes
     majorPentaTonic,
     minorPentaTonic,
     bluesMinor,
     bluesMajor,
     bebopScale,
-
-    -- ** Miscellaneous modes
     wholeTone,
     octatonic,
 
@@ -60,7 +74,7 @@ module Music.Pitch.Scale
     sixthMode,
     seventhMode,
 
-    -- * Common chords
+    -- ** Common practice chord types
     majorTriad,
     minorTriad,
     augmentedChord,
@@ -138,7 +152,13 @@ repeatingInterval (Mode xs) = sumV xs
 leadingInterval :: AffineSpace a => Mode a -> Diff a
 leadingInterval (Mode xs) = NonEmpty.last xs
 
-invertMode :: AffineSpace a => Int -> Mode a -> Mode a
+index :: Scale p -> Integer -> p
+index = error "TODO Scale.index"
+
+member :: Scale p -> p -> Bool
+member = error "TODO"
+
+invertMode :: AffineSpace a => Integer -> Mode a -> Mode a
 invertMode 0 = id
 invertMode n = invertMode (n - 1) . invertMode1
   where
