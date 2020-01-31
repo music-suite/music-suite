@@ -87,6 +87,19 @@ Consider switching to a decentralized issue tracker such as:
   - Try a polymorphic transformer first, e.g. PitchT (the rest should be easy)
 
 
+- Maybe add new time type, a la Haskore/Mezzo:
+    data Mus a = Note Duration a | Rest Duration | Par (V2 (Mus a)) | Seq (V2 (Mus a))
+    - Would behave much like Time.Voice, e.g.
+        instance HasDuration (Mus a)
+        instance Transformable (Mus a) -- translation invariant
+    - Can be aligned, rendered to a score etc.
+
+- Add parsers for aligned values, e.g.
+    parseAlignedVoice :: MonadError e m => Score a -> m [Aligned (Voice a)]
+    parseAlignedVoice :: MonadError e m => Score a -> m (Aligned (Mus a))
+    etc.
+  See $voiceSeparation
+
 - Issues from the old tracker
   - We have a CLI interface for dynamically exporting to various backends and providing options.
   - Could use typed serialization for providing this. Would allowing combination of files/CLI etc
@@ -130,6 +143,7 @@ Consider switching to a decentralized issue tracker such as:
     correctly.
   - Putting overlapping events in monophonic instruments (e.g. flute) should be a linting error,
     similar to range etc.
+  - The general problem of breaking up a score: $voiceSeparation
 
 - Music.Score.Export contains internal modules and should be renamed accordingly
   - What top-level interface should we support other than defaultMain?
