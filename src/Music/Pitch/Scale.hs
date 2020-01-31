@@ -190,15 +190,15 @@ rotate (x :| y : rs) = y :| (rs ++ [x])
 
 -- TODO semantically suspect!
 scaleToList :: AffineSpace a => Scale a -> [a]
-scaleToList (Scale tonic (Mode leaps)) = offsetPoints tonic $ toList leaps
+scaleToList (Scale tonic (Mode leaps)) = init $ offsetPoints tonic $ toList leaps
 
 -- | Convert a scale to a countably infinite set (represented as a tuple
 -- of "negative", "zero" and "positive" components.
 scaleToSet :: AffineSpace a => Scale a -> (Stream a, a, Stream a)
 scaleToSet (Scale tonic (Mode leaps)) =
-  ( offsetPointsS tonic $ fmap negateV $ Stream.cycle leaps
+  ( Stream.tail $ offsetPointsS tonic $ fmap negateV $ Stream.cycle $ NonEmpty.reverse leaps
   , tonic
-  , offsetPointsS tonic $ Stream.cycle leaps
+  , Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
   )
 
 
