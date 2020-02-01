@@ -100,13 +100,17 @@ instance Inspectable (ChordType Pitch) where
   inspectableToMusic = inspectableToMusic . functionToChord c
 
 instance Inspectable (Scale Pitch) where
-  inspectableToMusic = fmap fromPitch . pseq . map (\x -> pure x :: Score Pitch) . scaleToList
+  inspectableToMusic = inspectableToMusic . basicVoicing
 
 instance Inspectable (Chord Pitch) where
-  inspectableToMusic = fmap fromPitch . ppar . map (\x -> pure x :: Score Pitch) . chordToList
+  inspectableToMusic = inspectableToMusic . basicVoicing
+
+instance Inspectable (Voiced Scale Pitch) where
+  inspectableToMusic = fmap fromPitch . pseq . map (\x -> pure x :: Score Pitch) . toList . getVoiced
 
 instance Inspectable (Voiced Chord Pitch) where
   inspectableToMusic = fmap fromPitch . ppar . map (\x -> pure x :: Score Pitch) . toList . getVoiced
+
 
 -- TODO should be on separate staves, but without left binding (implying simultanuety)
 -- instance Inspectable [Mode Pitch] where

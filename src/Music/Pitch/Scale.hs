@@ -14,6 +14,11 @@ module Music.Pitch.Scale
     Mode,
     modeFromSteps,
     modeIntervals,
+
+    -- * TODO move
+    Countable(..),
+    Generated(..),
+
     ChordType,
     functionFromSteps,
     functionIntervals,
@@ -23,6 +28,7 @@ module Music.Pitch.Scale
     scaleTonic,
     scaleMode,
     leadingInterval,
+
     invertMode,
     modeToScale,
     scaleToSet,
@@ -43,7 +49,7 @@ module Music.Pitch.Scale
 
     -- * Common modes, scales and chords
 
-    -- ** Common practice modes
+    -- ** Major-Minor/Common practice modes
     majorScale,
     pureMinorScale,
     harmonicMinorScale,
@@ -76,7 +82,7 @@ module Music.Pitch.Scale
     sixthMode,
     seventhMode,
 
-    -- ** Common practice chord types
+    -- ** Triadic/Common practice chord types
     majorTriad,
     minorTriad,
     augmentedChord,
@@ -88,12 +94,18 @@ module Music.Pitch.Scale
     minorMajorSeventhChord,
     frenchSixthChord,
     germanSixthChord,
+
+    -- ** Non-triadic chord types
+    repeating,
+    chromaticCluster,
+    wholeToneCluster,
     quartal,
     quintal,
 
     -- * Voiced chords/scales
     Voiced(..),
     getVoiced,
+    basicVoicing,
   )
 where
 
@@ -166,6 +178,10 @@ leadingInterval (Mode xs) = NonEmpty.last xs
 isHeadOf :: Eq a => a -> Stream a -> Bool
 isHeadOf a (b Stream.:> _) = a == b
 
+-- |
+-- @
+-- length (generator x) == n -> invertMode n x = x
+-- @
 invertMode :: AffineSpace a => Integer -> Mode a -> Mode a
 invertMode 0 = id
 invertMode n = invertMode (n - 1) . invertMode1
@@ -182,10 +198,28 @@ rotate (x :| y : rs) = y :| (rs ++ [x])
 scaleToList :: AffineSpace a => Scale a -> [a]
 scaleToList (Scale tonic (Mode leaps)) = init $ offsetPoints tonic $ toList leaps
 
+-- TODO lawless class. Also add rotate and other Mode/ChordType ops to here?
+class Generated f where
+  -- |
+  -- Returns the interval sequenc that generates the given mode.
+  --
+  -- The length of this sequence gives the number of notes in the scale,
+  -- e.g. for a pentatonic (5-note) scale @s@, @length (generator s) == 5@,
+  -- for a heptatonic (7-note) scale it is 7, and so on.
+  generator :: f a -> NonEmpty (Diff a)
+
+instance Generated Chord where
+  generator (Chord (Scale _ (Mode x))) = x
+
+instance Generated Scale where
+  generator (Scale _ (Mode x)) = x
+
+
 class Countable f where
   -- | Convert to a countably infinite set (represented as a tuple
   -- of "negative", "zero" and "positive" components.
   scaleToSet :: AffineSpace a => f a -> (Stream a, a, Stream a)
+
   index :: AffineSpace p => f p -> Integer -> p
   member :: (Ord p, AffineSpace p) => f p -> p -> Bool
 
@@ -261,10 +295,12 @@ complementInterval = leadingInterval
 invertChord :: AffineSpace a => Integer -> ChordType a -> ChordType a
 invertChord = invertMode
 
-{-# DEPRECATED chordToList "TODO alternative?" #-}
+{-# DEPRECATED chordToList "Use (getVoiced . basicVoicing) instead" #-}
+{-# DEPRECATED scaleToList "Use (getVoiced . basicVoicing) instead" #-}
 -- | Returns a single inversion of the given chord (no repeats!).
 chordToList :: AffineSpace a => Chord a -> [a]
 chordToList = scaleToList . getChord
+
 
 
 -- Common scales
@@ -272,6 +308,11 @@ chordToList = scaleToList . getChord
 majorScale :: Mode Pitch
 majorScale = Mode [_M2, _M2, m2, _M2, _M2, _M2, m2]
 
+-- |
+-- @
+-- pureMinorScale = invertMode 5 majorScale
+-- majorScale     = invertMode 2 pureMinorScale
+-- @
 pureMinorScale :: Mode Pitch
 pureMinorScale = Mode [_M2, m2, _M2, _M2, m2, _M2, _M2]
 
@@ -387,16 +428,24 @@ frenchSixthChord :: ChordType Pitch
 frenchSixthChord = Mode [_M3, d3, _M3, _M2]
 
 
--- TODO generalize this to "repeating"
+-- | Build a harmonic filed from repeating a single interval.
 --
+-- Morally, we have:
+--
+-- @
 -- repeating _m2 = chromaticCluster
 -- repeating M2  = wholeToneCluster
 -- repeating m3  = diminishedChord
 -- repeating P4  = quartal
+-- @
+repeating :: Diff p -> ChordType p
 repeating x = Mode (x NonEmpty.:| [])
 
--- etc.
+chromaticCluster :: ChordType Pitch
+chromaticCluster = repeating m2
 
+wholeToneCluster :: ChordType Pitch
+wholeToneCluster = repeating _M2
 
 quartal :: ChordType Pitch
 quartal = repeating _P4
@@ -407,8 +456,11 @@ quintal = repeating _P5
 
 data Voiced f p = Voiced { getChordScale :: f p, getSteps :: NonEmpty Integer }
 
+
 getVoiced :: (AffineSpace p, Countable f) => Voiced f p -> NonEmpty p
 getVoiced x = index (getChordScale x) <$> getSteps x
 
+basicVoicing :: Generated f => f p -> Voiced f p
+basicVoicing x = Voiced x [0..fromIntegral (length (generator x)) - 1]
 
 

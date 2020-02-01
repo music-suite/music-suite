@@ -1848,12 +1848,22 @@ TODO voiced chord example
 
 ```music+haskell
 inspectableToMusic @(Voiced Chord Pitch) $
-  Voiced (functionToChord c minorTriad) [0,1,2]
+  Voiced (functionToChord d minorTriad) [0,1,2]
 ```
 
 ```music+haskell
 inspectableToMusic @(Voiced Chord Pitch) $
-  Voiced (functionToChord c minorTriad) [-2,0,2,4]
+  Voiced (functionToChord d minorTriad) [-2,0,2,4]
+```
+
+```music+haskell
+inspectableToMusic @(Voiced Chord Pitch) $
+  basicVoicing (functionToChord d majorTriad)
+```
+
+```music+haskell
+inspectableToMusic @(Voiced Scale Pitch) $
+  basicVoicing (modeToScale d majorScale)
 ```
 
 TODO basic voicing: exactly what we see in the "Inspectable" instance. In other words: the tonic, and one point for each vector in the generator set, e.g. the voicing [0..n] where n is the cardinality of the generator set.
