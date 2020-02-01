@@ -24,9 +24,10 @@ module Music.Pitch.Scale
     leadingInterval,
     invertMode,
     modeToScale,
-    scaleToList,
+    scaleToSet,
     index,
     member,
+    scaleToList,
 
     -- * Chords
     Chord,
@@ -92,17 +93,21 @@ module Music.Pitch.Scale
 where
 
 import Data.Foldable
-import Data.List.NonEmpty (NonEmpty)
+import Data.Stream.Infinite (Stream)
+import qualified Data.Stream.Infinite as Stream
+import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NonEmpty
-import Control.Lens
+import Control.Lens (Lens, Lens', coerced)
 import Data.AffineSpace
 import Data.VectorSpace
 import Music.Pitch.Common hiding (Mode)
 import Music.Pitch.Literal
 import Music.Pitch.Literal
+import Data.AffineSpace.Point.Offsets
+  ( offsetPoints, offsetPointsS )
 
 -- |  A mode is a list of intervals and a characteristic repeating interval.
-data Mode a = Mode (NonEmpty (Diff a))
+data Mode a = Mode { getMode :: NonEmpty (Diff a) }
 
 -- |
 -- @
@@ -152,25 +157,50 @@ repeatingInterval (Mode xs) = sumV xs
 leadingInterval :: AffineSpace a => Mode a -> Diff a
 leadingInterval (Mode xs) = NonEmpty.last xs
 
-index :: Scale p -> Integer -> p
-index = error "TODO Scale.index"
+index :: AffineSpace p => Scale p -> Integer -> p
+index s n = case fromIntegral n of
+  n | n >  0 -> pos Stream.!! (n - 1)
+    | n == 0 -> z
+    | n <  0 -> neg Stream.!! negate (n + 1)
+  where
+    (neg, z, pos) = scaleToSet s
 
-member :: Scale p -> p -> Bool
-member = error "TODO"
+member :: (Ord p, AffineSpace p) => Scale p -> p -> Bool
+member s p = case p of
+  p | p >  z -> p `isHeadOf` Stream.dropWhile (< p) pos
+    | p == z -> True
+    | p <  z -> p `isHeadOf` Stream.dropWhile (> p) neg
+  where
+    (neg, z, pos) = scaleToSet s
+
+isHeadOf :: Eq a => a -> Stream a -> Bool
+isHeadOf a (b Stream.:> _) = a == b
 
 invertMode :: AffineSpace a => Integer -> Mode a -> Mode a
 invertMode 0 = id
 invertMode n = invertMode (n - 1) . invertMode1
   where
     invertMode1 :: AffineSpace a => Mode a -> Mode a
-    invertMode1 = error "TODO simple rotation"
+    invertMode1 = Mode . rotate . getMode
 
+-- TODO move
+rotate :: NonEmpty a -> NonEmpty a
+rotate (x :| [])     = x :| []
+rotate (x :| y : rs) = y :| (rs ++ [x])
+
+-- TODO semantically suspect!
 scaleToList :: AffineSpace a => Scale a -> [a]
 scaleToList (Scale tonic (Mode leaps)) = offsetPoints tonic $ toList leaps
-  where
-    -- TODO consolidate?
-    offsetPoints :: AffineSpace p => p -> [Diff p] -> [p]
-    offsetPoints = scanl (.+^)
+
+-- | Convert a scale to a countably infinite set (represented as a tuple
+-- of "negative", "zero" and "positive" components.
+scaleToSet :: AffineSpace a => Scale a -> (Stream a, a, Stream a)
+scaleToSet (Scale tonic (Mode leaps)) =
+  ( offsetPointsS tonic $ fmap negateV $ Stream.cycle leaps
+  , tonic
+  , offsetPointsS tonic $ Stream.cycle leaps
+  )
+
 
 -- TODO rename to ChordType or similar
 type Function a = Mode a
@@ -196,12 +226,12 @@ functionToChord x xs = Chord $ modeToScale x xs
 -- |
 -- > Lens' (Chord Pitch) Pitch
 chordTonic :: Lens' (Chord a) a
-chordTonic = error "TODO"
+chordTonic = coerced . scaleTonic
 
 -- |
 -- > Lens' (Chord Pitch) (Function Pitch)
 chordFunction :: Lens' (Chord a) (Function a)
-chordFunction = error "TODO"
+chordFunction = coerced . scaleMode
 
 -- |
 --
@@ -214,10 +244,10 @@ chordFunction = error "TODO"
 --
 -- > Lens' (Function Pitch) Interval
 complementInterval :: AffineSpace a => Function a -> Diff a
-complementInterval = error "TODO same as leadingInterval"
+complementInterval = leadingInterval
 
-invertChord :: AffineSpace a => Int -> Function a -> Function a
-invertChord = error "TODO same as invertMode"
+invertChord :: AffineSpace a => Integer -> Function a -> Function a
+invertChord = invertMode
 
 {-# DEPRECATED chordToList "TODO alternative?" #-}
 -- | Returns a single inversion of the given chord (no repeats!).
