@@ -1831,16 +1831,6 @@ TODO tranposing scales/chords.
 
 TODO set operations on chords/scales (e.g. union/difference/intersection/isSubset/isPowerset etc).
 
-## Voicings
-
-While working with infinite sets for scales and chords is convenient, this is not helpful when dealing with problems of *voicing*. To represent this, we will need to consider finite subsets of the infinite pitch sets we use for scales and chords.
-
-TODO voiced chord example
-
-TODO basic voicing: exactly what we see in the "Inspectable" instance. In other words: the tonic, and one point for each vector
-
-
-
 
 ### Scales versus Chords
 
@@ -1849,6 +1839,28 @@ TODO there is little difference
 Whole tone is a superset of augmented, octatonic a superset of dimimished and so on
 
 Consider "scale-chord texture"
+
+## Voicings
+
+While working with infinite sets for scales and chords is convenient, this is not helpful when dealing with problems of *voicing*. To represent this, we will need to consider finite subsets of the infinite pitch sets we use for scales and chords.
+
+TODO voiced chord example
+
+```music+haskell
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (functionToChord c minorTriad) [0,1,2]
+```
+
+```music+haskell
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (functionToChord c minorTriad) [-2,0,2,4]
+```
+
+TODO basic voicing: exactly what we see in the "Inspectable" instance. In other words: the tonic, and one point for each vector in the generator set, e.g. the voicing [0..n] where n is the cardinality of the generator set.
+
+
+
+
 
 ## Beyond diatonic/chromatic
 
@@ -1862,6 +1874,18 @@ TODO tuning systems
 
 TODO spectral dissonance using HCF
 (https://harmonicratio.blogspot.com/2018/10/pursuing-clarity-through-openness-part_80.html)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

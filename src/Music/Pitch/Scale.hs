@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE InstanceSigs #-}
 -- | Scales and chords.
 --
 -- Semantically is little distinction between a Scale and a Chord. Thus the 'Chord' and 'Scale'
@@ -89,6 +90,10 @@ module Music.Pitch.Scale
     germanSixthChord,
     quartal,
     quintal,
+
+    -- * Voiced chords/scales
+    Voiced(..),
+    getVoiced,
   )
 where
 
@@ -157,21 +162,6 @@ repeatingInterval (Mode xs) = sumV xs
 leadingInterval :: AffineSpace a => Mode a -> Diff a
 leadingInterval (Mode xs) = NonEmpty.last xs
 
-index :: AffineSpace p => Scale p -> Integer -> p
-index s n = case fromIntegral n of
-  n | n >  0 -> pos Stream.!! (n - 1)
-    | n == 0 -> z
-    | n <  0 -> neg Stream.!! negate (n + 1)
-  where
-    (neg, z, pos) = scaleToSet s
-
-member :: (Ord p, AffineSpace p) => Scale p -> p -> Bool
-member s p = case p of
-  p | p >  z -> p `isHeadOf` Stream.dropWhile (< p) pos
-    | p == z -> True
-    | p <  z -> p `isHeadOf` Stream.dropWhile (> p) neg
-  where
-    (neg, z, pos) = scaleToSet s
 
 isHeadOf :: Eq a => a -> Stream a -> Bool
 isHeadOf a (b Stream.:> _) = a == b
@@ -192,15 +182,37 @@ rotate (x :| y : rs) = y :| (rs ++ [x])
 scaleToList :: AffineSpace a => Scale a -> [a]
 scaleToList (Scale tonic (Mode leaps)) = init $ offsetPoints tonic $ toList leaps
 
--- | Convert a scale to a countably infinite set (represented as a tuple
--- of "negative", "zero" and "positive" components.
-scaleToSet :: AffineSpace a => Scale a -> (Stream a, a, Stream a)
-scaleToSet (Scale tonic (Mode leaps)) =
-  ( Stream.tail $ offsetPointsS tonic $ fmap negateV $ Stream.cycle $ NonEmpty.reverse leaps
-  , tonic
-  , Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
-  )
+class Countable f where
+  -- | Convert to a countably infinite set (represented as a tuple
+  -- of "negative", "zero" and "positive" components.
+  scaleToSet :: AffineSpace a => f a -> (Stream a, a, Stream a)
+  index :: AffineSpace p => f p -> Integer -> p
+  member :: (Ord p, AffineSpace p) => f p -> p -> Bool
 
+  index s n = case fromIntegral n of
+    n | n >  0 -> pos Stream.!! (n - 1)
+      | n == 0 -> z
+      | n <  0 -> neg Stream.!! negate (n + 1)
+    where
+      (neg, z, pos) = scaleToSet s
+
+  member s p = case p of
+    p | p >  z -> p `isHeadOf` Stream.dropWhile (< p) pos
+      | p == z -> True
+      | p <  z -> p `isHeadOf` Stream.dropWhile (> p) neg
+    where
+      (neg, z, pos) = scaleToSet s
+
+instance Countable Scale where
+  scaleToSet :: AffineSpace a => Scale a -> (Stream a, a, Stream a)
+  scaleToSet (Scale tonic (Mode leaps)) =
+    ( Stream.tail $ offsetPointsS tonic $ fmap negateV $ Stream.cycle $ NonEmpty.reverse leaps
+    , tonic
+    , Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
+    )
+
+instance Countable Chord where
+  scaleToSet = scaleToSet . getChord
 
 -- TODO rename to ChordType or similar
 type ChordType a = Mode a
@@ -391,3 +403,12 @@ quartal = repeating _P4
 
 quintal :: ChordType Pitch
 quintal = repeating _P5
+
+
+data Voiced f p = Voiced { getChordScale :: f p, getSteps :: NonEmpty Integer }
+
+getVoiced :: (AffineSpace p, Countable f) => Voiced f p -> NonEmpty p
+getVoiced x = index (getChordScale x) <$> getSteps x
+
+
+
