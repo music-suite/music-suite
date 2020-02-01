@@ -1837,6 +1837,8 @@ While working with infinite sets for scales and chords is convenient, this is no
 
 TODO voiced chord example
 
+TODO basic voicing: exactly what we see in the "Inspectable" instance. In other words: the tonic, and one point for each vector
+
 
 
 
