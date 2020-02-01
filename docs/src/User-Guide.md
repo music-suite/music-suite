@@ -2,7 +2,19 @@
 
 ## Installing
 
-TODO
+TODO "easy" install options
+
+### Installing from source
+
+You'll need Git and Nix (2.3.2 or later).
+
+```
+$ git clone https://github.com/hanshoglund/music-suite
+$ cd music-suite
+```
+
+Then follow the instructions in `README.md` to setup the environment and build Music Suite.
+
 
 ## Writing music
 
@@ -352,7 +364,7 @@ TODO refer back to previous table. For example `Music.Pitch.Common` distinguishe
 
 Interval names are overloaded in a manner similar to pitches, and are consequently referred to as *interval literals*. The corresponding class is called @[IsInterval].
 
-Here and elsewhere in the Music Suite, the convention is to follow standard theoretical
+Here and elsewhere in Music Suite, the convention is to follow standard theoretical
 notation, so *minor* and *diminished* intervals are written in lower-case, while *major*
 and *perfect* intervals are written in upper-case. Unfortunately, Haskell does not support
 overloaded upper-case values, so we have to adopt an underscore prefix:
@@ -842,19 +854,60 @@ TODO artificial harmonics
 
 ### String techniques
 
-TODO pizz/arco
 
 ```music+haskell
-pizz $ pseq [c,c,c,c, arco d |* 2] |/ 4
+set parts' violins $
+  pseq [arco $ staccato $ times 4 c, times 4 $ pizz g_ ] |/ 4
 ```
+
+```music+haskell
+set parts' violins $
+  pseq [pizz $ pseq [c,c,c,c], d |* 2, pizz e |*2 ] |/ 4
+```
+
 
 TODO bow position (sul tasto, sul pont, nat)
 
-TODO col legno (bat, tratto)
+```music+haskell
+set parts' violins $
+  pseq [sulTasto $ pseq [c,c,c,c], posNat d |* 2] |/ 4
+```
+
+```music+haskell
+set parts' violins $
+  pseq [posNat $ pseq [c,c,c,c], sulPont d |* 2] |/ 4
+```
+
+```music+haskell
+set parts' violins $ pseq
+  [ colLegno c
+  , colLegnoBatt c
+  , senzaLegno c
+  ] |* 2
+```
+
+TODO mutes
+
+```music+haskell
+set parts' violins $ pseq
+  [ conSord c
+  , senzaSord c
+  ]
+  |/ 4
+```
+
+```music+haskell
+set parts' violins $ pseq
+  [ conSord $ arco c
+  , pizz c
+  , pizz $ conSord $ pizz c
+  , conSord $ colLegno $ pizz c
+  ]
+  |* 1.5
+```
 
 TODO chord tremolo
 
-TODO mutes
 
 ### Wind techniques
 
@@ -961,9 +1014,9 @@ TODO color
 TODO define this. Meta-information is presentational and not attached to a specific part. Shorten this intro. All presentational/extra info is meta, all *logical/semantic/sounding* information is not. We represent meta-information dynamically (Typeable).
 
 
-It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In the Music Suite these are grouped together under the common label *meta-information*.
+It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In Music Suite these are grouped together under the common label *meta-information*.
 
-The notion of meta-data used in the Music Suite is more extensive than just static values: any @[Transformable] container can be wrapped, and the meta-data will be transformed when the annotated value is transformed. This is why meta-data is often variable values, such as @[Reactive] or @[Behavior].
+The notion of meta-data used in Music Suite is more extensive than just static values: any @[Transformable] container can be wrapped, and the meta-data will be transformed when the annotated value is transformed. This is why meta-data is often variable values, such as @[Reactive] or @[Behavior].
 
 All time structures in Music Suite support an arbitrary number of meta-data fields, indexed by type. All meta-information is required to satisfy the `Typeable`, so that meta-data can be packed and unpacked dynamically), and `Monoid`, so that values can be created and composed without having to worry about meta-data. The `mempty` value is implicitly chosen if no meta-information of the given type has been entered: for example the default title is empty, the default time signature is `4/4`. If two values annotated with meta-data are composed, their associated meta-data maps are composed as well, using the `<>` operator on each of the types.
 
@@ -1688,13 +1741,12 @@ over t (up m2) [d,d,d |* 2,d] |/ 4
 
 # Harmony
 
-## Scales and modes
+## Scales, modes, chords and chord types
 
 TODO we've seen several examples of affine spaces with notions of *points* and *distances*: time points and durations, pitches and intervals, spans and transformations, and so on.
 
 Another example is the notion of scales and chords. These are (conceptually) infinite collections of points, forming a subset of a larger pitch space. By forgetting the *root* or *fundamental* of a scale/chord we obtain what is known as a mode (for scales) or a chord type (for chords).
 
-TODO rename (Function -> ChordType or similar). Function implies context/direction and is confusing for other reasons too.
 
 ```music+haskell
 inspectableToMusic @[Mode Pitch] $
@@ -1725,7 +1777,7 @@ inspectableToMusic @[Scale Pitch] $
 
 
 ```music+haskell
-inspectableToMusic @[Function Pitch] $
+inspectableToMusic @[ChordType Pitch] $
 
 [ majorTriad
 , minorTriad
@@ -1744,16 +1796,27 @@ inspectableToMusic @[Chord Pitch] $
 , functionToChord eb diminishedChord
 ]
 ```
+### Triadic harmony
 
-TODO all types above are also *voiced*, in other words:
+Basic triads, seventh and ninth chords
 
-  - Conceptually infinite/extensible
-  - Focused down on a subset of the space (e.g. the pitches [c,e,g]): the voicing
-  - We can "un-voice" the chord to forget the focused pitches
-  - We can "re-voice" the chord. TODO formalize this.
-    - Equivalence relations?
-    - Note this is *not* the same as inversion. `[c,e,g]` and `[e,g,c']` are related by inversion, but `[c,e,g]` and `[c,g,e']` are related by revoicing.
+### Non-octave repeating scales
 
+TODO Quartal and quintal
+
+Non-repeating/self-repeating scales (e.g. the overtone series). TODO create by unfold?
+
+TODO chromatic scale
+
+## Scales/Chords as sets
+
+Chords and scales are *countably infinite* sets. This means that we can map them directly to any other such sets, such as the set of integers. For example the chord "C major" is the set `{ Cn En Gn | n ∈ all octaves }`. Using C4 (or "middle C") as the starting point, 0 will map to C4, 1 to E4, 2 to G4, -1 to G3, -2 to E3, and so on.
+
+Normal Haskell types correspond to sets as well. For example, our `Common.Pitch` type is the set of *all* pitches in the diatonic/chromatic system. Values such as `scale c major` of type `Scale p` correpond to some subset of `p`.
+
+TODO inversion (aka rotation)
+
+TODO reflecting?
 
 TODO looking up notes in a scale/chord (infinitely, Integer ->, 0 being the tonic)
 
@@ -1764,21 +1827,28 @@ TODO type-level sepration of voiced/unvoiced (currently this is muddled). New ty
 
 Calculate dissonance of a chord (classical/"objective", by higest common fundamental)
 
-Non-repeating/self-repeating scales (e.g. the overtone series)
+TODO tranposing scales/chords.
 
-### Triadic harmony
+TODO set operations on chords/scales (e.g. union/difference/intersection/isSubset/isPowerset etc).
 
-Basic triads, seventh and ninth chords
+## Voicings
 
-### Quartal and quintal
+While working with infinite sets for scales and chords is convenient, this is not helpful when dealing with problems of *voicing*. To represent this, we will need to consider finite subsets of the infinite pitch sets we use for scales and chords.
 
-TODO
+TODO voiced chord example
 
-### Scales as chords
 
-TODO scale-chord texture, e.g. whole tone extending augmented,
 
-### Non-diatonic scales
+
+### Scales versus Chords
+
+TODO there is little difference
+
+Whole tone is a superset of augmented, octatonic a superset of dimimished and so on
+
+Consider "scale-chord texture"
+
+## Beyond diatonic/chromatic
 
 TODO the Common.Pitch type has built-in support for chromatic/diatonic harmony. We can construct types that support other system instead.
 

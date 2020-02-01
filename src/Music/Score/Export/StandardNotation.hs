@@ -243,10 +243,10 @@ import Music.Score.Dynamics (DynamicT (..))
 import qualified Music.Score.Export.ArticulationNotation
 import Music.Score.Export.ArticulationNotation (marks, slurs)
 import qualified Music.Score.Export.ArticulationNotation as AN
-import qualified Music.Score.Export.TechniqueNotation as TN
 import Music.Score.Export.DynamicNotation (crescDim, dynamicLevel)
 import qualified Music.Score.Export.DynamicNotation
 import qualified Music.Score.Export.DynamicNotation as DN
+import qualified Music.Score.Export.TechniqueNotation as TN
 import Music.Score.Harmonics (HarmonicT, runHarmonicT)
 import qualified Music.Score.Internal.Export
 import Music.Score.Internal.Quantize
@@ -273,7 +273,7 @@ import qualified Music.Score.Pitch
 import Music.Score.Pitch ()
 import Music.Score.Slide (SlideT, runSlideT)
 import Music.Score.StaffNumber (StaffNumberT, runStaffNumberT)
-import Music.Score.Technique (HasTechniques(techniques), SomeTechnique (..), TechniqueT (..))
+import Music.Score.Technique (HasTechniques (techniques), SomeTechnique (..), TechniqueT (..))
 import qualified Music.Score.Technique
 import Music.Score.Text (TextT, runTextT)
 import qualified Music.Score.Ties
@@ -1231,8 +1231,10 @@ toLy opts work = do
               newDur = (d `min` (1 / 4)) / scale
               repeats = d / newDur
            in (Lilypond.Tremolo (round repeats), newDur)
+
         notateText :: [String] -> Lilypond.Music -> Lilypond.Music
-        notateText texts = composed (fmap Lilypond.addText texts)
+        notateText texts = composed (fmap (Lilypond.addText' Lilypond.Above) texts)
+
         notateHarmonic :: HarmonicNotation -> Lilypond.Music -> Lilypond.Music
         notateHarmonic (Any isNat, Sum n) = case (isNat, n) of
           (_, 0) -> id
@@ -1840,7 +1842,6 @@ type Asp3 =
         )
     )
 
-
 type Asp = Score Asp1
 
 type StandardNotationExportM m = (MonadLog String m, MonadError String m)
@@ -1877,16 +1878,15 @@ fromAspects sc = do
       $ postChordMerge
   -- Rewrite dynamics and articulation to be context-sensitive
   -- This changes the aspect type again
-  say "Notate dynamics and articulation"
+  say "Notate dynamics, articulation and playing techniques"
   postContextSensitiveNotationRewrite <- return $ fmap2 asp2ToAsp3 $ postVoiceSeparation
   -- postContextSensitiveNotationRewrite :: [(Music.Parts.Part,Voice (Maybe Asp3))]
 
   -- Split each part into bars, splitting notes and adding ties when necessary
   -- Resulting list is list of bars, there is no layering (yet)
   say "Divide score into bars, adding ties where necessary"
-  let postTieSplit = fmap2 (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
-  -- postTieSplit :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
-
+  let postTieSplit :: [(Part, [Voice (Maybe Asp3)])] =
+        fmap2 (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
   -- For each bar, quantize all layers. This is where tuplets/note values are generated.
   say "Quantize rhythms (generating dotted notes and tuplets)"
   postQuantize <- traverse (traverse (traverse quantizeBar)) postTieSplit
@@ -1939,7 +1939,8 @@ fromAspects sc = do
         . ( over Music.Score.Articulation.articulations AN.notateArticulation
               . Music.Score.Articulation.addArtCon
           )
-        . ( -- TODO do "removeCloseDynMarks for playing techniques"
+        . (
+            -- TODO do "removeCloseDynMarks for playing techniques"
             over techniques TN.notateTechnique
               . Music.Score.Technique.addTechniqueCon
           )
@@ -1994,6 +1995,8 @@ fromAspects sc = do
         $ dynamicNotation .~ (asp ^. (Music.Score.Dynamics.dynamic))
         $ articulationNotation .~ (asp ^. (Music.Score.Articulation.articulation))
         $ pitches .~ (asp ^.. (Music.Score.Pitch.pitches))
+        $ chordText .~ TN.textualNotations (asp ^. Music.Score.Technique.technique)
+        -- $ harmonicNotation .~ _ asp
         $ mempty
       where
         (endTie, beginTie) = Music.Score.Ties.isTieEndBeginning asp

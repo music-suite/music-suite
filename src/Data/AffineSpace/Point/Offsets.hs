@@ -1,5 +1,6 @@
 module Data.AffineSpace.Point.Offsets
   ( offsetPoints,
+    offsetPointsS,
     pointOffsets,
     offsetVs,
     distanceVs,
@@ -12,6 +13,8 @@ import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.List
 import Data.VectorSpace
+import Data.Stream.Infinite (Stream)
+import qualified Data.Stream.Infinite as Stream
 
 -- | Lay out a series of vectors from a given point. Return all intermediate points.
 --
@@ -21,6 +24,10 @@ import Data.VectorSpace
 -- [0,1,2,3]
 offsetPoints :: AffineSpace p => p -> [Diff p] -> [p]
 offsetPoints = scanl (.+^)
+
+-- | Same as 'offsetPoints' but for infinite streams.
+offsetPointsS :: AffineSpace p => p -> Stream (Diff p) -> Stream p
+offsetPointsS = Stream.scanl (.+^)
 
 -- | Calculate the relative difference between vectors.
 --

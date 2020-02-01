@@ -45,6 +45,20 @@ module Music.Score.Technique
     pizz,
     arco,
 
+    moltoSulPont,
+    sulPont,
+    posNat,
+    sulTasto,
+    moltoSulTasto,
+    naturale,
+    colLegno,
+    colLegnoBatt,
+    senzaLegno,
+    muted,
+    unmuted,
+    conSord,
+    senzaSord,
+
     -- * Context
     vtechnique,
     addTechniqueCon,
@@ -481,7 +495,7 @@ data PizzArco = Arco | Pizz
 data Legno = NonLegno | ColLegnoTratto | ColLegnoBatt
   deriving (Show, Enum, Bounded, Eq, Ord)
 
-data StringPos = MultoSulPont | SulPont | PosNat | SulTasto | MoltoSulTasto
+data StringPos = MoltoSulPont | SulPont | PosNat | SulTasto | MoltoSulTasto
   deriving (Show, Enum, Bounded, Eq, Ord)
 
 data StringMute = NoStringMute | StringMute
@@ -546,6 +560,27 @@ instance Tiable SomeTechnique where
 pizz, arco :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
 pizz = set (techniques . pizzicato) Pizz
 arco = set (techniques . pizzicato) Arco
+
+moltoSulPont, sulPont, posNat, sulTasto, moltoSulTasto :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
+moltoSulPont = set (techniques . stringPos) MoltoSulPont
+sulPont = set (techniques . stringPos) SulPont
+posNat = set (techniques . stringPos) PosNat
+sulTasto = set (techniques . stringPos) SulTasto
+moltoSulTasto = set (techniques . stringPos) MoltoSulTasto
+
+naturale :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
+naturale = senzaLegno . posNat . unmuted
+
+colLegno, colLegnoBatt, senzaLegno :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
+colLegno = set (techniques . legno) ColLegnoTratto
+colLegnoBatt = set (techniques . legno) ColLegnoBatt
+senzaLegno = set (techniques . legno) NonLegno
+
+muted, unmuted, conSord, senzaSord :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
+muted = set (techniques . stringMute) StringMute
+unmuted = set (techniques . stringMute) NoStringMute
+conSord = set (techniques . stringMute) StringMute
+senzaSord = set (techniques . stringMute) NoStringMute
 
 -- |
 -- View just the techniquees in a voice.
