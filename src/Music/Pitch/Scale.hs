@@ -69,6 +69,12 @@ module Music.Pitch.Scale
     halfDiminishedChord,
     majorMinorSeventhChord,
     majorMajorSeventhChord,
+    minorMinorSeventhChord,
+    minorMajorSeventhChord,
+    frenchSixthChord,
+    germanSixthChord,
+    quartal,
+    quintal,
   )
 where
 
@@ -294,8 +300,41 @@ diminishedChord = Function [m3, m3, _A2] _P8
 halfDiminishedChord :: Function Pitch
 halfDiminishedChord = Function [m3, m3, _M3] _P8
 
+-- | Also known as "dominant seventh".
 majorMinorSeventhChord :: Function Pitch
 majorMinorSeventhChord = Function [_M3, m3, m3] _P8
 
+-- | Also known as "major seventh".
 majorMajorSeventhChord :: Function Pitch
 majorMajorSeventhChord = Function [_M3, m3, _M3] _P8
+
+-- | Also known as a "ii7". First inversion of major sixth.
+minorMinorSeventhChord :: Function Pitch
+minorMinorSeventhChord = Function [m3, _M3, m3] _P8
+
+-- | Also known as "major seventh".
+minorMajorSeventhChord :: Function Pitch
+minorMajorSeventhChord = Function [m3, _M3, _M3] _P8
+
+-- TODO ninth chords, sixths chords, 6/9 (pentatonic field), Guido's hexachord?
+
+germanSixthChord :: Function Pitch
+germanSixthChord = majorMinorSeventhChord
+
+frenchSixthChord :: Function Pitch
+frenchSixthChord = Function [_M3, d3, _M3] _P8
+
+
+-- TODO generalize this to "repeating"
+--
+-- repeating _m2 = chromaticCluster
+-- repeating M2  = wholeToneCluster
+-- repeating m3  = diminishedChord
+-- repeating P4  = quartal
+-- etc.
+--
+quartal :: Function Pitch
+quartal = Function [_P4] _P4
+
+quintal :: Function Pitch
+quintal = Function [_P5] _P5
