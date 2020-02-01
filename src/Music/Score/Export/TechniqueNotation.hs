@@ -46,14 +46,11 @@ import Music.Score.Technique
 import Music.Score.Ties
 import Music.Time
 
--- TODO this works for pizz/arco, col legno etc, but not for all techniques...
 newtype TechniqueNotation = TechniqueNotation [String]
   deriving (Semigroup, Monoid)
 
 textualNotations :: TechniqueNotation -> [String]
 textualNotations (TechniqueNotation xs) = xs
-
-
 
 notateTechnique :: Ctxt SomeTechnique -> TechniqueNotation
 notateTechnique t = TechniqueNotation $ case getCtxt t of
@@ -69,7 +66,6 @@ notateTechnique t = TechniqueNotation $ case getCtxt t of
     ++
     if prev^.stringMute /= cur^.stringMute
       then showStringMute (cur^.stringMute) else []
-    -- TODO add legno etc
   (_, cur, _) ->
        maybe [] showPizz (viewNotEmpty pizzicato cur)
     ++ maybe [] showLegno (viewNotEmpty legno cur)
@@ -79,9 +75,22 @@ notateTechnique t = TechniqueNotation $ case getCtxt t of
     viewNotEmpty l x = if v == mempty then Nothing else Just v
       where v = view l x
 
-    -- TODO show lowercase "pizz" etc
-    -- These should not use Show but a custom function to render e.g. ColLegnoBatt correctly
-    showPizz = pure . show
-    showLegno = pure . show
-    showStringPos = pure . show
-    showStringMute = pure . show
+showPizz :: PizzArco -> [String]
+showPizz Pizz = ["pizz."]
+showPizz Arco = ["arco"]
+
+showLegno :: Legno -> [String]
+showLegno NonLegno = ["senza legno"]
+showLegno ColLegnoBatt = ["col legno batt."]
+showLegno ColLegnoTratto = ["col legno tratto"]
+
+showStringPos :: StringPos -> [String]
+showStringPos PosNat = ["pos nat."]
+showStringPos MoltoSulTasto = ["molto sul tasto"]
+showStringPos MoltoSulPont  = ["molto sul pont."]
+showStringPos SulTasto = ["sul tasto"]
+showStringPos SulPont  = ["sul pont."]
+
+showStringMute :: StringMute -> [String]
+showStringMute NoStringMute = ["senza sord."]
+showStringMute StringMute   = ["con sord."]
