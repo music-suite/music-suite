@@ -21,14 +21,15 @@
 -- A 'Mode' (or 'ChordType) is like a Chord/Scale that has forgotten its origin.
 --
 module Music.Pitch.Scale
-  ( -- * Modes and Chord types
-    Mode,
-    modeFromSteps,
-    modeIntervals,
-
+  (
     -- * TODO move
     Countable(..),
     Generated(..),
+
+    -- * Modes and Chord types
+    Mode(..),
+    modeFromSteps,
+    modeIntervals,
 
     ChordType,
     functionFromSteps,
@@ -38,19 +39,17 @@ module Music.Pitch.Scale
     Scale,
     scaleTonic,
     scaleMode,
-    leadingInterval,
 
+    leadingInterval,
     invertMode,
     modeToScale,
-    scaleToSet,
-    index,
-    member,
     scaleToList,
 
     -- * Chords
     Chord,
     chordTonic,
     chordType,
+
     complementInterval,
     invertChord,
     functionToChord,
