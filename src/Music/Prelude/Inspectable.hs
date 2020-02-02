@@ -126,6 +126,9 @@ instance Inspectable [ChordType Pitch] where
 instance Inspectable [Chord Pitch] where
   inspectableToMusic = pseq . fmap inspectableToMusic
 
+instance Inspectable [Voiced Chord Pitch] where
+  inspectableToMusic = pseq . fmap inspectableToMusic
+
 -- instance Inspectable [Hertz] where
 --   inspectableToMusic xs = ppar $ map fromPitch $ map (^.from pitchHertz) xs
 -- instance Inspectable [[Hertz]] where

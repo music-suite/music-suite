@@ -116,6 +116,7 @@ module Music.Pitch.Scale
     Voiced(..),
     getVoiced,
     voiced,
+    invertVoicing,
   )
 where
 
@@ -203,20 +204,41 @@ isHeadOf a (b Stream.:> _) = a == b
 invertMode :: AffineSpace a => Integer -> Mode a -> Mode a
 invertMode n (Mode xs) = Mode (rotate n xs)
 
--- TODO move
--- TODO optimize
-rotate :: Integer -> NonEmpty a -> NonEmpty a
-rotate 0 xs = xs
-rotate n xs
-  | n > 0 =
-    NonEmpty.iterate left xs NonEmpty.!! fromInteger n
-  | n < 0 =
-    NonEmpty.iterate right xs NonEmpty.!! (negate $ fromInteger n)
-  where
-    left (x :| [])     = x :| []
-    left (x :| y : rs) = y :| (rs ++ [x])
 
-    right = NonEmpty.reverse . left . NonEmpty.reverse
+-- TODO move
+
+-- |
+-- Class of types representing finite sets.
+--
+-- @
+-- n `mod` length n == 0 -> rotate n = id
+-- length (rotate n xs) = length xs
+-- rotate n = rotate n . toList
+-- @
+class Foldable f => FiniteSequence f where
+  rotate :: Integer -> f a -> f a
+
+instance FiniteSequence [] where
+  rotate n xs = take lxs . drop (fromInteger n `mod` lxs) . cycle $ xs
+    where
+      lxs = length xs
+
+-- TODO optimize
+instance FiniteSequence NonEmpty where
+  rotate :: Integer -> NonEmpty a -> NonEmpty a
+  rotate 0 xs = xs
+  rotate n xs
+    | n > 0 =
+      NonEmpty.iterate left xs NonEmpty.!! fromInteger n
+    | n < 0 =
+      NonEmpty.iterate right xs NonEmpty.!! (negate $ fromInteger n)
+    where
+      left (x :| [])     = x :| []
+      left (x :| y : rs) = y :| (rs ++ [x])
+
+      right = NonEmpty.reverse . left . NonEmpty.reverse
+
+
 
 -- TODO semantically suspect!
 scaleToList :: AffineSpace a => Scale a -> [a]
@@ -459,7 +481,7 @@ frenchSixthChord = Mode [_M3, d3, _M3, _M2]
 
 -- | Build a harmonic filed from repeating a single interval.
 --
--- Morally, we have:
+-- Up to enharmonic equivalence, we have:
 --
 -- @
 -- repeating _m2 = chromaticCluster
@@ -497,5 +519,5 @@ voiced :: Generated f => f p -> Voiced f p
 voiced x = Voiced x [0..fromIntegral (length (generator x)) - 1]
 
 invertVoicing :: Integer -> Voiced f a -> Voiced f a
-invertVoicing n (Voiced f ns) = undefined
+invertVoicing n (Voiced f xs) = Voiced f (fmap (+ n) xs)
 

@@ -1884,6 +1884,13 @@ TODO uneven voicing, e.g. [1,2,4,7] etc. and the reverse of that.
 
 Like Modes and ChordTypes (and unlike Scales and Chords), voicing allow inversion:
 
+```music+haskell
+inspectableToMusic @[Voiced Chord Pitch] $
+  fmap (`invertVoicing` vs) [ -1..4 ]
+  where
+    vs = voiced (chord c majorTriad)
+```
+
 TODO
 
 TODO more combinators to modify the voicing
