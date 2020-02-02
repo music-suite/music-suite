@@ -42,7 +42,7 @@ module Music.Pitch.Scale
 
     leadingInterval,
     invertMode,
-    modeToScale,
+    scale,
     scaleToList,
 
     -- * Chords
@@ -52,7 +52,7 @@ module Music.Pitch.Scale
 
     complementInterval,
     invertChord,
-    functionToChord,
+    chord,
     chordToList,
 
 
@@ -115,7 +115,7 @@ module Music.Pitch.Scale
     -- * Voiced chords/scales
     Voiced(..),
     getVoiced,
-    basicVoicing,
+    voiced,
   )
 where
 
@@ -160,8 +160,8 @@ deriving instance (Eq a, Eq (Diff a)) => Eq (Scale a)
 deriving instance (Ord a, Ord (Diff a)) => Ord (Scale a)
 deriving instance (Show a, Show (Diff a)) => Show (Scale a)
 
-modeToScale :: AffineSpace a => a -> Mode a -> Scale a
-modeToScale = Scale
+scale :: AffineSpace a => a -> Mode a -> Scale a
+scale = Scale
 
 -- |
 -- > Lens' (Scale Pitch) Pitch
@@ -201,16 +201,22 @@ isHeadOf a (b Stream.:> _) = a == b
 -- length (generator x) == n -> invertMode n x = x
 -- @
 invertMode :: AffineSpace a => Integer -> Mode a -> Mode a
-invertMode 0 = id
-invertMode n = invertMode (n - 1) . invertMode1
-  where
-    invertMode1 :: AffineSpace a => Mode a -> Mode a
-    invertMode1 = Mode . rotate . getMode
+invertMode n (Mode xs) = Mode (rotate n xs)
 
 -- TODO move
-rotate :: NonEmpty a -> NonEmpty a
-rotate (x :| [])     = x :| []
-rotate (x :| y : rs) = y :| (rs ++ [x])
+-- TODO optimize
+rotate :: Integer -> NonEmpty a -> NonEmpty a
+rotate 0 xs = xs
+rotate n xs
+  | n > 0 =
+    NonEmpty.iterate left xs NonEmpty.!! fromInteger n
+  | n < 0 =
+    NonEmpty.iterate right xs NonEmpty.!! (negate $ fromInteger n)
+  where
+    left (x :| [])     = x :| []
+    left (x :| y : rs) = y :| (rs ++ [x])
+
+    right = NonEmpty.reverse . left . NonEmpty.reverse
 
 -- TODO semantically suspect!
 scaleToList :: AffineSpace a => Scale a -> [a]
@@ -239,6 +245,7 @@ class Countable f where
   scaleToSet :: AffineSpace a => f a -> (Stream a, a, Stream a)
 
   index :: AffineSpace p => f p -> Integer -> p
+
   member :: (Ord p, AffineSpace p) => f p -> p -> Bool
 
   index s n = case fromIntegral n of
@@ -288,8 +295,8 @@ deriving instance (Eq a, Eq (Diff a)) => Eq (Chord a)
 deriving instance (Ord a, Ord (Diff a)) => Ord (Chord a)
 deriving instance (Show a, Show (Diff a)) => Show (Chord a)
 
-functionToChord :: AffineSpace a => a -> ChordType a -> Chord a
-functionToChord x xs = Chord $ modeToScale x xs
+chord :: AffineSpace a => a -> ChordType a -> Chord a
+chord x xs = Chord $ scale x xs
 
 -- |
 -- > Lens' (Chord Pitch) Pitch
@@ -317,8 +324,8 @@ complementInterval = leadingInterval
 invertChord :: AffineSpace a => Integer -> ChordType a -> ChordType a
 invertChord = invertMode
 
-{-# DEPRECATED chordToList "Use (getVoiced . basicVoicing) instead" #-}
-{-# DEPRECATED scaleToList "Use (getVoiced . basicVoicing) instead" #-}
+{-# DEPRECATED chordToList "Use (getVoiced . voiced) instead" #-}
+{-# DEPRECATED scaleToList "Use (getVoiced . voiced) instead" #-}
 -- | Returns a single inversion of the given chord (no repeats!).
 chordToList :: AffineSpace a => Chord a -> [a]
 chordToList = scaleToList . getChord
@@ -486,7 +493,9 @@ deriving instance Show (f a) => Show (Voiced f a)
 getVoiced :: (AffineSpace p, Countable f) => Voiced f p -> NonEmpty p
 getVoiced x = index (getChordScale x) <$> getSteps x
 
-basicVoicing :: Generated f => f p -> Voiced f p
-basicVoicing x = Voiced x [0..fromIntegral (length (generator x)) - 1]
+voiced :: Generated f => f p -> Voiced f p
+voiced x = Voiced x [0..fromIntegral (length (generator x)) - 1]
 
+invertVoicing :: Integer -> Voiced f a -> Voiced f a
+invertVoicing n (Voiced f ns) = undefined
 

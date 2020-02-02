@@ -1764,12 +1764,12 @@ inspectableToMusic @[Mode Pitch] $
 ```music+haskell
 inspectableToMusic @[Scale Pitch] $
 
-[ modeToScale c phrygian
-, modeToScale d majorScale
-, modeToScale e bluesMajor
-, modeToScale f wholeTone
-, modeToScale g octatonic
-, modeToScale a thirdMode
+[ scale c phrygian
+, scale d majorScale
+, scale e bluesMajor
+, scale f wholeTone
+, scale g octatonic
+, scale a thirdMode
 ]
 ```
 
@@ -1790,10 +1790,10 @@ inspectableToMusic @[ChordType Pitch] $
 ```music+haskell
 inspectableToMusic @[Chord Pitch] $
 
-[ functionToChord g majorTriad
-, functionToChord c minorTriad
-, functionToChord f augmentedChord
-, functionToChord eb diminishedChord
+[ chord g majorTriad
+, chord c minorTriad
+, chord f augmentedChord
+, chord eb diminishedChord
 ]
 ```
 ### Triadic harmony
@@ -1850,37 +1850,48 @@ While working with infinite sets for scales and chords is convenient, this is no
 
 
 
-The `basicVoicing` (TODO name?) shows the pitches of the generating interval sequence, originating at the tonic:
+The `voiced` function voices a chord as closely as possible above the tonic. Formally the pitches of the generating interval sequence, originating at the tonic. For example:
 
 ```music+haskell
 inspectableToMusic @(Voiced Chord Pitch) $
-  basicVoicing (functionToChord d majorTriad)
+  voiced (chord d majorTriad)
 ```
 
 ```music+haskell
 inspectableToMusic @(Voiced Scale Pitch) $
-  basicVoicing (modeToScale d majorScale)
+  voiced (scale d majorScale)
 ```
+
 
 We can also create custom voicings, using any combination of integers. Recall that `0` stands for the origin, `1` for the first note above the origin, `2` for the next and so on. Negative numbers repeat the pattern below the origin.
 
 ```music+haskell
 inspectableToMusic @(Voiced Chord Pitch) $
-  Voiced (functionToChord d minorTriad) [0,1..6]
+  Voiced (chord d minorTriad) [0,1..6]
 ```
 
 ```music+haskell
 inspectableToMusic @(Voiced Chord Pitch) $
-  Voiced (functionToChord d minorTriad) [0,2..6]
+  Voiced (chord d minorTriad) [0,2..6]
 ```
 
 ```music+haskell
 inspectableToMusic @(Voiced Chord Pitch) $
-  Voiced (functionToChord d minorTriad) [-2,0,2,4]
+  Voiced (chord d minorTriad) [-2,0,2,4]
 ```
 
 TODO uneven voicing, e.g. [1,2,4,7] etc. and the reverse of that.
 
+Like Modes and ChordTypes (and unlike Scales and Chords), voicing allow inversion:
+
+TODO
+
+TODO more combinators to modify the voicing
+
+```music+haskell
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (chord d minorTriad) [-2,0,2,4]
+```
 
 
 ## Beyond diatonic/chromatic
