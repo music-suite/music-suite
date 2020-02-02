@@ -1,5 +1,16 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE QuantifiedConstraints #-}
+
+{-
+ - TODO get rid of UndecidableInstances by tracking both pitch and interval in the type
+ - params of Mode/Scale etc.
+ -}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Scales and chords.
 --
 -- Semantically is little distinction between a Scale and a Chord. Thus the 'Chord' and 'Scale'
@@ -126,6 +137,10 @@ import Data.AffineSpace.Point.Offsets
 -- |  A mode is a list of intervals and a characteristic repeating interval.
 data Mode a = Mode { getMode :: NonEmpty (Diff a) }
 
+deriving instance Eq (Diff a) => Eq (Mode a)
+deriving instance Ord (Diff a) => Ord (Mode a)
+deriving instance Show (Diff a) => Show (Mode a)
+
 -- |
 -- @
 -- majorScale = modeFromSteps [M2,M2,m3,M2,M2,M2,m3]
@@ -141,6 +156,10 @@ modeIntervals f (Mode is) = fmap (\is -> Mode is) $ f is
 
 -- |  A scale is a mode with a specified tonic.
 data Scale a = Scale a (Mode a) -- root, mode
+
+deriving instance (Eq a, Eq (Diff a)) => Eq (Scale a)
+deriving instance (Ord a, Ord (Diff a)) => Ord (Scale a)
+deriving instance (Show a, Show (Diff a)) => Show (Scale a)
 
 modeToScale :: AffineSpace a => a -> Mode a -> Scale a
 modeToScale = Scale
@@ -265,6 +284,10 @@ functionIntervals = modeIntervals
 
 -- Note: The only difference between a chord and a Scale is the Inspectable instance
 newtype Chord a = Chord { getChord :: Scale a }
+
+deriving instance (Eq a, Eq (Diff a)) => Eq (Chord a)
+deriving instance (Ord a, Ord (Diff a)) => Ord (Chord a)
+deriving instance (Show a, Show (Diff a)) => Show (Chord a)
 
 functionToChord :: AffineSpace a => a -> ChordType a -> Chord a
 functionToChord x xs = Chord $ modeToScale x xs
@@ -455,6 +478,10 @@ quintal = repeating _P5
 
 
 data Voiced f p = Voiced { getChordScale :: f p, getSteps :: NonEmpty Integer }
+
+deriving instance Eq (f a) => Eq (Voiced f a)
+deriving instance Ord (f a) => Ord (Voiced f a)
+deriving instance Show (f a) => Show (Voiced f a)
 
 
 getVoiced :: (AffineSpace p, Countable f) => Voiced f p -> NonEmpty p
