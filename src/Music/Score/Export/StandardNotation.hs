@@ -1996,7 +1996,7 @@ fromAspects sc = do
         $ articulationNotation .~ (asp ^. (Music.Score.Articulation.articulation))
         $ pitches .~ (asp ^.. (Music.Score.Pitch.pitches))
         $ chordText .~ TN.textualNotations (asp ^. Music.Score.Technique.technique)
-        -- $ harmonicNotation .~ _ asp
+        -- TODO: $ harmonicNotation .~ _ asp
         $ mempty
       where
         (endTie, beginTie) = Music.Score.Ties.isTieEndBeginning asp
