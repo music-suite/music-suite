@@ -1808,6 +1808,10 @@ Non-repeating/self-repeating scales (e.g. the overtone series). TODO create by u
 
 TODO chromatic scale
 
+### Custom chords
+
+TODO create from any interval sequence
+
 ## Scales/Chords as sets
 
 Chords and scales are *countably infinite* sets. This means that we can map them directly to any other such sets, such as the set of integers. For example the chord "C major" is the set `{ Cn En Gn | n ∈ all octaves }`. Using C4 (or "middle C") as the starting point, 0 will map to C4, 1 to E4, 2 to G4, -1 to G3, -2 to E3, and so on.
@@ -1844,17 +1848,9 @@ Consider "scale-chord texture"
 
 While working with infinite sets for scales and chords is convenient, this is not helpful when dealing with problems of *voicing*. To represent this, we will need to consider finite subsets of the infinite pitch sets we use for scales and chords.
 
-TODO voiced chord example
 
-```music+haskell
-inspectableToMusic @(Voiced Chord Pitch) $
-  Voiced (functionToChord d minorTriad) [0,1,2]
-```
 
-```music+haskell
-inspectableToMusic @(Voiced Chord Pitch) $
-  Voiced (functionToChord d minorTriad) [-2,0,2,4]
-```
+The `basicVoicing` (TODO name?) shows the pitches of the generating interval sequence, originating at the tonic:
 
 ```music+haskell
 inspectableToMusic @(Voiced Chord Pitch) $
@@ -1866,9 +1862,24 @@ inspectableToMusic @(Voiced Scale Pitch) $
   basicVoicing (modeToScale d majorScale)
 ```
 
-TODO basic voicing: exactly what we see in the "Inspectable" instance. In other words: the tonic, and one point for each vector in the generator set, e.g. the voicing [0..n] where n is the cardinality of the generator set.
+We can also create custom voicings, using any combination of integers. Recall that `0` stands for the origin, `1` for the first note above the origin, `2` for the next and so on. Negative numbers repeat the pattern below the origin.
 
+```music+haskell
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (functionToChord d minorTriad) [0,1..6]
+```
 
+```music+haskell
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (functionToChord d minorTriad) [0,2..6]
+```
+
+```music+haskell
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (functionToChord d minorTriad) [-2,0,2,4]
+```
+
+TODO uneven voicing, e.g. [1,2,4,7] etc. and the reverse of that.
 
 
 
