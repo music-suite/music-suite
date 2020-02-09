@@ -12,7 +12,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
 
-- Do not expose IntervalL (hide or remove completely)
+- [X] Do not expose IntervalL (hide or remove completely)
 
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
