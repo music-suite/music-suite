@@ -385,7 +385,7 @@ Consider switching to a decentralized issue tracker such as:
   - [X] Represent functions/modes and chords/scales
   - [X] Making (infinite) octave-repeating scales from pitches/intervals
   - [X] Looking up pitches
-  - [ ] Transposable instance for chords/scales (pitch-wise)
+  - [X] Transposable instance for chords/scales (pitch-wise)
     - We don't really have a Transposable class, so this means
       defining `HasPitches a b => HasPitches (C a) (C b)`.
       This is possible to define for Chord/Scale by:

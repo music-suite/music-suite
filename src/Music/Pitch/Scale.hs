@@ -4,6 +4,8 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ApplicativeDo #-}
 
 {-
  - TODO get rid of UndecidableInstances by tracking both pitch and interval in the type
@@ -129,11 +131,13 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Control.Lens (Lens, Lens', coerced)
 import Data.AffineSpace
 import Data.VectorSpace
+import Music.Score.Pitch (HasPitches(..))
+import qualified Music.Score.Pitch as S
 import Music.Pitch.Common hiding (Mode)
 import Music.Pitch.Literal
 import Music.Pitch.Literal
 import Data.AffineSpace.Point.Offsets
-  ( offsetPoints, offsetPointsS )
+  ( offsetPoints, offsetPointsS, distanceVs )
 
 -- |  A mode is a list of intervals and a characteristic repeating interval.
 data Mode a = Mode { getMode :: NonEmpty (Diff a) }
@@ -161,6 +165,37 @@ data Scale a = Scale a (Mode a) -- root, mode
 deriving instance (Eq a, Eq (Diff a)) => Eq (Scale a)
 deriving instance (Ord a, Ord (Diff a)) => Ord (Scale a)
 deriving instance (Show a, Show (Diff a)) => Show (Scale a)
+
+
+-- TODO move:
+type instance S.Pitch (NonEmpty a) = S.Pitch a
+type instance S.SetPitch b (NonEmpty a) = NonEmpty (S.SetPitch b a)
+instance HasPitches a b => HasPitches (NonEmpty a) (NonEmpty b) where
+  pitches = traverse . pitches
+
+
+type instance S.Pitch (Scale a) = S.Pitch a
+
+type instance S.SetPitch b (Scale a) = Scale (S.SetPitch b a)
+
+instance forall a b . (HasPitches a b, AffineSpace a, AffineSpace b) => HasPitches (Scale a) (Scale b) where
+  pitches :: forall g . Applicative g => (S.Pitch a -> g (S.Pitch b)) -> Scale a -> g (Scale b)
+  pitches f s = do
+    let ps :: NonEmpty a = getVoiced $ voicedLong s
+    ps2 :: NonEmpty b <- pitches f ps
+    pure $ fromPitches ps2
+    where
+      fromPitches :: forall a . AffineSpace a => NonEmpty a -> Scale a
+      fromPitches (tonic :| vs) = Scale tonic (Mode $ maybe err id $ NonEmpty.nonEmpty $ distanceVs tonic vs)
+        where
+          err = error "HasPitches for Scale/Chord changed number of elements"
+
+type instance S.Pitch (Chord a) = S.Pitch a
+
+type instance S.SetPitch b (Chord a) = Chord (S.SetPitch b a)
+
+instance forall a b . (HasPitches a b, AffineSpace a, AffineSpace b) => HasPitches (Chord a) (Chord b) where
+  pitches f (Chord s) = Chord <$> pitches f s
 
 scale :: AffineSpace a => a -> Mode a -> Scale a
 scale = Scale
@@ -518,6 +553,10 @@ getVoiced x = index (getChordScale x) <$> getSteps x
 
 voiced :: Generated f => f p -> Voiced f p
 voiced x = voiceIn (fromIntegral $ length (generator x)) x
+
+-- | Like 'voiced' but include the leading/repeating interval.
+voicedLong :: Generated f => f p -> Voiced f p
+voicedLong x = voiceIn (fromIntegral $ length (generator x) + 1) x
 
 voiceIn :: Integer -> f p -> Voiced f p
 voiceIn n x = Voiced x [0..n - 1]

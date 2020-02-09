@@ -1862,6 +1862,13 @@ inspectableToMusic @[Chord Pitch] $
 
 TODO tranposing scales/chords.
 
+```music+haskell
+inspectableToMusic @[Chord Pitch] $
+[          chord c majorTriad
+-- , up _M2 $ chord c majorTriad
+]
+```
+
 TODO reflection?
 Quite interesting! Reflection of majorTriad is minorTriad
 
