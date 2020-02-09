@@ -229,5 +229,5 @@ module Music.Pitch.Literal.Pitch
   )
 where
 
-import Music.Pitch.Common.Types
+import Music.Pitch.Common.Internal
 

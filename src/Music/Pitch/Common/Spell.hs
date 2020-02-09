@@ -24,5 +24,5 @@ module Music.Pitch.Common.Spell
   )
 where
 
-import Music.Pitch.Common.Types
+import Music.Pitch.Common.Internal
 

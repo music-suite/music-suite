@@ -3,28 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DerivingVia #-}
 
--- | Common (Western classical) pitches, intervals and related types.
-module Music.Pitch.Common.Types
-{- TODO restore this in Common.Types after moving definitions to Common.Internal:
-  ( -- * Even octaves and steps
-    Octaves,
-    DiatonicSteps,
-    ChromaticSteps,
-    Semitones,
-
-    -- * Intervals
-    Number,
-    Quality (..),
-    QualityType (..),
-    IntervalBasis (..),
-    Interval (..),
-
-    -- * Pitch
-    Name (..),
-    Accidental,
-    Pitch (..),
-  )
--}
+module Music.Pitch.Common.Internal
 where
 
 import Data.AdditiveGroup

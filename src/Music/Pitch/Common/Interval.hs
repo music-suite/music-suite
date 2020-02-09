@@ -49,4 +49,4 @@ module Music.Pitch.Common.Interval
   )
 where
 
-import Music.Pitch.Common.Types
+import Music.Pitch.Common.Internal

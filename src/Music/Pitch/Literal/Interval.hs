@@ -88,5 +88,5 @@ module Music.Pitch.Literal.Interval
   )
 where
 
-import Music.Pitch.Common.Types
+import Music.Pitch.Common.Internal
 
