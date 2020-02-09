@@ -1640,11 +1640,12 @@ Can be used to:
 
 In the functional programming commonity, traverals have a powerful generalization known as optics, which also includes concepts such as lenses, prisms, folds and isomorphisms. Music Suite defines lenses and traversals compatible with `lens` and `microlens`.
 
-TODO monomorphic and polymorphic traversals
+TODO monomorphic and polymorphic traversals (and switch names: `pitch'` is used much more than `pitch`!)
 
 Folds: `toListOf`, `anyOf`, `allOf`
 
 Traversals: `over`, `traverseOf/forOf`, arbitrary effects (e.g. State, Writer, Maybe)
+
 
 ## Traversing the notes in a voice
 
@@ -1685,15 +1686,15 @@ canon </> renderAlignedVoice rh
     theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
 ```
 
-## Traversing pitches
+## Traversing pitches, dynamics and articulations
 
-TODO
+Music Suite defines traversals and lenses for all of the standard musical aspects (pitch, dynamic, articulation and so on). If you've been following the previous chapters, you might have seen examples of these already: expressions such as `pitches .~ c`, `dynamics .~ ff` or `over dynamics (+ 1)` make use of traversals to *update* all pitches, dynamics and so on, in a given piece of music.
 
 ## Traversing dynamics and articulation
 
 TODO
 
-## Traversing parts
+## Traversing parts and playing techniques
 
 TODO
 
@@ -1728,6 +1729,8 @@ over (phrases' . Control.Lens._head) (up m2) $ bar <> delay (1/8) bar
 
 ## Filtered traversals
 
+Filtered traversals operate on the elements selected by another traversals if they match a specific predicate. If you have used a query language such as SQL this should be familiar, the corresponding construct is the `WHERE` clause:
+
 ```music+haskell
 inspectableToMusic @(Voice [StandardNote]) $
 
@@ -1736,6 +1739,9 @@ over t (up m2) [d,d,d |* 2,d] |/ 4
     t = notes . each . filtered (\x -> x^.duration < 2)
 ```
 
+TODO `backwards`?
+
+TODO other SQL-like constructs, e.g. LIMIT and ORDER BY.
 
 
 
