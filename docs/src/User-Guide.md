@@ -1871,7 +1871,7 @@ Chord and Scale are instances of `HasPitch`. Using a suitable pitch type such as
 inspectableToMusic @[Chord Pitch] $
 [          chord c majorTriad
 , up _M2 $ chord c majorTriad
-, up _M2 $ over pitches negate $ chord c majorTriad
+, up _M2 $ over pitches (relative c negateV) $ chord c majorTriad
 ]
 ```
 
@@ -1897,19 +1897,19 @@ TODO reflection:
 ```music+haskell
 compress 2 $ inspectableToMusic @[Chord Pitch] $
 [                       chord c majorTriad
-, over pitches negate $ chord c majorTriad
+, over pitches (relative c negateV) $ chord c majorTriad
 
 ,                       chord c majorMinorSeventhChord
-, over pitches negate $ chord c majorMinorSeventhChord
+, over pitches (relative c negateV) $ chord c majorMinorSeventhChord
 
 ,                       chord c majorMajorSeventhChord
-, over pitches negate $ chord c majorMajorSeventhChord
+, over pitches (relative c negateV) $ chord c majorMajorSeventhChord
 
 ,                       chord c minorMinorSeventhChord
-, over pitches negate $ chord c minorMinorSeventhChord
+, over pitches (relative c negateV) $ chord c minorMinorSeventhChord
 
 ,                       chord c minorMajorSeventhChord
-, over pitches negate $ chord c minorMajorSeventhChord
+, over pitches (relative c negateV) $ chord c minorMajorSeventhChord
 ]
 ```
 

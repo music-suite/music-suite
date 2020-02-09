@@ -1490,11 +1490,20 @@ isStandardAccidental a = abs a < 2
 --       qual Nothing  = 0
 --       qual (Just n) = round n
 
+
+-- |
+-- >>> toEnum 0
+-- c
+--
+-- >>> toEnum 8
+-- d'
+--
+--
 instance Enum Pitch where
 
-  toEnum = Pitch . (\a b -> (fromIntegral a, fromIntegral b) ^. intervalTotalSteps) 0 . fromIntegral
+  toEnum = Pitch . view intervalAlterationSteps . (0, ) . fromIntegral
 
-  fromEnum = fromIntegral . pred . number . (.-. c)
+  fromEnum = fromIntegral . snd . view (from intervalAlterationSteps) . getPitch
 
 instance Alterable Pitch where
 
