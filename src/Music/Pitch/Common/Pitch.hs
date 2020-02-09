@@ -179,7 +179,7 @@ instance Transformable Pitch where
 -- |
 -- Creates a pitch from name accidental.
 mkPitch :: Name -> Accidental -> Pitch
-mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b) ^. interval') (fromIntegral acc) (fromEnum name)
+mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b) ^. intervalAlterationSteps) (fromIntegral acc) (fromEnum name)
 
 -- TODO name
 -- TODO use this to define pitch-class equivalence
@@ -209,9 +209,8 @@ name x
 --
 -- See also 'octaves', and 'steps' and 'semitones'.
 accidental :: Pitch -> Accidental
-accidental = fromIntegral . intervalDiff . simple . getPitch
+accidental = fromIntegral . view _alteration . simple . getPitch
   where
-    intervalDiff = view (from interval' . _1)
 
 upChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
 upChromaticP origin n = relative origin $ (_alteration +~ n)

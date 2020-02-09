@@ -6,6 +6,7 @@ module Music.Pitch.Common.Interval
     -- ** Creating intervals
     interval,
     interval',
+    intervalAlterationSteps,
     _number,
     _quality,
     _steps,

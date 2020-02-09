@@ -439,7 +439,7 @@ instance ToJSON Interval where
   toJSON i = Data.Aeson.object [("steps", toJSON $ i ^. _steps), ("alteration", toJSON $ i ^. _alteration)]
 
 instance FromJSON Interval where
-  parseJSON (Data.Aeson.Object x) = liftA2 (curry (^. interval')) alteration steps
+  parseJSON (Data.Aeson.Object x) = liftA2 (curry (^. intervalAlterationSteps)) alteration steps
     where
       steps = x Data.Aeson..: "steps"
       alteration = x Data.Aeson..: "alteration"
@@ -647,11 +647,11 @@ mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
 
 -- | View or set the alteration (i.e. the number of chromatic steps differing from the excepted number) in an interval.
 _alteration :: Lens' Interval ChromaticSteps
-_alteration = from interval' . _1
+_alteration = from intervalAlterationSteps . _1
 
 -- | View or set the number of chromatic steps in an interval.
 _steps :: Lens' Interval DiatonicSteps
-_steps = from interval' . _2
+_steps = from intervalAlterationSteps . _2
 
 -- | View or set the quality of an interval.
 _quality :: Lens' Interval Quality
@@ -665,25 +665,24 @@ _number = from interval . _2
 interval :: Iso' (Quality, Number) Interval
 interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
 
-{-
 -- | View an interval as a pair of alteration and diatonic steps or vice versa.
-interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
-interval' =
+--
+-- >>> _P5^.from intervalAlterationSteps
+-- (0,4)
+--
+-- >>> d5^.from intervalAlterationSteps
+-- (-1,4)
+intervalAlterationSteps :: Iso' (ChromaticSteps, DiatonicSteps) Interval
+intervalAlterationSteps =
   iso
     (\(d, s) -> mkInterval' (fromIntegral d) (fromIntegral s))
     (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x) ^. diatonicSteps))
--}
 
+-- TODO rename this
 -- | View an interval as a pair of total number of chromatic and diatonic steps.
 interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 interval' = iso Interval getInterval
 
-{-
-Note: This is *not* the same as wrapping/unwrapping, as the number of chromatic steps viewed here is
-an *alteration*, rather than the total number of chromatic steps (basis d2).
-
-E.g. d5 is internally represented as (6,4) but _P5^.from interval' == (-1,4).
--}
 
 -- |
 -- >>> m3 & _number %~ pred
