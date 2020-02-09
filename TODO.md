@@ -10,7 +10,7 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
-- BUG: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
+- [X] BUG: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
   Intervals not displayed properly
 
 - $doctests!
