@@ -20,7 +20,14 @@ Consider switching to a decentralized issue tracker such as:
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
 - [ ] New (current) export does not render tremolo/gliss/harmonics/text/color
-  - See also $playingTechniques
+  - Color can use ColorT as before
+  - Text can use TextT as before
+  - Harmonics should be recast using $playingTechniques
+    - The current top-level combinators (in HasHarmonic) can stay, HarmonicT should go (use SomeTechnique)
+  - Gliss should use $playingTechniques
+    - The current top-level combinators (in HasTremolo) can stay, HarmonicT should go (use SomeTechnique)
+  - Tremolo should be a combination of playing techniques (TODO) and *chords*
+
 
 - [X] Add more examples (e.g from Piece1, Piece2 etc)
   - [ ] Make them all compile (add to cabal file!)
