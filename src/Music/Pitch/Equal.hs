@@ -100,10 +100,10 @@ getSize _ = nat
 
 -- | Size of this type (value not evaluated).
 --
--- >>> size (Proxy :: N2)
+-- TODO>>> size (Proxy :: N2)
 -- 2
 --
--- >>> size (Proxy :: N12)
+-- TODO>>> size (Proxy :: N12)
 -- 12
 size :: IsNat a => proxy a -> Int
 size = natToZ . getSize

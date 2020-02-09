@@ -363,8 +363,8 @@ isPositive x@(Interval (a, d)) = d >= 0 && not (isPerfectUnison x)
 
 instance Show Interval where
   show a
-    | isNegative a = "-" ++ showQuality (extractQuality a) ++ show (abs $ extractNumber a)
-    | otherwise = showQuality (extractQuality a) ++ show (abs $ extractNumber a)
+    | isNegative a = "-" ++ showQuality (quality a) ++ show (abs $ number a)
+    | otherwise = showQuality (quality a) ++ show (abs $ number a)
     where
       showQuality Major = "_M"
       showQuality Minor = "m"
@@ -386,10 +386,51 @@ instance HasBasis Interval where
 
 
 instance HasQuality Interval where
-  quality i = extractQuality i
+  quality :: Interval -> Quality
+  quality = go
+    where
+    -- This is finicky, as the A1 and d2 intervals interact in a
+    -- complex way to produce the perfect/major/minor/etc. intervals that
+    -- we are used to reading.
+    go (Interval (a, d))
+      | (a < 0) && (d == 0) = diminish $ go (Interval ((a + 1), d))
+      | (a, d) == (0, 0) = Perfect
+      | (a > 0) && (d == 0) = augment $ go (Interval ((a - 1), d))
+      | (a < 1) && (d == 1) = diminish $ go (Interval ((a + 1), d))
+      | (a, d) == (1, 1) = Minor
+      | (a, d) == (2, 1) = Major
+      | (a > 2) && (d == 1) = augment $ go (Interval ((a - 1), d))
+      | (a < 3) && (d == 2) = diminish $ go (Interval ((a + 1), d))
+      | (a, d) == (3, 2) = Minor
+      | (a, d) == (4, 2) = Major
+      | (a > 4) && (d == 2) = augment $ go (Interval ((a - 1), d))
+      | (a < 5) && (d == 3) = diminish $ go (Interval ((a + 1), d))
+      | (a, d) == (5, 3) = Perfect
+      | (a > 5) && (d == 3) = augment $ go (Interval ((a - 1), d))
+      | (a < 7) && (d == 4) = diminish $ go (Interval ((a + 1), d))
+      | (a, d) == (7, 4) = Perfect
+      | (a > 7) && (d == 4) = augment $ go (Interval ((a - 1), d))
+      | (a < 8) && (d == 5) = diminish $ go (Interval ((a + 1), d))
+      | (a, d) == (8, 5) = Minor
+      | (a, d) == (9, 5) = Major
+      | (a > 9) && (d == 5) = augment $ go (Interval ((a - 1), d))
+      | (a < 10) && (d == 6) = diminish $ go (Interval ((a + 1), d))
+      | (a, d) == (10, 6) = Minor
+      | (a, d) == (11, 6) = Major
+      | (a > 11) && (d == 6) = augment $ go (Interval ((a - 1), d))
+      | (a < 12) && (d == 7) = diminish $ go (Interval ((a + 1), d))
+      | (a, d) == (12, 7) = Perfect
+      | (a > 12) && (d == 7) = augment $ go (Interval ((a - 1), d))
+      -- note: these last two cases *have* to be this way round, otherwise
+      -- infinite loop occurs.
+      | (a > 12) || (d > 7) = go (Interval ((a - 12), (d - 7)))
+      | (a < 0) || (d < 0) = go (Interval ((- a), (- d)))
 
 instance HasNumber Interval where
-  number i = extractNumber i
+  number :: Interval -> Number
+  number (Interval (_a, d))
+    | d >= 0 = fromIntegral (d + 1)
+    | otherwise = fromIntegral (d - 1)
 
 instance Augmentable Interval where
 
@@ -439,58 +480,7 @@ mkInterval' ::
   Interval
 mkInterval' diff diatonic = Interval (diatonicToChromatic (fromIntegral diatonic) + fromIntegral diff, fromIntegral diatonic)
 
--- |
--- Extracting the 'number' from an interval vector.
---
--- Note that (a, d) is a representation of the interval (a * A1) + (d
--- * d2), so the 'number' part of the interval must be stored entirely
--- in the d * d2 part (adding a unison, perfect or otherwise, can
--- never increase the number of the interval)
-extractNumber :: Interval -> Number
-extractNumber (Interval (a, d))
-  | d >= 0 = fromIntegral (d + 1)
-  | otherwise = fromIntegral (d - 1)
 
--- |
--- Extracting the 'quality' from an interval vector.
---
--- This is much more finicky, as the A1 and d2 intervals interact in a
--- complex way to produce the perfect/major/minor/etc. intervals that
--- we are used to reading.
-extractQuality :: Interval -> Quality
-extractQuality (Interval (a, d))
-  | (a < 0) && (d == 0) = diminish $ extractQuality (Interval ((a + 1), d))
-  | (a, d) == (0, 0) = Perfect
-  | (a > 0) && (d == 0) = augment $ extractQuality (Interval ((a - 1), d))
-  | (a < 1) && (d == 1) = diminish $ extractQuality (Interval ((a + 1), d))
-  | (a, d) == (1, 1) = Minor
-  | (a, d) == (2, 1) = Major
-  | (a > 2) && (d == 1) = augment $ extractQuality (Interval ((a - 1), d))
-  | (a < 3) && (d == 2) = diminish $ extractQuality (Interval ((a + 1), d))
-  | (a, d) == (3, 2) = Minor
-  | (a, d) == (4, 2) = Major
-  | (a > 4) && (d == 2) = augment $ extractQuality (Interval ((a - 1), d))
-  | (a < 5) && (d == 3) = diminish $ extractQuality (Interval ((a + 1), d))
-  | (a, d) == (5, 3) = Perfect
-  | (a > 5) && (d == 3) = augment $ extractQuality (Interval ((a - 1), d))
-  | (a < 7) && (d == 4) = diminish $ extractQuality (Interval ((a + 1), d))
-  | (a, d) == (7, 4) = Perfect
-  | (a > 7) && (d == 4) = augment $ extractQuality (Interval ((a - 1), d))
-  | (a < 8) && (d == 5) = diminish $ extractQuality (Interval ((a + 1), d))
-  | (a, d) == (8, 5) = Minor
-  | (a, d) == (9, 5) = Major
-  | (a > 9) && (d == 5) = augment $ extractQuality (Interval ((a - 1), d))
-  | (a < 10) && (d == 6) = diminish $ extractQuality (Interval ((a + 1), d))
-  | (a, d) == (10, 6) = Minor
-  | (a, d) == (11, 6) = Major
-  | (a > 11) && (d == 6) = augment $ extractQuality (Interval ((a - 1), d))
-  | (a < 12) && (d == 7) = diminish $ extractQuality (Interval ((a + 1), d))
-  | (a, d) == (12, 7) = Perfect
-  | (a > 12) && (d == 7) = augment $ extractQuality (Interval ((a - 1), d))
-  -- note: these last two cases *have* to be this way round, otherwise
-  -- infinite loop occurs.
-  | (a > 12) || (d > 7) = extractQuality (Interval ((a - 12), (d - 7)))
-  | (a < 0) || (d < 0) = extractQuality (Interval ((- a), (- d)))
 
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
@@ -979,7 +969,7 @@ instance HasQuality Quality where
 
 -- | Augmentable Quality instance
 --
--- This Augmentable instance exists solely for use of the extractQuality
+-- This Augmentable instance exists solely for use of the quality
 -- function, which ensures that there is never any ambiguity around
 -- diminished/augmented intervals turning into major/minor/perfect
 -- intervals.
