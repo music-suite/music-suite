@@ -116,6 +116,7 @@ module Music.Pitch.Scale
     Voiced(..),
     getVoiced,
     voiced,
+    voiceIn,
     invertVoicing,
   )
 where
@@ -516,7 +517,10 @@ getVoiced :: (AffineSpace p, Countable f) => Voiced f p -> NonEmpty p
 getVoiced x = index (getChordScale x) <$> getSteps x
 
 voiced :: Generated f => f p -> Voiced f p
-voiced x = Voiced x [0..fromIntegral (length (generator x)) - 1]
+voiced x = voiceIn (fromIntegral $ length (generator x)) x
+
+voiceIn :: Integer -> f p -> Voiced f p
+voiceIn n x = Voiced x [0..n - 1]
 
 invertVoicing :: Integer -> Voiced f a -> Voiced f a
 invertVoicing n (Voiced f xs) = Voiced f (fmap (+ n) xs)

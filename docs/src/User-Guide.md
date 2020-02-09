@@ -1686,15 +1686,11 @@ canon </> renderAlignedVoice rh
     theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
 ```
 
-## Traversing pitches, dynamics and articulations
+## Pitches, dynamics and articulations
 
 Music Suite defines traversals and lenses for all of the standard musical aspects (pitch, dynamic, articulation and so on). If you've been following the previous chapters, you might have seen examples of these already: expressions such as `pitches .~ c`, `dynamics .~ ff` or `over dynamics (+ 1)` make use of traversals to *update* all pitches, dynamics and so on, in a given piece of music.
 
-## Traversing dynamics and articulation
-
-TODO
-
-## Traversing parts and playing techniques
+## Parts and playing techniques
 
 TODO
 
@@ -1824,13 +1820,28 @@ Chords and scales are *countably infinite* sets. This means that we can map them
 
 Normal Haskell types correspond to sets as well. For example, our `Common.Pitch` type is the set of *all* pitches in the diatonic/chromatic system. Values such as `scale c major` of type `Scale p` correpond to some subset of `p`.
 
-TODO inversion (aka rotation)
+TODO inversion of basic chords like this is counter-intuitive:
+
+```music+haskell
+inspectableToMusic @[Chord Pitch] $
+[ chord c majorTriad
+, chord g majorMinorSeventhChord
+, chord c majorTriad
+]
+```
+
+```music+haskell
+inspectableToMusic @[Chord Pitch] $
+[ chord c $ majorTriad
+, chord g $ invertChord (-1) majorMinorSeventhChord
+, chord c $ invertChord 2    majorTriad
+]
+```
+
 
 TODO reflecting?
 
 TODO looking up notes in a scale/chord (infinitely, Integer ->, 0 being the tonic)
-
-TODO getting exactly the "voiced" notes
 
 TODO type-level sepration of voiced/unvoiced (currently this is muddled). New type for voiced chords (this does not seem to appy to scales).
   "Free X" for building sets of pitches?
@@ -1888,7 +1899,9 @@ inspectableToMusic @(Voiced Chord Pitch) $
 
 TODO uneven voicing, e.g. [1,2,4,7] etc. and the reverse of that.
 
-Like Modes and ChordTypes (and unlike Scales and Chords), voicing allow inversion:
+
+Voiced chords allow inversion:
+
 
 ```music+haskell
 inspectableToMusic @[Voiced Chord Pitch] $
@@ -1897,15 +1910,26 @@ inspectableToMusic @[Voiced Chord Pitch] $
     vs = voiced (chord c majorTriad)
 ```
 
-TODO
-
-TODO more combinators to modify the voicing
-
 ```music+haskell
-inspectableToMusic @(Voiced Chord Pitch) $
-  Voiced (chord d minorTriad) [-2,0,2,4]
+inspectableToMusic @[Voiced Chord Pitch] $
+[ voiceIn 4 $ chord c majorTriad
+, invertVoicing (-2) $ voiced $ chord g majorMinorSeventhChord
+, voiceIn 4 $ chord c majorTriad
+]
 ```
 
+
+### Should I used Chord or Voiced Chord?
+
+For dealing with chords in the normal sense (e.g. pitches), use `Voiced Chord`.
+
+For dealing with infinitely repeating fields of pitches, use `ChordType` and `Chord`.
+
+## Consonance and dissonance
+
+TODO relative dissonance of intervals, modes and chords
+
+TODO resolution and leading notes. "Solve" an n-part voicing problem
 
 ## Beyond diatonic/chromatic
 
