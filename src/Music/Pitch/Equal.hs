@@ -148,13 +148,13 @@ equalToRatio x = 2 ** (realToFrac (fromEqual x) / realToFrac (size x))
 -- | Safely cast a tempered value to another size.
 --
 -- >>> cast (1 :: Equal12) :: Equal24
--- 2 :: Equal24
+-- 2
 --
 -- >>> cast (8 :: Equal12) :: Equal6
--- 4 :: Equal6
+-- 4
 --
 -- >>> (2 :: Equal12) + cast (2 :: Equal24)
--- 3 :: Equal12
+-- 3
 cast :: (IsNat a, IsNat b) => Equal a -> Equal b
 cast = cast' Proxy
 

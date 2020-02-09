@@ -99,8 +99,9 @@ instance Num Number where
   abs (Number a) = Number (abs b)
   signum (Number a) = Number (signum b)
 
-  fromInteger 0 = error "Invalid Number: zero"
-  fromInteger n = Number (fromInteger n)
+  -- TODO fix other code so this works:
+  --    fromInteger 0 = error "Invalid Number: zero"
+  fromInteger = Number
 
 -- |
 -- The /quality/ component of an interval (minor, major, augmented).
@@ -766,11 +767,11 @@ mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
 
 -- | View an interval as a pair of total number of chromatic and diatonic steps.
 --
--- >>> _P5^.from intervalAlterationSteps
--- (7, 4)
+-- >>> _P5^.from intervalTotalSteps
+-- (7,4)
 --
--- >>> d5^.from intervalAlterationSteps
--- (6, 4)
+-- >>> d5^.from intervalTotalSteps
+-- (6,4)
 intervalTotalSteps :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 intervalTotalSteps = iso Interval getInterval
 
@@ -1076,10 +1077,10 @@ isStandardQuality _ = True
 
 -- | Same as 'isStandardQuality' but also disallow doubly augmented/diminished.
 --
--- >>> filter isStandardQuality [Augmented n | n <- [1..4] ]
+-- >>> filter isSimpleQuality [Augmented n | n <- [1..4] ]
 -- [Augmented 1]
 --
--- >>> filter isStandardQuality [Diminished n | n <- [1..4] ]
+-- >>> filter isSimpleQuality [Diminished n | n <- [1..4] ]
 -- [Diminished 1]
 --
 isSimpleQuality :: Quality -> Bool
