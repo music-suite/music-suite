@@ -227,11 +227,6 @@ instance Alterable Accidental where
 
   flatten = pred
 
--- -- | Magic instance that allow us to write @c sharp@ instead of @sharpen c@.
--- instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
---   fromPitch l 1     = sharpen (fromPitch l)
---   fromPitch l (-1)  = flatten (fromPitch l)
--- Requires FlexibleInstances
 
 -- | Lexicographical ordering, comparing the 'd2' component of the
 -- Interval first, as it's tied to the Number which is expected to be

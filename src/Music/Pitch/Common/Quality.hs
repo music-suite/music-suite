@@ -21,7 +21,6 @@ module Music.Pitch.Common.Quality
     -- ** Quality to alteration
     Direction (..),
     qualityToAlteration,
-    qualityToDiff,
   )
 where
 
