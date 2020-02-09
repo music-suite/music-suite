@@ -563,6 +563,12 @@ separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
 -- > (perfect octave)^*x + y = z  iff  y = simple z
 simple :: Interval -> Interval
 simple = snd . separate
+{-
+  TODO
+  Generalize simple like this:
+    > (number (id @Interval (m9))-(fromIntegral $ signum (m9))) `mod` 7
+
+-}
 
 -- |
 -- Returns whether the given interval is simple.
@@ -688,17 +694,17 @@ _steps = from intervalAlterationSteps . _2
 
 -- | View an interval as a pair of quality and number or vice versa.
 --
--- >>> (Major, third)^.interval
--- _M3
+-- >>> (Major, third)^?interval
+-- Just _M3
 --
--- >>> (Perfect, 4)^.interval
--- _P4
+-- >>> (Perfect, 4)^?interval
+-- Just _P4
 --
--- >>> (Perfect, 12)^.interval
--- _P12
+-- >>> (Perfect, 12)^?interval
+-- Just _P12
 --
--- TODO what should happen here? Either make this a Prism, or normalize (making
--- this a prism "up to normalization").
+-- This is a 'Prism', as only certain combinations of quality and number
+-- make sense.
 --
 -- >>> (Perfect, 3)^?interval
 -- Nothing
@@ -1199,7 +1205,7 @@ class HasNumber a where
   -- 3
   number :: a -> Number
 
--- TODO rename numberDiatonicSteps
+-- TODO rename numberToDiatonicSteps? Compare other Isos
 
 -- |
 -- >>> second^.diatonicSteps
@@ -1221,12 +1227,6 @@ diatonicSteps = iso n2d d2n
 
 
 
-{-
-  TODO
-  Generalize simple like this:
-    > (number (id @Interval (m9))-(fromIntegral $ signum (m9))) `mod` 7
-
--}
 
 -- | Whether the given interval is a (harmonic) dissonance.
 isDissonance :: Interval -> Bool
@@ -1492,12 +1492,17 @@ isStandardAccidental a = abs a < 2
 
 
 -- |
--- >>> toEnum 0
+-- Enum instance using diatonic pitch.
+--
+-- >>> toEnum 0 :: Pitch
 -- c
 --
--- >>> toEnum 8
+-- >>> toEnum 8 :: Pitch
 -- d'
 --
+--
+-- >>> [c..g] :: [Pitch]
+-- [c,d,e,f,g]
 --
 instance Enum Pitch where
 
