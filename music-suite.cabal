@@ -431,6 +431,15 @@ executable "music-suite-examples-brass-large-ensemble"
     hs-source-dirs:     examples/pieces/BrassLargeEnsemble
     main-is:            Score.hs
 
+executable "music-suite-examples-salient-melodic-transformations"
+    build-depends:      base,
+                        lens,
+                        containers,
+                        random,
+                        music-suite
+    hs-source-dirs:     examples/pieces/SalientMelodicTransformations
+    main-is:            Score.hs
+
 -- TODO CrawfordSeeger
 -- TODO Floaters
 -- TODO HarmonyToTexture
