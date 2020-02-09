@@ -351,11 +351,18 @@ basis_P8 = Interval (12, 7)
 
 -- |
 -- Returns whether the given interval is negative.
+--
+-- >>> isNegative m3
+-- False
+--
+-- >>> isNegative (-m3)
+-- True
 isNegative :: Interval -> Bool
 isNegative (Interval (a, d)) = d < 0
 
 -- |
 -- Returns whether the given interval is positive.
+--
 isPositive :: Interval -> Bool
 isPositive x@(Interval (a, d)) = d >= 0 && not (isPerfectUnison x)
 
@@ -542,6 +549,12 @@ simple = snd . separate
 -- Returns whether the given interval is simple.
 --
 -- A simple interval is a non-negative interval spanning less than one octave.
+--
+-- >>> isSimple _P5
+-- True
+--
+-- >>> filter isSimple [_P5, _M9, -m3, m3, _A7, _P8]
+-- [_P5, m3, _A7]
 isSimple :: Interval -> Bool
 isSimple x = octaves x == 0
 
@@ -567,6 +580,9 @@ isNonNegative (Interval (a, d)) = d >= 0
 
 -- |
 -- Returns whether the given interval a perfect unison.
+--
+-- >>> isPerfectUnison _P1
+-- True
 isPerfectUnison :: Interval -> Bool
 isPerfectUnison (Interval (a, d)) = (a, d) == (0, 0)
 
@@ -576,6 +592,21 @@ isPerfectUnison (Interval (a, d)) = (a, d) == (0, 0)
 -- Only diatonic 'number' is taken into account, so @_A2@ is considered
 -- a step and @m3@ a leap, even though they have the same number of
 -- semitones.
+--
+-- >>> isLeap _A2
+-- False
+--
+-- >>> isLeap m3
+-- True
+--
+-- >>> isLeap m3
+-- True
+--
+-- >>> isLeap _M2
+-- False
+--
+-- >>> isLeap _P1
+-- False
 isStep :: Interval -> Bool
 isStep (Interval (a, d)) = (abs d) <= 1
 
