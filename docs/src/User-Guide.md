@@ -1713,6 +1713,8 @@ TODO introducing the polymorphic version of the lenses/traversals (`pitch`, `dyn
 
 TODO polymorphic update example (e.g. `Common.Pitch` vs `Hertz`)
 
+TODO explain the type families: Pitch, SetPitch etc.
+
 
 ## Phrase traversals
 
@@ -1858,17 +1860,16 @@ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
+TODO tranposing scales/chords.
 
-TODO reflecting?
+TODO reflection?
+Quite interesting! Reflection of majorTriad is minorTriad
+
+
 
 TODO looking up notes in a scale/chord (infinitely, Integer ->, 0 being the tonic)
 
-TODO type-level sepration of voiced/unvoiced (currently this is muddled). New type for voiced chords (this does not seem to appy to scales).
-  "Free X" for building sets of pitches?
 
-Calculate dissonance of a chord (classical/"objective", by higest common fundamental)
-
-TODO tranposing scales/chords.
 
 TODO set operations on chords/scales (e.g. union/difference/intersection/isSubset/isPowerset etc).
 
@@ -1950,6 +1951,8 @@ For dealing with infinitely repeating fields of pitches, use `ChordType` and `Ch
 TODO relative dissonance of intervals, modes and chords
 
 TODO resolution and leading notes. "Solve" an n-part voicing problem
+
+Calculate dissonance of a chord (classical/"objective", by higest common fundamental)
 
 ## Beyond diatonic/chromatic
 

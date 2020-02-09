@@ -382,10 +382,28 @@ Consider switching to a decentralized issue tracker such as:
 
 
 - Proper scale/chord type supporting all common use-cases
-  - Represent functions/modes and chords/scales
-  - Making (infinite) octave-repeating scales from pitches/intervals
-  - Looking up pitches
-  - Transposable instance for chords/scales (pitch-wise)
+  - [X] Represent functions/modes and chords/scales
+  - [X] Making (infinite) octave-repeating scales from pitches/intervals
+  - [X] Looking up pitches
+  - [ ] Transposable instance for chords/scales (pitch-wise)
+    - We don't really have a Transposable class, so this means
+      defining `HasPitches a b => HasPitches (C a) (C b)`.
+      This is possible to define for Chord/Scale by:
+        - Placing all pitches relative the origin
+        - Run the traversal
+        - Recalculate the inverval sequence relative the new/transformed origin and save that
+        - Save the new origin
+  - [ ] Define reflection
+
+- TODO maths/music terminology!
+  - Constant source of problems
+    - "Transposition" - Musical sense (maths: translation)
+    - "Inversion"
+      - This is inconsistently used in music
+      - Chord "inversions" means rotations or (cyclic) permutations
+      - Inverval inversion means negation modulo octave
+      - Melody inversion means (point-wise) negation
+
 
 - Get rid of asNote/asScore/asVoice/asTrack
 
