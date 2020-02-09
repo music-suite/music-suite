@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DerivingVia #-}
 
 -- | Common (Western classical) pitches, intervals and related types.
 module Music.Pitch.Common.Types
@@ -69,6 +71,7 @@ import Data.VectorSpace
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 import Music.Time.Transform (Transformable (..))
+import Data.Monoid (Ap(..))
 
 
 -- |
@@ -97,6 +100,10 @@ type Semitones = ChromaticSteps
 -- |
 -- The /number/ component of an interval (fourth, fifth) etc.
 -- May be negative, indicating a downward interval.
+--
+-- In keeping with music theory tradition, numbers are 1-indexed: the number 1
+-- (or @unison@) represents an interval of 0 steps, 2 (or @second@) reprents an
+-- interval of 1 step, and so on.
 newtype Number = Number {getNumber :: Integer}
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
@@ -110,18 +117,6 @@ data Quality
   | Minor
   | Diminished Integer
   deriving (Eq, Ord, Show)
-
-{-
-TODO we really want to use Positive instead of Integer
-Alternatively, we could do it as a recursive type
-
-data Quality
-  = Major
-  | Minor
-  | Perfect
-  | Augment Quality
-  | Diminish Quality
--}
 
 -- |
 -- The actual alteration implied by a quality is dependent on whether it is attached
@@ -170,9 +165,10 @@ instance VectorSpace Interval where
 
   (*^) = stackInterval
     where
+      stackInterval :: Integer -> Interval -> Interval
       stackInterval n a
-        | n >= 0 = mconcat $ replicate (fromIntegral n) a
-        | otherwise = negate $ stackInterval (negate n) a
+        | n >= 0    = mconcat $ replicate (fromIntegral n) a
+        | otherwise = negateV $ stackInterval (negate n) a
 
 instance AdditiveGroup Interval where
 
@@ -182,20 +178,6 @@ instance AdditiveGroup Interval where
 
   negateV (Interval (a, d)) = Interval (- a, - d)
 
--- | Avoid using '(*)', or 'signum' on intervals.
-instance Num Interval where
-
-  (+) = (^+^)
-
-  negate = negateV
-
-  abs a = if isNegative a then negate a else a
-
-  (*) = error "Music.Pitch.Common.Interval: no overloading for (*)"
-
-  signum = error "Music.Pitch.Common.Interval: no overloading for signum"
-
-  fromInteger = error "Music.Pitch.Common.Interval: no overloading for fromInteger"
 
 instance AffineSpace Pitch where
 
@@ -649,7 +631,7 @@ isLeap (Interval (a, d)) = (abs d) > 1
 --
 -- * The inversion of a compound interval is the inversion of its simple component.
 invert :: Interval -> Interval
-invert = simple . negate
+invert = simple . negateV
 
 mkInterval :: Quality -> Number -> Interval
 mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
@@ -1716,19 +1698,27 @@ instance Show Pitch where
         | n > 0 = replicate (fromIntegral n) 's'
         | otherwise = replicate (negate $ fromIntegral n) 'b'
 
-instance Num Pitch where
 
-  Pitch a + Pitch b = Pitch (a + b)
+-- |
+-- This instance exists only for the syntactic convenience of writing @-m3@, rather
+-- than @negateV m3@.
+--
+-- Avoid using '(*)', 'signum' or `fromInteger` on intervals. For multiplication,
+-- see the `VectorSpace` instance.
+instance Num Interval where
 
-  negate (Pitch a) = Pitch (negate a)
+  (+) = (^+^)
 
-  abs (Pitch a) = Pitch (abs a)
+  -- TODO negate/abs should not be used
+  negate = negateV
 
-  (*) = error "Music.Pitch.Common.Pitch: no overloading for (*)"
+  abs a = if isNegative a then negate a else a
 
-  signum = error "Music.Pitch.Common.Pitch: no overloading for signum"
+  (*) = error "Music.Pitch.Common.Interval: no overloading for (*)"
 
-  fromInteger = toEnum . fromInteger
+  signum = error "Music.Pitch.Common.Interval: no overloading for signum"
+
+  fromInteger = error "Music.Pitch.Common.Interval: no overloading for fromInteger"
 
 instance ToJSON Pitch where
   toJSON = toJSON . (.-. middleC)

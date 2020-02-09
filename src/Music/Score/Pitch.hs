@@ -497,7 +497,7 @@ ambitusLowestOctave = fromIntegral . octaves . (.-. c) . ambitusLowest
 -- |  Interpolate between the highest and lowest points in an ambitus.
 --
 --  Can be used as a primitive contour-based melody generator.
-interpolateAmbitus :: (Ord a, Num a, AffinePair (Diff a) a) => Ambitus a -> Scalar (Diff a) -> a
+interpolateAmbitus :: (AffinePair (Diff a) a) => Ambitus a -> Scalar (Diff a) -> a
 interpolateAmbitus a = let (m, n) = a ^. from ambitus in alerp m n
 
 -- |

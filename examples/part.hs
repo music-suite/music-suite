@@ -29,7 +29,7 @@ tintin' melInterval
     | isNegative melInterval = error "tintin: Negative interval"
     | otherwise              = last $ takeWhile (< melInterval) $ tintinStandardNotes
     where
-        tintinStandardNotes = concat $ iterate (fmap (+ _P8)) minorTriad
+        tintinStandardNotes = concat $ iterate (fmap (^+^ _P8)) minorTriad
         minorTriad = [_P1,m3,_P5]
 
 fallingScale :: IsPitch a => [Score a]
