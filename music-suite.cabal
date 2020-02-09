@@ -64,6 +64,7 @@ library
                         xml,
                         random,
                         neat-interpolation,
+                        modular-arithmetic,
                         random-shuffle
     if !os(windows)
       build-depends:    unix
@@ -106,6 +107,7 @@ library
                         Data.Music.MusicXml.Write.Score
                         Music.Pitch
                         Music.Pitch.Equal
+                        Music.Pitch.Class
                         Music.Pitch.Common
                         Music.Pitch.Common.Types
                         Music.Pitch.Common.Internal
