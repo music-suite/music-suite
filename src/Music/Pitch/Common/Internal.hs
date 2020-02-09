@@ -57,13 +57,19 @@ import Data.Monoid (Ap(..))
 -- Number of chromatic steps.
 -- May be negative, indicating a downward interval.
 newtype ChromaticSteps = ChromaticSteps {getChromaticSteps :: Integer}
-  deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
+  deriving (Eq, Ord, Enum, Num, Real, Integral)
+
+instance Show ChromaticSteps where
+  show = show . getChromaticSteps
+
+instance Show DiatonicSteps where
+  show = show . getDiatonicSteps
 
 -- |
 -- Number of diatonic steps.
 -- May be negative, indicating a downward interval.
 newtype DiatonicSteps = DiatonicSteps {getDiatonicSteps :: Integer}
-  deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
+  deriving (Eq, Ord, Enum, Num, Real, Integral)
 
 -- |
 -- Number of octaves.
@@ -653,6 +659,12 @@ _steps :: Lens' Interval DiatonicSteps
 _steps = from intervalAlterationSteps . _2
 
 -- | View or set the quality of an interval.
+--
+-- >>> m3^._quality
+-- Minor
+--
+-- >>> diminish (diminish m3)
+-- Diminished 2
 _quality :: Lens' Interval Quality
 _quality = from interval . _1
 
@@ -670,16 +682,36 @@ _number = from interval . _2
 --
 -- >>> (Major, third)^.interval
 -- _M3
+--
+-- >>> (Perfect, 4)^.interval
+-- _P4
+--
+-- >>> (Perfect, 12)^.interval
+-- _P12
+--
+-- TODO what should happen here? Either make this a Prism, or normalize (making
+-- this a prism "up to normalization").
+--
+-- >>> (Perfect, 3)^.interval
+-- _M3
+--
+-- >>> (Minor, 4)^.interval
+-- d4
+--
+-- This being an 'Iso', you can also use it backwards:
+--
+-- >>> m3^.from interval
+-- (Minor, 3)
 interval :: Iso' (Quality, Number) Interval
 interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
 
 -- | View an interval as a pair of alteration and diatonic steps or vice versa.
 --
 -- >>> _P5^.from intervalAlterationSteps
--- (ChromaticSteps {getChromaticSteps = 0},DiatonicSteps {getDiatonicSteps = 4})
+-- (0, 4)
 --
 -- >>> d5^.from intervalAlterationSteps
--- (ChromaticSteps {getChromaticSteps = -1},DiatonicSteps {getDiatonicSteps = 4})
+-- (-1, 4)
 intervalAlterationSteps :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 intervalAlterationSteps =
   iso
@@ -707,10 +739,16 @@ mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
         f False = Downward
         e = error "TODO"
 
--- TODO rename this
+
 -- | View an interval as a pair of total number of chromatic and diatonic steps.
-interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
-interval' = iso Interval getInterval
+--
+-- >>> _P5^.from intervalAlterationSteps
+-- (7, 4)
+--
+-- >>> d5^.from intervalAlterationSteps
+-- (6, 4)
+intervalTotalSteps :: Iso' (ChromaticSteps, DiatonicSteps) Interval
+intervalTotalSteps = iso Interval getInterval
 
 
 -- |
@@ -1449,14 +1487,14 @@ isStandardAccidental a = abs a < 2
 
 -- instance IsPitch Pitch where
 --   fromPitch (PitchL (c, a, o)) =
---     Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (qual a) c ^+^ (_P8^* fromIntegral o)
+--     Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.intervalTotalSteps) (qual a) c ^+^ (_P8^* fromIntegral o)
 --     where
 --       qual Nothing  = 0
 --       qual (Just n) = round n
 
 instance Enum Pitch where
 
-  toEnum = Pitch . (\a b -> (fromIntegral a, fromIntegral b) ^. interval') 0 . fromIntegral
+  toEnum = Pitch . (\a b -> (fromIntegral a, fromIntegral b) ^. intervalTotalSteps) 0 . fromIntegral
 
   fromEnum = fromIntegral . pred . number . (.-. middleC)
 
