@@ -1060,14 +1060,14 @@ isDiminished a = case quality a of Diminished _ -> True; _ -> False
 -- |
 -- Is this a quality used in standard notation
 --
--- >>> filter isStandardQuality [Major, Minor, Perfect]
--- [Major, Minor, Perfect]
+-- >>> filter isStandardQuality [Major,Minor,Perfect]
+-- [Major,Minor,Perfect]
 --
 -- >>> filter isStandardQuality [Augmented n | n <- [1..4] ]
--- [Augmented 1, Augmented 2]
+-- [Augmented 1,Augmented 2]
 --
 -- >>> filter isStandardQuality [Diminished n | n <- [1..4] ]
--- [Diminished 1, Diminished 2]
+-- [Diminished 1,Diminished 2]
 --
 isStandardQuality :: Quality -> Bool
 isStandardQuality (Augmented n) = n <= 2
@@ -1157,10 +1157,10 @@ data Direction = Upward | Downward
 -- Just 1
 --
 -- >>> qualityToAlteration Upward MajorMinorType Minor
--- Just (-1)
+-- Just -1
 --
 -- >>> qualityToAlteration Upward MajorMinorType (Diminished 1)
--- Just (-2)
+-- Just -2
 --
 -- >>> qualityToAlteration Upward PerfectType (Augmented 1)
 -- Just 1
@@ -1169,7 +1169,7 @@ data Direction = Upward | Downward
 -- Just 0
 --
 -- >>> qualityToAlteration Upward PerfectType (Diminished 1)
--- Just (-1)
+-- Just -1
 --
 -- >>> qualityToAlteration Upward PerfectType Major
 -- Nothing
