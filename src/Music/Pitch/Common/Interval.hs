@@ -42,10 +42,9 @@ module Music.Pitch.Common.Interval
     -- * Basis values
     IntervalBasis (..),
 
-    -- ** Converting basis
+    -- ** Alternative basis (TODO move to seprate module?)
     convertBasis,
     convertBasisFloat,
-    intervalDiv,
   )
 where
 

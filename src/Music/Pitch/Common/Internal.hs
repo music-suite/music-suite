@@ -189,9 +189,8 @@ instance Alterable Accidental where
   flatten = pred
 
 
--- | Lexicographical ordering, comparing the 'd2' component of the
--- Interval first, as it's tied to the Number which is expected to be
--- 'bigger' than the Quality, assuming ordinary tuning systems
+-- | Lexicographical ordering, comparing the number component of the
+--   interval first and the quality second.
 instance Ord Interval where
   Interval a `compare` Interval b = swap a `compare` swap b
     where
@@ -586,6 +585,15 @@ isStep (Interval (a, d)) = (abs d) <= 1
 -- Only the diatonic 'number' is taken into account, so @_A2@ is considered
 -- a step and @m3@ a leap, even though they have the same number of
 -- semitones.
+--
+-- >>> isLeap m3
+-- True
+--
+-- >>> isLeap _M2
+-- False
+--
+-- >>> isLeap _P1
+-- False
 isLeap :: Interval -> Bool
 isLeap (Interval (a, d)) = (abs d) > 1
 
@@ -618,10 +626,19 @@ _quality :: Lens' Interval Quality
 _quality = from interval . _1
 
 -- | View or set the number component of an interval.
+--
+-- >>> m3^._number
+-- 3
+--
+-- >>> number m3
+-- 3
 _number :: Lens' Interval Number
 _number = from interval . _2
 
 -- | View an interval as a pair of quality and number or vice versa.
+--
+-- >>> (Major, third)^.interval
+-- _M3
 interval :: Iso' (Quality, Number) Interval
 interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
 
