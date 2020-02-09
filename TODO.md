@@ -17,6 +17,9 @@ Consider switching to a decentralized issue tracker such as:
   - [ ] Run locally (README)
     - [X] Tool works.
     - [ ] Do whitelisting, or make it understand default-extensions (see README)
+      - These paths work for now
+        - src/Control
+        - src/Data
   - Run in CI
 
 - Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
