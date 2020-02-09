@@ -1,3 +1,10 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-missing-signatures
+  #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 -------------------------------------------------------------------------------------
@@ -17,7 +24,6 @@
 module Music.Pitch.Literal.Interval
   ( -- * IsInterval class
     IsInterval (..),
-    IntervalL (..),
 
     -- * Literal values
 
@@ -82,22 +88,19 @@ module Music.Pitch.Literal.Interval
   )
 where
 
-import Control.Applicative
-import Data.Fixed
 import Data.Functor.Couple
-import Data.Ratio
 import Data.Semigroup
-import Data.Word
 import Music.Pitch.Common.Types
+import Data.VectorSpace
 
 newtype IntervalL = IntervalL (Integer, Integer, Integer)
 
 -- (octaves, diatonic steps, chromatic steps)
 
 class IsInterval a where
-  fromInterval :: IntervalL -> a
+  fromInterval :: Interval -> a
 
-instance IsInterval IntervalL where
+instance IsInterval Interval where
   fromInterval = id
 
 instance IsInterval a => IsInterval (Maybe a) where
@@ -123,128 +126,118 @@ instance IsInterval Int where
 instance IsInterval Word where
   fromInterval x = fromIntegral (fromInterval x :: Integer)
 
-{-
-instance IsInterval Float where
-    fromInterval x = realToFrac (fromInterval x :: Double)
-
-instance HasResolution a => IsInterval (Fixed a) where
-    fromInterval x = realToFrac (fromInterval x :: Double)
-
-instance Integral a => IsInterval (Ratio a) where
-    fromInterval x = realToFrac (fromInterval x :: Double)
-
-instance IsInterval Double where
-    fromInterval = fromIntegral . asInteger . fromInterval
--}
-
 instance IsInterval Integer where
-  fromInterval (IntervalL (o, d, c)) = o * 12 + c
+  fromInterval (Interval (ChromaticSteps c, _d)) = fromIntegral c
 
-d1 = fromInterval $ IntervalL (0, 0, -1)
+fromIntervalL :: IsInterval a => IntervalL -> a
+fromIntervalL = fromInterval . go
+  where
+    go :: IntervalL -> Interval
+    go (IntervalL (o, d, c)) = (basis_P8 ^* o) ^+^ (basis_A1 ^* c) ^+^ (basis_d2 ^* d)
 
-_P1 = fromInterval $ IntervalL (0, 0, 0)
+d1 = fromIntervalL $ IntervalL (0, 0, -1)
 
-_A1 = fromInterval $ IntervalL (0, 0, 1)
+_P1 = fromIntervalL $ IntervalL (0, 0, 0)
 
-d2 = fromInterval $ IntervalL (0, 1, 0)
+_A1 = fromIntervalL $ IntervalL (0, 0, 1)
 
-m2 = fromInterval $ IntervalL (0, 1, 1)
+d2 = fromIntervalL $ IntervalL (0, 1, 0)
 
-_M2 = fromInterval $ IntervalL (0, 1, 2)
+m2 = fromIntervalL $ IntervalL (0, 1, 1)
 
-_A2 = fromInterval $ IntervalL (0, 1, 3)
+_M2 = fromIntervalL $ IntervalL (0, 1, 2)
 
-d3 = fromInterval $ IntervalL (0, 2, 2)
+_A2 = fromIntervalL $ IntervalL (0, 1, 3)
 
-m3 = fromInterval $ IntervalL (0, 2, 3)
+d3 = fromIntervalL $ IntervalL (0, 2, 2)
 
-_M3 = fromInterval $ IntervalL (0, 2, 4)
+m3 = fromIntervalL $ IntervalL (0, 2, 3)
 
-_A3 = fromInterval $ IntervalL (0, 2, 5)
+_M3 = fromIntervalL $ IntervalL (0, 2, 4)
 
-d4 = fromInterval $ IntervalL (0, 3, 4)
+_A3 = fromIntervalL $ IntervalL (0, 2, 5)
 
-_P4 = fromInterval $ IntervalL (0, 3, 5)
+d4 = fromIntervalL $ IntervalL (0, 3, 4)
 
-_A4 = fromInterval $ IntervalL (0, 3, 6)
+_P4 = fromIntervalL $ IntervalL (0, 3, 5)
 
-d5 = fromInterval $ IntervalL (0, 4, 6)
+_A4 = fromIntervalL $ IntervalL (0, 3, 6)
 
-_P5 = fromInterval $ IntervalL (0, 4, 7)
+d5 = fromIntervalL $ IntervalL (0, 4, 6)
 
-_A5 = fromInterval $ IntervalL (0, 4, 8)
+_P5 = fromIntervalL $ IntervalL (0, 4, 7)
 
-d6 = fromInterval $ IntervalL (0, 5, 7)
+_A5 = fromIntervalL $ IntervalL (0, 4, 8)
 
-m6 = fromInterval $ IntervalL (0, 5, 8)
+d6 = fromIntervalL $ IntervalL (0, 5, 7)
 
-_M6 = fromInterval $ IntervalL (0, 5, 9)
+m6 = fromIntervalL $ IntervalL (0, 5, 8)
 
-_A6 = fromInterval $ IntervalL (0, 5, 10)
+_M6 = fromIntervalL $ IntervalL (0, 5, 9)
 
-d7 = fromInterval $ IntervalL (0, 6, 9)
+_A6 = fromIntervalL $ IntervalL (0, 5, 10)
 
-m7 = fromInterval $ IntervalL (0, 6, 10)
+d7 = fromIntervalL $ IntervalL (0, 6, 9)
 
-_M7 = fromInterval $ IntervalL (0, 6, 11)
+m7 = fromIntervalL $ IntervalL (0, 6, 10)
 
-_A7 = fromInterval $ IntervalL (0, 6, 12)
+_M7 = fromIntervalL $ IntervalL (0, 6, 11)
 
-d8 = fromInterval $ IntervalL (1, 0, -1)
+_A7 = fromIntervalL $ IntervalL (0, 6, 12)
 
-_P8 = fromInterval $ IntervalL (1, 0, 0)
+d8 = fromIntervalL $ IntervalL (1, 0, -1)
 
-_A8 = fromInterval $ IntervalL (1, 0, 1)
+_P8 = fromIntervalL $ IntervalL (1, 0, 0)
 
-d9 = fromInterval $ IntervalL (1, 1, 0)
+_A8 = fromIntervalL $ IntervalL (1, 0, 1)
 
-m9 = fromInterval $ IntervalL (1, 1, 1)
+d9 = fromIntervalL $ IntervalL (1, 1, 0)
 
-_M9 = fromInterval $ IntervalL (1, 1, 2)
+m9 = fromIntervalL $ IntervalL (1, 1, 1)
 
-_A9 = fromInterval $ IntervalL (1, 1, 3)
+_M9 = fromIntervalL $ IntervalL (1, 1, 2)
 
-d10 = fromInterval $ IntervalL (1, 2, 2)
+_A9 = fromIntervalL $ IntervalL (1, 1, 3)
 
-m10 = fromInterval $ IntervalL (1, 2, 3)
+d10 = fromIntervalL $ IntervalL (1, 2, 2)
 
-_M10 = fromInterval $ IntervalL (1, 2, 4)
+m10 = fromIntervalL $ IntervalL (1, 2, 3)
 
-_A10 = fromInterval $ IntervalL (1, 2, 5)
+_M10 = fromIntervalL $ IntervalL (1, 2, 4)
 
-d11 = fromInterval $ IntervalL (1, 3, 4)
+_A10 = fromIntervalL $ IntervalL (1, 2, 5)
 
-_P11 = fromInterval $ IntervalL (1, 3, 5)
+d11 = fromIntervalL $ IntervalL (1, 3, 4)
 
-_A11 = fromInterval $ IntervalL (1, 3, 6)
+_P11 = fromIntervalL $ IntervalL (1, 3, 5)
 
-d12 = fromInterval $ IntervalL (1, 4, 6)
+_A11 = fromIntervalL $ IntervalL (1, 3, 6)
 
-_P12 = fromInterval $ IntervalL (1, 4, 7)
+d12 = fromIntervalL $ IntervalL (1, 4, 6)
 
-_A12 = fromInterval $ IntervalL (1, 4, 8)
+_P12 = fromIntervalL $ IntervalL (1, 4, 7)
 
-d13 = fromInterval $ IntervalL (1, 5, 7)
+_A12 = fromIntervalL $ IntervalL (1, 4, 8)
 
-m13 = fromInterval $ IntervalL (1, 5, 8)
+d13 = fromIntervalL $ IntervalL (1, 5, 7)
 
-_M13 = fromInterval $ IntervalL (1, 5, 9)
+m13 = fromIntervalL $ IntervalL (1, 5, 8)
 
-_A13 = fromInterval $ IntervalL (1, 5, 10)
+_M13 = fromIntervalL $ IntervalL (1, 5, 9)
 
-d14 = fromInterval $ IntervalL (1, 6, 9)
+_A13 = fromIntervalL $ IntervalL (1, 5, 10)
 
-m14 = fromInterval $ IntervalL (1, 6, 10)
+d14 = fromIntervalL $ IntervalL (1, 6, 9)
 
-_M14 = fromInterval $ IntervalL (1, 6, 11)
+m14 = fromIntervalL $ IntervalL (1, 6, 10)
 
-_A14 = fromInterval $ IntervalL (1, 6, 12)
+_M14 = fromIntervalL $ IntervalL (1, 6, 11)
 
-d15 = fromInterval $ IntervalL (2, 0, -1)
+_A14 = fromIntervalL $ IntervalL (1, 6, 12)
 
-_P15 = fromInterval $ IntervalL (2, 0, 0)
+d15 = fromIntervalL $ IntervalL (2, 0, -1)
 
-_A15 = fromInterval $ IntervalL (2, 0, 1)
+_P15 = fromIntervalL $ IntervalL (2, 0, 0)
 
-asInteger :: Integer -> Integer
-asInteger = id
+_A15 = fromIntervalL $ IntervalL (2, 0, 1)
+

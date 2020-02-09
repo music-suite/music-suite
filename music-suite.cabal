@@ -108,6 +108,7 @@ library
                         Music.Pitch.Equal
                         Music.Pitch.Common
                         Music.Pitch.Common.Types
+                        Music.Pitch.Common.Internal
                         Music.Pitch.Common.Quality
                         Music.Pitch.Common.Number
                         Music.Pitch.Common.Interval
