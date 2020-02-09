@@ -1693,13 +1693,26 @@ canon </> renderAlignedVoice rh
     theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
 ```
 
-## Pitches, dynamics and articulations
+## Traversing the components of a note
+
+### Pitches, dynamics and articulations
 
 Music Suite defines traversals and lenses for all of the standard musical aspects (pitch, dynamic, articulation and so on). If you've been following the previous chapters, you might have seen examples of these already: expressions such as `pitches .~ c`, `dynamics .~ ff` or `over dynamics (+ 1)` make use of traversals to *update* all pitches, dynamics and so on, in a given piece of music.
 
-## Parts and playing techniques
+### Parts and playing techniques
 
 TODO
+
+### Traversals vs. Lenses (singular vs plural)
+
+TODO
+
+### Polymorphic updates
+
+TODO introducing the polymorphic version of the lenses/traversals (`pitch`, `dynamic` etc.)
+
+TODO polymorphic update example (e.g. `Common.Pitch` vs `Hertz`)
+
 
 ## Phrase traversals
 
