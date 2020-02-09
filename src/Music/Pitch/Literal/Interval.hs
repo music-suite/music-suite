@@ -127,7 +127,7 @@ instance IsInterval Word where
   fromInterval x = fromIntegral (fromInterval x :: Integer)
 
 instance IsInterval Integer where
-  fromInterval (Interval (ChromaticSteps c, _d)) = fromIntegral c
+  fromInterval (Interval (ChromaticSteps c, _d)) = c
 
 fromIntervalL :: IsInterval a => IntervalL -> a
 fromIntervalL = fromInterval . go

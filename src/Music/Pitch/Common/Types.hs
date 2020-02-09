@@ -53,13 +53,13 @@ import Numeric.Positive
 -- |
 -- Number of chromatic steps.
 -- May be negative, indicating a downward interval.
-newtype ChromaticSteps = ChromaticSteps {getChromaticSteps :: Int}
+newtype ChromaticSteps = ChromaticSteps {getChromaticSteps :: Integer}
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
 -- |
 -- Number of diatonic steps.
 -- May be negative, indicating a downward interval.
-newtype DiatonicSteps = DiatonicSteps {getDiatonicSteps :: Int}
+newtype DiatonicSteps = DiatonicSteps {getDiatonicSteps :: Integer}
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
 -- |
