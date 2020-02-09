@@ -660,6 +660,12 @@ mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
       EQ -> error "diatonicSteps: Invalid number 0"
       LT -> n + 1
 
+    qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
+      where
+        f True = Upward
+        f False = Downward
+        e = error "TODO"
+
 -- steps = n^.diatonicSteps
 
 -- | View or set the alteration (i.e. the number of chromatic steps differing from the excepted number) in an interval.
@@ -694,6 +700,12 @@ intervalAlterationSteps =
   iso
     (\(d, s) -> mkInterval' (fromIntegral d) (fromIntegral s))
     (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x) ^. diatonicSteps))
+    where
+      qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
+        where
+          f True = Upward
+          f False = Downward
+          e = error "TODO"
 
 -- TODO rename this
 -- | View an interval as a pair of total number of chromatic and diatonic steps.
@@ -1176,18 +1188,6 @@ qualityToAlteration d qt q = fmap fromIntegral $ go d qt q
     go Downward PerfectType (Diminished n) = Just $ 0 + n
     go _ qt q = Nothing
 
-qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
-  where
-    f True = Upward
-    f False = Downward
-    e =
-      error $
-        "qualityToDiff: Unknown interval expression ("
-          ++ show qt
-          ++ ", "
-          ++ show q
-          ++ ")"
-{-# DEPRECATED qualityToDiff "Use qualityToAlteration" #-}
 
 
 instance HasNumber Number where number = id
