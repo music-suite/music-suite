@@ -660,7 +660,10 @@ upChromaticP' _ n p
 simplifyPitches :: (HasPitches' a, Pitch a ~ Common.Pitch) => a -> a
 simplifyPitches = over pitches' simplifyPitch
   where
-    simplifyPitch p = if (accidental p < doubleFlat || accidental p > doubleSharp) then relative c (spell usingSharps) p else p
+    simplifyPitch p
+      | accidental p < doubleFlat  = relative c (spell usingFlats) p
+      | accidental p > doubleSharp = relative c (spell usingSharps) p
+      | otherwise                  = p
 
 type instance Pitch Common.Pitch = Common.Pitch
 
