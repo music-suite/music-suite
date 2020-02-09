@@ -11,12 +11,12 @@ module Music.Pitch.Common.Types
     Quality (..),
     QualityType (..),
     IntervalBasis (..),
-    Interval (..),
+    Interval,
 
     -- * Pitch
     Name (..),
     Accidental,
-    Pitch (..),
+    Pitch,
   )
 where
 import Music.Pitch.Common.Internal

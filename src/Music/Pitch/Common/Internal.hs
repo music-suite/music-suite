@@ -1,3 +1,4 @@
+{-# OPTIONS_HADDOCK hide #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -504,37 +505,38 @@ mkInterval' ::
 mkInterval' diff diatonic = Interval (diatonicToChromatic (fromIntegral diatonic) + fromIntegral diff, fromIntegral diatonic)
 
 
+-- TODO get rid of the following partial functions: perfect, major, minor, augmented, diminished, doublyAugmented, doublyDiminished
 
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
 perfect :: Number -> Interval
-perfect = mkInterval Perfect
+perfect = fromJust . mkIntervalS Perfect
 
 -- | Creates a major interval.
 --   If given a perfect number, constructs a perfect interval.
 major :: Number -> Interval
-major = mkInterval Major
+major = fromJust . mkIntervalS Major
 
 -- | Creates a minor interval.
 --   If given a perfect number, constructs a diminished interval.
 minor :: Number -> Interval
-minor = mkInterval Minor
+minor = fromJust . mkIntervalS Minor
 
 -- | Creates an augmented interval.
 augmented :: Number -> Interval
-augmented = mkInterval (Augmented 1)
+augmented = fromJust . mkIntervalS (Augmented 1)
 
 -- | Creates a diminished interval.
 diminished :: Number -> Interval
-diminished = mkInterval (Diminished 1)
+diminished = fromJust . mkIntervalS (Diminished 1)
 
 -- | Creates a doubly augmented interval.
 doublyAugmented :: Number -> Interval
-doublyAugmented = mkInterval (Augmented 2)
+doublyAugmented = fromJust . mkIntervalS (Augmented 2)
 
 -- | Creates a doubly diminished interval.
 doublyDiminished :: Number -> Interval
-doublyDiminished = mkInterval (Diminished 2)
+doublyDiminished = fromJust . mkIntervalS (Diminished 2)
 
 -- |
 -- Separate a compound interval into octaves and a simple interval.
@@ -698,18 +700,20 @@ _steps = from intervalAlterationSteps . _2
 -- TODO what should happen here? Either make this a Prism, or normalize (making
 -- this a prism "up to normalization").
 --
--- >>> (Perfect, 3)^.interval
--- _M3
+-- >>> (Perfect, 3)^?interval
+-- Nothing
 --
--- >>> (Minor, 4)^.interval
--- d4
+-- >>> (Minor, 4)^?interval
+-- Nothing
 --
--- This being an 'Iso', you can also use it backwards:
+-- This being a 'Prism', you can also use it backwards:
 --
--- >>> m3^.from interval
--- (Minor, 3)
-interval :: Iso' (Quality, Number) Interval
-interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
+-- >>> m3^.re interval
+-- (Minor,3)
+interval :: Prism' (Quality, Number) Interval
+interval = prism'
+  (\x -> (quality x, number x))
+  (uncurry mkIntervalS)
 
 -- | View an interval as a pair of alteration and diatonic steps or vice versa.
 --
@@ -730,21 +734,15 @@ intervalAlterationSteps =
           f False = Downward
           e = error "TODO"
 
-mkInterval :: Quality -> Number -> Interval
-mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
+
+mkIntervalS :: Quality -> Number -> Maybe Interval
+mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ fromIntegral steps)
   where
-    diff = qualityToDiff (n > 0) (expectedQualityType n) (q)
+    diff = qualityToAlteration (if n > 0 then Upward else Downward) (expectedQualityType n) (q)
     steps = case n `compare` 0 of
       GT -> n - 1
       EQ -> error "diatonicSteps: Invalid number 0"
       LT -> n + 1
-
-    qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
-      where
-        f True = Upward
-        f False = Downward
-        e = error "TODO"
-
 
 -- | View an interval as a pair of total number of chromatic and diatonic steps.
 --
@@ -835,14 +833,7 @@ instance HasOctaves Interval where
   --
   -- TODO prop> _P8^*octaves x ^+^ simple x = x
   --
-  -- >>> octaves (_P5 :: Interval)
-  -- 0
-  --
-  -- >>> octaves (_M9 :: Interval)
-  -- 1
-  --
-  -- >>> octaves (-m3 :: Interval)
-  -- -1
+  -- >>> octaves (_P5
   octaves :: Interval -> Octaves
   octaves (Interval (_, d)) = fromIntegral $ d `div` 7
 
@@ -1217,7 +1208,7 @@ class HasNumber a where
 -- >>> 2^.diatonicSteps
 -- 1
 --
--- 3^.from diatonicSteps
+-- >>> 3^.from diatonicSteps
 -- 4
 diatonicSteps :: Iso' Number DiatonicSteps
 diatonicSteps = iso n2d d2n
@@ -1503,7 +1494,7 @@ instance Enum Pitch where
 
   toEnum = Pitch . (\a b -> (fromIntegral a, fromIntegral b) ^. intervalTotalSteps) 0 . fromIntegral
 
-  fromEnum = fromIntegral . pred . number . (.-. middleC)
+  fromEnum = fromIntegral . pred . number . (.-. c)
 
 instance Alterable Pitch where
 
@@ -1545,7 +1536,7 @@ instance Num Interval where
   fromInteger = error "Music.Pitch.Common.Interval: no overloading for fromInteger"
 
 instance ToJSON Pitch where
-  toJSON = toJSON . (.-. middleC)
+  toJSON = toJSON . (.-. c)
 
 instance IsPitch Int where
   fromPitch x = fromIntegral (fromPitch x :: Integer)
@@ -1571,11 +1562,8 @@ instance IsPitch Integer where
 instance IsPitch Pitch where
   fromPitch = id
 
--- TODO bootstrapping, remove when/if possible
-middleC = c
-
 instance FromJSON Pitch where
-  parseJSON = fmap (middleC .+^) . parseJSON
+  parseJSON = fmap (c .+^) . parseJSON
 
 instance Transformable Pitch where
   transform _ = id
@@ -1583,7 +1571,7 @@ instance Transformable Pitch where
 -- |
 -- Creates a pitch from name accidental.
 mkPitch :: Name -> Accidental -> Pitch
-mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b) ^. intervalAlterationSteps) (fromIntegral acc) (fromEnum name)
+mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b) ^. intervalAlterationSteps) acc (fromEnum name)
 
 {-
 -- TODO name
