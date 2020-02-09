@@ -10,6 +10,9 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
+- BUG: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533 or 99f3197199f33765ed9fa42a0c1f8676300d0220
+  Intervals not displayed properly
+
 - Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
 
 - [X] Do not expose IntervalL (hide or remove completely)
