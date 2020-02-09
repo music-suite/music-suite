@@ -23,6 +23,8 @@ Consider switching to a decentralized issue tracker such as:
         - src/Data
   - Run in CI
 
+- Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
+
 - Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
 
 - [X] Do not expose IntervalL (hide or remove completely)
