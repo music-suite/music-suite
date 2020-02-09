@@ -22,6 +22,5 @@ module Music.Pitch.Common.Number
   )
 where
 
-import Control.Lens
 import Music.Pitch.Common.Types
 

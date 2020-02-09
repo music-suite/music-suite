@@ -49,6 +49,26 @@ import Data.Semigroup
 import Data.Typeable
 import Data.VectorSpace
 import Numeric.Positive
+import Control.Applicative
+import Control.Lens hiding (simple)
+import Control.Monad
+import Data.Aeson (FromJSON (..), ToJSON (..))
+import qualified Data.Aeson
+import Data.AffineSpace
+import Data.AffineSpace.Point
+import qualified Data.Char as Char
+import Data.Either
+import Data.Fixed (Fixed (..), HasResolution (..))
+import qualified Data.List as List
+import Data.Maybe
+import Data.Ratio
+import Data.Semigroup
+import Data.Typeable
+import Data.VectorSpace
+-- import Music.Pitch.Absolute
+import Music.Pitch.Alterable
+import Music.Pitch.Augmentable
+import Music.Time.Transform (Transformable (..))
 
 
 -- |
@@ -1411,4 +1431,825 @@ _P15 = fromIntervalL $ IntervalL (2, 0, 0)
 
 _A15 = fromIntervalL $ IntervalL (2, 0, 1)
 
+
+{-
+  TODO
+  Generalize simple like this:
+    > (number (asInterval (m9))-(fromIntegral $ signum (m9))) `mod` 7
+
+-}
+
+-- | Whether the given interval is a (harmonic) dissonance.
+isDissonance :: Interval -> Bool
+isDissonance x = case number (simple x) of
+  2 -> True
+  7 -> True
+  _ -> False
+
+-- | Whether the given interval is a (harmonic) consonance.
+isConsonance :: Interval -> Bool
+isConsonance x = isPerfectConsonance x || isImperfectConsonance x
+
+-- | Whether the given interval is a perfect (harmonic) consonance.
+isPerfectConsonance :: Interval -> Bool
+isPerfectConsonance x = case number (simple x) of
+  1 -> True
+  4 -> True
+  5 -> True
+  _ -> False
+
+-- | Whether the given interval is an imperfect (harmonic) consonance.
+isImperfectConsonance :: Interval -> Bool
+isImperfectConsonance x = case number (simple x) of
+  3 -> True
+  6 -> True
+  _ -> False
+
+-- | Whether the given interval is a melodic dissonance.
+isMelodicDissonance :: Interval -> Bool
+isMelodicDissonance x = not $ isMelodicConsonance x
+
+-- | Whether an interval is melodic consonance.
+isMelodicConsonance :: Interval -> Bool
+isMelodicConsonance x = quality x `elem` [Perfect, Major, Minor]
+
+
+-- $semitonesAndSpellings
+--
+-- TODO document better
+--
+-- The `semitones` function retrieves the number of Semitones in a pitch, for example
+--
+-- > semitones :: Interval -> Semitones
+-- > semitones major third = 4
+--
+-- Note that semitones is surjetive. We can define a non-deterministic function `spellings`
+--
+-- > spellings :: Semitones -> [Interval]
+-- > spellings 4 = [majorThird, diminishedFourth]
+--
+-- /Law/
+--
+-- > map semitones (spellings a) = replicate n a    for all n > 0
+--
+-- /Lemma/
+--
+-- > map semitones (spellings a)
+
+-- |
+-- A spelling provide a way of notating a semitone interval such as 'tritone'.
+--
+-- Examples:
+--
+-- > spell usingSharps tritone   == _A4
+-- > spell usingFlats  tritone   == d5
+-- > spell modally     tone      == _M2
+type Spelling = Semitones -> Number
+
+-- |
+-- Spell an interval using the given 'Spelling'.
+spell :: HasSemitones a => Spelling -> a -> Interval
+spell spelling x =
+  let -- TODO use Steps etc to remove fromIntegral
+      (octaves, steps) = semitones x `divMod` 12
+      num = fromIntegral (spelling steps)
+      diff = fromIntegral steps - fromIntegral (diatonicToChromatic num)
+   in (\a b -> (fromIntegral a, fromIntegral b) ^. intervalAlterationSteps) diff num ^+^ _P8 ^* (fromIntegral octaves)
+  where
+    diatonicToChromatic = go
+      where
+        go 0 = 0
+        go 1 = 2
+        go 2 = 4
+        go 3 = 5
+        go 4 = 7
+        go 5 = 9
+        go 6 = 11
+
+type Tonic = Pitch
+
+spellPitchRelative :: Tonic -> Spelling -> Pitch -> Pitch
+spellPitchRelative tonic s p = tonic .+^ spell s (p .-. tonic)
+
+-- |
+-- Flipped version of 'spell'. To be used infix, as in:
+--
+-- > d5 `spelled` usingSharps
+spelled :: HasSemitones a => a -> Spelling -> Interval
+spelled = flip spell
+
+-- |
+-- Spell using the most the most common accidentals. Double sharps and flats are not
+-- preserved.
+--
+-- This spelling is particularly useful for modal music where the tonic is C.
+--
+-- > c cs d eb e f fs g gs a bb b
+modally :: Spelling
+modally = go
+  where
+    go 0 = 0
+    go 1 = 0
+    go 2 = 1
+    go 3 = 2
+    go 4 = 2
+    go 5 = 3
+    go 6 = 3
+    go 7 = 4
+    go 8 = 4
+    go 9 = 5
+    go 10 = 6
+    go 11 = 6
+
+-- |
+-- Spell using sharps. Double sharps and flats are not preserved.
+--
+-- > c cs d ds e f fs g gs a as b
+usingSharps :: Spelling
+usingSharps = go
+  where
+    go 0 = 0
+    go 1 = 0
+    go 2 = 1
+    go 3 = 1
+    go 4 = 2
+    go 5 = 3
+    go 6 = 3
+    go 7 = 4
+    go 8 = 4
+    go 9 = 5
+    go 10 = 5
+    go 11 = 6
+
+-- |
+-- Spell using flats. Double sharps and flats are not preserved.
+--
+-- > c db d eb e f gb g ab a bb b
+usingFlats :: Spelling
+usingFlats = go
+  where
+    go 0 = 0
+    go 1 = 1
+    go 2 = 1
+    go 3 = 2
+    go 4 = 2
+    go 5 = 3
+    go 6 = 4
+    go 7 = 4
+    go 8 = 5
+    go 9 = 5
+    go 10 = 6
+    go 11 = 6
+
+{-
+Respell preserving general augmented/diminished diretion, but disallow all qualities
+except the standard ones.
+
+Standard qualities include major, minor, perfect, augmented/diminished or
+doubly augmented/diminished.
+-}
+useStandardQualities :: Interval -> Interval
+useStandardQualities i
+  | quality i > Perfect && not (ok i) = spell usingSharps i
+  | quality i < Perfect && not (ok i) = spell usingFlats i
+  | otherwise = i
+  where
+    ok i = isStandardQuality (quality i)
+
+{-
+Same as 'useStandardQualities' but disallow doubly augmented/diminished.
+-}
+useSimpleQualities :: Interval -> Interval
+useSimpleQualities i
+  | quality i > Perfect && not (ok i) = spell usingSharps i
+  | quality i < Perfect && not (ok i) = spell usingFlats i
+  | otherwise = i
+  where
+    ok i = isSimpleQuality (quality i)
+
+{-
+Respell preserving general sharp/flat diretion, but disallow all qualities
+except the standard ones.
+
+Standard qualities include natural, sharp, flat, double sharp and double flat.
+-}
+useStandardAlterations :: Tonic -> Pitch -> Pitch
+useStandardAlterations tonic p
+  | quality i > Perfect && not (ok i) = spellPitchRelative tonic usingSharps p
+  | quality i < Perfect && not (ok i) = spellPitchRelative tonic usingFlats p
+  | otherwise = p
+  where
+    i = p .-. tonic
+    ok i = isStandardQuality (quality i)
+
+{-
+Same as 'useStandardAlterations' but disallow double sharp/flat.
+-}
+useSimpleAlterations :: Tonic -> Pitch -> Pitch
+useSimpleAlterations tonic p
+  | quality i > Perfect && not (ok i) = spellPitchRelative tonic usingSharps p
+  | quality i < Perfect && not (ok i) = spellPitchRelative tonic usingFlats p
+  | otherwise = p
+  where
+    i = p .-. tonic
+    ok i = isSimpleQuality (quality i)
+
+
+sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
+
+-- | The double sharp accidental.
+doubleSharp = 2
+
+-- | The sharp accidental.
+sharp = 1
+
+-- | The natural accidental.
+natural = 0
+
+-- | The flat accidental.
+flat = -1
+
+-- | The double flat accidental.
+doubleFlat = -2
+
+isNatural, isSharpened, isFlattened :: Accidental -> Bool
+
+-- | Returns whether this is a natural accidental.
+isNatural = (== 0)
+
+-- | Returns whether this is a sharp, double sharp etc.
+isSharpened = (> 0)
+
+-- | Returns whether this is a flat, double flat etc.
+isFlattened = (< 0)
+
+-- | Returns whether this is a standard accidental, i.e.
+--   either a double flat, flat, natural, sharp or double sharp.
+isStandardAccidental :: Accidental -> Bool
+isStandardAccidental a = abs a < 2
+
+-- was: isStandard
+
+-- instance IsPitch Pitch where
+--   fromPitch (PitchL (c, a, o)) =
+--     Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (qual a) c ^+^ (_P8^* fromIntegral o)
+--     where
+--       qual Nothing  = 0
+--       qual (Just n) = round n
+
+instance Enum Pitch where
+
+  toEnum = Pitch . (\a b -> (fromIntegral a, fromIntegral b) ^. interval') 0 . fromIntegral
+
+  fromEnum = fromIntegral . pred . number . (.-. middleC)
+
+instance Alterable Pitch where
+
+  sharpen (Pitch a) = Pitch (augment a)
+
+  flatten (Pitch a) = Pitch (diminish a)
+
+instance Show Pitch where
+  show p = showName (name p) ++ showAccidental (accidental p) ++ showOctave (octaves $ getPitch p)
+    where
+      showName = fmap Char.toLower . show
+      showOctave n
+        | n > 0 = replicate (fromIntegral n) '\''
+        | otherwise = replicate (negate $ fromIntegral n) '_'
+      showAccidental n
+        | n > 0 = replicate (fromIntegral n) 's'
+        | otherwise = replicate (negate $ fromIntegral n) 'b'
+
+instance Num Pitch where
+
+  Pitch a + Pitch b = Pitch (a + b)
+
+  negate (Pitch a) = Pitch (negate a)
+
+  abs (Pitch a) = Pitch (abs a)
+
+  (*) = error "Music.Pitch.Common.Pitch: no overloading for (*)"
+
+  signum = error "Music.Pitch.Common.Pitch: no overloading for signum"
+
+  fromInteger = toEnum . fromInteger
+
+instance ToJSON Pitch where
+  toJSON = toJSON . (.-. middleC)
+
+instance IsPitch Int where
+  fromPitch x = fromIntegral (fromPitch x :: Integer)
+
+instance IsPitch Word where
+  fromPitch x = fromIntegral (fromPitch x :: Integer)
+
+instance IsPitch Float where
+  fromPitch x = realToFrac (fromPitch x :: Double)
+
+instance HasResolution a => IsPitch (Fixed a) where
+  fromPitch x = realToFrac (fromPitch x :: Double)
+
+instance Integral a => IsPitch (Ratio a) where
+  fromPitch x = realToFrac (fromPitch x :: Double)
+
+instance IsPitch Double where
+  fromPitch p = fromIntegral . semitones $ (p .-. c)
+
+instance IsPitch Integer where
+  fromPitch p = fromIntegral . semitones $ (p .-. c)
+
+instance IsPitch Pitch where
+  fromPitch = id
+
+-- TODO bootstrapping, remove when/if possible
+middleC = c
+
+instance FromJSON Pitch where
+  parseJSON = fmap (middleC .+^) . parseJSON
+
+instance Transformable Pitch where
+  transform _ = id
+
+-- |
+-- Creates a pitch from name accidental.
+mkPitch :: Name -> Accidental -> Pitch
+mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b) ^. intervalAlterationSteps) (fromIntegral acc) (fromEnum name)
+
+-- TODO name
+-- TODO use this to define pitch-class equivalence
+toFirstOctave :: Pitch -> Pitch
+toFirstOctave p = case (name p, accidental p) of
+  (n, a) -> mkPitch n a
+
+-- |
+-- Returns the name of a pitch.
+--
+-- To convert a pitch to a numeric type, use 'octaves', 'steps' or 'semitones'
+-- on the relevant interval type, for example:
+--
+-- @
+-- semitones ('a\'' .-. 'c')
+-- @
+name :: Pitch -> Name
+name x
+  | i == 7 = toEnum 0 -- Arises for flat C etc.
+  | 0 <= i && i <= 6 = toEnum i
+  | otherwise = error $ "Pitch.name: Bad value " ++ show i
+  where
+    i = (fromIntegral . pred . number . simple . getPitch) x
+
+-- |
+-- Returns the accidental of a pitch.
+--
+-- See also 'octaves', and 'steps' and 'semitones'.
+accidental :: Pitch -> Accidental
+accidental = fromIntegral . view _alteration . simple . getPitch
+  where
+
+upChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
+upChromaticP origin n = relative origin $ (_alteration +~ n)
+
+downChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
+downChromaticP origin n = relative origin $ (_alteration -~ n)
+
+upDiatonicP :: Pitch -> DiatonicSteps -> Pitch -> Pitch
+upDiatonicP origin n = relative origin $ (_steps +~ n)
+
+downDiatonicP :: Pitch -> DiatonicSteps -> Pitch -> Pitch
+downDiatonicP origin n = relative origin $ (_steps -~ n)
+
+invertDiatonicallyP :: Pitch -> Pitch -> Pitch
+invertDiatonicallyP origin = relative origin $ (_steps %~ negate)
+
+invertChromaticallyP :: Pitch -> Pitch -> Pitch
+invertChromaticallyP origin = relative origin $ (_alteration %~ negate)
+
+-- Pitch literal, defined as @(class, alteration, octave)@, where
+--
+--     * @class@      is a pitch class number in @[0..6]@, starting from C.
+--
+--     * @alteration@ is the number of semitones, i.e. 0 is natural, 1 for sharp 2 for double sharp, -1 for flat and -2 for double flat.
+--       Alteration is in 'Maybe' because some pitch representations differ between explicit and explicit accidentals, i.e. a diatonic
+--       pitch type may assume @(0,Nothing,...)@ to mean C sharp rather than C.
+--
+--     * @octave@     is octave number in scientific pitch notation - 4.
+--
+-- Middle C is represented by the pitch literal @(0, Nothing, 0)@.
+--
+-- newtype PitchL = PitchL { getPitchL :: (Int, Maybe Double, Int) }
+-- deriving (Eq, Show, Ord)
+
+class IsPitch a where
+  fromPitch :: Pitch -> a
+
+instance IsPitch a => IsPitch (Maybe a) where
+  fromPitch = pure . fromPitch
+
+instance IsPitch a => IsPitch (First a) where
+  fromPitch = pure . fromPitch
+
+instance IsPitch a => IsPitch (Last a) where
+  fromPitch = pure . fromPitch
+
+instance IsPitch a => IsPitch [a] where
+  fromPitch = pure . fromPitch
+
+instance (Monoid b, IsPitch a) => IsPitch (b, a) where
+  fromPitch = pure . fromPitch
+
+deriving instance IsPitch a => IsPitch (Data.Semigroup.Sum a)
+
+deriving instance IsPitch a => IsPitch (Data.Semigroup.Product a)
+
+deriving instance (Monoid b, IsPitch a) => IsPitch (Couple b a)
+
+-- TODO clean by inlining this whole thing or similar
+viaPitchL :: (Int, Int, Int) -> Pitch
+viaPitchL (pc, sem, oct) = Pitch $ mkInterval' sem (oct * 7 + pc)
+  where
+    mkInterval' diff diatonic = Interval (diatonicToChromatic (fromIntegral diatonic) + fromIntegral diff, fromIntegral diatonic)
+    diatonicToChromatic :: DiatonicSteps -> ChromaticSteps
+    diatonicToChromatic d = fromIntegral $ (octaves * 12) + go restDia
+      where
+        -- restDia is always in [0..6]
+        (octaves, restDia) = fromIntegral d `divMod` 7
+        go = ([0, 2, 4, 5, 7, 9, 11] !!)
+
+cs'''' = fromPitch $ viaPitchL (0, 1, 4)
+
+ds'''' = fromPitch $ viaPitchL (1, 1, 4)
+
+es'''' = fromPitch $ viaPitchL (2, 1, 4)
+
+fs'''' = fromPitch $ viaPitchL (3, 1, 4)
+
+gs'''' = fromPitch $ viaPitchL (4, 1, 4)
+
+as'''' = fromPitch $ viaPitchL (5, 1, 4)
+
+bs'''' = fromPitch $ viaPitchL (6, 1, 4)
+
+c'''' = fromPitch $ viaPitchL (0, 0, 4)
+
+d'''' = fromPitch $ viaPitchL (1, 0, 4)
+
+e'''' = fromPitch $ viaPitchL (2, 0, 4)
+
+f'''' = fromPitch $ viaPitchL (3, 0, 4)
+
+g'''' = fromPitch $ viaPitchL (4, 0, 4)
+
+a'''' = fromPitch $ viaPitchL (5, 0, 4)
+
+b'''' = fromPitch $ viaPitchL (6, 0, 4)
+
+cb'''' = fromPitch $ viaPitchL (0, (-1), 4)
+
+db'''' = fromPitch $ viaPitchL (1, (-1), 4)
+
+eb'''' = fromPitch $ viaPitchL (2, (-1), 4)
+
+fb'''' = fromPitch $ viaPitchL (3, (-1), 4)
+
+gb'''' = fromPitch $ viaPitchL (4, (-1), 4)
+
+ab'''' = fromPitch $ viaPitchL (5, (-1), 4)
+
+bb'''' = fromPitch $ viaPitchL (6, (-1), 4)
+
+cs''' = fromPitch $ viaPitchL (0, 1, 3)
+
+ds''' = fromPitch $ viaPitchL (1, 1, 3)
+
+es''' = fromPitch $ viaPitchL (2, 1, 3)
+
+fs''' = fromPitch $ viaPitchL (3, 1, 3)
+
+gs''' = fromPitch $ viaPitchL (4, 1, 3)
+
+as''' = fromPitch $ viaPitchL (5, 1, 3)
+
+bs''' = fromPitch $ viaPitchL (6, 1, 3)
+
+c''' = fromPitch $ viaPitchL (0, 0, 3)
+
+d''' = fromPitch $ viaPitchL (1, 0, 3)
+
+e''' = fromPitch $ viaPitchL (2, 0, 3)
+
+f''' = fromPitch $ viaPitchL (3, 0, 3)
+
+g''' = fromPitch $ viaPitchL (4, 0, 3)
+
+a''' = fromPitch $ viaPitchL (5, 0, 3)
+
+b''' = fromPitch $ viaPitchL (6, 0, 3)
+
+cb''' = fromPitch $ viaPitchL (0, (-1), 3)
+
+db''' = fromPitch $ viaPitchL (1, (-1), 3)
+
+eb''' = fromPitch $ viaPitchL (2, (-1), 3)
+
+fb''' = fromPitch $ viaPitchL (3, (-1), 3)
+
+gb''' = fromPitch $ viaPitchL (4, (-1), 3)
+
+ab''' = fromPitch $ viaPitchL (5, (-1), 3)
+
+bb''' = fromPitch $ viaPitchL (6, (-1), 3)
+
+cs'' = fromPitch $ viaPitchL (0, 1, 2)
+
+ds'' = fromPitch $ viaPitchL (1, 1, 2)
+
+es'' = fromPitch $ viaPitchL (2, 1, 2)
+
+fs'' = fromPitch $ viaPitchL (3, 1, 2)
+
+gs'' = fromPitch $ viaPitchL (4, 1, 2)
+
+as'' = fromPitch $ viaPitchL (5, 1, 2)
+
+bs'' = fromPitch $ viaPitchL (6, 1, 2)
+
+c'' = fromPitch $ viaPitchL (0, 0, 2)
+
+d'' = fromPitch $ viaPitchL (1, 0, 2)
+
+e'' = fromPitch $ viaPitchL (2, 0, 2)
+
+f'' = fromPitch $ viaPitchL (3, 0, 2)
+
+g'' = fromPitch $ viaPitchL (4, 0, 2)
+
+a'' = fromPitch $ viaPitchL (5, 0, 2)
+
+b'' = fromPitch $ viaPitchL (6, 0, 2)
+
+cb'' = fromPitch $ viaPitchL (0, (-1), 2)
+
+db'' = fromPitch $ viaPitchL (1, (-1), 2)
+
+eb'' = fromPitch $ viaPitchL (2, (-1), 2)
+
+fb'' = fromPitch $ viaPitchL (3, (-1), 2)
+
+gb'' = fromPitch $ viaPitchL (4, (-1), 2)
+
+ab'' = fromPitch $ viaPitchL (5, (-1), 2)
+
+bb'' = fromPitch $ viaPitchL (6, (-1), 2)
+
+cs' = fromPitch $ viaPitchL (0, 1, 1)
+
+ds' = fromPitch $ viaPitchL (1, 1, 1)
+
+es' = fromPitch $ viaPitchL (2, 1, 1)
+
+fs' = fromPitch $ viaPitchL (3, 1, 1)
+
+gs' = fromPitch $ viaPitchL (4, 1, 1)
+
+as' = fromPitch $ viaPitchL (5, 1, 1)
+
+bs' = fromPitch $ viaPitchL (6, 1, 1)
+
+c' = fromPitch $ viaPitchL (0, 0, 1)
+
+d' = fromPitch $ viaPitchL (1, 0, 1)
+
+e' = fromPitch $ viaPitchL (2, 0, 1)
+
+f' = fromPitch $ viaPitchL (3, 0, 1)
+
+g' = fromPitch $ viaPitchL (4, 0, 1)
+
+a' = fromPitch $ viaPitchL (5, 0, 1)
+
+b' = fromPitch $ viaPitchL (6, 0, 1)
+
+cb' = fromPitch $ viaPitchL (0, (-1), 1)
+
+db' = fromPitch $ viaPitchL (1, (-1), 1)
+
+eb' = fromPitch $ viaPitchL (2, (-1), 1)
+
+fb' = fromPitch $ viaPitchL (3, (-1), 1)
+
+gb' = fromPitch $ viaPitchL (4, (-1), 1)
+
+ab' = fromPitch $ viaPitchL (5, (-1), 1)
+
+bb' = fromPitch $ viaPitchL (6, (-1), 1)
+
+cs = fromPitch $ viaPitchL (0, 1, 0)
+
+ds = fromPitch $ viaPitchL (1, 1, 0)
+
+es = fromPitch $ viaPitchL (2, 1, 0)
+
+fs = fromPitch $ viaPitchL (3, 1, 0)
+
+gs = fromPitch $ viaPitchL (4, 1, 0)
+
+as = fromPitch $ viaPitchL (5, 1, 0)
+
+bs = fromPitch $ viaPitchL (6, 1, 0)
+
+c = fromPitch $ viaPitchL (0, 0, 0)
+
+d = fromPitch $ viaPitchL (1, 0, 0)
+
+e = fromPitch $ viaPitchL (2, 0, 0)
+
+f = fromPitch $ viaPitchL (3, 0, 0)
+
+g = fromPitch $ viaPitchL (4, 0, 0)
+
+a = fromPitch $ viaPitchL (5, 0, 0)
+
+b = fromPitch $ viaPitchL (6, 0, 0)
+
+cb = fromPitch $ viaPitchL (0, (-1), 0)
+
+db = fromPitch $ viaPitchL (1, (-1), 0)
+
+eb = fromPitch $ viaPitchL (2, (-1), 0)
+
+fb = fromPitch $ viaPitchL (3, (-1), 0)
+
+gb = fromPitch $ viaPitchL (4, (-1), 0)
+
+ab = fromPitch $ viaPitchL (5, (-1), 0)
+
+bb = fromPitch $ viaPitchL (6, (-1), 0)
+
+cs_ = fromPitch $ viaPitchL (0, 1, -1)
+
+ds_ = fromPitch $ viaPitchL (1, 1, -1)
+
+es_ = fromPitch $ viaPitchL (2, 1, -1)
+
+fs_ = fromPitch $ viaPitchL (3, 1, -1)
+
+gs_ = fromPitch $ viaPitchL (4, 1, -1)
+
+as_ = fromPitch $ viaPitchL (5, 1, -1)
+
+bs_ = fromPitch $ viaPitchL (6, 1, -1)
+
+c_ = fromPitch $ viaPitchL (0, 0, -1)
+
+d_ = fromPitch $ viaPitchL (1, 0, -1)
+
+e_ = fromPitch $ viaPitchL (2, 0, -1)
+
+f_ = fromPitch $ viaPitchL (3, 0, -1)
+
+g_ = fromPitch $ viaPitchL (4, 0, -1)
+
+a_ = fromPitch $ viaPitchL (5, 0, -1)
+
+b_ = fromPitch $ viaPitchL (6, 0, -1)
+
+cb_ = fromPitch $ viaPitchL (0, (-1), -1)
+
+db_ = fromPitch $ viaPitchL (1, (-1), -1)
+
+eb_ = fromPitch $ viaPitchL (2, (-1), -1)
+
+fb_ = fromPitch $ viaPitchL (3, (-1), -1)
+
+gb_ = fromPitch $ viaPitchL (4, (-1), -1)
+
+ab_ = fromPitch $ viaPitchL (5, (-1), -1)
+
+bb_ = fromPitch $ viaPitchL (6, (-1), -1)
+
+cs__ = fromPitch $ viaPitchL (0, 1, -2)
+
+ds__ = fromPitch $ viaPitchL (1, 1, -2)
+
+es__ = fromPitch $ viaPitchL (2, 1, -2)
+
+fs__ = fromPitch $ viaPitchL (3, 1, -2)
+
+gs__ = fromPitch $ viaPitchL (4, 1, -2)
+
+as__ = fromPitch $ viaPitchL (5, 1, -2)
+
+bs__ = fromPitch $ viaPitchL (6, 1, -2)
+
+c__ = fromPitch $ viaPitchL (0, 0, -2)
+
+d__ = fromPitch $ viaPitchL (1, 0, -2)
+
+e__ = fromPitch $ viaPitchL (2, 0, -2)
+
+f__ = fromPitch $ viaPitchL (3, 0, -2)
+
+g__ = fromPitch $ viaPitchL (4, 0, -2)
+
+a__ = fromPitch $ viaPitchL (5, 0, -2)
+
+b__ = fromPitch $ viaPitchL (6, 0, -2)
+
+cb__ = fromPitch $ viaPitchL (0, (-1), -2)
+
+db__ = fromPitch $ viaPitchL (1, (-1), -2)
+
+eb__ = fromPitch $ viaPitchL (2, (-1), -2)
+
+fb__ = fromPitch $ viaPitchL (3, (-1), -2)
+
+gb__ = fromPitch $ viaPitchL (4, (-1), -2)
+
+ab__ = fromPitch $ viaPitchL (5, (-1), -2)
+
+bb__ = fromPitch $ viaPitchL (6, (-1), -2)
+
+cs___ = fromPitch $ viaPitchL (0, 1, -3)
+
+ds___ = fromPitch $ viaPitchL (1, 1, -3)
+
+es___ = fromPitch $ viaPitchL (2, 1, -3)
+
+fs___ = fromPitch $ viaPitchL (3, 1, -3)
+
+gs___ = fromPitch $ viaPitchL (4, 1, -3)
+
+as___ = fromPitch $ viaPitchL (5, 1, -3)
+
+bs___ = fromPitch $ viaPitchL (6, 1, -3)
+
+c___ = fromPitch $ viaPitchL (0, 0, -3)
+
+d___ = fromPitch $ viaPitchL (1, 0, -3)
+
+e___ = fromPitch $ viaPitchL (2, 0, -3)
+
+f___ = fromPitch $ viaPitchL (3, 0, -3)
+
+g___ = fromPitch $ viaPitchL (4, 0, -3)
+
+a___ = fromPitch $ viaPitchL (5, 0, -3)
+
+b___ = fromPitch $ viaPitchL (6, 0, -3)
+
+cb___ = fromPitch $ viaPitchL (0, (-1), -3)
+
+db___ = fromPitch $ viaPitchL (1, (-1), -3)
+
+eb___ = fromPitch $ viaPitchL (2, (-1), -3)
+
+fb___ = fromPitch $ viaPitchL (3, (-1), -3)
+
+gb___ = fromPitch $ viaPitchL (4, (-1), -3)
+
+ab___ = fromPitch $ viaPitchL (5, (-1), -3)
+
+bb___ = fromPitch $ viaPitchL (6, (-1), -3)
+
+cs____ = fromPitch $ viaPitchL (0, 1, -4)
+
+ds____ = fromPitch $ viaPitchL (1, 1, -4)
+
+es____ = fromPitch $ viaPitchL (2, 1, -4)
+
+fs____ = fromPitch $ viaPitchL (3, 1, -4)
+
+gs____ = fromPitch $ viaPitchL (4, 1, -4)
+
+as____ = fromPitch $ viaPitchL (5, 1, -4)
+
+bs____ = fromPitch $ viaPitchL (6, 1, -4)
+
+c____ = fromPitch $ viaPitchL (0, 0, -4)
+
+d____ = fromPitch $ viaPitchL (1, 0, -4)
+
+e____ = fromPitch $ viaPitchL (2, 0, -4)
+
+f____ = fromPitch $ viaPitchL (3, 0, -4)
+
+g____ = fromPitch $ viaPitchL (4, 0, -4)
+
+a____ = fromPitch $ viaPitchL (5, 0, -4)
+
+b____ = fromPitch $ viaPitchL (6, 0, -4)
+
+cb____ = fromPitch $ viaPitchL (0, (-1), -4)
+
+db____ = fromPitch $ viaPitchL (1, (-1), -4)
+
+eb____ = fromPitch $ viaPitchL (2, (-1), -4)
+
+fb____ = fromPitch $ viaPitchL (3, (-1), -4)
+
+gb____ = fromPitch $ viaPitchL (4, (-1), -4)
+
+ab____ = fromPitch $ viaPitchL (5, (-1), -4)
+
+bb____ = fromPitch $ viaPitchL (6, (-1), -4)
 

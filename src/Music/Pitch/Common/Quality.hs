@@ -25,8 +25,5 @@ module Music.Pitch.Common.Quality
   )
 where
 
-import Data.Maybe (fromMaybe)
-import Music.Pitch.Augmentable
-import Music.Pitch.Common.Number
 import Music.Pitch.Common.Types
 
