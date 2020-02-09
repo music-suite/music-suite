@@ -95,9 +95,9 @@ newtype Number = Number {getNumber :: Integer}
 instance Num Number where
   Number a + Number b = Number (a + b)
   Number a * Number b = Number (a * b)
-  negate (Number a) = Number (negate b)
-  abs (Number a) = Number (abs b)
-  signum (Number a) = Number (signum b)
+  negate (Number a) = Number (negate a)
+  abs (Number a) = Number (abs a)
+  signum (Number a) = Number (signum a)
 
   -- TODO fix other code so this works:
   --    fromInteger 0 = error "Invalid Number: zero"
@@ -695,10 +695,10 @@ _quality = from interval . _1
 
 -- | View or set the number component of an interval.
 --
--- >>> m3^._number
+-- >>> (m3 :: Interval)^._number
 -- 3
 --
--- >>> number m3
+-- >>> number (m3 :: Interval)
 -- 3
 _number :: Lens' Interval Number
 _number = from interval . _2
