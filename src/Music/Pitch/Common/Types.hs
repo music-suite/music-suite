@@ -30,6 +30,7 @@ import Data.AdditiveGroup
 import Data.AffineSpace
 import Data.Typeable
 -- import Music.Pitch.Literal
+import Data.Functor.Couple
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 import Data.VectorSpace
@@ -668,10 +669,10 @@ interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
 -- | View an interval as a pair of alteration and diatonic steps or vice versa.
 --
 -- >>> _P5^.from intervalAlterationSteps
--- (0,4)
+-- (ChromaticSteps {getChromaticSteps = 0},DiatonicSteps {getDiatonicSteps = 4})
 --
 -- >>> d5^.from intervalAlterationSteps
--- (-1,4)
+-- (ChromaticSteps {getChromaticSteps = -1},DiatonicSteps {getDiatonicSteps = 4})
 intervalAlterationSteps :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 intervalAlterationSteps =
   iso
@@ -685,11 +686,11 @@ interval' = iso Interval getInterval
 
 
 -- |
--- >>> m3 & _number %~ pred
+-- TODO>>> m3 & _number %~ pred
 -- m2
--- >>> m3 & _number %~ succ
+-- TODO>>> m3 & _number %~ succ
 -- d4
--- >>> _M3 & _number %~ succ
+-- TODO>>> _M3 & _number %~ succ
 -- _P4
 --
 --
@@ -1261,4 +1262,153 @@ diatonicSteps = iso n2d d2n
     n2d n | n < 0 = fromIntegral (n + 1)
     d2n n | n >= 0 = fromIntegral (n + 1)
     d2n n | n < 0 = fromIntegral (n - 1)
+
+newtype IntervalL = IntervalL (Integer, Integer, Integer)
+
+-- (octaves, diatonic steps, chromatic steps)
+
+class IsInterval a where
+  fromInterval :: Interval -> a
+
+instance IsInterval Interval where
+  fromInterval = id
+
+instance IsInterval a => IsInterval (Maybe a) where
+  fromInterval = pure . fromInterval
+
+instance IsInterval a => IsInterval (First a) where
+  fromInterval = pure . fromInterval
+
+instance IsInterval a => IsInterval (Last a) where
+  fromInterval = pure . fromInterval
+
+instance IsInterval a => IsInterval [a] where
+  fromInterval = pure . fromInterval
+
+instance (Monoid b, IsInterval a) => IsInterval (b, a) where
+  fromInterval = pure . fromInterval
+
+deriving instance (Monoid b, IsInterval a) => IsInterval (Couple b a)
+
+instance IsInterval Int where
+  fromInterval x = fromIntegral (fromInterval x :: Integer)
+
+instance IsInterval Word where
+  fromInterval x = fromIntegral (fromInterval x :: Integer)
+
+instance IsInterval Integer where
+  fromInterval (Interval (ChromaticSteps c, _d)) = c
+
+fromIntervalL :: IsInterval a => IntervalL -> a
+fromIntervalL = fromInterval . go
+  where
+    go :: IntervalL -> Interval
+    go (IntervalL (o, d, c)) = (basis_P8 ^* o) ^+^ (basis_A1 ^* c) ^+^ (basis_d2 ^* d)
+
+d1 = fromIntervalL $ IntervalL (0, 0, -1)
+
+_P1 = fromIntervalL $ IntervalL (0, 0, 0)
+
+_A1 = fromIntervalL $ IntervalL (0, 0, 1)
+
+d2 = fromIntervalL $ IntervalL (0, 1, 0)
+
+m2 = fromIntervalL $ IntervalL (0, 1, 1)
+
+_M2 = fromIntervalL $ IntervalL (0, 1, 2)
+
+_A2 = fromIntervalL $ IntervalL (0, 1, 3)
+
+d3 = fromIntervalL $ IntervalL (0, 2, 2)
+
+m3 = fromIntervalL $ IntervalL (0, 2, 3)
+
+_M3 = fromIntervalL $ IntervalL (0, 2, 4)
+
+_A3 = fromIntervalL $ IntervalL (0, 2, 5)
+
+d4 = fromIntervalL $ IntervalL (0, 3, 4)
+
+_P4 = fromIntervalL $ IntervalL (0, 3, 5)
+
+_A4 = fromIntervalL $ IntervalL (0, 3, 6)
+
+d5 = fromIntervalL $ IntervalL (0, 4, 6)
+
+_P5 = fromIntervalL $ IntervalL (0, 4, 7)
+
+_A5 = fromIntervalL $ IntervalL (0, 4, 8)
+
+d6 = fromIntervalL $ IntervalL (0, 5, 7)
+
+m6 = fromIntervalL $ IntervalL (0, 5, 8)
+
+_M6 = fromIntervalL $ IntervalL (0, 5, 9)
+
+_A6 = fromIntervalL $ IntervalL (0, 5, 10)
+
+d7 = fromIntervalL $ IntervalL (0, 6, 9)
+
+m7 = fromIntervalL $ IntervalL (0, 6, 10)
+
+_M7 = fromIntervalL $ IntervalL (0, 6, 11)
+
+_A7 = fromIntervalL $ IntervalL (0, 6, 12)
+
+d8 = fromIntervalL $ IntervalL (1, 0, -1)
+
+_P8 = fromIntervalL $ IntervalL (1, 0, 0)
+
+_A8 = fromIntervalL $ IntervalL (1, 0, 1)
+
+d9 = fromIntervalL $ IntervalL (1, 1, 0)
+
+m9 = fromIntervalL $ IntervalL (1, 1, 1)
+
+_M9 = fromIntervalL $ IntervalL (1, 1, 2)
+
+_A9 = fromIntervalL $ IntervalL (1, 1, 3)
+
+d10 = fromIntervalL $ IntervalL (1, 2, 2)
+
+m10 = fromIntervalL $ IntervalL (1, 2, 3)
+
+_M10 = fromIntervalL $ IntervalL (1, 2, 4)
+
+_A10 = fromIntervalL $ IntervalL (1, 2, 5)
+
+d11 = fromIntervalL $ IntervalL (1, 3, 4)
+
+_P11 = fromIntervalL $ IntervalL (1, 3, 5)
+
+_A11 = fromIntervalL $ IntervalL (1, 3, 6)
+
+d12 = fromIntervalL $ IntervalL (1, 4, 6)
+
+_P12 = fromIntervalL $ IntervalL (1, 4, 7)
+
+_A12 = fromIntervalL $ IntervalL (1, 4, 8)
+
+d13 = fromIntervalL $ IntervalL (1, 5, 7)
+
+m13 = fromIntervalL $ IntervalL (1, 5, 8)
+
+_M13 = fromIntervalL $ IntervalL (1, 5, 9)
+
+_A13 = fromIntervalL $ IntervalL (1, 5, 10)
+
+d14 = fromIntervalL $ IntervalL (1, 6, 9)
+
+m14 = fromIntervalL $ IntervalL (1, 6, 10)
+
+_M14 = fromIntervalL $ IntervalL (1, 6, 11)
+
+_A14 = fromIntervalL $ IntervalL (1, 6, 12)
+
+d15 = fromIntervalL $ IntervalL (2, 0, -1)
+
+_P15 = fromIntervalL $ IntervalL (2, 0, 0)
+
+_A15 = fromIntervalL $ IntervalL (2, 0, 1)
+
 
