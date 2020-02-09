@@ -17,6 +17,7 @@ main = do
                             "TupleSections",
                             "TypeFamilies",
                             "TypeOperators",
+                            "TypeApplications",
                             "ViewPatterns",
                             "OverloadedStrings"
                             ]

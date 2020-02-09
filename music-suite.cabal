@@ -217,6 +217,7 @@ library
                         TupleSections,
                         TypeFamilies,
                         TypeOperators,
+                        TypeApplications,
                         ViewPatterns,
                         OverloadedStrings
   ghc-options:
