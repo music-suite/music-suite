@@ -7,8 +7,6 @@ module Music.Pitch.Common.Interval
     interval,
     intervalTotalSteps,
     intervalAlterationSteps,
-    _number,
-    _quality,
     _steps,
     _alteration,
 

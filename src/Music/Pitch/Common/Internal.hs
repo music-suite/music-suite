@@ -683,25 +683,6 @@ _alteration = from intervalAlterationSteps . _1
 _steps :: Lens' Interval DiatonicSteps
 _steps = from intervalAlterationSteps . _2
 
--- | View or set the quality of an interval.
---
--- >>> m3^._quality
--- Minor
---
--- >>> view _quality $ diminish $ diminish m3
--- Diminished 2
-_quality :: Lens' Interval Quality
-_quality = from interval . _1
-
--- | View or set the number component of an interval.
---
--- >>> (m3 :: Interval)^._number
--- 3
---
--- >>> number (m3 :: Interval)
--- 3
-_number :: Lens' Interval Number
-_number = from interval . _2
 
 -- | View an interval as a pair of quality and number or vice versa.
 --
@@ -775,35 +756,6 @@ mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
 intervalTotalSteps :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 intervalTotalSteps = iso Interval getInterval
 
-
--- |
--- >>> m3 & _number %~ pred
--- m2
--- >>> m3 & _number %~ succ
--- d4
--- >>> _M3 & _number %~ succ
--- _P4
---
---
--- >>> m3 & _number +~ 1
--- d4
--- >>> m3 & _number +~ 2
--- d5
--- >>> m3 & _number +~ 3
--- m6
--- >>> m3 & _number +~ 4
---
---
--- >>> m3 & _quality .~ Minor
--- m3
--- >>> _P5 & _quality .~ Minor
--- d5
--- >>> (-d5) & _quality %~ diminish
---
--- >>> _P5 & _quality .~ Minor
--- d5
--- >>> _P5 & _quality .~ (Diminished 1)
--- d5
 
 
 diatonicToChromatic :: DiatonicSteps -> ChromaticSteps
@@ -881,41 +833,18 @@ instance HasOctaves Interval where
   -- |
   -- Returns the non-simple part of an interval.
   --
-  -- > _P8^*octaves x ^+^ simple x = x
+  -- TODO prop> _P8^*octaves x ^+^ simple x = x
+  --
+  -- >>> octaves (_P5 :: Interval)
+  -- 0
+  --
+  -- >>> octaves (_M9 :: Interval)
+  -- 1
+  --
+  -- >>> octaves (-m3 :: Interval)
+  -- -1
   octaves :: Interval -> Octaves
   octaves (Interval (_, d)) = fromIntegral $ d `div` 7
-
--- |
--- >>> m3 & _number %~ pred
--- m2
--- >>> m3 & _number %~ succ
--- d4
--- >>> _M3 & _number %~ succ
--- _P4
---
---
--- >>> m3 & _number +~ 1
--- d4
--- >>> m3 & _number +~ 2
--- d5
--- >>> m3 & _number +~ 3
--- m6
--- >>> m3 & _number +~ 4
---
---
--- >>> m3 & _quality .~ Minor
--- m3
--- >>> _P5 & _quality .~ Minor
--- d5
--- >>> (-d5) & _quality %~ diminish
---
---
--- TODO only obeys lens laws up to quality normalization
---
--- >>> _P5 & _quality .~ Minor
--- d5
--- >>> _P5 & _quality .~ (Diminished 1)
--- d5
 
 
 
@@ -1027,6 +956,12 @@ a /:= b = semitones a /= semitones b
 
 -- | Types of value that has an interval quality (mainly 'Interval' and 'Quality' itself).
 class HasQuality a where
+  -- >>> quality (m3 :: Interval)
+  -- Minor
+  --
+  -- >>> quality $ diminish $ diminish m3
+  -- Diminished 2
+  --
   quality :: a -> Quality
 
 -- |
@@ -1268,6 +1203,9 @@ class HasNumber a where
   -- The interval number is negative if and only if the interval is negative.
   --
   -- See also 'quality', 'octaves' and 'semitones'.
+  --
+  -- >>> number (m3 :: Interval)
+  -- 3
   number :: a -> Number
 
 -- TODO rename numberDiatonicSteps
@@ -1664,7 +1602,6 @@ toFirstOctave p = case (name p, accidental p) of
 --
 --    nameAccidental :: Iso' Pitch (Name, Accidental)
 --
--- TODO flip name for _number/number and _quality/quality and octaves (compare HasDuration!)
 
 -- |
 -- Returns the name of a pitch.
