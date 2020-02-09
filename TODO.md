@@ -381,7 +381,7 @@ Consider switching to a decentralized issue tracker such as:
 
 
 
-- Proper scale/chord type supporting all common use-cases
+- [X] Proper scale/chord type supporting all common use-cases
   - [X] Represent functions/modes and chords/scales
   - [X] Making (infinite) octave-repeating scales from pitches/intervals
   - [X] Looking up pitches
@@ -393,7 +393,7 @@ Consider switching to a decentralized issue tracker such as:
         - Run the traversal
         - Recalculate the inverval sequence relative the new/transformed origin and save that
         - Save the new origin
-  - [ ] Define reflection
+  - [X] Define reflection
 
 - TODO maths/music terminology!
   - Constant source of problems
