@@ -571,7 +571,7 @@ simple = snd . separate
 -- True
 --
 -- >>> filter isSimple [_P5, _M9, -m3, m3, _A7, _P8]
--- [_P5, m3, _A7]
+-- [_P5,m3,_A7]
 isSimple :: Interval -> Bool
 isSimple x = octaves x == 0
 
