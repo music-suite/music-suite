@@ -612,20 +612,6 @@ isLeap (Interval (a, d)) = (abs d) > 1
 invert :: Interval -> Interval
 invert = simple . negateV
 
-mkInterval :: Quality -> Number -> Interval
-mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
-  where
-    diff = qualityToDiff (n > 0) (expectedQualityType n) (q)
-    steps = case n `compare` 0 of
-      GT -> n - 1
-      EQ -> error "diatonicSteps: Invalid number 0"
-      LT -> n + 1
-
-    qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
-      where
-        f True = Upward
-        f False = Downward
-        e = error "TODO"
 
 -- steps = n^.diatonicSteps
 
@@ -668,6 +654,21 @@ intervalAlterationSteps =
           f False = Downward
           e = error "TODO"
 
+mkInterval :: Quality -> Number -> Interval
+mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
+  where
+    diff = qualityToDiff (n > 0) (expectedQualityType n) (q)
+    steps = case n `compare` 0 of
+      GT -> n - 1
+      EQ -> error "diatonicSteps: Invalid number 0"
+      LT -> n + 1
+
+    qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
+      where
+        f True = Upward
+        f False = Downward
+        e = error "TODO"
+
 -- TODO rename this
 -- | View an interval as a pair of total number of chromatic and diatonic steps.
 interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
@@ -706,7 +707,6 @@ interval' = iso Interval getInterval
 -- >>> _P5 & _quality .~ (Diminished 1)
 -- d5
 
--- Internal stuff
 
 -- TODO more generic pattern here
 diatonicToChromatic :: DiatonicSteps -> ChromaticSteps
@@ -733,35 +733,6 @@ intervalDiv i di
       | (i > basis_P1) = error "Impossible"
       | (i ^+^ di) > basis_P1 = 0
       | otherwise = 1 + (intervalDiv (i ^+^ di) di)
-
-{- TODO remove after checking these are the same as the above
- -
--- TODO more generic pattern here
-diatonicToChromatic :: DiatonicSteps -> ChromaticSteps
-diatonicToChromatic d = fromIntegral $ (octaves * 12) + go restDia
-  where
-    -- restDia is always in [0..6]
-    (octaves, restDia) = fromIntegral d `divMod` 7
-    go = ([0, 2, 4, 5, 7, 9, 11] !!)
-
--- | Integer div of intervals: i / di = x, where x is an integer
-intervalDiv :: Interval -> Interval -> Int
-intervalDiv (Interval (a, d)) (Interval (1, 0)) = fromIntegral a
-intervalDiv (Interval (a, d)) (Interval (0, 1)) = fromIntegral d
-intervalDiv i di
-  | (i > basis_P1) = intervalDivPos i di
-  | (i < basis_P1) = intervalDivNeg i di
-  | otherwise = 0 :: Int
-  where
-    intervalDivPos i di
-      | (i < basis_P1) = error "Impossible"
-      | (i ^-^ di) < basis_P1 = 0
-      | otherwise = 1 + (intervalDiv (i ^-^ di) di)
-    intervalDivNeg i di
-      | (i > basis_P1) = error "Impossible"
-      | (i ^+^ di) > basis_P1 = 0
-      | otherwise = 1 + (intervalDiv (i ^+^ di) di)
--}
 
 
 -- | Represent an interval i in a new basis (j, k).
@@ -808,56 +779,6 @@ convertBasisFloat i j k
     p = fromIntegral $ (a * d - b * c)
     q = fromIntegral $ (a * n - b * m)
     r = fromIntegral $ (d * m - c * n)
-
-{- TODO remove after checking they are the same as the above
- -
--- | Represent an interval i in a new basis (j, k).
---
--- We want x,y where i = x*j + y*k
---
--- e.g., convertBasis basis_d2 _P5 basis_P8 == Just (-12,7), as expected.
-convertBasis ::
-  Interval ->
-  Interval ->
-  Interval ->
-  Maybe (Int, Int)
-convertBasis i j k
-  | (p == 0) = Nothing
-  | not $ p `divides` r = Nothing
-  | not $ p `divides` q = Nothing
-  | otherwise = Just (r `div` p, q `div` p)
-  where
-    Interval (fromIntegral -> m, fromIntegral -> n) = i
-    Interval (fromIntegral -> a, fromIntegral -> b) = j
-    Interval (fromIntegral -> c, fromIntegral -> d) = k
-    p = (a * d - b * c)
-    q = (a * n - b * m)
-    r = (d * m - c * n)
-    divides :: Integral a => a -> a -> Bool
-    x `divides` y = (y `rem` x) == 0
-
--- | Same as above, but don't worry if new interval has non-integer
--- coefficients -- useful when getting a value to use as a frequency
--- ratio in a tuning system.
-convertBasisFloat ::
-  (Fractional t, Eq t) =>
-  Interval ->
-  Interval ->
-  Interval ->
-  Maybe (t, t)
-convertBasisFloat i j k
-  | (p == 0) = Nothing
-  | otherwise = Just (r / p, q / p)
-  where
-    Interval (fromIntegral -> m, fromIntegral -> n) = i
-    Interval (fromIntegral -> a, fromIntegral -> b) = j
-    Interval (fromIntegral -> c, fromIntegral -> d) = k
-    p = fromIntegral $ (a * d - b * c)
-    q = fromIntegral $ (a * n - b * m)
-    r = fromIntegral $ (d * m - c * n)
--}
-
-
 
 instance HasOctaves Interval where
   -- |
@@ -866,17 +787,6 @@ instance HasOctaves Interval where
   -- > _P8^*octaves x ^+^ simple x = x
   octaves :: Interval -> Octaves
   octaves (Interval (_, d)) = fromIntegral $ d `div` 7
-
-
-
-
-
-{-
-Note: This is *not* the same as wrapping/unwrapping, as the number of chromatic steps viewed here is
-an *alteration*, rather than the total number of chromatic steps (basis d2).
-
-E.g. d5 is internally represented as (6,4) but _P5^.from interval' == (-1,4).
--}
 
 -- |
 -- >>> m3 & _number %~ pred
@@ -910,7 +820,6 @@ E.g. d5 is internally represented as (6,4) but _P5^.from interval' == (-1,4).
 -- >>> _P5 & _quality .~ (Diminished 1)
 -- d5
 
--- Internal stuff
 
 
 
