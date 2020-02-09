@@ -688,7 +688,7 @@ _steps = from intervalAlterationSteps . _2
 -- >>> m3^._quality
 -- Minor
 --
--- >>> diminish (diminish m3)
+-- >>> view _quality $ diminish $ diminish m3
 -- Diminished 2
 _quality :: Lens' Interval Quality
 _quality = from interval . _1
@@ -733,10 +733,10 @@ interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
 -- | View an interval as a pair of alteration and diatonic steps or vice versa.
 --
 -- >>> _P5^.from intervalAlterationSteps
--- (0, 4)
+-- (0,4)
 --
 -- >>> d5^.from intervalAlterationSteps
--- (-1, 4)
+-- (-1,4)
 intervalAlterationSteps :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 intervalAlterationSteps =
   iso
@@ -777,11 +777,11 @@ intervalTotalSteps = iso Interval getInterval
 
 
 -- |
--- TODO>>> m3 & _number %~ pred
+-- >>> m3 & _number %~ pred
 -- m2
--- TODO>>> m3 & _number %~ succ
+-- >>> m3 & _number %~ succ
 -- d4
--- TODO>>> _M3 & _number %~ succ
+-- >>> _M3 & _number %~ succ
 -- _P4
 --
 --
@@ -800,16 +800,12 @@ intervalTotalSteps = iso Interval getInterval
 -- d5
 -- >>> (-d5) & _quality %~ diminish
 --
---
--- TODO only obeys lens laws up to quality normalization
---
 -- >>> _P5 & _quality .~ Minor
 -- d5
 -- >>> _P5 & _quality .~ (Diminished 1)
 -- d5
 
 
--- TODO more generic pattern here
 diatonicToChromatic :: DiatonicSteps -> ChromaticSteps
 diatonicToChromatic d = fromIntegral $ (octaves * 12) + go restDia
   where
