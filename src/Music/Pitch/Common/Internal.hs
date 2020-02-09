@@ -90,7 +90,17 @@ type Semitones = ChromaticSteps
 -- (or @unison@) represents an interval of 0 steps, 2 (or @second@) reprents an
 -- interval of 1 step, and so on.
 newtype Number = Number {getNumber :: Integer}
-  deriving (Eq, Ord, Num, Enum, Real, Integral)
+  deriving (Eq, Ord, Enum, Real, Integral)
+
+instance Num Number where
+  Number a + Number b = Number (a + b)
+  Number a * Number b = Number (a * b)
+  negate (Number a) = Number (negate b)
+  abs (Number a) = Number (abs b)
+  signum (Number a) = Number (signum b)
+
+  fromInteger 0 = error "Invalid Number: zero"
+  fromInteger n = Number (fromInteger n)
 
 -- |
 -- The /quality/ component of an interval (minor, major, augmented).
@@ -644,11 +654,25 @@ isLeap (Interval (a, d)) = (abs d) > 1
 -- * The quality of a simple interval is the inversion of the quality of its inversion.
 --
 -- * The inversion of a compound interval is the inversion of its simple component.
+--
+-- >>> invert _P4
+-- _P5
+--
+-- >>> invert _A4
+-- d5
+--
+-- >>> invert m3
+-- _M6
+--
+-- >>> invert (_P8 ^+^ m3)
+-- _M6
+--
+-- >>> invert (-m3)
+-- m3
 invert :: Interval -> Interval
 invert = simple . negateV
 
 
--- steps = n^.diatonicSteps
 
 -- | View or set the alteration (i.e. the number of chromatic steps differing from the excepted number) in an interval.
 _alteration :: Lens' Interval ChromaticSteps
@@ -947,9 +971,9 @@ class HasSemitones a where
   -- 0
   -- >>> semitones tritone
   -- 6
-  -- >>> semitones d5
+  -- >>> semitones (d5 :: Interval)
   -- 6
-  -- >>> semitones (-_P8)
+  -- >>> semitones (-_P8 :: Interval)
   -- -12
   semitones :: a -> Semitones
 
@@ -1033,18 +1057,31 @@ isAugmented a = case quality a of Augmented _ -> True; _ -> False
 isDiminished :: HasQuality a => a -> Bool
 isDiminished a = case quality a of Diminished _ -> True; _ -> False
 
-{-
-Is this quality standard, i.e. major, minor, perfect, augmented/diminished
-or doubly augmented/diminished.
--}
+-- |
+-- Is this a quality used in standard notation
+--
+-- >>> filter isStandardQuality [Major, Minor, Perfect]
+-- [Major, Minor, Perfect]
+--
+-- >>> filter isStandardQuality [Augmented n | n <- [1..4] ]
+-- [Augmented 1, Augmented 2]
+--
+-- >>> filter isStandardQuality [Diminished n | n <- [1..4] ]
+-- [Diminished 1, Diminished 2]
+--
 isStandardQuality :: Quality -> Bool
 isStandardQuality (Augmented n) = n <= 2
 isStandardQuality (Diminished n) = n <= 2
 isStandardQuality _ = True
 
-{-
-Same as 'isStandardQuality' but disallow doubly augmented/diminished.
--}
+-- | Same as 'isStandardQuality' but also disallow doubly augmented/diminished.
+--
+-- >>> filter isStandardQuality [Augmented n | n <- [1..4] ]
+-- [Augmented 1]
+--
+-- >>> filter isStandardQuality [Diminished n | n <- [1..4] ]
+-- [Diminished 1]
+--
 isSimpleQuality :: Quality -> Bool
 isSimpleQuality (Augmented n) = n <= 1
 isSimpleQuality (Diminished n) = n <= 1
@@ -1115,6 +1152,27 @@ data Direction = Upward | Downward
 
 -- |
 -- Return the alteration in implied by the given quality to a number of a given quality type.
+--
+-- >>> qualityToAlteration Upward MajorMinorType (Augmented 1)
+-- Just 1
+--
+-- >>> qualityToAlteration Upward MajorMinorType Minor
+-- Just (-1)
+--
+-- >>> qualityToAlteration Upward MajorMinorType (Diminished 1)
+-- Just (-2)
+--
+-- >>> qualityToAlteration Upward PerfectType (Augmented 1)
+-- Just 1
+--
+-- >>> qualityToAlteration Upward PerfectType Perfect
+-- Just 0
+--
+-- >>> qualityToAlteration Upward PerfectType (Diminished 1)
+-- Just (-1)
+--
+-- >>> qualityToAlteration Upward PerfectType Major
+-- Nothing
 qualityToAlteration :: Direction -> QualityType -> Quality -> Maybe ChromaticSteps
 qualityToAlteration d qt q = fmap fromIntegral $ go d qt q
   where
@@ -1216,6 +1274,16 @@ class HasNumber a where
   number :: a -> Number
 
 -- TODO rename numberDiatonicSteps
+
+-- |
+-- >>> second^.diatonicSteps
+-- 1
+--
+-- >>> 2^.diatonicSteps
+-- 1
+--
+-- 3^.from diatonicSteps
+-- 4
 diatonicSteps :: Iso' Number DiatonicSteps
 diatonicSteps = iso n2d d2n
   where
@@ -1294,11 +1362,15 @@ isMelodicConsonance x = quality x `elem` [Perfect, Major, Minor]
 -- |
 -- A spelling provide a way of notating a semitone interval such as 'tritone'.
 --
--- Examples:
 --
--- > spell usingSharps tritone   == _A4
--- > spell usingFlats  tritone   == d5
--- > spell modally     tone      == _M2
+-- >>> spell usingSharps tritone
+-- _A4
+--
+-- >>> spell usingFlats  tritone
+-- d5
+--
+-- >>> spell modally     tone
+-- _M2
 type Spelling = Semitones -> Number
 
 -- |
@@ -1578,11 +1650,24 @@ instance Transformable Pitch where
 mkPitch :: Name -> Accidental -> Pitch
 mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b) ^. intervalAlterationSteps) (fromIntegral acc) (fromEnum name)
 
+{-
 -- TODO name
 -- TODO use this to define pitch-class equivalence
 toFirstOctave :: Pitch -> Pitch
 toFirstOctave p = case (name p, accidental p) of
   (n, a) -> mkPitch n a
+-}
+
+-- TODO rename (and flip Iso!)
+--
+--    intervalTotalSteps -> totalSteps
+--    intervalAlterationSteps -> alterationSteps
+--
+-- TODO add similar Iso to replace mkPitch:
+--
+--    nameAccidental :: Iso' Pitch (Name, Accidental)
+--
+-- TODO flip name for _number/number and _quality/quality and octaves (compare HasDuration!)
 
 -- |
 -- Returns the name of a pitch.
