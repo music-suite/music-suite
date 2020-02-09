@@ -1028,9 +1028,9 @@ infix 4 /:=
 -- |
 -- Enharmonic equivalence.
 --
--- >>> asInterval _A2 == m3
+-- >>> id @Interval _A2 == m3
 -- False
--- >>> asInterval _A2 =:= m3
+-- >>> id @Interval _A2 =:= m3
 -- True
 (=:=) :: HasSemitones a => a -> a -> Bool
 a =:= b = semitones a == semitones b
@@ -1038,9 +1038,9 @@ a =:= b = semitones a == semitones b
 -- |
 -- Enharmonic non-equivalence.
 --
--- >>> asInterval _A2 /= m3
+-- >>> id @Interval _A2 /= m3
 -- True
--- >>> asInterval _A2 /:= m3
+-- >>> id @Interval _A2 /:= m3
 -- False
 (/:=) :: HasSemitones a => a -> a -> Bool
 a /:= b = semitones a /= semitones b
@@ -1430,7 +1430,7 @@ _A15 = fromIntervalL $ IntervalL (2, 0, 1)
 {-
   TODO
   Generalize simple like this:
-    > (number (asInterval (m9))-(fromIntegral $ signum (m9))) `mod` 7
+    > (number (id @Interval (m9))-(fromIntegral $ signum (m9))) `mod` 7
 
 -}
 
