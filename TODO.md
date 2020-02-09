@@ -14,7 +14,9 @@ Consider switching to a decentralized issue tracker such as:
   Intervals not displayed properly
 
 - $doctests!
-  - Run locally (README)
+  - [ ] Run locally (README)
+    - [X] Tool works.
+    - [ ] Do whitelisting, or make it understand default-extensions (see README)
   - Run in CI
 
 - Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc

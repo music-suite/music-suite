@@ -27,6 +27,8 @@ cabal build
 
 ### Test everything
 
+#### Property tests
+
 ```
 cabal test
 ```
@@ -36,6 +38,17 @@ To run individual tests:
 ```
 cabal run TEST_NAME -- TEST_ARGS...
 ```
+
+#### Doctests
+
+```
+cabal build && cabal exec --package music-suite -- cabal run doctester PATHS
+```
+
+where `PATHS` is a list of Haskell files or directories containing Haskell files.
+
+For now, `default-extensions` is not recognized, so you must list the extensions
+explicitly in each file using a `LANGUAGE` pragma.
 
 ### Development shell
 
