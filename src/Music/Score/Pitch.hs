@@ -497,7 +497,7 @@ ambitusLowestOctave = fromIntegral . octaves . (.-. c) . ambitusLowest
 -- |  Interpolate between the highest and lowest points in an ambitus.
 --
 --  Can be used as a primitive contour-based melody generator.
-interpolateAmbitus :: (Ord a, Num a, AffinePair (Diff a) a) => Ambitus a -> Scalar (Diff a) -> a
+interpolateAmbitus :: (AffinePair (Diff a) a) => Ambitus a -> Scalar (Diff a) -> a
 interpolateAmbitus a = let (m, n) = a ^. from ambitus in alerp m n
 
 -- |
@@ -660,7 +660,10 @@ upChromaticP' _ n p
 simplifyPitches :: (HasPitches' a, Pitch a ~ Common.Pitch) => a -> a
 simplifyPitches = over pitches' simplifyPitch
   where
-    simplifyPitch p = if (accidental p < doubleFlat || accidental p > doubleSharp) then relative c (spell usingSharps) p else p
+    simplifyPitch p
+      | accidental p < doubleFlat  = relative c (spell usingFlats) p
+      | accidental p > doubleSharp = relative c (spell usingSharps) p
+      | otherwise                  = p
 
 type instance Pitch Common.Pitch = Common.Pitch
 

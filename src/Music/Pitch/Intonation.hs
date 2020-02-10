@@ -59,7 +59,7 @@ basis_d2 :: Interval
 basis_d2 = basisValue Diatonic
 
 synTune :: (Interval, Double) -> (Interval, Double) -> Interval -> Double
-synTune (i1, i1rat) (i2, i2rat) (view (from interval'') -> (a1, d2)) =
+synTune (i1, i1rat) (i2, i2rat) (view (from intervalAlterationSteps) -> (a1, d2)) =
   ((makeA1 (i1, i1rat) (i2, i2rat)) ** (fromIntegral a1)) * ((maked2 (i1, i1rat) (i2, i2rat)) ** (fromIntegral d2))
   where
     makeA1 = makeBasis basis_A1

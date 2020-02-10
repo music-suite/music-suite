@@ -10,6 +10,7 @@ index-state: 2020-01-02T22:25:18Z
 packages: ./music-suite.cabal
           ./doc-tools/transf/transf.cabal
           ./doc-tools/hslinks/hslinks.cabal
+          ./doc-tools/doctester/doctester.cabal
 
 package music-suite
   optimization: False

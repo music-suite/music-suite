@@ -160,4 +160,10 @@ constraints: any.Boolean ==0.2.4,
              any.neat-interpolation ==0.3.2.5,
              any.megaparsec ==8.0.0,
              any.parser-combinators ==1.2.1,
-             any.case-insensitive ==1.2.1.0
+             any.case-insensitive ==1.2.1.0,
+             any.modular-arithmetic ==1.2.1.5,
+
+             any.doctest ==0.16.2,
+             any.code-page ==0.2,
+             any.syb ==0.7.1,
+             any.hsc2hs ==0.68.6

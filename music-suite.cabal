@@ -64,6 +64,7 @@ library
                         xml,
                         random,
                         neat-interpolation,
+                        modular-arithmetic,
                         random-shuffle
     if !os(windows)
       build-depends:    unix
@@ -106,8 +107,10 @@ library
                         Data.Music.MusicXml.Write.Score
                         Music.Pitch
                         Music.Pitch.Equal
+                        Music.Pitch.Class
                         Music.Pitch.Common
                         Music.Pitch.Common.Types
+                        Music.Pitch.Common.Internal
                         Music.Pitch.Common.Quality
                         Music.Pitch.Common.Number
                         Music.Pitch.Common.Interval
@@ -214,6 +217,7 @@ library
                         TupleSections,
                         TypeFamilies,
                         TypeOperators,
+                        TypeApplications,
                         ViewPatterns,
                         OverloadedStrings
   ghc-options:
@@ -429,6 +433,15 @@ executable "music-suite-examples-brass-large-ensemble"
                         random,
                         music-suite
     hs-source-dirs:     examples/pieces/BrassLargeEnsemble
+    main-is:            Score.hs
+
+executable "music-suite-examples-salient-melodic-transformations"
+    build-depends:      base,
+                        lens,
+                        containers,
+                        random,
+                        music-suite
+    hs-source-dirs:     examples/pieces/SalientMelodicTransformations
     main-is:            Score.hs
 
 -- TODO CrawfordSeeger

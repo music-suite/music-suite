@@ -14,7 +14,7 @@ import Data.Orphans ()
 import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Music.Dynamics.Literal
-import Music.Pitch.Literal
+-- import Music.Pitch.Literal
 
 -- TODO move these to semigroups and music-pitch-literal
 
@@ -62,9 +62,6 @@ deriving instance IsDynamics a => IsDynamics (Sum a)
 
 deriving instance IsDynamics a => IsDynamics (Product a)
 
-deriving instance IsPitch a => IsPitch (Sum a)
-
-deriving instance IsPitch a => IsPitch (Product a)
 {-
 deriving instance Floating a => Floating (Product a)
 instance Num a => Num (Product a) where

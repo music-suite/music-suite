@@ -162,6 +162,8 @@ instrument f (Part s i u) = fmap (\i -> Part s i u) $ f i
 -- | Divide a part into @n@ subparts.
 divide :: Int -> Part -> [Part]
 divide n (Part solo instr subp) = fmap (\x -> Part solo instr (subp <> Subpart (pure x))) $ divisions n
+  where
+    divisions n = [0..(fromIntegral n - 1)]
 
 solo instr = Part Solo instr def
 

@@ -20,7 +20,7 @@ import qualified Data.Stream.Infinite as Stream
 --
 -- > lenght xs + 1 == length (offsetPoints p xs)
 --
--- >>> offsetPoints 0 [1,1,1] :: [Time]
+-- >>> offsetPoints 0 [1,1,1] :: [Integer]
 -- [0,1,2,3]
 offsetPoints :: AffineSpace p => p -> [Diff p] -> [p]
 offsetPoints = scanl (.+^)
@@ -33,7 +33,7 @@ offsetPointsS = Stream.scanl (.+^)
 --
 -- > lenght xs + 1 == length (offsetPoints p xs)
 --
--- >>> offsetPoints 0 [1,1,1] :: [Time]
+-- >>> offsetPoints 0 [1,1,1] :: [Integer]
 -- [0,1,2,3]
 pointOffsets :: AffineSpace p => p -> [p] -> [Diff p]
 pointOffsets or = (zeroV :) . snd . mapAccumL g or

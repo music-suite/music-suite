@@ -1458,7 +1458,7 @@ toXml work = do
 
             renderBar :: (MusicXmlExportM m) => Bar -> m MusicXml.Music
             renderBar bar = do
-              say "    MusicXML: Generating bar <<>>"
+              -- TODO too verbose: say "    MusicXML: Generating bar <<>>"
               case barLayersHaveEqualDuration bar of
                 -- No layers in this bar
                 Left [] -> pure mempty

@@ -1,8 +1,6 @@
 -- | A type to represent (flat) subdivisions of a part.
 module Music.Parts.Division
   ( Division (..),
-    getDivision,
-    divisions,
     showDivision,
     showDivisionR,
   )
@@ -26,9 +24,6 @@ import Text.Numeral.Roman (toRoman)
 newtype Division = Division {getDivision :: Integer}
   deriving (Eq, Ord, Enum, Num)
 
-instance Show Division where
-  show (Division m) = "division " ++ show m
-
 instance Default Division where
   def = Division 1
 
@@ -42,13 +37,16 @@ instance FromJSON Division where
   parseJSON _ = empty
 
 -- | Show division in roman numerals.
+--
+-- >>> showDivisionR 3
+-- "III"
 showDivisionR :: Division -> String
 showDivisionR = toRoman . getDivision
 
 -- | Show division in ordinary numerals.
+--
+-- >>> showDivision 3
+-- "3"
 showDivision :: Division -> String
 showDivision = show . getDivision
 
--- | Get all possible divisions for a given divisor in ascending order.
-divisions :: Int -> [Division]
-divisions n = take n [0 ..]

@@ -10,9 +10,24 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
+- [X] BUG: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
+  Intervals not displayed properly
+
+- $doctests!
+  - [ ] Run locally (README)
+    - [X] Tool works
+    - [ ] Fix hack for default-extensions (see Doctester.hs)
+    - [ ] Make this work for all modules
+      - Done:
+        - src/Control
+        - src/Data
+  - Run in CI
+
+- Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
+
 - Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
 
-- Do not expose IntervalL (hide or remove completely)
+- [X] Do not expose IntervalL (hide or remove completely)
 
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
@@ -20,7 +35,14 @@ Consider switching to a decentralized issue tracker such as:
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
 - [ ] New (current) export does not render tremolo/gliss/harmonics/text/color
-  - See also $playingTechniques
+  - Color can use ColorT as before
+  - Text can use TextT as before
+  - Harmonics should be recast using $playingTechniques
+    - The current top-level combinators (in HasHarmonic) can stay, HarmonicT should go (use SomeTechnique)
+  - Gliss should use $playingTechniques
+    - The current top-level combinators (in HasTremolo) can stay, HarmonicT should go (use SomeTechnique)
+  - Tremolo should be a combination of playing techniques (TODO) and *chords*
+
 
 - [X] Add more examples (e.g from Piece1, Piece2 etc)
   - [ ] Make them all compile (add to cabal file!)
@@ -381,11 +403,29 @@ Consider switching to a decentralized issue tracker such as:
 
 
 
-- Proper scale/chord type supporting all common use-cases
-  - Represent functions/modes and chords/scales
-  - Making (infinite) octave-repeating scales from pitches/intervals
-  - Looking up pitches
-  - Transposable instance for chords/scales (pitch-wise)
+- [X] Proper scale/chord type supporting all common use-cases
+  - [X] Represent functions/modes and chords/scales
+  - [X] Making (infinite) octave-repeating scales from pitches/intervals
+  - [X] Looking up pitches
+  - [X] Transposable instance for chords/scales (pitch-wise)
+    - We don't really have a Transposable class, so this means
+      defining `HasPitches a b => HasPitches (C a) (C b)`.
+      This is possible to define for Chord/Scale by:
+        - Placing all pitches relative the origin
+        - Run the traversal
+        - Recalculate the inverval sequence relative the new/transformed origin and save that
+        - Save the new origin
+  - [X] Define reflection
+
+- TODO maths/music terminology!
+  - Constant source of problems
+    - "Transposition" - Musical sense (maths: translation)
+    - "Inversion"
+      - This is inconsistently used in music
+      - Chord "inversions" means rotations or (cyclic) permutations
+      - Inverval inversion means negation modulo octave
+      - Melody inversion means (point-wise) negation
+
 
 - Get rid of asNote/asScore/asVoice/asTrack
 
