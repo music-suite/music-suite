@@ -736,7 +736,7 @@ intervalAlterationSteps =
       where
         f True = Upward
         f False = Downward
-        e = error "TODO"
+        e = error "Impossible (TODO prove)"
 
 mkIntervalS :: Quality -> Number -> Maybe Interval
 mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ fromIntegral steps)
@@ -774,11 +774,11 @@ intervalDiv i di
   | otherwise = 0 :: Int
   where
     intervalDivPos i di
-      | (i < basis_P1) = error "Impossible"
+      | (i < basis_P1) = error "Impossible (TODO prove)"
       | (i ^-^ di) < basis_P1 = 0
       | otherwise = 1 + (intervalDiv (i ^-^ di) di)
     intervalDivNeg i di
-      | (i > basis_P1) = error "Impossible"
+      | (i > basis_P1) = error "Impossible (TODO prove)"
       | (i ^+^ di) > basis_P1 = 0
       | otherwise = 1 + (intervalDiv (i ^+^ di) di)
 
@@ -1588,10 +1588,9 @@ toFirstOctave p = case (name p, accidental p) of
 -- semitones ('a\'' .-. 'c')
 -- @
 name :: Pitch -> Name
-name x
-  | i == 7 = toEnum 0 -- Arises for flat C etc.
-  | 0 <= i && i <= 6 = toEnum i
-  | otherwise = error $ "Pitch.name: Bad value " ++ show i
+name x =
+  -- Should always be in [0..6], but 7 arises for flat C etc.
+  toEnum (i `mod` 7)
   where
     i = (fromIntegral . pred . number . simple . getPitch) x
 
