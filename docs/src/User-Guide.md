@@ -370,11 +370,12 @@ and *perfect* intervals are written in upper-case. Unfortunately, Haskell does n
 overloaded upper-case values, so we have to adopt an underscore prefix:
 
 ```haskell
-minor third      == m3
-major third      == _M3
-perfect fifth    == _P5
-diminished fifth == d5
-minor ninth      == m9
+m3
+_M3
+_P5
+d5
+m9
+d12
 ```
 
 Similar to @[sharpen] and @[flatten], the @[augment] and @[diminish] functions can be used

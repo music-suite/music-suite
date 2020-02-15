@@ -512,38 +512,36 @@ mkInterval' ::
   Interval
 mkInterval' diff diatonic = Interval (diatonicToChromatic (fromIntegral diatonic) + fromIntegral diff, fromIntegral diatonic)
 
--- TODO get rid of the following partial functions: perfect, major, minor, augmented, diminished, doublyAugmented, doublyDiminished
-
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
-perfect :: Number -> Interval
-perfect = fromJust . mkIntervalS Perfect
+perfect :: Number -> Maybe Interval
+perfect = mkIntervalS Perfect
 
 -- | Creates a major interval.
 --   If given a perfect number, constructs a perfect interval.
-major :: Number -> Interval
-major = fromJust . mkIntervalS Major
+major :: Number -> Maybe Interval
+major = mkIntervalS Major
 
 -- | Creates a minor interval.
 --   If given a perfect number, constructs a diminished interval.
-minor :: Number -> Interval
-minor = fromJust . mkIntervalS Minor
+minor :: Number -> Maybe Interval
+minor = mkIntervalS Minor
 
 -- | Creates an augmented interval.
-augmented :: Number -> Interval
-augmented = fromJust . mkIntervalS (Augmented 1)
+augmented :: Number -> Maybe Interval
+augmented = mkIntervalS (Augmented 1)
 
 -- | Creates a diminished interval.
-diminished :: Number -> Interval
-diminished = fromJust . mkIntervalS (Diminished 1)
+diminished :: Number -> Maybe Interval
+diminished = mkIntervalS (Diminished 1)
 
 -- | Creates a doubly augmented interval.
-doublyAugmented :: Number -> Interval
-doublyAugmented = fromJust . mkIntervalS (Augmented 2)
+doublyAugmented :: Number -> Maybe Interval
+doublyAugmented = mkIntervalS (Augmented 2)
 
 -- | Creates a doubly diminished interval.
-doublyDiminished :: Number -> Interval
-doublyDiminished = fromJust . mkIntervalS (Diminished 2)
+doublyDiminished :: Number -> Maybe Interval
+doublyDiminished = mkIntervalS (Diminished 2)
 
 -- |
 -- Separate a compound interval into octaves and a simple interval.
@@ -881,7 +879,7 @@ class HasSemitones a where
   -- The number of semitones is negative if and only if the interval is
   -- negative.
   --
-  -- >>> semitones (perfect unison)
+  -- >>> semitones (_P1 :: Interval)
   -- 0
   -- >>> semitones tritone
   -- 6
