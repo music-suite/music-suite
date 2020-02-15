@@ -21,6 +21,10 @@ Consider switching to a decentralized issue tracker such as:
       - Done:
         - src/Control
         - src/Data
+        - src/Music/Pitch
+        - src/Music/Dynamics
+        - src/Music/Articulation
+        - src/Music/Score/Export
   - Run in CI
 
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
