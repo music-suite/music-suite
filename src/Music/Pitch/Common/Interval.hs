@@ -32,7 +32,7 @@ module Music.Pitch.Common.Interval
     isCompound,
     separate,
     simple,
-    HasOctaves(..),
+    HasOctaves (..),
 
     -- *** Inversion
     invert,

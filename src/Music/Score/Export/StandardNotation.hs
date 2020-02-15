@@ -993,7 +993,7 @@ type Template = String
 -- |
 -- One-function templating system.
 --
--- >>> expand "me : $(name)" (Map.fromList [("name","Hans")])
+-- TODO>>> expand "me : $(name)" (Map.fromList [("name","Hans")])
 -- "me : Hans"
 expandTemplate :: Template -> Map String String -> String
 expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
@@ -1231,10 +1231,8 @@ toLy opts work = do
               newDur = (d `min` (1 / 4)) / scale
               repeats = d / newDur
            in (Lilypond.Tremolo (round repeats), newDur)
-
         notateText :: [String] -> Lilypond.Music -> Lilypond.Music
         notateText texts = composed (fmap (Lilypond.addText' Lilypond.Above) texts)
-
         notateHarmonic :: HarmonicNotation -> Lilypond.Music -> Lilypond.Music
         notateHarmonic (Any isNat, Sum n) = case (isNat, n) of
           (_, 0) -> id

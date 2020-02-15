@@ -26,9 +26,9 @@ module Music.Prelude.Inspectable
   )
 where
 
+import Data.Foldable (toList)
 import Music.Prelude.Standard hiding (open, play)
 import Music.Score ()
-import Data.Foldable (toList)
 import qualified Music.Time
 import qualified System.Info
 import qualified System.Process
@@ -47,7 +47,7 @@ class InspectableNote a where
 
 -- TODO not just Pitch
 instance Inspectable (Pattern Pitch) where
-  inspectableToMusic = fmap fromPitch'' . flip renderPattern (0 <-> 1)
+  inspectableToMusic = fmap fromPitch . flip renderPattern (0 <-> 1)
 
 instance (IsPitch a, Reversible a) => IsPitch (Pattern a) where
   fromPitch = pureP . fromPitch
@@ -95,7 +95,6 @@ instance Inspectable (Ambitus Pitch) where
 -- instance Inspectable (Mode Pitch) where
 --  inspectableToMusic = inspectableToMusic . scale c
 
-
 instance Inspectable (ChordType Pitch) where
   inspectableToMusic = inspectableToMusic . chord c
 
@@ -110,7 +109,6 @@ instance Inspectable (Voiced Scale Pitch) where
 
 instance Inspectable (Voiced Chord Pitch) where
   inspectableToMusic = fmap fromPitch . ppar . map (\x -> pure x :: Score Pitch) . toList . getVoiced
-
 
 -- TODO should be on separate staves, but without left binding (implying simultanuety)
 -- instance Inspectable [Mode Pitch] where
@@ -158,7 +156,7 @@ instance Inspectable [Span] where
   inspectableToMusic xs = rcat $ fmap inspectableToMusic xs
 
 instance Inspectable [Voice Pitch] where
-  inspectableToMusic = asScore . rcat . fmap (fmap fromPitch) . fmap (renderAlignedVoice . aligned 0 0)
+  inspectableToMusic = rcat @Music . fmap (fmap fromPitch) . fmap (renderAlignedVoice . aligned 0 0)
 
 instance Inspectable [Note Pitch] where
   inspectableToMusic = inspectableToMusic . fmap ((^. voice) . pure)

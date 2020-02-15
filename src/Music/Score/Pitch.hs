@@ -661,9 +661,9 @@ simplifyPitches :: (HasPitches' a, Pitch a ~ Common.Pitch) => a -> a
 simplifyPitches = over pitches' simplifyPitch
   where
     simplifyPitch p
-      | accidental p < doubleFlat  = relative c (spell usingFlats) p
+      | accidental p < doubleFlat = relative c (spell usingFlats) p
       | accidental p > doubleSharp = relative c (spell usingSharps) p
-      | otherwise                  = p
+      | otherwise = p
 
 type instance Pitch Common.Pitch = Common.Pitch
 

@@ -25,4 +25,3 @@ module Music.Pitch.Common.Spell
 where
 
 import Music.Pitch.Common.Internal
-

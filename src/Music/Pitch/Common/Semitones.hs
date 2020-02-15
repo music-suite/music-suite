@@ -23,4 +23,3 @@ module Music.Pitch.Common.Semitones
 where
 
 import Music.Pitch.Common.Internal
-

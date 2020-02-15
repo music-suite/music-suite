@@ -40,12 +40,6 @@ module Music.Prelude.Standard
     doubleParts,
     doublePartsF,
     doublePartsInOctave,
-    -- TODO remove the below:
-    asScore,
-    asVoice,
-    asTrack,
-    asNote,
-    fromPitch'',
   )
 where
 
@@ -62,18 +56,6 @@ import Music.Score.Export.StandardNotation (Asp1, LilypondLayout (..), LilypondO
 import qualified Music.Score.Part
 import qualified System.Environment
 import qualified Text.Pretty
-
-asNote :: StandardNote -> StandardNote
-asNote = id
-
-asScore :: Score StandardNote -> Score StandardNote
-asScore = id
-
-asVoice :: Voice StandardNote -> Voice StandardNote
-asVoice = id
-
-asTrack :: Track StandardNote -> Track StandardNote
-asTrack = id
 
 type StandardNote = Asp1
 
@@ -118,29 +100,29 @@ defaultMain music = do
       -- TODO use ByteString/builders, not String?
       writeFile path $ Data.Music.MusicXml.showXml work'
 
--- TODO remove!
-fromPitch'' :: IsPitch a => Pitch -> a
-fromPitch'' = fromPitch
-{-# DEPRECATED fromPitch'' "Use fromPitch (no primes!)" #-}
-
+-- TODO move
 -- | Orchestrate in the given parts.
 singleParts :: (Monoid a, Semigroup a, HasParts' a) => [Music.Score.Part.Part a] -> [a] -> a
 singleParts ens = ppar . zipWith (set parts') (reverse $ ens)
 
+-- TODO move
 -- | Orchestrate by doubling the given music in all given parts.
 --
 -- >>> doublePartsInOctave [violins,flutes] $ pseq[c,d,e]
 doubleParts :: (Monoid a, HasParts' a) => [Music.Score.Part.Part a] -> a -> a
 doubleParts ps x = mconcat $ fmap (\p -> set parts' p x) ps
 
+-- TODO move
 doublePartsF :: (Monoid (f a), HasParts' a, Functor f) => [Music.Score.Part.Part a] -> f a -> f a
 doublePartsF ps x = mconcat $ fmap (\p -> set (mapped . parts') p x) ps
 
+-- TODO move
 -- | Orchestrate by doubling in all given parts.
 --
 -- >>> doublePartsInOctave [(violins,0),(flutes,1)] $ pseq[c,d,e]
 doublePartsInOctave :: (Monoid a, Transposable a, HasParts' a) => [(Music.Score.Part.Part a, Int)] -> a -> a
 doublePartsInOctave ps x = mconcat $ fmap (\(p, n) -> set parts' p $ octavesUp (fromIntegral n) x) ps
 
+-- TODO move
 doublePartsInOctaveF :: (Monoid (f a), Transposable a, HasParts' a, Functor f) => [(Music.Score.Part.Part a, Int)] -> f a -> f a
 doublePartsInOctaveF ps x = mconcat $ fmap (\(p, n) -> set (mapped . parts') p $ fmap (octavesUp (fromIntegral n)) x) ps

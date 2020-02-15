@@ -25,4 +25,3 @@ module Music.Pitch.Common.Quality
 where
 
 import Music.Pitch.Common.Internal
-

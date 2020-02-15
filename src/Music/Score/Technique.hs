@@ -44,7 +44,6 @@ module Music.Score.Technique
     -- ** High level combinators
     pizz,
     arco,
-
     moltoSulPont,
     sulPont,
     posNat,

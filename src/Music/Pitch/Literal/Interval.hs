@@ -1,11 +1,10 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
-  -fno-warn-missing-signatures
-  #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
+  -fno-warn-missing-signatures #-}
 
 -------------------------------------------------------------------------------------
 
@@ -89,4 +88,3 @@ module Music.Pitch.Literal.Interval
 where
 
 import Music.Pitch.Common.Internal
-

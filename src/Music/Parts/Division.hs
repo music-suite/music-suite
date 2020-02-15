@@ -49,4 +49,3 @@ showDivisionR = toRoman . getDivision
 -- "3"
 showDivision :: Division -> String
 showDivision = show . getDivision
-

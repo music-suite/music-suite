@@ -1,17 +1,17 @@
-{-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 {-
  - TODO get rid of UndecidableInstances by tracking both pitch and interval in the type
  - params of Mode/Scale etc.
  -}
-{-# LANGUAGE UndecidableInstances #-}
 
 -- | Scales and chords.
 --
@@ -21,18 +21,15 @@
 -- Semantically @Chord p@ and @Scale p@ are countable subsets of some pitch space p.
 --
 -- A 'Mode' (or 'ChordType) is like a Chord/Scale that has forgotten its origin.
---
 module Music.Pitch.Scale
-  (
-    -- * TODO move
-    Countable(..),
-    Generated(..),
+  ( -- * TODO move
+    Countable (..),
+    Generated (..),
 
     -- * Modes and Chord types
-    Mode(..),
+    Mode (..),
     modeFromSteps,
     modeIntervals,
-
     ChordType,
     functionFromSteps,
     functionIntervals,
@@ -41,7 +38,6 @@ module Music.Pitch.Scale
     Scale,
     scaleTonic,
     scaleMode,
-
     leadingInterval,
     invertMode,
     scale,
@@ -51,13 +47,10 @@ module Music.Pitch.Scale
     Chord,
     chordTonic,
     chordType,
-
     complementInterval,
     invertChord,
     chord,
     chordToList,
-
-
 
     -- * Common modes, scales and chords
 
@@ -115,7 +108,7 @@ module Music.Pitch.Scale
     quintal,
 
     -- * Voiced chords/scales
-    Voiced(..),
+    Voiced (..),
     getVoiced,
     voiced,
     voiceIn,
@@ -123,27 +116,32 @@ module Music.Pitch.Scale
   )
 where
 
-import Data.Foldable
-import Data.Stream.Infinite (Stream)
-import qualified Data.Stream.Infinite as Stream
-import Data.List.NonEmpty (NonEmpty((:|)))
-import qualified Data.List.NonEmpty as NonEmpty
 import Control.Lens (Lens, Lens', coerced)
 import Data.AffineSpace
+import Data.AffineSpace.Point.Offsets
+  ( distanceVs,
+    offsetPoints,
+    offsetPointsS,
+  )
+import Data.Foldable
+import Data.List.NonEmpty (NonEmpty ((:|)))
+import qualified Data.List.NonEmpty as NonEmpty
+import Data.Stream.Infinite (Stream)
+import qualified Data.Stream.Infinite as Stream
 import Data.VectorSpace
-import Music.Score.Pitch (HasPitches(..))
-import qualified Music.Score.Pitch as S
 import Music.Pitch.Common hiding (Mode)
 import Music.Pitch.Literal
 import Music.Pitch.Literal
-import Data.AffineSpace.Point.Offsets
-  ( offsetPoints, offsetPointsS, distanceVs )
+import Music.Score.Pitch (HasPitches (..))
+import qualified Music.Score.Pitch as S
 
 -- |  A mode is a list of intervals and a characteristic repeating interval.
-data Mode a = Mode { getMode :: NonEmpty (Diff a) }
+data Mode a = Mode {getMode :: NonEmpty (Diff a)}
 
 deriving instance Eq (Diff a) => Eq (Mode a)
+
 deriving instance Ord (Diff a) => Ord (Mode a)
+
 deriving instance Show (Diff a) => Show (Mode a)
 
 -- |
@@ -163,29 +161,31 @@ modeIntervals f (Mode is) = fmap (\is -> Mode is) $ f is
 data Scale a = Scale a (Mode a) -- root, mode
 
 deriving instance (Eq a, Eq (Diff a)) => Eq (Scale a)
-deriving instance (Ord a, Ord (Diff a)) => Ord (Scale a)
-deriving instance (Show a, Show (Diff a)) => Show (Scale a)
 
+deriving instance (Ord a, Ord (Diff a)) => Ord (Scale a)
+
+deriving instance (Show a, Show (Diff a)) => Show (Scale a)
 
 -- TODO move:
 type instance S.Pitch (NonEmpty a) = S.Pitch a
+
 type instance S.SetPitch b (NonEmpty a) = NonEmpty (S.SetPitch b a)
+
 instance HasPitches a b => HasPitches (NonEmpty a) (NonEmpty b) where
   pitches = traverse . pitches
-
 
 type instance S.Pitch (Scale a) = S.Pitch a
 
 type instance S.SetPitch b (Scale a) = Scale (S.SetPitch b a)
 
-instance forall a b . (HasPitches a b, AffineSpace a, AffineSpace b) => HasPitches (Scale a) (Scale b) where
-  pitches :: forall g . Applicative g => (S.Pitch a -> g (S.Pitch b)) -> Scale a -> g (Scale b)
+instance forall a b. (HasPitches a b, AffineSpace a, AffineSpace b) => HasPitches (Scale a) (Scale b) where
+  pitches :: forall g. Applicative g => (S.Pitch a -> g (S.Pitch b)) -> Scale a -> g (Scale b)
   pitches f s = do
     let ps :: NonEmpty a = getVoiced $ voicedLong s
     ps2 :: NonEmpty b <- pitches f ps
     pure $ fromPitches ps2
     where
-      fromPitches :: forall a . AffineSpace a => NonEmpty a -> Scale a
+      fromPitches :: forall a. AffineSpace a => NonEmpty a -> Scale a
       fromPitches (tonic :| vs) = Scale tonic (Mode $ maybe err id $ NonEmpty.nonEmpty $ distanceVs tonic vs)
         where
           err = error "HasPitches for Scale/Chord changed number of elements"
@@ -194,7 +194,7 @@ type instance S.Pitch (Chord a) = S.Pitch a
 
 type instance S.SetPitch b (Chord a) = Chord (S.SetPitch b a)
 
-instance forall a b . (HasPitches a b, AffineSpace a, AffineSpace b) => HasPitches (Chord a) (Chord b) where
+instance forall a b. (HasPitches a b, AffineSpace a, AffineSpace b) => HasPitches (Chord a) (Chord b) where
   pitches f (Chord s) = Chord <$> pitches f s
 
 scale :: AffineSpace a => a -> Mode a -> Scale a
@@ -209,7 +209,6 @@ scaleTonic f (Scale t xs) = fmap (\t -> Scale t xs) $ f t
 -- > Lens' (Scale Pitch) (Mode Pitch)
 scaleMode :: Lens' (Scale a) (Mode a)
 scaleMode f (Scale t xs) = fmap (\xs -> Scale t xs) $ f xs
-
 
 -- |
 --
@@ -229,7 +228,6 @@ repeatingInterval (Mode xs) = sumV xs
 leadingInterval :: AffineSpace a => Mode a -> Diff a
 leadingInterval (Mode xs) = NonEmpty.last xs
 
-
 isHeadOf :: Eq a => a -> Stream a -> Bool
 isHeadOf a (b Stream.:> _) = a == b
 
@@ -239,7 +237,6 @@ isHeadOf a (b Stream.:> _) = a == b
 -- @
 invertMode :: AffineSpace a => Integer -> Mode a -> Mode a
 invertMode n (Mode xs) = Mode (rotate n xs)
-
 
 -- TODO move
 
@@ -269,12 +266,9 @@ instance FiniteSequence NonEmpty where
     | n < 0 =
       NonEmpty.iterate right xs NonEmpty.!! (negate $ fromInteger n)
     where
-      left (x :| [])     = x :| []
+      left (x :| []) = x :| []
       left (x :| y : rs) = y :| (rs ++ [x])
-
       right = NonEmpty.reverse . left . NonEmpty.reverse
-
-
 
 -- TODO semantically suspect!
 scaleToList :: AffineSpace a => Scale a -> [a]
@@ -296,8 +290,8 @@ instance Generated Chord where
 instance Generated Scale where
   generator (Scale _ (Mode x)) = x
 
-
 class Countable f where
+
   -- | Convert to a countably infinite set (represented as a tuple
   -- of "negative", "zero" and "positive" components.
   scaleToSet :: AffineSpace a => f a -> (Stream a, a, Stream a)
@@ -307,25 +301,27 @@ class Countable f where
   member :: (Ord p, AffineSpace p) => f p -> p -> Bool
 
   index s n = case fromIntegral n of
-    n | n >  0 -> pos Stream.!! (n - 1)
+    n
+      | n > 0 -> pos Stream.!! (n - 1)
       | n == 0 -> z
-      | n <  0 -> neg Stream.!! negate (n + 1)
+      | n < 0 -> neg Stream.!! negate (n + 1)
     where
       (neg, z, pos) = scaleToSet s
 
   member s p = case p of
-    p | p >  z -> p `isHeadOf` Stream.dropWhile (< p) pos
+    p
+      | p > z -> p `isHeadOf` Stream.dropWhile (< p) pos
       | p == z -> True
-      | p <  z -> p `isHeadOf` Stream.dropWhile (> p) neg
+      | p < z -> p `isHeadOf` Stream.dropWhile (> p) neg
     where
       (neg, z, pos) = scaleToSet s
 
 instance Countable Scale where
   scaleToSet :: AffineSpace a => Scale a -> (Stream a, a, Stream a)
   scaleToSet (Scale tonic (Mode leaps)) =
-    ( Stream.tail $ offsetPointsS tonic $ fmap negateV $ Stream.cycle $ NonEmpty.reverse leaps
-    , tonic
-    , Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
+    ( Stream.tail $ offsetPointsS tonic $ fmap negateV $ Stream.cycle $ NonEmpty.reverse leaps,
+      tonic,
+      Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
     )
 
 instance Countable Chord where
@@ -344,13 +340,13 @@ functionFromSteps = modeFromSteps
 functionIntervals :: Lens' (ChordType a) (NonEmpty (Diff a))
 functionIntervals = modeIntervals
 
-
-
 -- Note: The only difference between a chord and a Scale is the Inspectable instance
-newtype Chord a = Chord { getChord :: Scale a }
+newtype Chord a = Chord {getChord :: Scale a}
 
 deriving instance (Eq a, Eq (Diff a)) => Eq (Chord a)
+
 deriving instance (Ord a, Ord (Diff a)) => Ord (Chord a)
+
 deriving instance (Show a, Show (Diff a)) => Show (Chord a)
 
 chord :: AffineSpace a => a -> ChordType a -> Chord a
@@ -383,12 +379,12 @@ invertChord :: AffineSpace a => Integer -> ChordType a -> ChordType a
 invertChord = invertMode
 
 {-# DEPRECATED chordToList "Use (getVoiced . voiced) instead" #-}
+
 {-# DEPRECATED scaleToList "Use (getVoiced . voiced) instead" #-}
+
 -- | Returns a single inversion of the given chord (no repeats!).
 chordToList :: AffineSpace a => Chord a -> [a]
 chordToList = scaleToList . getChord
-
-
 
 -- Common scales
 
@@ -514,7 +510,6 @@ germanSixthChord = majorMinorSeventhChord
 frenchSixthChord :: ChordType Pitch
 frenchSixthChord = Mode [_M3, d3, _M3, _M2]
 
-
 -- | Build a harmonic filed from repeating a single interval.
 --
 -- Up to enharmonic equivalence, we have:
@@ -540,13 +535,13 @@ quartal = repeating _P4
 quintal :: ChordType Pitch
 quintal = repeating _P5
 
-
-data Voiced f p = Voiced { getChordScale :: f p, getSteps :: NonEmpty Integer }
+data Voiced f p = Voiced {getChordScale :: f p, getSteps :: NonEmpty Integer}
 
 deriving instance Eq (f a) => Eq (Voiced f a)
-deriving instance Ord (f a) => Ord (Voiced f a)
-deriving instance Show (f a) => Show (Voiced f a)
 
+deriving instance Ord (f a) => Ord (Voiced f a)
+
+deriving instance Show (f a) => Show (Voiced f a)
 
 getVoiced :: (AffineSpace p, Countable f) => Voiced f p -> NonEmpty p
 getVoiced x = index (getChordScale x) <$> getSteps x
@@ -559,8 +554,7 @@ voicedLong :: Generated f => f p -> Voiced f p
 voicedLong x = voiceIn (fromIntegral $ length (generator x) + 1) x
 
 voiceIn :: Integer -> f p -> Voiced f p
-voiceIn n x = Voiced x [0..n - 1]
+voiceIn n x = Voiced x [0 .. n - 1]
 
 invertVoicing :: Integer -> Voiced f a -> Voiced f a
 invertVoicing n (Voiced f xs) = Voiced f (fmap (+ n) xs)
-

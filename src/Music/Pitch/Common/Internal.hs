@@ -1,58 +1,47 @@
-{-# OPTIONS_HADDOCK hide #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DerivingVia #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports
+  -fno-warn-missing-signatures
+  #-}
 
-module Music.Pitch.Common.Internal
-where
+{-# OPTIONS_HADDOCK hide #-}
 
-import Data.AdditiveGroup
--- import Data.VectorSpace
-import Data.AffineSpace
-import Data.Typeable
--- import Music.Pitch.Literal
-import Data.Functor.Couple
-import Music.Pitch.Alterable
-import Music.Pitch.Augmentable
-import Data.VectorSpace
-import Data.AffineSpace
+module Music.Pitch.Common.Internal where
+
 import Control.Applicative
 import Control.Lens hiding (simple)
 import Control.Monad
+import Data.AdditiveGroup
 import Data.Aeson (FromJSON (..), ToJSON (..))
-import qualified Data.Aeson
+import Data.AffineSpace
+import Data.AffineSpace.Point
 import Data.AffineSpace.Point (relative)
 import Data.Basis
 import Data.Either
-import qualified Data.List as List
-import Data.Maybe
-import Data.Semigroup
-import Data.Typeable
-import Data.VectorSpace
-import Numeric.Positive
-import Control.Applicative
-import Control.Lens hiding (simple)
-import Control.Monad
-import Data.Aeson (FromJSON (..), ToJSON (..))
-import qualified Data.Aeson
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import qualified Data.Char as Char
-import Data.Either
 import Data.Fixed (Fixed (..), HasResolution (..))
-import qualified Data.List as List
+import Data.Functor.Couple
 import Data.Maybe
+import Data.Monoid (Ap (..))
 import Data.Ratio
 import Data.Semigroup
 import Data.Typeable
 import Data.VectorSpace
--- import Music.Pitch.Absolute
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 import Music.Time.Transform (Transformable (..))
-import Data.Monoid (Ap(..))
-
+import Numeric.Positive
+import qualified Data.Aeson
+import qualified Data.Char as Char
+import qualified Data.List as List
 
 -- |
 -- Number of chromatic steps.
@@ -94,15 +83,19 @@ newtype Number = Number {getNumber :: Integer}
   deriving (Eq, Ord, Enum, Real, Integral)
 
 instance Num Number where
+
   Number a + Number b = Number (a + b)
+
   Number a * Number b = Number (a * b)
+
   negate (Number a) = Number (negate a)
+
   abs (Number a) = Number (abs a)
+
   signum (Number a) = Number (signum a)
 
-  -- TODO fix other code so this works:
-  --    fromInteger 0 = error "Invalid Number: zero"
-  fromInteger = Number
+  fromInteger 0 = error "Invalid Number: zero"
+  fromInteger n = Number n
 
 -- |
 -- The /quality/ component of an interval (minor, major, augmented).
@@ -152,9 +145,8 @@ instance Semigroup Interval where
 
 instance Monoid Interval where
 
-  mempty = basis_P1
+  mempty = _P1
 
-  mappend = (^+^)
 
 instance VectorSpace Interval where
 
@@ -164,17 +156,16 @@ instance VectorSpace Interval where
     where
       stackInterval :: Integer -> Interval -> Interval
       stackInterval n a
-        | n >= 0    = mconcat $ replicate (fromIntegral n) a
+        | n >= 0 = mconcat $ replicate (fromIntegral n) a
         | otherwise = negateV $ stackInterval (negate n) a
 
 instance AdditiveGroup Interval where
 
-  zeroV = basis_P1 where basis_P1 = Interval (0, 0)
+  zeroV = _P1
 
   (Interval (a1, d1)) ^+^ (Interval (a2, d2)) = Interval (a1 ^+^ a2, d1 ^+^ d2)
 
   negateV (Interval (a, d)) = Interval (- a, - d)
-
 
 instance AffineSpace Pitch where
 
@@ -199,13 +190,13 @@ instance Show Accidental where
     | n == (-2) = "doubleFlat"
     | n > 0 = "sharp * " ++ show (getAccidental n)
     | n < 0 = "flat * " ++ show (negate $ getAccidental n)
+    | otherwise = error "Impossible"
 
 instance Alterable Accidental where
 
   sharpen = succ
 
   flatten = pred
-
 
 -- | Lexicographical ordering, comparing the number component of the
 --   interval first and the quality second.
@@ -229,6 +220,7 @@ instance AdditiveGroup DiatonicSteps where
   (^+^) = (+)
 
   negateV = negate
+
 {-
 The number portion of an interval (i.e. second, third, etc).
 
@@ -357,15 +349,6 @@ intervals.
 > steps   a = semitones a `mod` 12
 -}
 
-basis_P1 = Interval (0, 0)
-
-basis_A1 = Interval (1, 0)
-
-basis_d2 = Interval (0, 1)
-
-basis_P5 = Interval (7, 4)
-
-basis_P8 = Interval (12, 7)
 
 -- |
 -- Returns whether the given interval is negative.
@@ -380,10 +363,8 @@ isNegative (Interval (a, d)) = d < 0
 
 -- |
 -- Returns whether the given interval is positive.
---
 isPositive :: Interval -> Bool
 isPositive x@(Interval (a, d)) = d >= 0 && not (isPerfectUnison x)
-
 
 instance Show Interval where
   show a
@@ -400,55 +381,62 @@ instance HasBasis Interval where
 
   type Basis Interval = IntervalBasis
 
-  basisValue Chromatic = basis_A1
-  basisValue Diatonic = basis_d2
+  basisValue Chromatic = _A1
+  basisValue Diatonic = d2
 
   decompose (Interval (c, d)) = [(Chromatic, fromIntegral c), (Diatonic, fromIntegral d)]
 
   decompose' (Interval (c, d)) Chromatic = fromIntegral c
   decompose' (Interval (c, d)) Diatonic = fromIntegral d
 
-
 instance HasQuality Interval where
+  -- | Return the quality of an interval.
+  --
+  -- >>> quality m3
+  -- Minor
+  --
+  -- >>> quality (augment _A4)
+  -- Augmented 2
   quality :: Interval -> Quality
   quality = go
     where
-    -- This is finicky, as the A1 and d2 intervals interact in a
-    -- complex way to produce the perfect/major/minor/etc. intervals that
-    -- we are used to reading.
-    go (Interval (a, d))
-      | (a < 0) && (d == 0) = diminish $ go (Interval ((a + 1), d))
-      | (a, d) == (0, 0) = Perfect
-      | (a > 0) && (d == 0) = augment $ go (Interval ((a - 1), d))
-      | (a < 1) && (d == 1) = diminish $ go (Interval ((a + 1), d))
-      | (a, d) == (1, 1) = Minor
-      | (a, d) == (2, 1) = Major
-      | (a > 2) && (d == 1) = augment $ go (Interval ((a - 1), d))
-      | (a < 3) && (d == 2) = diminish $ go (Interval ((a + 1), d))
-      | (a, d) == (3, 2) = Minor
-      | (a, d) == (4, 2) = Major
-      | (a > 4) && (d == 2) = augment $ go (Interval ((a - 1), d))
-      | (a < 5) && (d == 3) = diminish $ go (Interval ((a + 1), d))
-      | (a, d) == (5, 3) = Perfect
-      | (a > 5) && (d == 3) = augment $ go (Interval ((a - 1), d))
-      | (a < 7) && (d == 4) = diminish $ go (Interval ((a + 1), d))
-      | (a, d) == (7, 4) = Perfect
-      | (a > 7) && (d == 4) = augment $ go (Interval ((a - 1), d))
-      | (a < 8) && (d == 5) = diminish $ go (Interval ((a + 1), d))
-      | (a, d) == (8, 5) = Minor
-      | (a, d) == (9, 5) = Major
-      | (a > 9) && (d == 5) = augment $ go (Interval ((a - 1), d))
-      | (a < 10) && (d == 6) = diminish $ go (Interval ((a + 1), d))
-      | (a, d) == (10, 6) = Minor
-      | (a, d) == (11, 6) = Major
-      | (a > 11) && (d == 6) = augment $ go (Interval ((a - 1), d))
-      | (a < 12) && (d == 7) = diminish $ go (Interval ((a + 1), d))
-      | (a, d) == (12, 7) = Perfect
-      | (a > 12) && (d == 7) = augment $ go (Interval ((a - 1), d))
-      -- note: these last two cases *have* to be this way round, otherwise
-      -- infinite loop occurs.
-      | (a > 12) || (d > 7) = go (Interval ((a - 12), (d - 7)))
-      | (a < 0) || (d < 0) = go (Interval ((- a), (- d)))
+      -- This is finicky, as the A1 and d2 intervals interact in a
+      -- complex way to produce the perfect/major/minor/etc. intervals that
+      -- we are used to reading.
+      go (Interval (a, d))
+        | (a < 0) && (d == 0) = diminish $ go (Interval ((a + 1), d))
+        | (a, d) == (0, 0) = Perfect
+        | (a > 0) && (d == 0) = augment $ go (Interval ((a - 1), d))
+        | (a < 1) && (d == 1) = diminish $ go (Interval ((a + 1), d))
+        | (a, d) == (1, 1) = Minor
+        | (a, d) == (2, 1) = Major
+        | (a > 2) && (d == 1) = augment $ go (Interval ((a - 1), d))
+        | (a < 3) && (d == 2) = diminish $ go (Interval ((a + 1), d))
+        | (a, d) == (3, 2) = Minor
+        | (a, d) == (4, 2) = Major
+        | (a > 4) && (d == 2) = augment $ go (Interval ((a - 1), d))
+        | (a < 5) && (d == 3) = diminish $ go (Interval ((a + 1), d))
+        | (a, d) == (5, 3) = Perfect
+        | (a > 5) && (d == 3) = augment $ go (Interval ((a - 1), d))
+        | (a < 7) && (d == 4) = diminish $ go (Interval ((a + 1), d))
+        | (a, d) == (7, 4) = Perfect
+        | (a > 7) && (d == 4) = augment $ go (Interval ((a - 1), d))
+        | (a < 8) && (d == 5) = diminish $ go (Interval ((a + 1), d))
+        | (a, d) == (8, 5) = Minor
+        | (a, d) == (9, 5) = Major
+        | (a > 9) && (d == 5) = augment $ go (Interval ((a - 1), d))
+        | (a < 10) && (d == 6) = diminish $ go (Interval ((a + 1), d))
+        | (a, d) == (10, 6) = Minor
+        | (a, d) == (11, 6) = Major
+        | (a > 11) && (d == 6) = augment $ go (Interval ((a - 1), d))
+        | (a < 12) && (d == 7) = diminish $ go (Interval ((a + 1), d))
+        | (a, d) == (12, 7) = Perfect
+        | (a > 12) && (d == 7) = augment $ go (Interval ((a - 1), d))
+        -- note: these last two cases *have* to be this way round, otherwise
+        -- infinite loop occurs.
+        | (a > 12) || (d > 7) = go (Interval ((a - 12), (d - 7)))
+        | (a < 0) || (d < 0) = go (Interval ((- a), (- d)))
+        | otherwise = error "Impossible (TODO prove)"
 
 instance HasNumber Interval where
   number :: Interval -> Number
@@ -458,9 +446,9 @@ instance HasNumber Interval where
 
 instance Augmentable Interval where
 
-  augment i = i ^+^ basis_A1
+  augment i = i ^+^ _A1
 
-  diminish i = i ^-^ basis_A1
+  diminish i = i ^-^ _A1
 
 instance HasSemitones Interval where
   semitones (Interval (a, d)) = fromIntegral a -- assuming "semitone" == A1
@@ -504,39 +492,36 @@ mkInterval' ::
   Interval
 mkInterval' diff diatonic = Interval (diatonicToChromatic (fromIntegral diatonic) + fromIntegral diff, fromIntegral diatonic)
 
-
--- TODO get rid of the following partial functions: perfect, major, minor, augmented, diminished, doublyAugmented, doublyDiminished
-
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
-perfect :: Number -> Interval
-perfect = fromJust . mkIntervalS Perfect
+perfect :: Number -> Maybe Interval
+perfect = mkIntervalS Perfect
 
 -- | Creates a major interval.
 --   If given a perfect number, constructs a perfect interval.
-major :: Number -> Interval
-major = fromJust . mkIntervalS Major
+major :: Number -> Maybe Interval
+major = mkIntervalS Major
 
 -- | Creates a minor interval.
 --   If given a perfect number, constructs a diminished interval.
-minor :: Number -> Interval
-minor = fromJust . mkIntervalS Minor
+minor :: Number -> Maybe Interval
+minor = mkIntervalS Minor
 
 -- | Creates an augmented interval.
-augmented :: Number -> Interval
-augmented = fromJust . mkIntervalS (Augmented 1)
+augmented :: Number -> Maybe Interval
+augmented = mkIntervalS (Augmented 1)
 
 -- | Creates a diminished interval.
-diminished :: Number -> Interval
-diminished = fromJust . mkIntervalS (Diminished 1)
+diminished :: Number -> Maybe Interval
+diminished = mkIntervalS (Diminished 1)
 
 -- | Creates a doubly augmented interval.
-doublyAugmented :: Number -> Interval
-doublyAugmented = fromJust . mkIntervalS (Augmented 2)
+doublyAugmented :: Number -> Maybe Interval
+doublyAugmented = mkIntervalS (Augmented 2)
 
 -- | Creates a doubly diminished interval.
-doublyDiminished :: Number -> Interval
-doublyDiminished = fromJust . mkIntervalS (Diminished 2)
+doublyDiminished :: Number -> Maybe Interval
+doublyDiminished = mkIntervalS (Diminished 2)
 
 -- |
 -- Separate a compound interval into octaves and a simple interval.
@@ -552,10 +537,9 @@ doublyDiminished = fromJust . mkIntervalS (Diminished 2)
 -- >>> separate ((-1)*^_P8+m3)
 -- (-1,m3)
 separate :: Interval -> (Octaves, Interval)
-separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
+separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ _P8))
   where
     o = octaves i
-
 
 -- |
 -- Returns the simple part of an interval.
@@ -563,6 +547,7 @@ separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
 -- > (perfect octave)^*x + y = z  iff  y = simple z
 simple :: Interval -> Interval
 simple = snd . separate
+
 {-
   TODO
   Generalize simple like this:
@@ -596,7 +581,6 @@ isSimple x = octaves x == 0
 -- False
 isCompound :: Interval -> Bool
 isCompound x = octaves x /= 0
-
 
 -- |
 -- Returns whether the given interval is non-negative. This implies that it is either positive or a perfect unison.
@@ -681,8 +665,6 @@ isLeap (Interval (a, d)) = (abs d) > 1
 invert :: Interval -> Interval
 invert = simple . negateV
 
-
-
 -- | View or set the alteration (i.e. the number of chromatic steps differing from the excepted number) in an interval.
 _alteration :: Lens' Interval ChromaticSteps
 _alteration = from intervalAlterationSteps . _1
@@ -690,7 +672,6 @@ _alteration = from intervalAlterationSteps . _1
 -- | View or set the number of chromatic steps in an interval.
 _steps :: Lens' Interval DiatonicSteps
 _steps = from intervalAlterationSteps . _2
-
 
 -- | View an interval as a pair of quality and number or vice versa.
 --
@@ -717,9 +698,10 @@ _steps = from intervalAlterationSteps . _2
 -- >>> m3^.re interval
 -- (Minor,3)
 interval :: Prism' (Quality, Number) Interval
-interval = prism'
-  (\x -> (quality x, number x))
-  (uncurry mkIntervalS)
+interval =
+  prism'
+    (\x -> (quality x, number x))
+    (uncurry mkIntervalS)
 
 -- | View an interval as a pair of alteration and diatonic steps or vice versa.
 --
@@ -732,23 +714,50 @@ intervalAlterationSteps :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 intervalAlterationSteps =
   iso
     (\(d, s) -> mkInterval' (fromIntegral d) (fromIntegral s))
-    (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x) ^. diatonicSteps))
-    where
-      qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
-        where
-          f True = Upward
-          f False = Downward
-          e = error "TODO"
 
+    (\x -> (qualityToDiff (number x) (expectedQualityType (number x)) (quality x), view diatonicSteps $ number x))
+  where
+    qualityToDiff n qt q = fromMaybe e $ qualityToAlteration (numberDirection n) qt q
+      where
+        e = error "Impossible (TODO prove)"
 
 mkIntervalS :: Quality -> Number -> Maybe Interval
-mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ fromIntegral steps)
+mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ steps n)
   where
-    diff = qualityToAlteration (if n > 0 then Upward else Downward) (expectedQualityType n) (q)
-    steps = case n `compare` 0 of
-      GT -> n - 1
-      EQ -> error "diatonicSteps: Invalid number 0"
-      LT -> n + 1
+    diff = qualityToAlteration (numberDirection n) (expectedQualityType n) (q)
+
+
+-- TODO rename numberToDiatonicSteps? Compare other Isos
+
+-- |
+-- >>> second^.diatonicSteps
+-- 1
+--
+-- >>> 2^.diatonicSteps
+-- 1
+--
+-- >>> 3^.from diatonicSteps
+-- 4
+diatonicSteps :: Iso' Number DiatonicSteps
+diatonicSteps = iso steps d2n
+  where
+
+    d2n :: DiatonicSteps -> Number
+    d2n n | n >= 0 = fromIntegral (n + 1)
+          | n < 0  = fromIntegral (n - 1)
+          | otherwise = error "Impossible"
+
+steps :: Integral a => Number -> a
+steps n = case fromIntegral n `compare` (0 :: Integer) of
+  GT -> fromIntegral n - 1
+  EQ -> error "Impossible: Number can not be 0"
+  LT -> fromIntegral n + 1
+
+numberDirection :: Number -> Direction
+numberDirection n = case fromIntegral n `compare` (0 :: Integer) of
+  GT -> Upward
+  EQ -> error "Impossible: Number can not be 0"
+  LT -> Downward
 
 -- | View an interval as a pair of total number of chromatic and diatonic steps.
 --
@@ -759,8 +768,6 @@ mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ fromIntegr
 -- (6,4)
 intervalTotalSteps :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 intervalTotalSteps = iso Interval getInterval
-
-
 
 diatonicToChromatic :: DiatonicSteps -> ChromaticSteps
 diatonicToChromatic d = fromIntegral $ (octaves * 12) + go restDia
@@ -774,25 +781,24 @@ intervalDiv :: Interval -> Interval -> Int
 intervalDiv (Interval (a, d)) (Interval (1, 0)) = fromIntegral a
 intervalDiv (Interval (a, d)) (Interval (0, 1)) = fromIntegral d
 intervalDiv i di
-  | (i > basis_P1) = intervalDivPos i di
-  | (i < basis_P1) = intervalDivNeg i di
+  | (i > _P1) = intervalDivPos i di
+  | (i < _P1) = intervalDivNeg i di
   | otherwise = 0 :: Int
   where
     intervalDivPos i di
-      | (i < basis_P1) = error "Impossible"
-      | (i ^-^ di) < basis_P1 = 0
+      | (i < _P1) = error "Impossible (TODO prove)"
+      | (i ^-^ di) < _P1 = 0
       | otherwise = 1 + (intervalDiv (i ^-^ di) di)
     intervalDivNeg i di
-      | (i > basis_P1) = error "Impossible"
-      | (i ^+^ di) > basis_P1 = 0
+      | (i > _P1) = error "Impossible (TODO prove)"
+      | (i ^+^ di) > _P1 = 0
       | otherwise = 1 + (intervalDiv (i ^+^ di) di)
-
 
 -- | Represent an interval i in a new basis (j, k).
 --
 -- We want x,y where i = x*j + y*k
 --
--- e.g., convertBasis basis_d2 _P5 basis_P8 == Just (-12,7), as expected.
+-- e.g., convertBasis d2 _P5 _P8 == Just (-12,7), as expected.
 convertBasis ::
   Interval ->
   Interval ->
@@ -828,23 +834,14 @@ convertBasisFloat i j k
   where
     Interval (fromIntegral -> m, fromIntegral -> n) = i
     Interval (fromIntegral -> a, fromIntegral -> b) = j
-    Interval (fromIntegral -> c, fromIntegral -> d) = k
+    Interval (fromIntegral @_ @Integer -> c, fromIntegral -> d) = k
     p = fromIntegral $ (a * d - b * c)
     q = fromIntegral $ (a * n - b * m)
     r = fromIntegral $ (d * m - c * n)
 
 instance HasOctaves Interval where
-  -- |
-  -- Returns the non-simple part of an interval.
-  --
-  -- TODO prop> _P8^*octaves x ^+^ simple x = x
-  --
-  -- >>> octaves (_P5
   octaves :: Interval -> Octaves
   octaves (Interval (_, d)) = fromIntegral $ d `div` 7
-
-
-
 
 -- |
 -- Class of intervals that has a number of 'Octaves'.
@@ -855,31 +852,23 @@ class HasOctaves a where
   -- The number of octaves is negative if and only if the interval is
   -- negative.
   --
-  -- Examples:
+  -- >>> octaves @Interval m3
+  -- 0
   --
-  -- > octaves (perfect unison)  =  0
-  -- > octaves (d5 ^* 4)         =  2
-  -- > octaves (-_P8)            =  -1
+  -- >>> octaves @Interval _M9
+  -- 1
+  --
+  -- >>> octaves @Interval (-m3)
+  -- -1
+  --
+  -- >>> octaves @Interval (d5 ^* 4)
+  -- 2
+  --
+  -- > octaves @Interval (-_P8)
+  -- -1
   octaves :: a -> Octaves
 
 instance HasOctaves Octaves where octaves = id
-
-{-
--- |
--- Class of intervals that has a number of 'Steps'.
---
-class HasSteps a where
-  -- |
-  -- The number of steps is always in the range /0 ≤ x < 12/.
-  --
-  -- Examples:
-  --
-  -- > octaves (perfect unison)  =  0
-  -- > octaves (d5 ^* 4)         =  2
-  -- > octaves (-m7)             =  -1
-  --
-  steps :: a -> Steps
--}
 
 -- |
 -- Class of intervals that can be converted to a number of 'Semitones'.
@@ -890,12 +879,15 @@ class HasSemitones a where
   -- The number of semitones is negative if and only if the interval is
   -- negative.
   --
-  -- >>> semitones (perfect unison)
+  -- >>> semitones (_P1 :: Interval)
   -- 0
+  --
   -- >>> semitones tritone
   -- 6
+  --
   -- >>> semitones (d5 :: Interval)
   -- 6
+  --
   -- >>> semitones (-_P8 :: Interval)
   -- -12
   semitones :: a -> Semitones
@@ -997,7 +989,6 @@ isDiminished a = case quality a of Diminished _ -> True; _ -> False
 --
 -- >>> filter isStandardQuality [Diminished n | n <- [1..4] ]
 -- [Diminished 1,Diminished 2]
---
 isStandardQuality :: Quality -> Bool
 isStandardQuality (Augmented n) = n <= 2
 isStandardQuality (Diminished n) = n <= 2
@@ -1010,7 +1001,6 @@ isStandardQuality _ = True
 --
 -- >>> filter isSimpleQuality [Diminished n | n <- [1..4] ]
 -- [Diminished 1]
---
 isSimpleQuality :: Quality -> Bool
 isSimpleQuality (Augmented n) = n <= 1
 isSimpleQuality (Diminished n) = n <= 1
@@ -1064,6 +1054,12 @@ expectedQualityType x =
 
 -- |
 -- Return all possible quality types for a given quality.
+--
+-- >>> qualityTypes Perfect
+-- [PerfectType]
+--
+-- >>> qualityTypes (Augmented 1)
+-- [PerfectType,MajorMinorType]
 qualityTypes :: Quality -> [QualityType]
 qualityTypes Perfect = [PerfectType]
 qualityTypes Major = [MajorMinorType]
@@ -1121,8 +1117,8 @@ qualityToAlteration d qt q = fmap fromIntegral $ go d qt q
     go Downward PerfectType (Diminished n) = Just $ 0 + n
     go _ qt q = Nothing
 
-
-
+-- TODO get rid of HasNumber, make (number :: Interval -> Number)
+-- TODO get rid of HasQuality, make (quality :: Interval -> Quality)
 instance HasNumber Number where number = id
 
 -- | A synonym for @1@.
@@ -1205,30 +1201,14 @@ class HasNumber a where
   -- 3
   number :: a -> Number
 
--- TODO rename numberToDiatonicSteps? Compare other Isos
-
--- |
--- >>> second^.diatonicSteps
--- 1
---
--- >>> 2^.diatonicSteps
--- 1
---
--- >>> 3^.from diatonicSteps
--- 4
-diatonicSteps :: Iso' Number DiatonicSteps
-diatonicSteps = iso n2d d2n
-  where
-    n2d n | n > 0 = fromIntegral (n - 1)
-    n2d n | n == 0 = error "diatonicSteps: Invalid number 0"
-    n2d n | n < 0 = fromIntegral (n + 1)
-    d2n n | n >= 0 = fromIntegral (n + 1)
-    d2n n | n < 0 = fromIntegral (n - 1)
-
-
-
 
 -- | Whether the given interval is a (harmonic) dissonance.
+--
+-- This does /not/ check for augmented or dominished intervals,
+-- see 'isMelodicDissonance'.
+--
+-- >>> isDissonance _M2
+-- True
 isDissonance :: Interval -> Bool
 isDissonance x = case number (simple x) of
   2 -> True
@@ -1236,10 +1216,20 @@ isDissonance x = case number (simple x) of
   _ -> False
 
 -- | Whether the given interval is a (harmonic) consonance.
+--
+-- This does /not/ check for augmented or dominished intervals,
+-- see 'isMelodicDissonance'.
+--
+-- >>> isConsonance _P4
+-- True
 isConsonance :: Interval -> Bool
 isConsonance x = isPerfectConsonance x || isImperfectConsonance x
 
 -- | Whether the given interval is a perfect (harmonic) consonance.
+--
+-- This does /not/ check for augmented or dominished intervals,
+-- see 'isMelodicDissonance'.
+--
 isPerfectConsonance :: Interval -> Bool
 isPerfectConsonance x = case number (simple x) of
   1 -> True
@@ -1248,6 +1238,10 @@ isPerfectConsonance x = case number (simple x) of
   _ -> False
 
 -- | Whether the given interval is an imperfect (harmonic) consonance.
+--
+-- This does /not/ check for augmented or dominished intervals,
+-- see 'isMelodicDissonance'.
+--
 isImperfectConsonance :: Interval -> Bool
 isImperfectConsonance x = case number (simple x) of
   3 -> True
@@ -1255,13 +1249,16 @@ isImperfectConsonance x = case number (simple x) of
   _ -> False
 
 -- | Whether the given interval is a melodic dissonance.
+--
+-- A melodic dissonance is either augmented or diminished.
 isMelodicDissonance :: Interval -> Bool
 isMelodicDissonance x = not $ isMelodicConsonance x
 
 -- | Whether an interval is melodic consonance.
+--
+-- A melodic consonance is either augmented or diminished.
 isMelodicConsonance :: Interval -> Bool
 isMelodicConsonance x = quality x `elem` [Perfect, Major, Minor]
-
 
 -- $semitonesAndSpellings
 --
@@ -1306,8 +1303,8 @@ spell spelling x =
   let -- TODO use Steps etc to remove fromIntegral
       (octaves, steps) = semitones x `divMod` 12
       num = fromIntegral (spelling steps)
-      diff = fromIntegral steps - fromIntegral (diatonicToChromatic num)
-   in (\a b -> (fromIntegral a, fromIntegral b) ^. intervalAlterationSteps) diff num ^+^ _P8 ^* (fromIntegral octaves)
+      diff = fromIntegral steps - fromInteger (diatonicToChromatic num)
+   in (\a b -> (fromInteger a, fromInteger b) ^. intervalAlterationSteps) diff num ^+^ _P8 ^* (fromIntegral octaves)
   where
     diatonicToChromatic = go
       where
@@ -1318,6 +1315,7 @@ spell spelling x =
         go 4 = 7
         go 5 = 9
         go 6 = 11
+        go _ = error "TODO: Use mod-12 arith type for argument to Spelling"
 
 type Tonic = Pitch
 
@@ -1353,6 +1351,7 @@ modally = go
     go 9 = 5
     go 10 = 6
     go 11 = 6
+    go _ = error "TODO: Use mod-12 arith type for argument to Spelling"
 
 -- |
 -- Spell using sharps. Double sharps and flats are not preserved.
@@ -1373,6 +1372,7 @@ usingSharps = go
     go 9 = 5
     go 10 = 5
     go 11 = 6
+    go _ = error "TODO: Use mod-12 arith type for argument to Spelling"
 
 -- |
 -- Spell using flats. Double sharps and flats are not preserved.
@@ -1393,8 +1393,9 @@ usingFlats = go
     go 9 = 5
     go 10 = 6
     go 11 = 6
+    go _ = error "TODO: Use mod-12 arith type for argument to Spelling"
 
-{-
+{- |
 Respell preserving general augmented/diminished diretion, but disallow all qualities
 except the standard ones.
 
@@ -1409,7 +1410,7 @@ useStandardQualities i
   where
     ok i = isStandardQuality (quality i)
 
-{-
+{- |
 Same as 'useStandardQualities' but disallow doubly augmented/diminished.
 -}
 useSimpleQualities :: Interval -> Interval
@@ -1420,7 +1421,7 @@ useSimpleQualities i
   where
     ok i = isSimpleQuality (quality i)
 
-{-
+{- |
 Respell preserving general sharp/flat diretion, but disallow all qualities
 except the standard ones.
 
@@ -1435,7 +1436,7 @@ useStandardAlterations tonic p
     i = p .-. tonic
     ok i = isStandardQuality (quality i)
 
-{-
+{- |
 Same as 'useStandardAlterations' but disallow double sharp/flat.
 -}
 useSimpleAlterations :: Tonic -> Pitch -> Pitch
@@ -1446,7 +1447,6 @@ useSimpleAlterations tonic p
   where
     i = p .-. tonic
     ok i = isSimpleQuality (quality i)
-
 
 sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
 
@@ -1490,7 +1490,6 @@ isStandardAccidental a = abs a < 2
 --       qual Nothing  = 0
 --       qual (Just n) = round n
 
-
 -- |
 -- Enum instance using diatonic pitch.
 --
@@ -1503,10 +1502,9 @@ isStandardAccidental a = abs a < 2
 --
 -- >>> [c..g] :: [Pitch]
 -- [c,d,e,f,g]
---
 instance Enum Pitch where
 
-  toEnum = Pitch . view intervalAlterationSteps . (0, ) . fromIntegral
+  toEnum = Pitch . view intervalAlterationSteps . (0,) . fromIntegral
 
   fromEnum = fromIntegral . snd . view (from intervalAlterationSteps) . getPitch
 
@@ -1527,7 +1525,6 @@ instance Show Pitch where
         | n > 0 = replicate (fromIntegral n) 's'
         | otherwise = replicate (negate $ fromIntegral n) 'b'
 
-
 -- |
 -- This instance exists only for the syntactic convenience of writing @-m3@, rather
 -- than @negateV m3@.
@@ -1536,10 +1533,10 @@ instance Show Pitch where
 -- see the `VectorSpace` instance.
 instance Num Interval where
 
-  (+) = (^+^)
-
-  -- TODO negate/abs should not be used
   negate = negateV
+
+  -- TODO (+)/abs should not be used
+  (+) = (^+^)
 
   abs a = if isNegative a then negate a else a
 
@@ -1615,10 +1612,9 @@ toFirstOctave p = case (name p, accidental p) of
 -- semitones ('a\'' .-. 'c')
 -- @
 name :: Pitch -> Name
-name x
-  | i == 7 = toEnum 0 -- Arises for flat C etc.
-  | 0 <= i && i <= 6 = toEnum i
-  | otherwise = error $ "Pitch.name: Bad value " ++ show i
+name x =
+  -- Should always be in [0..6], but 7 arises for flat C etc.
+  toEnum (i `mod` 7)
   where
     i = (fromIntegral . pred . number . simple . getPitch) x
 
@@ -1626,9 +1622,17 @@ name x
 -- Returns the accidental of a pitch.
 --
 -- See also 'octaves', and 'steps' and 'semitones'.
+--
+-- >>> accidental cs
+-- sharp
+--
+-- >>> accidental c
+-- natural
+--
+-- >>> accidental (flatten cb)
+-- doubleFlat
 accidental :: Pitch -> Accidental
 accidental = fromIntegral . view _alteration . simple . getPitch
-  where
 
 upChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
 upChromaticP origin n = relative origin $ (_alteration +~ n)
@@ -2077,12 +2081,6 @@ ab____ = fromPitch $ viaPitchL (5, (-1), -4)
 
 bb____ = fromPitch $ viaPitchL (6, (-1), -4)
 
--- |
--- @
--- (octaves, diatonic steps, chromatic steps)
--- @
-newtype IntervalL = IntervalL (Integer, Integer, Integer)
-
 
 class IsInterval a where
   fromInterval :: Interval -> a
@@ -2116,19 +2114,31 @@ instance IsInterval Word where
 instance IsInterval Integer where
   fromInterval (Interval (ChromaticSteps c, _d)) = c
 
+-- |
+-- @
+-- (octaves, diatonic steps, chromatic steps)
+-- @
+newtype IntervalL = IntervalL (Integer, Integer, Integer)
+
+-- TODO factor out this and IntervalL
 fromIntervalL :: IsInterval a => IntervalL -> a
 fromIntervalL = fromInterval . go
   where
     go :: IntervalL -> Interval
-    go (IntervalL (o, d, c)) = (basis_P8 ^* o) ^+^ (basis_A1 ^* c) ^+^ (basis_d2 ^* d)
+    go (IntervalL (o, d, c)) = (_P8 ^* o) ^+^ (_A1 ^* c) ^+^ (d2 ^* d)
+
+
+
+
+
 
 d1 = fromIntervalL $ IntervalL (0, 0, -1)
 
-_P1 = fromIntervalL $ IntervalL (0, 0, 0)
+_P1 = fromInterval $ Interval (0, 0)
 
-_A1 = fromIntervalL $ IntervalL (0, 0, 1)
+_A1 = fromInterval $ Interval (1, 0)
 
-d2 = fromIntervalL $ IntervalL (0, 1, 0)
+d2 = fromInterval $ Interval (0, 1)
 
 m2 = fromIntervalL $ IntervalL (0, 1, 1)
 
@@ -2152,7 +2162,7 @@ _A4 = fromIntervalL $ IntervalL (0, 3, 6)
 
 d5 = fromIntervalL $ IntervalL (0, 4, 6)
 
-_P5 = fromIntervalL $ IntervalL (0, 4, 7)
+_P5 = fromInterval $ Interval (7, 4)
 
 _A5 = fromIntervalL $ IntervalL (0, 4, 8)
 
@@ -2174,7 +2184,7 @@ _A7 = fromIntervalL $ IntervalL (0, 6, 12)
 
 d8 = fromIntervalL $ IntervalL (1, 0, -1)
 
-_P8 = fromIntervalL $ IntervalL (1, 0, 0)
+_P8 = fromInterval $ Interval (12, 7)
 
 _A8 = fromIntervalL $ IntervalL (1, 0, 1)
 
@@ -2227,4 +2237,3 @@ d15 = fromIntervalL $ IntervalL (2, 0, -1)
 _P15 = fromIntervalL $ IntervalL (2, 0, 0)
 
 _A15 = fromIntervalL $ IntervalL (2, 0, 1)
-

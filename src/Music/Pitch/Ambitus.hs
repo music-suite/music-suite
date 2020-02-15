@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+
 -- | Pitch range or ambitus.
 module Music.Pitch.Ambitus
   ( Ambitus,
@@ -22,10 +23,9 @@ import Music.Pitch.Common.Semitones
 --
 -- Also known as /range/ or /tessitura/, this type can be used to restrict the
 -- range instruments, chords, melodies etc.
-data Ambitus a = Ambitus !a !a  -- {getAmbitus :: (I.Interval a)}
+data Ambitus a = Ambitus !a !a -- {getAmbitus :: (I.Interval a)}
 
-
-instance Show a=> Show (Ambitus a) where
+instance Show a => Show (Ambitus a) where
   show a = show (a ^. from ambitus) ++ "^.ambitus"
 
 ambitus :: () => Iso (a, a) (b, b) (Ambitus a) (Ambitus b)
@@ -51,7 +51,6 @@ ambitusHighest (Ambitus x y) = y
 inAmbitus :: (AffineSpace a, HasSemitones (Diff a)) => Ambitus a -> a -> Bool
 inAmbitus (Ambitus a c) b =
   semitones (c .-. b) >= 0 && semitones (b .-. a) >= 0
-
 {-
 Misc stuff from data-interval and friends. What is relevant?
 
