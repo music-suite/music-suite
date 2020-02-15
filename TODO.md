@@ -333,7 +333,7 @@ Consider switching to a decentralized issue tracker such as:
 - Add WTC C major prelude example
   - Data: https://gist.github.com/hanshoglund/4058cfb08906379fd2da
 
-- Interactive editing/preview (see also preview class in $entrypoint).
+- $interactive: Interactive editing/preview (see also preview class in $entrypoint).
   - MVP: When moving cursor to an expression, show it visualized in Window, with caching.
     - Should work out of the box for all common types (e.g. Common.Pitch, Music.Prelude.Music etc)
     - Also show playback controls/audio rendering?
@@ -365,12 +365,28 @@ Consider switching to a decentralized issue tracker such as:
     - No interactivity/edits in the window, just view.
     - EvalServer has access to GHC+MusicSuiteDependencies+MusicSuiteTheLibrary (either being compiled with music-suite and `hint`, or by running e.g. `cabal exec -- runhaskell examples/part.hs -f ly -o t.ly`).
     - Client/EditorEnvironments (e.g. NeoVim, VSCode etc) send file name + Pos.
+      - TODO NeoVim hooks:
+        getcurpos() -- returns [_,line,col,...]
+        expand('%:p') -- returns abs path of focused file
+      - TODO proper transport, for now just use `writefile(["JSONData"], ".inspector")`
     - Server fetches file and inserts an appropriate `defaultMain` (selected expression must be `Inspectable`)
     - Server should try both with and without `:: Music` specialization (poor man's defaulting, to make type signatures
       for simple cases like `c` redundant)
     - The `defaultMain` (see $entrypoint) renders XML, MIDI, ABC, etc
     - The window view is updated (use TeaTime?)
     - Percentage indicator for rendering time (formal streaming support in $entrypoint)?
+
+- $vimHook
+  For $interactive
+```
+function! MusicSuiteInteract()
+  let l:pos = getcurpos()
+  let l:file = expand('%:p')
+  call writefile([string(l:pos),l:file],".music-suite-inspect")
+endfunction
+
+noremap <F6> :call MusicSuiteInteract()<CR>
+```
 
 - Replace Aeson with typed serialization
 
