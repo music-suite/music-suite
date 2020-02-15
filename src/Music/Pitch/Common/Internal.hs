@@ -390,6 +390,13 @@ instance HasBasis Interval where
   decompose' (Interval (c, d)) Diatonic = fromIntegral d
 
 instance HasQuality Interval where
+  -- | Return the quality of an interval.
+  --
+  -- >>> quality m3
+  -- Minor
+  --
+  -- >>> quality (augment _A4)
+  -- Augmented 2
   quality :: Interval -> Quality
   quality = go
     where
@@ -844,32 +851,23 @@ class HasOctaves a where
   --
   -- The number of octaves is negative if and only if the interval is
   -- negative.
+  -- >>> octaves m3
+  -- 0
   --
-  -- Examples:
+  -- >>> octaves _M9
+  -- 1
   --
-  -- > octaves (perfect unison)  =  0
-  -- > octaves (d5 ^* 4)         =  2
-  -- > octaves (-_P8)            =  -1
+  -- >>> octaves (-m3)
+  -- -1
+  --
+  -- >>> octaves (d5 ^* 4)
+  -- 2
+  --
+  -- > octaves (-_P8)
+  -- -1
   octaves :: a -> Octaves
 
 instance HasOctaves Octaves where octaves = id
-
-{-
--- |
--- Class of intervals that has a number of 'Steps'.
---
-class HasSteps a where
-  -- |
-  -- The number of steps is always in the range /0 ≤ x < 12/.
-  --
-  -- Examples:
-  --
-  -- > octaves (perfect unison)  =  0
-  -- > octaves (d5 ^* 4)         =  2
-  -- > octaves (-m7)             =  -1
-  --
-  steps :: a -> Steps
--}
 
 -- |
 -- Class of intervals that can be converted to a number of 'Semitones'.
@@ -882,10 +880,13 @@ class HasSemitones a where
   --
   -- >>> semitones (_P1 :: Interval)
   -- 0
+  --
   -- >>> semitones tritone
   -- 6
+  --
   -- >>> semitones (d5 :: Interval)
   -- 6
+  --
   -- >>> semitones (-_P8 :: Interval)
   -- -12
   semitones :: a -> Semitones
@@ -1052,6 +1053,12 @@ expectedQualityType x =
 
 -- |
 -- Return all possible quality types for a given quality.
+--
+-- >>> qualityTypes Perfect
+-- [PerfectType]
+--
+-- >>> qualityTypes (Augmented 1)
+-- [PerfectType, MajorMinorType]
 qualityTypes :: Quality -> [QualityType]
 qualityTypes Perfect = [PerfectType]
 qualityTypes Major = [MajorMinorType]
@@ -1501,10 +1508,10 @@ instance Show Pitch where
 -- see the `VectorSpace` instance.
 instance Num Interval where
 
-  (+) = (^+^)
-
-  -- TODO negate/abs should not be used
   negate = negateV
+
+  -- TODO (+)/abs should not be used
+  (+) = (^+^)
 
   abs a = if isNegative a then negate a else a
 
@@ -1590,9 +1597,17 @@ name x =
 -- Returns the accidental of a pitch.
 --
 -- See also 'octaves', and 'steps' and 'semitones'.
+--
+-- >>> accidental cs
+-- sharp
+--
+-- >>> accidental c
+-- natural
+--
+-- >>> accidental (flatten cb)
+-- doubleFlat
 accidental :: Pitch -> Accidental
 accidental = fromIntegral . view _alteration . simple . getPitch
-  where
 
 upChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
 upChromaticP origin n = relative origin $ (_alteration +~ n)
