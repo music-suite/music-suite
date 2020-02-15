@@ -36,4 +36,3 @@ module Music.Pitch.Common.Pitch
 where
 
 import Music.Pitch.Common.Internal
-

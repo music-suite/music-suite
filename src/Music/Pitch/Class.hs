@@ -3,7 +3,6 @@
 -- | Pitch class theory (also known as Musical Set Theory).
 module Music.Pitch.Class where
 
-
 -- import TypeUnary.Nat
 
 import qualified Data.List as List

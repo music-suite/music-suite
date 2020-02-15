@@ -230,4 +230,3 @@ module Music.Pitch.Literal.Pitch
 where
 
 import Music.Pitch.Common.Internal
-

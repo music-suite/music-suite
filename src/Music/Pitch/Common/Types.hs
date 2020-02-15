@@ -19,6 +19,5 @@ module Music.Pitch.Common.Types
     Pitch,
   )
 where
+
 import Music.Pitch.Common.Internal
-
-

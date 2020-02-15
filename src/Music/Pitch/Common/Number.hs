@@ -23,4 +23,3 @@ module Music.Pitch.Common.Number
 where
 
 import Music.Pitch.Common.Internal
-
