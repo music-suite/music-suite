@@ -733,7 +733,8 @@ intervalAlterationSteps :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 intervalAlterationSteps =
   iso
     (\(d, s) -> mkInterval' (fromIntegral d) (fromIntegral s))
-    (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x) ^. diatonicSteps))
+
+    (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (view diatonicSteps $ number x)))
   where
     qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
       where
@@ -744,13 +745,40 @@ intervalAlterationSteps =
 mkIntervalS :: Quality -> Number -> Maybe Interval
 mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ steps n)
   where
-    diff = qualityToAlteration (if n > 0 then Upward else Downward) (expectedQualityType n) (q)
+    diff = qualityToAlteration (numberDirection n) (expectedQualityType n) (q)
 
-    steps :: Number -> Int
-    steps n = case n `compare` 0 of
-      GT -> fromIntegral n - 1
-      EQ -> error "diatonicSteps: Invalid number 0"
-      LT -> fromIntegral n + 1
+
+-- TODO rename numberToDiatonicSteps? Compare other Isos
+
+-- |
+-- >>> second^.diatonicSteps
+-- 1
+--
+-- >>> 2^.diatonicSteps
+-- 1
+--
+-- >>> 3^.from diatonicSteps
+-- 4
+diatonicSteps :: Iso' Number DiatonicSteps
+diatonicSteps = iso steps d2n
+  where
+
+    d2n :: DiatonicSteps -> Number
+    d2n n | n >= 0 = fromIntegral (n + 1)
+          | n < 0  = fromIntegral (n - 1)
+          | otherwise = error "Impossible"
+
+steps :: Integral a => Number -> a
+steps n = case fromIntegral n `compare` (0 :: Integer) of
+  GT -> fromIntegral n - 1
+  EQ -> error "Impossible: Number can not be 0"
+  LT -> fromIntegral n + 1
+
+numberDirection :: Number -> Direction
+numberDirection n = case fromIntegral n `compare` (0 :: Integer) of
+  GT -> Upward
+  EQ -> error "Impossible: Number can not be 0"
+  LT -> Downward
 
 -- | View an interval as a pair of total number of chromatic and diatonic steps.
 --
@@ -1191,31 +1219,6 @@ class HasNumber a where
   -- 3
   number :: a -> Number
 
--- TODO rename numberToDiatonicSteps? Compare other Isos
-
--- |
--- >>> second^.diatonicSteps
--- 1
---
--- >>> 2^.diatonicSteps
--- 1
---
--- >>> 3^.from diatonicSteps
--- 4
-diatonicSteps :: Iso' Number DiatonicSteps
-diatonicSteps = iso n2d d2n
-  where
-    n2d :: Number -> DiatonicSteps
-    n2d n | n > 0 = fromIntegral (n - 1)
-          | n == 0 = error "diatonicSteps: Invalid number 0"
-          | n < 0 = fromIntegral (n + 1)
-          | otherwise = error "Impossible"
-
-
-    d2n :: DiatonicSteps -> Number
-    d2n n | n >= 0 = fromIntegral (n + 1)
-          | n < 0  = fromIntegral (n - 1)
-          | otherwise = error "Impossible"
 
 -- | Whether the given interval is a (harmonic) dissonance.
 isDissonance :: Interval -> Bool
