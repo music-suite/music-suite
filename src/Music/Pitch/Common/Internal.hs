@@ -2,13 +2,20 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports
+  -fno-warn-missing-signatures
+  #-}
+
 {-# OPTIONS_HADDOCK hide #-}
 
 module Music.Pitch.Common.Internal where
-
--- import Data.VectorSpace
-
--- import Music.Pitch.Literal
 
 import Control.Applicative
 import Control.Applicative
@@ -18,26 +25,19 @@ import Control.Monad
 import Control.Monad
 import Data.AdditiveGroup
 import Data.Aeson (FromJSON (..), ToJSON (..))
-import qualified Data.Aeson
 import Data.Aeson (FromJSON (..), ToJSON (..))
-import qualified Data.Aeson
 import Data.AffineSpace
 import Data.AffineSpace
 import Data.AffineSpace
-import Data.AffineSpace.Point (relative)
 import Data.AffineSpace.Point
+import Data.AffineSpace.Point (relative)
 import Data.Basis
-import qualified Data.Char as Char
 import Data.Either
 import Data.Either
 import Data.Fixed (Fixed (..), HasResolution (..))
 import Data.Functor.Couple
-import qualified Data.List as List
-import qualified Data.List as List
 import Data.Maybe
 import Data.Maybe
--- import Music.Pitch.Absolute
-
 import Data.Monoid (Ap (..))
 import Data.Ratio
 import Data.Semigroup
@@ -54,6 +54,11 @@ import Music.Pitch.Augmentable
 import Music.Pitch.Augmentable
 import Music.Time.Transform (Transformable (..))
 import Numeric.Positive
+import qualified Data.Aeson
+import qualified Data.Aeson
+import qualified Data.Char as Char
+import qualified Data.List as List
+import qualified Data.List as List
 
 -- |
 -- Number of chromatic steps.
@@ -160,7 +165,6 @@ instance Monoid Interval where
 
   mempty = basis_P1
 
-  mappend = (^+^)
 
 instance VectorSpace Interval where
 
@@ -204,6 +208,7 @@ instance Show Accidental where
     | n == (-2) = "doubleFlat"
     | n > 0 = "sharp * " ++ show (getAccidental n)
     | n < 0 = "flat * " ++ show (negate $ getAccidental n)
+    | otherwise = error "Impossible"
 
 instance Alterable Accidental where
 
@@ -451,6 +456,7 @@ instance HasQuality Interval where
         -- infinite loop occurs.
         | (a > 12) || (d > 7) = go (Interval ((a - 12), (d - 7)))
         | (a < 0) || (d < 0) = go (Interval ((- a), (- d)))
+        | otherwise = error "Impossible (TODO prove)"
 
 instance HasNumber Interval where
   number :: Interval -> Number
@@ -822,7 +828,7 @@ convertBasisFloat i j k
   where
     Interval (fromIntegral -> m, fromIntegral -> n) = i
     Interval (fromIntegral -> a, fromIntegral -> b) = j
-    Interval (fromIntegral -> c, fromIntegral -> d) = k
+    Interval (fromIntegral @_ @Integer -> c, fromIntegral -> d) = k
     p = fromIntegral $ (a * d - b * c)
     q = fromIntegral $ (a * n - b * m)
     r = fromIntegral $ (d * m - c * n)
@@ -1200,11 +1206,17 @@ class HasNumber a where
 diatonicSteps :: Iso' Number DiatonicSteps
 diatonicSteps = iso n2d d2n
   where
+    n2d :: Number -> DiatonicSteps
     n2d n | n > 0 = fromIntegral (n - 1)
-    n2d n | n == 0 = error "diatonicSteps: Invalid number 0"
-    n2d n | n < 0 = fromIntegral (n + 1)
+          | n == 0 = error "diatonicSteps: Invalid number 0"
+          | n < 0 = fromIntegral (n + 1)
+          | otherwise = error "Impossible"
+
+
+    d2n :: DiatonicSteps -> Number
     d2n n | n >= 0 = fromIntegral (n + 1)
-    d2n n | n < 0 = fromIntegral (n - 1)
+          | n < 0  = fromIntegral (n - 1)
+          | otherwise = error "Impossible"
 
 -- | Whether the given interval is a (harmonic) dissonance.
 isDissonance :: Interval -> Bool
@@ -1283,8 +1295,8 @@ spell spelling x =
   let -- TODO use Steps etc to remove fromIntegral
       (octaves, steps) = semitones x `divMod` 12
       num = fromIntegral (spelling steps)
-      diff = fromIntegral steps - fromIntegral (diatonicToChromatic num)
-   in (\a b -> (fromIntegral a, fromIntegral b) ^. intervalAlterationSteps) diff num ^+^ _P8 ^* (fromIntegral octaves)
+      diff = fromIntegral steps - fromInteger (diatonicToChromatic num)
+   in (\a b -> (fromInteger a, fromInteger b) ^. intervalAlterationSteps) diff num ^+^ _P8 ^* (fromIntegral octaves)
   where
     diatonicToChromatic = go
       where
@@ -1295,6 +1307,7 @@ spell spelling x =
         go 4 = 7
         go 5 = 9
         go 6 = 11
+        go _ = error "TODO: Use mod-12 arith type for argument to Spelling"
 
 type Tonic = Pitch
 
@@ -1330,6 +1343,7 @@ modally = go
     go 9 = 5
     go 10 = 6
     go 11 = 6
+    go _ = error "TODO: Use mod-12 arith type for argument to Spelling"
 
 -- |
 -- Spell using sharps. Double sharps and flats are not preserved.
@@ -1350,6 +1364,7 @@ usingSharps = go
     go 9 = 5
     go 10 = 5
     go 11 = 6
+    go _ = error "TODO: Use mod-12 arith type for argument to Spelling"
 
 -- |
 -- Spell using flats. Double sharps and flats are not preserved.
@@ -1370,6 +1385,7 @@ usingFlats = go
     go 9 = 5
     go 10 = 6
     go 11 = 6
+    go _ = error "TODO: Use mod-12 arith type for argument to Spelling"
 
 {-
 Respell preserving general augmented/diminished diretion, but disallow all qualities
