@@ -851,19 +851,20 @@ class HasOctaves a where
   --
   -- The number of octaves is negative if and only if the interval is
   -- negative.
-  -- >>> octaves m3
+  --
+  -- >>> octaves @Interval m3
   -- 0
   --
-  -- >>> octaves _M9
+  -- >>> octaves @Interval _M9
   -- 1
   --
-  -- >>> octaves (-m3)
+  -- >>> octaves @Interval (-m3)
   -- -1
   --
-  -- >>> octaves (d5 ^* 4)
+  -- >>> octaves @Interval (d5 ^* 4)
   -- 2
   --
-  -- > octaves (-_P8)
+  -- > octaves @Interval (-_P8)
   -- -1
   octaves :: a -> Octaves
 
@@ -1058,7 +1059,7 @@ expectedQualityType x =
 -- [PerfectType]
 --
 -- >>> qualityTypes (Augmented 1)
--- [PerfectType, MajorMinorType]
+-- [PerfectType,MajorMinorType]
 qualityTypes :: Quality -> [QualityType]
 qualityTypes Perfect = [PerfectType]
 qualityTypes Major = [MajorMinorType]
