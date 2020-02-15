@@ -111,9 +111,8 @@ instance Num Number where
 
   signum (Number a) = Number (signum a)
 
-  -- TODO fix other code so this works:
-  --    fromInteger 0 = error "Invalid Number: zero"
-  fromInteger = Number
+  fromInteger 0 = error "Invalid Number: zero"
+  fromInteger n = Number n
 
 -- |
 -- The /quality/ component of an interval (minor, major, augmented).
@@ -743,13 +742,15 @@ intervalAlterationSteps =
         e = error "Impossible (TODO prove)"
 
 mkIntervalS :: Quality -> Number -> Maybe Interval
-mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ fromIntegral steps)
+mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ steps n)
   where
     diff = qualityToAlteration (if n > 0 then Upward else Downward) (expectedQualityType n) (q)
-    steps = case n `compare` 0 of
-      GT -> n - 1
+
+    steps :: Number -> Int
+    steps n = case n `compare` 0 of
+      GT -> fromIntegral n - 1
       EQ -> error "diatonicSteps: Invalid number 0"
-      LT -> n + 1
+      LT -> fromIntegral n + 1
 
 -- | View an interval as a pair of total number of chromatic and diatonic steps.
 --
