@@ -25,6 +25,7 @@ Consider switching to a decentralized issue tracker such as:
         - src/Music/Dynamics
         - src/Music/Articulation
         - src/Music/Score/Export
+    - [ ] Try property-based testing (see doctest/README)
   - Run in CI
 
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
