@@ -1202,6 +1202,12 @@ class HasNumber a where
 
 
 -- | Whether the given interval is a (harmonic) dissonance.
+--
+-- This does /not/ check for augmented or dominished intervals,
+-- see 'isMelodicDissonance'.
+--
+-- >>> isDissonance _M2
+-- True
 isDissonance :: Interval -> Bool
 isDissonance x = case number (simple x) of
   2 -> True
@@ -1209,10 +1215,20 @@ isDissonance x = case number (simple x) of
   _ -> False
 
 -- | Whether the given interval is a (harmonic) consonance.
+--
+-- This does /not/ check for augmented or dominished intervals,
+-- see 'isMelodicDissonance'.
+--
+-- >>> isConsonance _P4
+-- True
 isConsonance :: Interval -> Bool
 isConsonance x = isPerfectConsonance x || isImperfectConsonance x
 
 -- | Whether the given interval is a perfect (harmonic) consonance.
+--
+-- This does /not/ check for augmented or dominished intervals,
+-- see 'isMelodicDissonance'.
+--
 isPerfectConsonance :: Interval -> Bool
 isPerfectConsonance x = case number (simple x) of
   1 -> True
@@ -1221,6 +1237,10 @@ isPerfectConsonance x = case number (simple x) of
   _ -> False
 
 -- | Whether the given interval is an imperfect (harmonic) consonance.
+--
+-- This does /not/ check for augmented or dominished intervals,
+-- see 'isMelodicDissonance'.
+--
 isImperfectConsonance :: Interval -> Bool
 isImperfectConsonance x = case number (simple x) of
   3 -> True
@@ -1228,10 +1248,14 @@ isImperfectConsonance x = case number (simple x) of
   _ -> False
 
 -- | Whether the given interval is a melodic dissonance.
+--
+-- A melodic dissonance is either augmented or diminished.
 isMelodicDissonance :: Interval -> Bool
 isMelodicDissonance x = not $ isMelodicConsonance x
 
 -- | Whether an interval is melodic consonance.
+--
+-- A melodic consonance is either augmented or diminished.
 isMelodicConsonance :: Interval -> Bool
 isMelodicConsonance x = quality x `elem` [Perfect, Major, Minor]
 
@@ -1370,7 +1394,7 @@ usingFlats = go
     go 11 = 6
     go _ = error "TODO: Use mod-12 arith type for argument to Spelling"
 
-{-
+{- |
 Respell preserving general augmented/diminished diretion, but disallow all qualities
 except the standard ones.
 
@@ -1385,7 +1409,7 @@ useStandardQualities i
   where
     ok i = isStandardQuality (quality i)
 
-{-
+{- |
 Same as 'useStandardQualities' but disallow doubly augmented/diminished.
 -}
 useSimpleQualities :: Interval -> Interval
@@ -1396,7 +1420,7 @@ useSimpleQualities i
   where
     ok i = isSimpleQuality (quality i)
 
-{-
+{- |
 Respell preserving general sharp/flat diretion, but disallow all qualities
 except the standard ones.
 
@@ -1411,7 +1435,7 @@ useStandardAlterations tonic p
     i = p .-. tonic
     ok i = isStandardQuality (quality i)
 
-{-
+{- |
 Same as 'useStandardAlterations' but disallow double sharp/flat.
 -}
 useSimpleAlterations :: Tonic -> Pitch -> Pitch
