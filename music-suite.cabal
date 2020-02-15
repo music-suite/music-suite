@@ -77,7 +77,6 @@ library
                         Music.Dynamics.Literal
                         Data.Semigroup.Option.Instances
                         Music.Parts
-                        Music.Parts.Voices
                         Music.Parts.Division
                         Music.Parts.Subpart
                         Music.Parts.Solo
