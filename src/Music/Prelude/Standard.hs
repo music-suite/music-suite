@@ -40,12 +40,6 @@ module Music.Prelude.Standard
     doubleParts,
     doublePartsF,
     doublePartsInOctave,
-    -- TODO remove the below:
-    asScore,
-    asVoice,
-    asTrack,
-    asNote,
-    fromPitch'',
   )
 where
 
@@ -62,18 +56,6 @@ import Music.Score.Export.StandardNotation (Asp1, LilypondLayout (..), LilypondO
 import qualified Music.Score.Part
 import qualified System.Environment
 import qualified Text.Pretty
-
-asNote :: StandardNote -> StandardNote
-asNote = id
-
-asScore :: Score StandardNote -> Score StandardNote
-asScore = id
-
-asVoice :: Voice StandardNote -> Voice StandardNote
-asVoice = id
-
-asTrack :: Track StandardNote -> Track StandardNote
-asTrack = id
 
 type StandardNote = Asp1
 

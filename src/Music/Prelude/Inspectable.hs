@@ -47,7 +47,7 @@ class InspectableNote a where
 
 -- TODO not just Pitch
 instance Inspectable (Pattern Pitch) where
-  inspectableToMusic = fmap fromPitch'' . flip renderPattern (0 <-> 1)
+  inspectableToMusic = fmap fromPitch . flip renderPattern (0 <-> 1)
 
 instance (IsPitch a, Reversible a) => IsPitch (Pattern a) where
   fromPitch = pureP . fromPitch
@@ -156,7 +156,7 @@ instance Inspectable [Span] where
   inspectableToMusic xs = rcat $ fmap inspectableToMusic xs
 
 instance Inspectable [Voice Pitch] where
-  inspectableToMusic = asScore . rcat . fmap (fmap fromPitch) . fmap (renderAlignedVoice . aligned 0 0)
+  inspectableToMusic = rcat @Music . fmap (fmap fromPitch) . fmap (renderAlignedVoice . aligned 0 0)
 
 instance Inspectable [Note Pitch] where
   inspectableToMusic = inspectableToMusic . fmap ((^. voice) . pure)
