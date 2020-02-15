@@ -18,46 +18,29 @@
 module Music.Pitch.Common.Internal where
 
 import Control.Applicative
-import Control.Applicative
 import Control.Lens hiding (simple)
-import Control.Lens hiding (simple)
-import Control.Monad
 import Control.Monad
 import Data.AdditiveGroup
 import Data.Aeson (FromJSON (..), ToJSON (..))
-import Data.Aeson (FromJSON (..), ToJSON (..))
-import Data.AffineSpace
-import Data.AffineSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.AffineSpace.Point (relative)
 import Data.Basis
 import Data.Either
-import Data.Either
 import Data.Fixed (Fixed (..), HasResolution (..))
 import Data.Functor.Couple
-import Data.Maybe
 import Data.Maybe
 import Data.Monoid (Ap (..))
 import Data.Ratio
 import Data.Semigroup
-import Data.Semigroup
 import Data.Typeable
-import Data.Typeable
-import Data.Typeable
-import Data.VectorSpace
-import Data.VectorSpace
 import Data.VectorSpace
 import Music.Pitch.Alterable
-import Music.Pitch.Alterable
-import Music.Pitch.Augmentable
 import Music.Pitch.Augmentable
 import Music.Time.Transform (Transformable (..))
 import Numeric.Positive
 import qualified Data.Aeson
-import qualified Data.Aeson
 import qualified Data.Char as Char
-import qualified Data.List as List
 import qualified Data.List as List
 
 -- |
@@ -162,7 +145,7 @@ instance Semigroup Interval where
 
 instance Monoid Interval where
 
-  mempty = basis_P1
+  mempty = _P1
 
 
 instance VectorSpace Interval where
@@ -178,7 +161,7 @@ instance VectorSpace Interval where
 
 instance AdditiveGroup Interval where
 
-  zeroV = basis_P1 where basis_P1 = Interval (0, 0)
+  zeroV = _P1
 
   (Interval (a1, d1)) ^+^ (Interval (a2, d2)) = Interval (a1 ^+^ a2, d1 ^+^ d2)
 
@@ -366,15 +349,6 @@ intervals.
 > steps   a = semitones a `mod` 12
 -}
 
-basis_P1 = Interval (0, 0)
-
-basis_A1 = Interval (1, 0)
-
-basis_d2 = Interval (0, 1)
-
-basis_P5 = Interval (7, 4)
-
-basis_P8 = Interval (12, 7)
 
 -- |
 -- Returns whether the given interval is negative.
@@ -407,8 +381,8 @@ instance HasBasis Interval where
 
   type Basis Interval = IntervalBasis
 
-  basisValue Chromatic = basis_A1
-  basisValue Diatonic = basis_d2
+  basisValue Chromatic = _A1
+  basisValue Diatonic = d2
 
   decompose (Interval (c, d)) = [(Chromatic, fromIntegral c), (Diatonic, fromIntegral d)]
 
@@ -465,9 +439,9 @@ instance HasNumber Interval where
 
 instance Augmentable Interval where
 
-  augment i = i ^+^ basis_A1
+  augment i = i ^+^ _A1
 
-  diminish i = i ^-^ basis_A1
+  diminish i = i ^-^ _A1
 
 instance HasSemitones Interval where
   semitones (Interval (a, d)) = fromIntegral a -- assuming "semitone" == A1
@@ -556,7 +530,7 @@ doublyDiminished = mkIntervalS (Diminished 2)
 -- >>> separate ((-1)*^_P8+m3)
 -- (-1,m3)
 separate :: Interval -> (Octaves, Interval)
-separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
+separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ _P8))
   where
     o = octaves i
 
@@ -800,24 +774,24 @@ intervalDiv :: Interval -> Interval -> Int
 intervalDiv (Interval (a, d)) (Interval (1, 0)) = fromIntegral a
 intervalDiv (Interval (a, d)) (Interval (0, 1)) = fromIntegral d
 intervalDiv i di
-  | (i > basis_P1) = intervalDivPos i di
-  | (i < basis_P1) = intervalDivNeg i di
+  | (i > _P1) = intervalDivPos i di
+  | (i < _P1) = intervalDivNeg i di
   | otherwise = 0 :: Int
   where
     intervalDivPos i di
-      | (i < basis_P1) = error "Impossible (TODO prove)"
-      | (i ^-^ di) < basis_P1 = 0
+      | (i < _P1) = error "Impossible (TODO prove)"
+      | (i ^-^ di) < _P1 = 0
       | otherwise = 1 + (intervalDiv (i ^-^ di) di)
     intervalDivNeg i di
-      | (i > basis_P1) = error "Impossible (TODO prove)"
-      | (i ^+^ di) > basis_P1 = 0
+      | (i > _P1) = error "Impossible (TODO prove)"
+      | (i ^+^ di) > _P1 = 0
       | otherwise = 1 + (intervalDiv (i ^+^ di) di)
 
 -- | Represent an interval i in a new basis (j, k).
 --
 -- We want x,y where i = x*j + y*k
 --
--- e.g., convertBasis basis_d2 _P5 basis_P8 == Just (-12,7), as expected.
+-- e.g., convertBasis d2 _P5 _P8 == Just (-12,7), as expected.
 convertBasis ::
   Interval ->
   Interval ->
@@ -2067,11 +2041,6 @@ ab____ = fromPitch $ viaPitchL (5, (-1), -4)
 
 bb____ = fromPitch $ viaPitchL (6, (-1), -4)
 
--- |
--- @
--- (octaves, diatonic steps, chromatic steps)
--- @
-newtype IntervalL = IntervalL (Integer, Integer, Integer)
 
 class IsInterval a where
   fromInterval :: Interval -> a
@@ -2105,19 +2074,31 @@ instance IsInterval Word where
 instance IsInterval Integer where
   fromInterval (Interval (ChromaticSteps c, _d)) = c
 
+-- |
+-- @
+-- (octaves, diatonic steps, chromatic steps)
+-- @
+newtype IntervalL = IntervalL (Integer, Integer, Integer)
+
+-- TODO factor out this and IntervalL
 fromIntervalL :: IsInterval a => IntervalL -> a
 fromIntervalL = fromInterval . go
   where
     go :: IntervalL -> Interval
-    go (IntervalL (o, d, c)) = (basis_P8 ^* o) ^+^ (basis_A1 ^* c) ^+^ (basis_d2 ^* d)
+    go (IntervalL (o, d, c)) = (_P8 ^* o) ^+^ (_A1 ^* c) ^+^ (d2 ^* d)
+
+
+
+
+
 
 d1 = fromIntervalL $ IntervalL (0, 0, -1)
 
-_P1 = fromIntervalL $ IntervalL (0, 0, 0)
+_P1 = fromInterval $ Interval (0, 0)
 
-_A1 = fromIntervalL $ IntervalL (0, 0, 1)
+_A1 = fromInterval $ Interval (1, 0)
 
-d2 = fromIntervalL $ IntervalL (0, 1, 0)
+d2 = fromInterval $ Interval (0, 1)
 
 m2 = fromIntervalL $ IntervalL (0, 1, 1)
 
@@ -2141,7 +2122,7 @@ _A4 = fromIntervalL $ IntervalL (0, 3, 6)
 
 d5 = fromIntervalL $ IntervalL (0, 4, 6)
 
-_P5 = fromIntervalL $ IntervalL (0, 4, 7)
+_P5 = fromInterval $ Interval (7, 4)
 
 _A5 = fromIntervalL $ IntervalL (0, 4, 8)
 
@@ -2163,7 +2144,7 @@ _A7 = fromIntervalL $ IntervalL (0, 6, 12)
 
 d8 = fromIntervalL $ IntervalL (1, 0, -1)
 
-_P8 = fromIntervalL $ IntervalL (1, 0, 0)
+_P8 = fromInterval $ Interval (12, 7)
 
 _A8 = fromIntervalL $ IntervalL (1, 0, 1)
 
