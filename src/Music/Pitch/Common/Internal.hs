@@ -734,12 +734,10 @@ intervalAlterationSteps =
   iso
     (\(d, s) -> mkInterval' (fromIntegral d) (fromIntegral s))
 
-    (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (view diatonicSteps $ number x)))
+    (\x -> (qualityToDiff (number x) (expectedQualityType (number x)) (quality x), view diatonicSteps $ number x))
   where
-    qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
+    qualityToDiff n qt q = fromMaybe e $ qualityToAlteration (numberDirection n) qt q
       where
-        f True = Upward
-        f False = Downward
         e = error "Impossible (TODO prove)"
 
 mkIntervalS :: Quality -> Number -> Maybe Interval
@@ -1137,6 +1135,8 @@ qualityToAlteration d qt q = fmap fromIntegral $ go d qt q
     go Downward PerfectType (Diminished n) = Just $ 0 + n
     go _ qt q = Nothing
 
+-- TODO get rid of HasNumber, make (number :: Interval -> Number)
+-- TODO get rid of HasQuality, make (quality :: Interval -> Quality)
 instance HasNumber Number where number = id
 
 -- | A synonym for @1@.
