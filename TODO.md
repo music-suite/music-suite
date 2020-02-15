@@ -376,17 +376,6 @@ Consider switching to a decentralized issue tracker such as:
     - The window view is updated (use TeaTime?)
     - Percentage indicator for rendering time (formal streaming support in $entrypoint)?
 
-- $vimHook
-  For $interactive
-```
-function! MusicSuiteInteract()
-  let l:pos = getcurpos()
-  let l:file = expand('%:p')
-  call writefile([string(l:pos),l:file],".music-suite-inspect")
-endfunction
-
-noremap <F6> :call MusicSuiteInteract()<CR>
-```
 
 - Replace Aeson with typed serialization
 
