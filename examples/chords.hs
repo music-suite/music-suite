@@ -71,7 +71,7 @@ music = pseq [music1, music2]
 
 music1 = mempty
   -- <> (level mf $ set parts' guitar $ melody)
-  -- <> level _p strings
+  <> level _p strings
   <> level mp counterRh
   <> gtr
 music2 = mempty

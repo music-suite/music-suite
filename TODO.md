@@ -205,6 +205,10 @@ Consider switching to a decentralized issue tracker such as:
 
 - [ ] Large scores makes Lilypond segfault
 
+- [ ] Examples should not be Cabal executables
+  - Test in CI with cabal runhaskell
+  - Saves the slow linking step when doing Cabal build
+
 - Test generating all examples/documentation (and add more) in CI (nightly?)
   - [ ] Make CI validate MIDI output (how?)
   - [ ] Make CI validate MusicXML 3.0 output (using its XSD schema)

@@ -59,13 +59,15 @@ lookupSpace = flip getPitchSpace
 inSpace :: Pitch -> PitchSpace -> Bool
 inSpace p s = not $ null $ lookupSpace ((p,p)^.ambitus) s
 
-widenAmbitus :: (Ord a, Num a) => a -> Ambitus a -> Ambitus a
+widenAmbitus :: (Ord a) => a -> Ambitus a -> Ambitus a
 widenAmbitus p = under ambitus (\(m,n) -> (m `min` p, n `max` p))
 
+{-
 inAmbitus :: (Ord a, Num a) => Ambitus a -> a -> Bool
 inAmbitus amb p = m <= p && p <= n
   where
     (m,n) = amb^.from ambitus
+-}
 
 applyB :: Reactive a -> b -> Behavior (a -> b) -> Reactive b
 applyB r z b = mapWithTimeR (\t x -> case t of { Nothing -> z ; Just t -> (b ! t) x}) r
@@ -142,7 +144,10 @@ pitchSpaceVoices = extractChords (0<->10) $
     r3 = pure$(f_,d'')^.ambitus
 
 pitchSpaceVoices' :: Music
-pitchSpaceVoices' = (asScore . fmap fromPitch) $ mpseqter $ (renderAlignedVoice . aligned 0 0) pitchSpaceVoices
+pitchSpaceVoices' = (fmap fromPitch) $ mscatter $ (renderAlignedVoice . aligned 0 0) pitchSpaceVoices
+
+-- mscatter :: Score [a] -> Score a
+-- mscatter = join . fmap ppar
 
 
 {-
