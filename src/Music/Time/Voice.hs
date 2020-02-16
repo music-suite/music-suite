@@ -33,6 +33,10 @@ module Music.Time.Voice
     midpointsRelative,
     erasRelative,
 
+    -- * Rotation
+    rotateDurations,
+    rotateValues,
+
     -- * Fusion
     fuse,
     fuseBy,
@@ -861,3 +865,14 @@ eraMap = error "No eraMap"
 durations :: Voice a -> [Duration]
 durations = view durationsV
 -}
+
+rotateDurations :: Int -> Voice a -> Voice a
+rotateDurations n x = view voice $ fmap (view note) $ zip (rotate n ds) vs
+  where
+    (ds, vs) = unzip $ fmap (view $ from note) $ view notes x
+
+rotateValues :: Int -> Voice a -> Voice a
+rotateValues n x = view voice $ fmap (view note) $ zip ds (rotate n vs)
+  where
+    (ds, vs) = unzip $ fmap (view $ from note) $ view notes x
+
