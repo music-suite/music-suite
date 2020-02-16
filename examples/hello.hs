@@ -17,13 +17,7 @@ import Music.Prelude
 --
 -- The 'times' function repeats the 3-note figure 5 times.
 music :: Music
-music =
-  set (parts' . instrument) violin $
-    rcat
-      [ legato $ times 3 $ (cs |> ppar[a,g] |> e) |* (1/4)
-      , legato $ times 3 $ (cs |> ppar[a,g] |> e) |* (1/4) |* 2
-      , delay 2 $ legato $ times 3 $ (cs |> ppar[a,g] |> e) |* (1/4) |* (2/5)
-      ]
+music = times 5 $ (c |> d |> e) |* (1/4)
 
 -- This line creates a standard Haskell main function that exports the piece
 -- 'music'. This means we can run this file as a standard Haskell program,
