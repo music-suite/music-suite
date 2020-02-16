@@ -21,9 +21,7 @@ test 99 = group 5 c |> group 3 c |> c|*2
 group n x = times n x |/ fromIntegral n
 
 music :: Music
-music = {-fadeIn 1 $-} {-fadeOut 1 $-} catSep $ map test [1..5]
-
-catSep = ppar . zipWith (set parts') (divide 100 mempty)
+music = rcat $ map test [1..5]
 
 main :: IO ()
 main = defaultMain music

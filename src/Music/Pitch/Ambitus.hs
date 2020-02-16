@@ -9,6 +9,7 @@ module Music.Pitch.Ambitus
     ambitusHighest,
     ambitusLowest,
     ambitusInterval,
+    inAmbitus,
   )
 where
 
