@@ -5,7 +5,6 @@ module Main where
 
 import Music.Prelude
 import qualified Music.Score
-import Util
 
 {-
 Klangfarben melodien...
