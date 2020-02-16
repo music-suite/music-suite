@@ -5,9 +5,11 @@ import Music.Prelude
 import Control.Lens (set, over)
 
 -- A simple subject
+subj :: Music
 subj  = times 2 $ pseq [c,c,d,b_,e,e]|/16
 
 -- Each voice differ slighly in onset etc
+voca :: Duration -> Music
 voca v = delay ((4/8)|*v) $ removeRests $ pseq $ fmap (\i -> (id $ up (_M2^*i) subj) |> rest|*(15/8))
   $ [0..3]
 
@@ -17,11 +19,9 @@ music = id
   $ composer "Anonymous"
   $ timeSignature (3/8)
   $ timeSignatureDuring ((14*3/8) <-> 200) (4/8)
+  $ over phrases fuse
   $ over phrases (rotateValues 1)
-  -- $ over (phrases.middleV) (octavesAbove 1)
-  -- $ over phrases fuse
-  $ catSep
-  -- $ fadeIn 4
+  $ rcat
   $ map voca [0..3]
 
 main  = defaultMain music
@@ -37,4 +37,3 @@ rotate n xs = iterate rotate1 xs !! n
     rotate1 [] = []
     rotate1 xs = last xs : init xs
 
-catSep = ppar . zipWith (set parts') (divide 100 violins)
