@@ -17,7 +17,7 @@ import Music.Prelude
 --
 -- The 'times' function repeats the 3-note figure 5 times.
 music :: Music
-music = times 5 $ (c |> d |> e) |* (1/4)
+music = times 4 $ (c |> d |> e) |* (1/4)
 
 -- This line creates a standard Haskell main function that exports the piece
 -- 'music'. This means we can run this file as a standard Haskell program,
