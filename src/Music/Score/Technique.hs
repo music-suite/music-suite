@@ -536,7 +536,7 @@ data SomeTechnique
         _stringMute :: StringMute
         -- TODO etc
       }
-  deriving (Show)
+  deriving (Show, Eq)
 
 makeLenses ''SomeTechnique
 
