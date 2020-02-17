@@ -40,3 +40,5 @@ TAGS
 tags
 .directory
 .music-suite-inspect
+# For now, used by the interactive shell:
+r/
