@@ -1,7 +1,7 @@
 
 module Main where
 
-import Music.Prelude
+import Music.Prelude hiding (snareDrum)
 import Util
 {-
 Encoding of standard popular-music rhythms
@@ -35,12 +35,8 @@ toPattern patterns = compress (fromIntegral $ maximum $ fmap length patterns) $ 
     g 'x' = hiHat
     g 'b' = bassDrum
     g 's' = snareDrum
-    
-
-
-toNote = fromPitch''
 
 
 
-
-
+toNote = fromPitch
+main = defaultMain music

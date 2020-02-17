@@ -26,6 +26,7 @@ pkgs.stdenv.mkDerivation {
   buildInputs = [
 
     pkgs.lilypond
+    pkgs.timidity
     (
     pkgs.haskellPackages.ghcWithPackages (pkgs:
         [ pkgs.cabal-install
