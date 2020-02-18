@@ -67,12 +67,14 @@ data CommandLineOptions
   = ToXml FilePath
   | ToLy LilypondOptions FilePath
   | ToMidi FilePath
+  | ToLyAndMidi LilypondOptions FilePath
   | Help
 
 -- TOOD Proper parser using optparse-applicative or optparse-generic
 parse :: Applicative m => [String] -> m CommandLineOptions
 parse ("-f" : "xml" : "-o" : path : _) = pure $ ToXml path
 parse ("-f" : "ly" : "-o" : path : _) = pure $ ToLy defaultLilypondOptions path
+parse ("-f" : "ly+mid" : "-o" : path : _) = pure $ ToLyAndMidi defaultLilypondOptions path
 parse ("-f" : "ly" : "--layout=inline" : "-o" : path : _) = pure $ ToLy (defaultLilypondOptions {layout = LilypondInline}) path
 parse ("-f" : "mid" : "-o" : path : _) = pure $ ToMidi path
 parse _ = pure Help
@@ -81,24 +83,36 @@ defaultMain :: Music -> IO ()
 defaultMain music = do
   args <- System.Environment.getArgs
   opts <- parse args
-  case opts of
-    Help ->
-      putStrLn
-        "Usage: <executable> -f [xml|ly|mid] -o PATH"
-    ToMidi path -> do
-      midi <- runIOExportM $ toMidi music
-      Codec.Midi.exportFile path midi
-    ToLy opts path -> do
-      work <- runIOExportM $ fromAspects music
-      (h, ly) <- runIOExportM $ toLy opts work
-      let ly' = h ++ show (Text.Pretty.pretty ly)
-      -- TODO use ByteString/builders, not String?
-      writeFile path ly'
-    ToXml path -> do
-      work <- runIOExportM $ fromAspects music
-      work' <- runIOExportM $ toXml work
-      -- TODO use ByteString/builders, not String?
-      writeFile path $ Data.Music.MusicXml.showXml work'
+  handle opts
+    where
+      handle opts = case opts of
+        Help ->
+          putStrLn
+            "Usage: <executable> -f [xml|ly|mid] -o PATH"
+        ToLyAndMidi lyOpts path -> do
+          -- TODO run in parallel?
+          handle $ ToMidi
+            (stripSuffix path ++ ".mid")
+          handle $ ToLy lyOpts path
+        ToMidi path -> do
+          midi <- runIOExportM $ toMidi music
+          Codec.Midi.exportFile path midi
+        ToLy opts path -> do
+          work <- runIOExportM $ fromAspects music
+          (h, ly) <- runIOExportM $ toLy opts work
+          let ly' = h ++ show (Text.Pretty.pretty ly)
+          -- TODO use ByteString/builders, not String?
+          writeFile path ly'
+        ToXml path -> do
+          work <- runIOExportM $ fromAspects music
+          work' <- runIOExportM $ toXml work
+          -- TODO use ByteString/builders, not String?
+          writeFile path $ Data.Music.MusicXml.showXml work'
+
+stripSuffix :: String -> String
+stripSuffix xs
+  | '.' `elem` xs = reverse $ drop 1 $ dropWhile (/= '.') $ reverse xs
+  | otherwise = xs
 
 -- TODO move
 -- | Orchestrate in the given parts.
