@@ -1,4 +1,4 @@
-
+{-# LANGUAGE NoMonomorphismRestriction #-}
 module Main where
 
 import Music.Prelude hiding (snareDrum)
@@ -14,8 +14,8 @@ Sources:
 music = fmap toNote basic1
 
 -- TODO proper percussion support
-openHiHat = up d2
-closeHiHat = down d2
+openHiHat = d'
+closeHiHat = d
 hiHat = g'
 bassDrum = f
 snareDrum = c'
