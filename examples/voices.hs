@@ -1,24 +1,23 @@
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, OverloadedLists #-}
 
 import Music.Prelude
 import Control.Lens (set)
 import qualified Music.Score as S
 
-subj :: Voice (Maybe Pitch)
-subj = mconcat [c',ab,db',e,f,g,ab,bb,c']
 
-type Chorale = [Voice (Maybe Pitch)]
+chorale :: (IsPitch a, HasParts' a, S.Part a ~ Part) =>
+  [Voice (Maybe Pitch)] -> Score a
+chorale = rcat . fmap renderVoice
+  where
+    renderVoice :: IsPitch a => Voice (Maybe Pitch) -> Score a
+    renderVoice = fmap fromPitch . removeRests . renderAlignedVoice . aligned 0 0
 
-renderVoice :: IsPitch a => Voice (Maybe Pitch) -> Score a
-renderVoice = fmap fromPitch . removeRests . renderAlignedVoice . aligned 0 0
-
--- renderChorale :: (IsPitch a, HasParts' a, S.Part a ~ Part) => Chorale -> Score a
-renderChorale = catSep . fmap renderVoice
-
-catSep = ppar . zipWith (set parts') (divide 100 mempty)
 
 music :: Music
-music = renderChorale [subj]
+music = compress 4 $ delay 3 $ chorale
+  [           mconcat [ e, a, g, f, e, d|*2, e, b, c', c', stretchTo 1 [b, a], b, a |* 3 ]
+  , down _P8 $ mconcat [ c, f_, e_, a_, a_, f_, g_, c, gs_, a_, d_, e_, e_, a_ |*3 ]
+  ]
 
 main = defaultMain music
