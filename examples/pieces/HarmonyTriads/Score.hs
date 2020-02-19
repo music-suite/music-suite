@@ -1,8 +1,8 @@
 
 module Main where
 
-import Music.Prelude
-import Util
+import Music.Prelude hiding (Direction)
+import Util hiding (Direction)
 
 {-
 Triadic harmony
@@ -50,13 +50,13 @@ fromAbove = False
 --
 -- @ >>> leadingNote [c,e,g] fromBelow _i MajorMode
 -- [((1/2),bb_)^.note,((1/2),c)^.note]^.voice
--- 
+--
 -- >>> leadingNote [c,e,g] fromBelow _i MinorMode
 -- [((1/2),b_)^.note,((1/2),c)^.note]^.voice
--- 
+--
 -- >>> leadingNote [e,g,b] fromBelow _iii MinorMode
 -- [((1/2),fs)^.note,((1/2),g)^.note]^.voice
--- 
+--
 -- >>> leadingNote [e,g,b] fromAbove _v MinorMode
 -- [((1/2),c')^.note,((1/2),b)^.note]^.voice
 --

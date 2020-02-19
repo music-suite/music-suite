@@ -29,9 +29,10 @@ C) Possibly the best!
   Fixed set of 48 pitches! *Always* played tutti in different permutations!
 
 -}
+main = defaultMain music
 music = text "Hello!" c
 
-players = 
+players =
     [flutes1, flutes2, oboes1,oboes2,clarinets1,clarinets2,bassoons1,bassoons2]
     <> divide 4 horns <> divide 2 trumpets <> divide 2 trombones
     <> [tutti vibraphone] <> [tutti timpani]
@@ -44,8 +45,8 @@ players =
 
 
 
-playersByHighest = Data.List.sortBy (Data.Ord.comparing $ \p -> (instrumentRange (p^._instrument))^.from ambitus._2) players
-playersByLowest  = Data.List.sortBy (Data.Ord.comparing $ \p -> (instrumentRange (p^._instrument))^.from ambitus._1) players
+playersByHighest = Data.List.sortBy (Data.Ord.comparing $ \p -> (instrumentRange (p^.instrument))^.from ambitus._2) players
+playersByLowest  = Data.List.sortBy (Data.Ord.comparing $ \p -> (instrumentRange (p^.instrument))^.from ambitus._1) players
 
 -- Some example "chords"
 unison1 = ppar $ zipWith (set parts') players (repeat c)
@@ -75,8 +76,8 @@ a pitch-instrument pair. Given an instrument, we can find a pitch inside the cho
 ambitus. As there are possibly many such matching pitches, let's try a logic monad! We also need
 state to keep track of the pitches already allocated!
 -}
-    
-    
+
+
 
 
 

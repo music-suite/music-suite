@@ -17,7 +17,11 @@ import Music.Prelude
 --
 -- The 'times' function repeats the 3-note figure 5 times.
 music :: Music
-music = times 4 $ (c |> d |> e) |* (1/4)
+music =
+  mconcat
+    [ set parts' violins $ level ff $ pseq [c,d,e,d,g,f] |* (19/5)
+    , set parts' trumpets $ level ff $ pseq [c,d,e,d,g,f] |* (19/5)
+    ]
 
 -- This line creates a standard Haskell main function that exports the piece
 -- 'music'. This means we can run this file as a standard Haskell program,

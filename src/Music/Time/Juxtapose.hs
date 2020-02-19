@@ -23,6 +23,7 @@ module Music.Time.Juxtapose
 
     -- * Repetition
     times,
+    group,
   )
 where
 
@@ -30,7 +31,7 @@ import Control.Lens hiding ((<|), (|>))
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.Semigroup
-import Data.Stream.Infinite
+import Data.Stream.Infinite hiding (group)
 import Data.VectorSpace
 import Music.Time.Reverse
 import Music.Time.Split
@@ -104,13 +105,23 @@ sustain :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 x `sustain` y = x <> y `during` x
 
 -- |
--- Repeat exact amount of times.
+-- Repeat the given music /n/ times.
 --
 -- @
 -- 'Int' -> 'Score' a -> 'Score' a
 -- @
-times :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => Int -> a -> a
+times :: (Monoid a, HasPosition a, Transformable a) => Int -> a -> a
 times n = pseq . replicate n
+
+-- |
+-- Repeat the given music /n/ times and stretch to the original duration.
+--
+-- @
+-- 'Int' -> 'Score' a -> 'Score' a
+-- @
+group :: (Monoid a, Transformable a, HasPosition a) => Int -> a -> a
+group n x = times n x |/ fromIntegral n
+
 
 -- |
 -- Compose sequentially by aligning the nominal position of each value to the

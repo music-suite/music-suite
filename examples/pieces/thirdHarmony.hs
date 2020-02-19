@@ -1,6 +1,6 @@
+{-# LANGUAGE TypeApplications #-}
 
 import Music.Prelude
-import Util (fromPitch'')
 
 intervals  = [m3,_M3]
 intervals2 = [d3,m3,_M3,_A3]
@@ -44,5 +44,8 @@ Min#7
 Aug-min (inversion of Maj-6)
 Aug
 -}
-music  = pseq $ fmap (ppar . fmap fromPitch'' . offsetPoints (c::Pitch)) ch
-music2 = over pitches' (relative c $ spell usingSharps) $ pseq $ fmap (ppar . fmap fromPitch'' . offsetPoints (c::Pitch)) cch
+music :: Music
+music  = pseq $ fmap (ppar . fmap fromPitch . offsetPoints (c::Pitch)) ch
+music2 = pseq $ fmap (ppar . fmap fromPitch . offsetPoints (c::Pitch)) cch
+
+main = defaultMain music

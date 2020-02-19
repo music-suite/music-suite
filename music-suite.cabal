@@ -374,12 +374,12 @@ executable "music-suite-examples-tuplet"
     hs-source-dirs:     examples
     main-is:            tuplet.hs
 
-executable "music-suite-examples-voices"
+executable "music-suite-examples-chorale"
     build-depends:      base,
                         lens,
                         music-suite
     hs-source-dirs:     examples
-    main-is:            voices.hs
+    main-is:            chorale.hs
 
 -- executable "music-suite-examples-piece1"
 --     build-depends:      base,
