@@ -15,9 +15,9 @@ chorale = rcat . fmap renderVoice
 
 
 music :: Music
-music = compress 4 $ delay 3 $ chorale
-  [           mconcat [ e, a, g, f, e, d|*2, e, b, c', c', stretchTo 1 [b, a], b, a |* 3 ]
-  , down _P8 $ mconcat [ c, f_, e_, a_, a_, f_, g_, c, gs_, a_, d_, e_, e_, a_ |*3 ]
+music = compress 4 $ delay 3 $ chorale $ fmap mconcat
+  [          [ e, a, g, f, e, d|*2, e, b, c', c', stretchTo 1 [b, a], b, a |* 3 ]
+  , down _P8 [ c, f_, e_, a_, a_, f_, g_, c, gs_, a_, d_, e_, e_, a_ |*3 ]
   ]
 
 main = defaultMain music
