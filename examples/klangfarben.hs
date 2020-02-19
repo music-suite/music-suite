@@ -1,22 +1,23 @@
 
 {-# LANGUAGE TypeFamilies #-}
 
+-- This example shows a Webern style orchestration of a single voice
+-- distributed throughout several parts.
+--
+-- We accomplish this with the zip-like function 'klangfarben'.
 module Main where
 
 import Music.Prelude
 import qualified Music.Score
 
-{-
-Klangfarben melodien...
--}
+main :: IO ()
+main = defaultMain music
 
--- main = displayAndAudify music
-main = defaultMain music2
+music :: Music
+music = compress 4 $ times 2 $ renderAlignedVoice $ aligned 0 0 $ orchestrated
 
-music2 = compress 4 $ ppar $ map renderAlignedVoice $
-  times 2 (pure $ aligned 0 0 $ music1)
-
-music1 = klangfarben
+orchestrated :: (HasParts' a, Music.Score.Part a ~ Part, IsPitch a) => Voice a
+orchestrated = klangfarben
   [violins,flutes,oboes,trumpets,tubas,clarinets,trombones,doubleBasses]
   (mconcat [c,e|*3,fs,g,a|/2,gs'|*3,g',fs',as,b,cs])
 
