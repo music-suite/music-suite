@@ -94,7 +94,7 @@ instance Num Number where
 
   signum (Number a) = Number (signum a)
 
-  fromInteger 0 = error "Invalid Number: zero"
+  -- TODO should we?: fromInteger 0 = error "Invalid Number: zero"
   fromInteger n = Number n
 
 -- |
@@ -1548,6 +1548,9 @@ instance Num Interval where
 
 instance ToJSON Pitch where
   toJSON = toJSON . (.-. c)
+
+instance IsPitch () where
+  fromPitch _ = ()
 
 instance IsPitch Int where
   fromPitch x = fromIntegral (fromPitch x :: Integer)

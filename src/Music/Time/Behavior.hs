@@ -2,8 +2,8 @@ module Music.Time.Behavior
   ( -- * Behavior type
     Behavior,
 
-    -- ** Examples
     behavior,
+    sampled,
 
     -- * Combinators
     switch,
@@ -204,11 +204,11 @@ behavior = iso Behavior getBehavior
 -- View a time function as a behavior.
 --
 -- @
--- unbehavior    = from behavior
--- x^.unbehavior = (x !)
+-- sampled    = from behavior
+-- x^.sampled = (x !)
 -- @
-unbehavior :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
-unbehavior = from behavior
+sampled :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
+sampled = from behavior
 
 -- |
 -- A behavior that gives the current time.
