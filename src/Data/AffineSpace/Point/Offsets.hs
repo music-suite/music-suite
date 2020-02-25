@@ -41,6 +41,7 @@ pointOffsets or = (zeroV :) . snd . mapAccumL g or
     g prev p = (p, p .-. prev)
 
 -- How they should really have been defined
+-- See https://www.reddit.com/r/haskell/comments/f7h1xn/why_do_scanr_and_scanl_change_the_size_of_the_list/
 
 -- |
 -- For all p
