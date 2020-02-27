@@ -332,19 +332,19 @@ data SystemBar
   = SystemBar
       {-
       We treat all the following information as global.
-      
+
       This is more restrictive than most classical notations, but greatly
       simplifies representation. In this view, a score is a matrix of bars
       (each belonging to a single staff). Each bar must have a single
       time sig/key sig/rehearsal mark/tempo mark.
-      
+
       ----
       Note: Option First ~ Maybe
-      
+
       Alternatively we could just make these things into Monoids such that
       mempty means "no notation at this point", and remove the "Option First"
       part here.
-      
+
       Actually I'm pretty sure this is the right approach. See also #242
       -}
       { _barNumbers :: Option (First BarNumber),
@@ -387,11 +387,11 @@ data StaffInfo
         _sibeliusFriendlyName :: SibeliusFriendlyName,
         {-
         See also clefChanges
-        
+
         TODO change name of _instrumentDefaultClef
         More accurately, it represents the first clef to be used on the staff
         (and the only one if there are no changes.)
-        
+
         OTOH having clef in the staff at all is redundant, specifying clef
         is optional (along with everything else) in this representation anyway.
         This is arguably wrong, as stanard notation generally requires a clef.
@@ -399,7 +399,7 @@ data StaffInfo
         _instrumentDefaultClef :: Music.Pitch.Clef,
         {-
         I.e. -P5 for horn
-        
+
         Note that this representation indicates *written pitch*, not sounding (as does MusicXML),
         so this value is redundant when rendering a graphical score. OTOH if this representation
         is used to render *sound*, pitches need to be transposed acconrdingly.
@@ -1052,223 +1052,224 @@ toLy opts work = do
   say "Lilypond: Converting music"
   music <- toLyMusic $ firstMovement
   return (header, music)
+
+
+toLyMusic :: (LilypondExportM m) => Movement -> m Lilypond.Music
+toLyMusic m2 = do
+  let m = movementAssureSameNumberOfBars m2
+  -- We will copy system-staff info to each bar (time sigs, key sigs and so on,
+  -- which seems to be what Lilypond expects), so the system staff is included
+  -- in the rendering of each staff
+  renderedStaves <- traverse (toLyStaff $ m ^. systemStaff) (m ^. staves)
+  -- Now we still have (LabelTree BracketType), which is converted to a parallel
+  -- music expression, using \StaffGroup etc
+  toLyStaffGroup renderedStaves
+toLyStaff :: (LilypondExportM m) => SystemStaff -> Staff -> m Lilypond.Music
+toLyStaff sysBars staff =
+  id
+    <$> Lilypond.New "Staff" Nothing
+    <$> Lilypond.Sequential
+    <$> addPartName (staff ^. staffInfo . instrumentFullName)
+    <$> addClef (toLyClef $ staff ^. staffInfo . instrumentDefaultClef)
+    -- TODO Currently score is always in C with no oct-transp.
+    -- To get a transposing score, add \transpose <written> <sounding>
+    <$> (sequence $ zipWith toLyBar sysBars (staff ^. bars))
+toLyClef c
+  | c == Music.Pitch.trebleClef = Lilypond.Treble
+  | c == Music.Pitch.altoClef = Lilypond.Alto
+  | c == Music.Pitch.tenorClef = Lilypond.Tenor
+  | c == Music.Pitch.bassClef = Lilypond.Bass
+  | otherwise = Lilypond.Treble
+addClef c xs = Lilypond.Clef c : xs
+addPartName partName xs = longName : shortName : xs
   where
-    toLyMusic :: (LilypondExportM m) => Movement -> m Lilypond.Music
-    toLyMusic m2 = do
-      let m = movementAssureSameNumberOfBars m2
-      -- We will copy system-staff info to each bar (time sigs, key sigs and so on,
-      -- which seems to be what Lilypond expects), so the system staff is included
-      -- in the rendering of each staff
-      renderedStaves <- traverse (toLyStaff $ m ^. systemStaff) (m ^. staves)
-      -- Now we still have (LabelTree BracketType), which is converted to a parallel
-      -- music expression, using \StaffGroup etc
-      toLyStaffGroup renderedStaves
-    toLyStaff :: (LilypondExportM m) => SystemStaff -> Staff -> m Lilypond.Music
-    toLyStaff sysBars staff =
-      id
-        <$> Lilypond.New "Staff" Nothing
-        <$> Lilypond.Sequential
-        <$> addPartName (staff ^. staffInfo . instrumentFullName)
-        <$> addClef (toLyClef $ staff ^. staffInfo . instrumentDefaultClef)
-        -- TODO Currently score is always in C with no oct-transp.
-        -- To get a transposing score, add \transpose <written> <sounding>
-        <$> (sequence $ zipWith toLyBar sysBars (staff ^. bars))
-    toLyClef c
-      | c == Music.Pitch.trebleClef = Lilypond.Treble
-      | c == Music.Pitch.altoClef = Lilypond.Alto
-      | c == Music.Pitch.tenorClef = Lilypond.Tenor
-      | c == Music.Pitch.bassClef = Lilypond.Bass
-      | otherwise = Lilypond.Treble
-    addClef c xs = Lilypond.Clef c : xs
-    addPartName partName xs = longName : shortName : xs
+    longName = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
+    shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
+toLyBar :: (LilypondExportM m) => SystemBar -> Bar -> m Lilypond.Music
+toLyBar sysBar bar = do
+  let layers = bar ^. pitchLayers
+  -- TODO emit \new Voice for eachlayer
+  sim <$> sysStuff <$> traverse (toLyLayer . getPitchLayer) layers
+  where
+    -- System information need not be replicated in all layers
+    -- TODO other system stuff (reh marks, special barlines etc)
+    sysStuff [] = []
+    sysStuff (x : xs) = (addTimeSignature (sysBar ^. timeSignature) x : xs)
+    sim [x] = x
+    sim xs = Lilypond.Simultaneous False xs
+    addTimeSignature ::
+      Option (First Music.Score.Meta.Time.TimeSignature) ->
+      Lilypond.Music ->
+      Lilypond.Music
+    addTimeSignature timeSignature x = (setTimeSignature `ifJust` (unOF timeSignature)) x
       where
-        longName = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
-        shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
-    toLyBar :: (LilypondExportM m) => SystemBar -> Bar -> m Lilypond.Music
-    toLyBar sysBar bar = do
-      let layers = bar ^. pitchLayers
-      -- TODO emit \new Voice for eachlayer
-      sim <$> sysStuff <$> traverse (toLyLayer . getPitchLayer) layers
+        unOF = fmap getFirst . getOption
+        ifJust = maybe id
+        setTimeSignature (Music.Score.Meta.Time.getTimeSignature -> (ms, n)) x =
+          Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
+toLyLayer :: (LilypondExportM m) => Rhythm Chord -> m Lilypond.Music
+toLyLayer (Beat d x) = toLyChord d x
+toLyLayer (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
+toLyLayer (Dotted n _) = error "FIXME"
+toLyLayer (Group rs) = Lilypond.Sequential <$> traverse toLyLayer rs
+toLyLayer (Tuplet m r) = Lilypond.Times (realToFrac m) <$> (toLyLayer r)
+  where
+    (a, b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
+    unRatio = Music.Score.Internal.Util.unRatio
+{-
+TODO _arpeggioNotation::Maybe ArpeggioNotation,
+TODO _tremoloNotation::Maybe TremoloNotation,
+TODO _breathNotation::Maybe BreathNotation,
+-}
+toLyChord :: (LilypondExportM m) => Duration -> Chord -> m Lilypond.Music
+toLyChord d chord =
+  id
+    <$> notateTies (chord ^. ties)
+    <$> notateGliss (chord ^. slideNotation)
+    <$> notateHarmonic (chord ^. harmonicNotation)
+    <$> notateText (chord ^. chordText)
+    <$> notateColor (chord ^. chordColor)
+    -- <$> notateTremolo (chord^.tremoloNotation)
+    <$> notateDynamicLy (chord ^. dynamicNotation)
+    <$> notateArticulationLy (chord ^. articulationNotation)
+    <$> notatePitches d (chord ^. pitches)
+  where
+    notatePitches :: (LilypondExportM m) => Duration -> [Pitch] -> m Lilypond.Music
+    notatePitches d pitches = case pitches of
+      [] -> return $ Lilypond.Rest (Just (realToFrac d)) []
+      [x] -> return $ Lilypond.Note (toLyNote x) (Just (realToFrac d)) []
+      xs -> return $ Lilypond.Chord (fmap ((,[]) . toLyNote) xs) (Just (realToFrac d)) []
+    toLyNote :: Pitch -> Lilypond.Note
+    toLyNote p =
+      (`Lilypond.NotePitch` Nothing) $
+        Lilypond.Pitch
+          ( toEnum (fromEnum $ Music.Pitch.name p),
+            -- FIXME catch if (abs accidental)>2 (or simply normalize)
+            fromIntegral (Music.Pitch.accidental p),
+            -- Lilypond expects SPN, so middle c is octave 4
+            fromIntegral $
+              Music.Pitch.octaves
+                (p .-. Music.Score.Pitch.octavesDown (4 + 1) Music.Pitch.Literal.c)
+          )
+    notateDynamicLy :: DynamicNotation -> Lilypond.Music -> Lilypond.Music
+    notateDynamicLy (DN.DynamicNotation (crescDims, level)) =
+      rcomposed (fmap notateCrescDim crescDims)
+        . notateLevel level
       where
-        -- System information need not be replicated in all layers
-        -- TODO other system stuff (reh marks, special barlines etc)
-        sysStuff [] = []
-        sysStuff (x : xs) = (addTimeSignature (sysBar ^. timeSignature) x : xs)
-        sim [x] = x
-        sim xs = Lilypond.Simultaneous False xs
-        addTimeSignature ::
-          Option (First Music.Score.Meta.Time.TimeSignature) ->
-          Lilypond.Music ->
-          Lilypond.Music
-        addTimeSignature timeSignature x = (setTimeSignature `ifJust` (unOF timeSignature)) x
-          where
-            unOF = fmap getFirst . getOption
-            ifJust = maybe id
-            setTimeSignature (Music.Score.Meta.Time.getTimeSignature -> (ms, n)) x =
-              Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
-    toLyLayer :: (LilypondExportM m) => Rhythm Chord -> m Lilypond.Music
-    toLyLayer (Beat d x) = toLyChord d x
-    toLyLayer (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
-    toLyLayer (Dotted n _) = error "FIXME"
-    toLyLayer (Group rs) = Lilypond.Sequential <$> traverse toLyLayer rs
-    toLyLayer (Tuplet m r) = Lilypond.Times (realToFrac m) <$> (toLyLayer r)
-      where
-        (a, b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
-        unRatio = Music.Score.Internal.Util.unRatio
-    {-
-    TODO _arpeggioNotation::Maybe ArpeggioNotation,
-    TODO _tremoloNotation::Maybe TremoloNotation,
-    TODO _breathNotation::Maybe BreathNotation,
-    -}
-    toLyChord :: (LilypondExportM m) => Duration -> Chord -> m Lilypond.Music
-    toLyChord d chord =
-      id
-        <$> notateTies (chord ^. ties)
-        <$> notateGliss (chord ^. slideNotation)
-        <$> notateHarmonic (chord ^. harmonicNotation)
-        <$> notateText (chord ^. chordText)
-        <$> notateColor (chord ^. chordColor)
-        -- <$> notateTremolo (chord^.tremoloNotation)
-        <$> notateDynamicLy (chord ^. dynamicNotation)
-        <$> notateArticulationLy (chord ^. articulationNotation)
-        <$> notatePitches d (chord ^. pitches)
-      where
-        notatePitches :: (LilypondExportM m) => Duration -> [Pitch] -> m Lilypond.Music
-        notatePitches d pitches = case pitches of
-          [] -> return $ Lilypond.Rest (Just (realToFrac d)) []
-          [x] -> return $ Lilypond.Note (toLyNote x) (Just (realToFrac d)) []
-          xs -> return $ Lilypond.Chord (fmap ((,[]) . toLyNote) xs) (Just (realToFrac d)) []
-        toLyNote :: Pitch -> Lilypond.Note
-        toLyNote p =
-          (`Lilypond.NotePitch` Nothing) $
-            Lilypond.Pitch
-              ( toEnum (fromEnum $ Music.Pitch.name p),
-                -- FIXME catch if (abs accidental)>2 (or simply normalize)
-                fromIntegral (Music.Pitch.accidental p),
-                -- Lilypond expects SPN, so middle c is octave 4
-                fromIntegral $
-                  Music.Pitch.octaves
-                    (p .-. Music.Score.Pitch.octavesDown (4 + 1) Music.Pitch.Literal.c)
-              )
-        notateDynamicLy :: DynamicNotation -> Lilypond.Music -> Lilypond.Music
-        notateDynamicLy (DN.DynamicNotation (crescDims, level)) =
-          rcomposed (fmap notateCrescDim crescDims)
-            . notateLevel level
-          where
-            notateCrescDim :: DN.CrescDim -> Lilypond.Music -> Lilypond.Music
-            notateCrescDim crescDims = case crescDims of
-              DN.NoCrescDim -> id
-              DN.BeginCresc -> Lilypond.beginCresc
-              DN.EndCresc -> Lilypond.endCresc
-              DN.BeginDim -> Lilypond.beginDim
-              DN.EndDim -> Lilypond.endDim
-            -- TODO these literals are not so nice...
-            notateLevel :: Maybe Double -> Lilypond.Music -> Lilypond.Music
-            notateLevel showLevel = case showLevel of
-              Nothing -> id
-              Just lvl ->
-                Lilypond.addDynamics
-                  ( fromDynamics
-                      ( DynamicsL
-                          (Just (fixLevel . realToFrac $ lvl), Nothing)
-                      )
+        notateCrescDim :: DN.CrescDim -> Lilypond.Music -> Lilypond.Music
+        notateCrescDim crescDims = case crescDims of
+          DN.NoCrescDim -> id
+          DN.BeginCresc -> Lilypond.beginCresc
+          DN.EndCresc -> Lilypond.endCresc
+          DN.BeginDim -> Lilypond.beginDim
+          DN.EndDim -> Lilypond.endDim
+        -- TODO these literals are not so nice...
+        notateLevel :: Maybe Double -> Lilypond.Music -> Lilypond.Music
+        notateLevel showLevel = case showLevel of
+          Nothing -> id
+          Just lvl ->
+            Lilypond.addDynamics
+              ( fromDynamics
+                  ( DynamicsL
+                      (Just (fixLevel . realToFrac $ lvl), Nothing)
                   )
-            fixLevel :: Double -> Double
-            fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
-        notateArticulationLy ::
-          ArticulationNotation ->
+              )
+        fixLevel :: Double -> Double
+        fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
+    notateArticulationLy ::
+      ArticulationNotation ->
+      Lilypond.Music ->
+      Lilypond.Music
+    notateArticulationLy (AN.ArticulationNotation (slurs, marks)) =
+      rcomposed (fmap notateMark marks)
+        . rcomposed (fmap notateSlur slurs)
+      where
+        notateMark ::
+          AN.Mark ->
           Lilypond.Music ->
           Lilypond.Music
-        notateArticulationLy (AN.ArticulationNotation (slurs, marks)) =
-          rcomposed (fmap notateMark marks)
-            . rcomposed (fmap notateSlur slurs)
-          where
-            notateMark ::
-              AN.Mark ->
-              Lilypond.Music ->
-              Lilypond.Music
-            notateMark mark = case mark of
-              AN.NoMark -> id
-              AN.Staccato -> Lilypond.addStaccato
-              AN.MoltoStaccato -> Lilypond.addStaccatissimo
-              AN.Marcato -> Lilypond.addMarcato
-              AN.Accent -> Lilypond.addAccent
-              AN.Tenuto -> Lilypond.addTenuto
-              -- TODO proper exception
-              _ -> error "Lilypond export: Unknown articulation mark"
-            notateSlur :: AN.Slur -> Lilypond.Music -> Lilypond.Music
-            notateSlur slurs = case slurs of
-              AN.NoSlur -> id
-              AN.BeginSlur -> Lilypond.beginSlur
-              AN.EndSlur -> Lilypond.endSlur
-        -- TODO This syntax might change in future Lilypond versions
-        -- TODO handle any color
-        notateColor :: Option (First (Colour Double)) -> Lilypond.Music -> Lilypond.Music
-        notateColor (Option Nothing) = id
-        notateColor (Option (Just (First color))) = \x ->
-          Lilypond.Sequential
-            [ Lilypond.Override
-                "NoteHead#' color"
-                (Lilypond.toLiteralValue $ "#" ++ colorName color),
-              x,
-              Lilypond.Revert "NoteHead#' color"
-            ]
-        colorName c
-          | c == Data.Colour.Names.black = "black"
-          | c == Data.Colour.Names.red = "red"
-          | c == Data.Colour.Names.blue = "blue"
-          | otherwise = error "Lilypond backend: Unkown color"
-        -- TODO not used for now
-        -- We need to rescale the music according to the returned duration
-        notateTremolo ::
-          Maybe Int ->
-          Duration ->
-          (Lilypond.Music -> Lilypond.Music, Duration)
-        notateTremolo Nothing d = (id, d)
-        notateTremolo (Just 0) d = (id, d)
-        notateTremolo (Just n) d =
-          let scale = 2 ^ n
-              newDur = (d `min` (1 / 4)) / scale
-              repeats = d / newDur
-           in (Lilypond.Tremolo (round repeats), newDur)
-        notateText :: [String] -> Lilypond.Music -> Lilypond.Music
-        notateText texts = composed (fmap (Lilypond.addText' Lilypond.Above) texts)
-        notateHarmonic :: HarmonicNotation -> Lilypond.Music -> Lilypond.Music
-        notateHarmonic (Any isNat, Sum n) = case (isNat, n) of
-          (_, 0) -> id
-          (True, n) -> notateNatural n
-          (False, n) -> notateArtificial n
-          where
-            notateNatural n = Lilypond.addFlageolet -- addOpen?
-            notateArtificial n = id -- TODO
-        notateGliss :: SlideNotation -> Lilypond.Music -> Lilypond.Music
-        notateGliss ((Any eg, Any es), (Any bg, Any bs))
-          | bg = Lilypond.beginGlissando
-          | bs = Lilypond.beginGlissando
-          | otherwise = id
-        notateTies :: Ties -> Lilypond.Music -> Lilypond.Music
-        notateTies (Any ta, Any tb)
-          | ta && tb = Lilypond.beginTie
-          | tb = Lilypond.beginTie
-          | ta = id
-          | otherwise = id
-        -- Use rcomposed as notateDynamic returns "mark" order, not application order
-        composed = Music.Score.Internal.Util.composed
-        rcomposed = Music.Score.Internal.Util.composed . reverse
-    toLyStaffGroup ::
-      (LilypondExportM m) =>
-      LabelTree BracketType (Lilypond.Music) ->
-      m Lilypond.Music
-    toLyStaffGroup = return . foldLabelTree id g
+        notateMark mark = case mark of
+          AN.NoMark -> id
+          AN.Staccato -> Lilypond.addStaccato
+          AN.MoltoStaccato -> Lilypond.addStaccatissimo
+          AN.Marcato -> Lilypond.addMarcato
+          AN.Accent -> Lilypond.addAccent
+          AN.Tenuto -> Lilypond.addTenuto
+          -- TODO proper exception
+          _ -> error "Lilypond export: Unknown articulation mark"
+        notateSlur :: AN.Slur -> Lilypond.Music -> Lilypond.Music
+        notateSlur slurs = case slurs of
+          AN.NoSlur -> id
+          AN.BeginSlur -> Lilypond.beginSlur
+          AN.EndSlur -> Lilypond.endSlur
+    -- TODO This syntax might change in future Lilypond versions
+    -- TODO handle any color
+    notateColor :: Option (First (Colour Double)) -> Lilypond.Music -> Lilypond.Music
+    notateColor (Option Nothing) = id
+    notateColor (Option (Just (First color))) = \x ->
+      Lilypond.Sequential
+        [ Lilypond.Override
+            "NoteHead#' color"
+            (Lilypond.toLiteralValue $ "#" ++ colorName color),
+          x,
+          Lilypond.Revert "NoteHead#' color"
+        ]
+    colorName c
+      | c == Data.Colour.Names.black = "black"
+      | c == Data.Colour.Names.red = "red"
+      | c == Data.Colour.Names.blue = "blue"
+      | otherwise = error "Lilypond backend: Unkown color"
+    -- TODO not used for now
+    -- We need to rescale the music according to the returned duration
+    notateTremolo ::
+      Maybe Int ->
+      Duration ->
+      (Lilypond.Music -> Lilypond.Music, Duration)
+    notateTremolo Nothing d = (id, d)
+    notateTremolo (Just 0) d = (id, d)
+    notateTremolo (Just n) d =
+      let scale = 2 ^ n
+          newDur = (d `min` (1 / 4)) / scale
+          repeats = d / newDur
+       in (Lilypond.Tremolo (round repeats), newDur)
+    notateText :: [String] -> Lilypond.Music -> Lilypond.Music
+    notateText texts = composed (fmap (Lilypond.addText' Lilypond.Above) texts)
+    notateHarmonic :: HarmonicNotation -> Lilypond.Music -> Lilypond.Music
+    notateHarmonic (Any isNat, Sum n) = case (isNat, n) of
+      (_, 0) -> id
+      (True, n) -> notateNatural n
+      (False, n) -> notateArtificial n
       where
-        -- Note: PianoStaff is handled in toLyStaffGroup
-        -- Note: Nothing for name (we dump everything inside staves, so no need to identify them)
-        g NoBracket ms = k ms
-        g Bracket ms = Lilypond.New "StaffGroup" Nothing $ k ms
-        g Subbracket ms = Lilypond.New "GrandStaff" Nothing $ k ms
-        g Brace ms = Lilypond.New "GrandStaff" Nothing $ k ms
-        -- Why False? No separation mark is necessary as the wrapped music is all in separate staves
-        k = Lilypond.Simultaneous False
+        notateNatural n = Lilypond.addFlageolet -- addOpen?
+        notateArtificial n = id -- TODO
+    notateGliss :: SlideNotation -> Lilypond.Music -> Lilypond.Music
+    notateGliss ((Any eg, Any es), (Any bg, Any bs))
+      | bg = Lilypond.beginGlissando
+      | bs = Lilypond.beginGlissando
+      | otherwise = id
+    notateTies :: Ties -> Lilypond.Music -> Lilypond.Music
+    notateTies (Any ta, Any tb)
+      | ta && tb = Lilypond.beginTie
+      | tb = Lilypond.beginTie
+      | ta = id
+      | otherwise = id
+    -- Use rcomposed as notateDynamic returns "mark" order, not application order
+    composed = Music.Score.Internal.Util.composed
+    rcomposed = Music.Score.Internal.Util.composed . reverse
+toLyStaffGroup ::
+  (LilypondExportM m) =>
+  LabelTree BracketType (Lilypond.Music) ->
+  m Lilypond.Music
+toLyStaffGroup = return . foldLabelTree id g
+  where
+    -- Note: PianoStaff is handled in toLyStaffGroup
+    -- Note: Nothing for name (we dump everything inside staves, so no need to identify them)
+    g NoBracket ms = k ms
+    g Bracket ms = Lilypond.New "StaffGroup" Nothing $ k ms
+    g Subbracket ms = Lilypond.New "GrandStaff" Nothing $ k ms
+    g Brace ms = Lilypond.New "GrandStaff" Nothing $ k ms
+    -- Why False? No separation mark is necessary as the wrapped music is all in separate staves
+    k = Lilypond.Simultaneous False
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -1308,307 +1309,307 @@ toXml work = do
   partWise <- movementToPartwiseXml firstMovement
   return $ MusicXml.fromParts title composer partList partWise
   where
+{-
+  Returns the part list, specifying instruments, staves and gruops
+  (but not the musical contents of the staves).
+-}
+movementToPartList :: (MusicXmlExportM m) => Movement -> m MusicXml.PartList
+movementToPartList m = return $ foldLabelTree f g (m ^. staves)
+  where
+    -- TODO generally, what name to use?
+    -- TODO use MusicXML sound id
+    f s = MusicXml.partList [s ^. staffInfo . sibeliusFriendlyName]
+    g bt pl = case bt of
+      NoBracket -> mconcat pl
+      Subbracket -> mconcat pl
+      Bracket -> MusicXml.bracket $ mconcat pl
+      Brace -> MusicXml.brace $ mconcat pl
+{-
+  Returns a matrix of bars in in row-major order, i.e. each inner list
+  represents the bars of one particular MusicXML part[1].
+
+  This is suitable for a "partwise" MusicXML score. The transpose of the
+  returned matrix is suitable for a "timewise" score.
+
+  [1]: Note that a MusicXML part can be rendered as 1 staff (default) or more,
+  so there are two ways to render a piano staff:
+    1) Use two MusicXML parts grouped with a brace.
+    2) Use one MusicXML part with 2 staves. In this case each note must
+       have a staff child element.
+
+-}
+movementToPartwiseXml :: (MusicXmlExportM m) => Movement -> m [[MusicXml.Music]]
+movementToPartwiseXml movement = music
+  where
+    music :: (MusicXmlExportM m) => m [[MusicXml.Music]]
+    music = do
+      staffMusic_ <- staffMusic
+      pure $ fmap (zipWith (<>) allSystemBarDirections) staffMusic_
     {-
-      Returns the part list, specifying instruments, staves and gruops
-      (but not the musical contents of the staves).
+      Old comment:
+            Each entry in outer list must be prepended to the FIRST staff (whatever that is)
+            We could also prepend it to other staves, but that is reduntant and makes the
+            generated XML file much larger.
+      Trying a new approach here by including this in all parts.
+
+      ---
+      Again, this definition is a sequnce of elements to be prepended to each bar
+      (typically divisions and attributes).
     -}
-    movementToPartList :: (MusicXmlExportM m) => Movement -> m MusicXml.PartList
-    movementToPartList m = return $ foldLabelTree f g (m ^. staves)
+    allSystemBarDirections :: [MusicXml.Music]
+    allSystemBarDirections =
+      zipWith3
+        (\a b c -> mconcat [a, b, c])
+        divisions_
+        timeSignatures_
+        keySignatures_
       where
-        -- TODO generally, what name to use?
-        -- TODO use MusicXML sound id
-        f s = MusicXml.partList [s ^. staffInfo . sibeliusFriendlyName]
-        g bt pl = case bt of
-          NoBracket -> mconcat pl
-          Subbracket -> mconcat pl
-          Bracket -> MusicXml.bracket $ mconcat pl
-          Brace -> MusicXml.brace $ mconcat pl
+        -- TODO bar numbers (?)
+        -- TODO reh marks (direction)
+        -- TODO tempo marks (direction)
+        -- TODO merge attribute elements in the beginning of each bar?
+
+        divisions_ :: [MusicXml.Music]
+        divisions_ = MusicXml.defaultDivisions : repeat mempty
+        keySignatures_ :: [MusicXml.Music]
+        keySignatures_ = fmap (expTS . unOF) $ fmap (^. keySignature) (movement ^. systemStaff)
+          where
+            unOF = fmap getFirst . getOption
+            -- TODO recognize common/cut
+            expTS Nothing = (mempty :: MusicXml.Music)
+            expTS (Just ks) =
+              let (fifths, mode) = Music.Score.Meta.Key.getKeySignature ks
+               in MusicXml.key (fromIntegral fifths) (if mode then MusicXml.Major else MusicXml.Minor)
+        timeSignatures_ :: [MusicXml.Music]
+        timeSignatures_ = fmap (expTS . unOF) $ fmap (^. timeSignature) (movement ^. systemStaff)
+          where
+            unOF = fmap getFirst . getOption
+            -- TODO recognize common/cut
+            expTS Nothing = (mempty :: MusicXml.Music)
+            expTS (Just ts) =
+              let (ms, n) = Music.Score.Meta.Time.getTimeSignature ts
+               in MusicXml.time (fromIntegral $ sum ms) (fromIntegral n)
+    -- System bar directions per bar
+
     {-
-      Returns a matrix of bars in in row-major order, i.e. each inner list
-      represents the bars of one particular MusicXML part[1].
-    
-      This is suitable for a "partwise" MusicXML score. The transpose of the
-      returned matrix is suitable for a "timewise" score.
-    
-      [1]: Note that a MusicXML part can be rendered as 1 staff (default) or more,
-      so there are two ways to render a piano staff:
-        1) Use two MusicXML parts grouped with a brace.
-        2) Use one MusicXML part with 2 staves. In this case each note must
-           have a staff child element.
-    
+      A matrix similar to the one returned from movementToPartwiseXml, but
+      not including information from the system staff.
+
+      TODO we use movementAssureSameNumberOfBars
+      We should do a sumilar check on the transpose of the bar/staff matrix
+      to assure that all /bars/ have the same duration.
     -}
-    movementToPartwiseXml :: (MusicXmlExportM m) => Movement -> m [[MusicXml.Music]]
-    movementToPartwiseXml movement = music
+    staffMusic :: (MusicXmlExportM m) => m [[MusicXml.Music]]
+    staffMusic = traverse renderStaff $ movement ^.. staves . traverse
       where
-        music :: (MusicXmlExportM m) => m [[MusicXml.Music]]
-        music = do
-          staffMusic_ <- staffMusic
-          pure $ fmap (zipWith (<>) allSystemBarDirections) staffMusic_
-        {-
-          Old comment:
-                Each entry in outer list must be prepended to the FIRST staff (whatever that is)
-                We could also prepend it to other staves, but that is reduntant and makes the
-                generated XML file much larger.
-          Trying a new approach here by including this in all parts.
-        
-          ---
-          Again, this definition is a sequnce of elements to be prepended to each bar
-          (typically divisions and attributes).
-        -}
-        allSystemBarDirections :: [MusicXml.Music]
-        allSystemBarDirections =
-          zipWith3
-            (\a b c -> mconcat [a, b, c])
-            divisions_
-            timeSignatures_
-            keySignatures_
+        renderClef :: Music.Pitch.Clef -> MusicXml.Music
+        renderClef (Music.Pitch.Clef clef) = case clef of
+          (clefSymbol, octCh, line) ->
+            X.Music $ pure $ X.MusicAttributes $
+              X.Clef (exportSymbol clefSymbol) (fromIntegral line + 3)
           where
-            -- TODO bar numbers (?)
-            -- TODO reh marks (direction)
-            -- TODO tempo marks (direction)
-            -- TODO merge attribute elements in the beginning of each bar?
-
-            divisions_ :: [MusicXml.Music]
-            divisions_ = MusicXml.defaultDivisions : repeat mempty
-            keySignatures_ :: [MusicXml.Music]
-            keySignatures_ = fmap (expTS . unOF) $ fmap (^. keySignature) (movement ^. systemStaff)
-              where
-                unOF = fmap getFirst . getOption
-                -- TODO recognize common/cut
-                expTS Nothing = (mempty :: MusicXml.Music)
-                expTS (Just ks) =
-                  let (fifths, mode) = Music.Score.Meta.Key.getKeySignature ks
-                   in MusicXml.key (fromIntegral fifths) (if mode then MusicXml.Major else MusicXml.Minor)
-            timeSignatures_ :: [MusicXml.Music]
-            timeSignatures_ = fmap (expTS . unOF) $ fmap (^. timeSignature) (movement ^. systemStaff)
-              where
-                unOF = fmap getFirst . getOption
-                -- TODO recognize common/cut
-                expTS Nothing = (mempty :: MusicXml.Music)
-                expTS (Just ts) =
-                  let (ms, n) = Music.Score.Meta.Time.getTimeSignature ts
-                   in MusicXml.time (fromIntegral $ sum ms) (fromIntegral n)
-        -- System bar directions per bar
+            -- TODO add octave-adjust to musicxml2
+            exportSymbol x = case x of
+              Music.Pitch.GClef -> X.GClef
+              Music.Pitch.CClef -> X.CClef
+              Music.Pitch.FClef -> X.FClef
+              Music.Pitch.PercClef -> X.PercClef
+              Music.Pitch.NeutralClef -> X.TabClef
+        renderStaff :: (MusicXmlExportM m) => Staff -> m [MusicXml.Music]
+        renderStaff staff = do
+          say "  MusicXML: Generating staff <<>>"
+          fromBars <- traverse renderBar (staff ^. bars)
+          let clef = renderClef initClef
+          pure $ mapHead ((transposeInfo <> clef) <>) fromBars
+          where
+            mapHead f [] = []
+            mapHead f (x : xs) = f x : xs
+            transposeInfo :: MusicXml.Music
+            transposeInfo = mempty
+            {-
+              Always generate a clef at the beginning of the staff based =
+              on the instrument default. See comments in the definition of StaffInfo.
+            -}
+            initClef = staff ^. staffInfo . instrumentDefaultClef
+        -- TODO how to best render transposed staves (i.e. clarinets)
 
         {-
-          A matrix similar to the one returned from movementToPartwiseXml, but
-          not including information from the system staff.
-        
-          TODO we use movementAssureSameNumberOfBars
-          We should do a sumilar check on the transpose of the bar/staff matrix
-          to assure that all /bars/ have the same duration.
+        backup/forward
+          - Moves XML "counter" without emitting notes/rests
+          - Possibly use sanity check to ensure all layers in a bar are of the
+            same length (and the length expected by the time signature).
+            If not, we could get some rather strange results!
+          - Remember we still need to emit the correct voice (starting with 1 - I recall doing something
+           about this, are we always emitting the voice?)
+            YES, see setDefaultVoice below?
+            How about staff, are we always emitting that?
+
+          - TODO how does this interact with the staff-crossing feature?
+            (are we always emitting staff?)
+          - TODO how does it interact with clefs/other in-measure elements not
+            connected to chords?
+
+            Lots of meta-stuff here about how a bar is represented, would be nice to write up music-score
+            eloquently!
         -}
-        staffMusic :: (MusicXmlExportM m) => m [[MusicXml.Music]]
-        staffMusic = traverse renderStaff $ movement ^.. staves . traverse
+
+        -- TODO emit line ===== comments in between measures
+
+        renderBar :: (MusicXmlExportM m) => Bar -> m MusicXml.Music
+        renderBar bar = do
+          -- TODO too verbose: say "    MusicXML: Generating bar <<>>"
+          case barLayersHaveEqualDuration bar of
+            -- No layers in this bar
+            Left [] -> pure mempty
+            -- Layers have different durations
+            Left _ -> throwError "Layers have different durations"
+            -- One or more layers with the same duration
+            Right d -> do
+              let layers =
+                    zipWith
+                      (\voiceN music -> MusicXml.setVoice voiceN music)
+                      [1 ..]
+                      (fmap renderPitchLayer (bar ^. pitchLayers))
+                  clefs =
+                    Data.Map.foldMapWithKey
+                      (\time clef -> [atPosition time (renderClef clef)])
+                      (bar ^. clefChanges)
+              pure $ mconcat $ Data.List.intersperse (MusicXml.backup $ durToXmlDur d) $ layers <> clefs
           where
-            renderClef :: Music.Pitch.Clef -> MusicXml.Music
-            renderClef (Music.Pitch.Clef clef) = case clef of
-              (clefSymbol, octCh, line) ->
-                X.Music $ pure $ X.MusicAttributes $
-                  X.Clef (exportSymbol clefSymbol) (fromIntegral line + 3)
-              where
-                -- TODO add octave-adjust to musicxml2
-                exportSymbol x = case x of
-                  Music.Pitch.GClef -> X.GClef
-                  Music.Pitch.CClef -> X.CClef
-                  Music.Pitch.FClef -> X.FClef
-                  Music.Pitch.PercClef -> X.PercClef
-                  Music.Pitch.NeutralClef -> X.TabClef
-            renderStaff :: (MusicXmlExportM m) => Staff -> m [MusicXml.Music]
-            renderStaff staff = do
-              say "  MusicXML: Generating staff <<>>"
-              fromBars <- traverse renderBar (staff ^. bars)
-              let clef = renderClef initClef
-              pure $ mapHead ((transposeInfo <> clef) <>) fromBars
-              where
-                mapHead f [] = []
-                mapHead f (x : xs) = f x : xs
-                transposeInfo :: MusicXml.Music
-                transposeInfo = mempty
-                {-
-                  Always generate a clef at the beginning of the staff based =
-                  on the instrument default. See comments in the definition of StaffInfo.
-                -}
-                initClef = staff ^. staffInfo . instrumentDefaultClef
-            -- TODO how to best render transposed staves (i.e. clarinets)
+            atPosition :: Duration -> X.Music -> X.Music
+            atPosition 0 x = x
+            atPosition d x = (MusicXml.forward $ durToXmlDur d) <> x
+            durToXmlDur :: Duration -> MusicXml.Duration
+            durToXmlDur d = round (realToFrac MusicXml.defaultDivisionsVal * d)
+        renderPitchLayer :: PitchLayer -> MusicXml.Music
+        renderPitchLayer = renderBarMusic . fmap renderChord . getPitchLayer
+        {-
+        Render a rest/note/chord.
 
-            {-
-            backup/forward
-              - Moves XML "counter" without emitting notes/rests
-              - Possibly use sanity check to ensure all layers in a bar are of the
-                same length (and the length expected by the time signature).
-                If not, we could get some rather strange results!
-              - Remember we still need to emit the correct voice (starting with 1 - I recall doing something
-               about this, are we always emitting the voice?)
-                YES, see setDefaultVoice below?
-                How about staff, are we always emitting that?
-            
-              - TODO how does this interact with the staff-crossing feature?
-                (are we always emitting staff?)
-              - TODO how does it interact with clefs/other in-measure elements not
-                connected to chords?
-            
-                Lots of meta-stuff here about how a bar is represented, would be nice to write up music-score
-                eloquently!
-            -}
-
-            -- TODO emit line ===== comments in between measures
-
-            renderBar :: (MusicXmlExportM m) => Bar -> m MusicXml.Music
-            renderBar bar = do
-              -- TODO too verbose: say "    MusicXML: Generating bar <<>>"
-              case barLayersHaveEqualDuration bar of
-                -- No layers in this bar
-                Left [] -> pure mempty
-                -- Layers have different durations
-                Left _ -> throwError "Layers have different durations"
-                -- One or more layers with the same duration
-                Right d -> do
-                  let layers =
-                        zipWith
-                          (\voiceN music -> MusicXml.setVoice voiceN music)
-                          [1 ..]
-                          (fmap renderPitchLayer (bar ^. pitchLayers))
-                      clefs =
-                        Data.Map.foldMapWithKey
-                          (\time clef -> [atPosition time (renderClef clef)])
-                          (bar ^. clefChanges)
-                  pure $ mconcat $ Data.List.intersperse (MusicXml.backup $ durToXmlDur d) $ layers <> clefs
+        This returns a series of <note> elements, with appropriate <chord> tags.
+        -}
+        renderChord :: Chord -> Duration -> MusicXml.Music
+        renderChord ch d = post $ case ch ^. pitches of
+          -- TODO Don't emit <alter> tag if alteration is 0
+          [] -> MusicXml.rest (realToFrac d)
+          [p] -> MusicXml.note (fromPitch_ p) (realToFrac d)
+          ps -> MusicXml.chord (fmap fromPitch_ ps) (realToFrac d)
+          where
+            -- Normalize pitch here if it hasn't been done before
+            fromPitch_ = fromPitch . Music.Pitch.useStandardAlterations P.c
+            -- TODO arpeggio, breath, color, fermata
+            -- (render all constructors from Chord here, except pitch)
+            post :: MusicXml.Music -> MusicXml.Music
+            post =
+              id
+                . notateArpeggio (ch ^. arpeggioNotation)
+                . notateBreath (ch ^. breathNotation)
+                . notateFermata (ch ^. fermata)
+                . notateDynamic (ch ^. dynamicNotation)
+                . notateArticulation (ch ^. articulationNotation)
+                . notateTremolo (ch ^. tremoloNotation)
+                . notateText (ch ^. chordText)
+                . notateHarmonic (ch ^. harmonicNotation)
+                . notateSlide (ch ^. slideNotation)
+                . notateTie (ch ^. ties)
+        renderBarMusic :: Rhythm (Duration -> MusicXml.Music) -> MusicXml.Music
+        renderBarMusic = go
+          where
+            go (Beat d x) = setDefaultVoice (x d)
+            go (Dotted n (Beat d x)) = setDefaultVoice (x (d * dotMod n))
+            go (Group rs) = mconcat $ map renderBarMusic rs
+            go (Tuplet m r) = MusicXml.tuplet b a (renderBarMusic r)
               where
-                atPosition :: Duration -> X.Music -> X.Music
-                atPosition 0 x = x
-                atPosition d x = (MusicXml.forward $ durToXmlDur d) <> x
-                durToXmlDur :: Duration -> MusicXml.Duration
-                durToXmlDur d = round (realToFrac MusicXml.defaultDivisionsVal * d)
-            renderPitchLayer :: PitchLayer -> MusicXml.Music
-            renderPitchLayer = renderBarMusic . fmap renderChord . getPitchLayer
-            {-
-            Render a rest/note/chord.
-            
-            This returns a series of <note> elements, with appropriate <chord> tags.
-            -}
-            renderChord :: Chord -> Duration -> MusicXml.Music
-            renderChord ch d = post $ case ch ^. pitches of
-              -- TODO Don't emit <alter> tag if alteration is 0
-              [] -> MusicXml.rest (realToFrac d)
-              [p] -> MusicXml.note (fromPitch_ p) (realToFrac d)
-              ps -> MusicXml.chord (fmap fromPitch_ ps) (realToFrac d)
-              where
-                -- Normalize pitch here if it hasn't been done before
-                fromPitch_ = fromPitch . Music.Pitch.useStandardAlterations P.c
-                -- TODO arpeggio, breath, color, fermata
-                -- (render all constructors from Chord here, except pitch)
-                post :: MusicXml.Music -> MusicXml.Music
-                post =
-                  id
-                    . notateArpeggio (ch ^. arpeggioNotation)
-                    . notateBreath (ch ^. breathNotation)
-                    . notateFermata (ch ^. fermata)
-                    . notateDynamic (ch ^. dynamicNotation)
-                    . notateArticulation (ch ^. articulationNotation)
-                    . notateTremolo (ch ^. tremoloNotation)
-                    . notateText (ch ^. chordText)
-                    . notateHarmonic (ch ^. harmonicNotation)
-                    . notateSlide (ch ^. slideNotation)
-                    . notateTie (ch ^. ties)
-            renderBarMusic :: Rhythm (Duration -> MusicXml.Music) -> MusicXml.Music
-            renderBarMusic = go
-              where
-                go (Beat d x) = setDefaultVoice (x d)
-                go (Dotted n (Beat d x)) = setDefaultVoice (x (d * dotMod n))
-                go (Group rs) = mconcat $ map renderBarMusic rs
-                go (Tuplet m r) = MusicXml.tuplet b a (renderBarMusic r)
-                  where
-                    (a, b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
-                go _ = error "MusicXML export: (Dotted x) requires x to be (Beat _)"
-            setDefaultVoice :: MusicXml.Music -> MusicXml.Music
-            setDefaultVoice = MusicXml.setVoice 1
-            notateDynamic :: DN.DynamicNotation -> MusicXml.Music -> MusicXml.Music
-            notateDynamic (DN.DynamicNotation (crescDims, level)) =
-              Music.Score.Internal.Util.composed (fmap notateCrescDim crescDims)
-                . notateLevel level
-              where
-                notateCrescDim crescDims = case crescDims of
-                  DN.NoCrescDim -> id
-                  DN.BeginCresc -> (<>) MusicXml.beginCresc
-                  DN.EndCresc -> (<>) MusicXml.endCresc
-                  DN.BeginDim -> (<>) MusicXml.beginDim
-                  DN.EndDim -> (<>) MusicXml.endDim
-                -- TODO these literals are not so nice...
-                notateLevel showLevel = case showLevel of
-                  Nothing -> id
-                  Just lvl ->
-                    (<>) $
-                      MusicXml.dynamic
-                        ( fromDynamics
-                            ( DynamicsL
-                                (Just (fixLevel . realToFrac $ lvl), Nothing)
-                            )
+                (a, b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
+            go _ = error "MusicXML export: (Dotted x) requires x to be (Beat _)"
+        setDefaultVoice :: MusicXml.Music -> MusicXml.Music
+        setDefaultVoice = MusicXml.setVoice 1
+        notateDynamic :: DN.DynamicNotation -> MusicXml.Music -> MusicXml.Music
+        notateDynamic (DN.DynamicNotation (crescDims, level)) =
+          Music.Score.Internal.Util.composed (fmap notateCrescDim crescDims)
+            . notateLevel level
+          where
+            notateCrescDim crescDims = case crescDims of
+              DN.NoCrescDim -> id
+              DN.BeginCresc -> (<>) MusicXml.beginCresc
+              DN.EndCresc -> (<>) MusicXml.endCresc
+              DN.BeginDim -> (<>) MusicXml.beginDim
+              DN.EndDim -> (<>) MusicXml.endDim
+            -- TODO these literals are not so nice...
+            notateLevel showLevel = case showLevel of
+              Nothing -> id
+              Just lvl ->
+                (<>) $
+                  MusicXml.dynamic
+                    ( fromDynamics
+                        ( DynamicsL
+                            (Just (fixLevel . realToFrac $ lvl), Nothing)
                         )
-                fixLevel :: Double -> Double
-                fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
-            -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
-            -- rcomposed = composed . reverse
+                    )
+            fixLevel :: Double -> Double
+            fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
+        -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
+        -- rcomposed = composed . reverse
 
-            notateArticulation :: AN.ArticulationNotation -> MusicXml.Music -> MusicXml.Music
-            notateArticulation (AN.ArticulationNotation (slurs, marks)) =
-              Music.Score.Internal.Util.composed (fmap notateMark marks)
-                . Music.Score.Internal.Util.composed (fmap notateSlur slurs)
-              where
-                notateMark mark = case mark of
-                  AN.NoMark -> id
-                  AN.Staccato -> MusicXml.staccato
-                  AN.MoltoStaccato -> MusicXml.staccatissimo
-                  AN.Marcato -> MusicXml.strongAccent
-                  AN.Accent -> MusicXml.accent
-                  AN.Tenuto -> MusicXml.tenuto
-                  -- TODO proper exception
-                  _ -> error "MusicXML export: Unknown articulation mark"
-                notateSlur slurs = case slurs of
-                  AN.NoSlur -> id
-                  AN.BeginSlur -> MusicXml.beginSlur
-                  AN.EndSlur -> MusicXml.endSlur
-            notateArpeggio :: ArpeggioNotation -> MusicXml.Music -> MusicXml.Music
-            notateArpeggio _ x = x
-            notateBreath :: BreathNotation -> MusicXml.Music -> MusicXml.Music
-            notateBreath _ x = x
-            notateFermata :: Fermata -> MusicXml.Music -> MusicXml.Music
-            notateFermata _ x = x
-            notateTremolo :: TremoloNotation -> MusicXml.Music -> MusicXml.Music
-            notateTremolo n = case n of
-              -- TODO optionally use z cross-beam
-              -- TODO support multi-pitch
-              NoTremolo -> id
-              CrossBeamTremolo (Just n) -> MusicXml.tremolo (fromIntegral n)
-              CrossBeamTremolo Nothing -> MusicXml.tremolo 3
-              MultiPitchTremolo _ -> id
-            notateText :: [String] -> MusicXml.Music -> MusicXml.Music
-            notateText texts a = mconcat (fmap MusicXml.text texts) <> a
-            notateHarmonic :: HarmonicNotation -> MusicXml.Music -> MusicXml.Music
-            notateHarmonic (Any isNat, Sum n) = notate isNat n
-              where
-                notate _ 0 = id
-                notate True n = notateNatural n
-                notate False n = notateArtificial n
-                -- notateNatural n = Xml.harmonic -- openString?
-                notateNatural n = MusicXml.setNoteHead MusicXml.DiamondNoteHead
-                -- Most programs do not recognize the harmonic tag
-                -- We set a single diamond notehead instead, which can be manually replaced
-                notateArtificial n = id -- TODO
-            notateSlide :: SlideNotation -> MusicXml.Music -> MusicXml.Music
-            notateSlide ((eg, es), (bg, bs)) = notate
-              where
-                notate = neg . nes . nbg . nbs
-                neg = if getAny eg then MusicXml.endGliss else id
-                nes = if getAny es then MusicXml.endSlide else id
-                nbg = if getAny bg then MusicXml.beginGliss else id
-                nbs = if getAny bs then MusicXml.beginSlide else id
-            notateTie :: Ties -> MusicXml.Music -> MusicXml.Music
-            notateTie (Any ta, Any tb)
-              | ta && tb = MusicXml.beginTie . MusicXml.endTie -- TODO flip order?
-              | tb = MusicXml.beginTie
-              | ta = MusicXml.endTie
-              | otherwise = id
+        notateArticulation :: AN.ArticulationNotation -> MusicXml.Music -> MusicXml.Music
+        notateArticulation (AN.ArticulationNotation (slurs, marks)) =
+          Music.Score.Internal.Util.composed (fmap notateMark marks)
+            . Music.Score.Internal.Util.composed (fmap notateSlur slurs)
+          where
+            notateMark mark = case mark of
+              AN.NoMark -> id
+              AN.Staccato -> MusicXml.staccato
+              AN.MoltoStaccato -> MusicXml.staccatissimo
+              AN.Marcato -> MusicXml.strongAccent
+              AN.Accent -> MusicXml.accent
+              AN.Tenuto -> MusicXml.tenuto
+              -- TODO proper exception
+              _ -> error "MusicXML export: Unknown articulation mark"
+            notateSlur slurs = case slurs of
+              AN.NoSlur -> id
+              AN.BeginSlur -> MusicXml.beginSlur
+              AN.EndSlur -> MusicXml.endSlur
+        notateArpeggio :: ArpeggioNotation -> MusicXml.Music -> MusicXml.Music
+        notateArpeggio _ x = x
+        notateBreath :: BreathNotation -> MusicXml.Music -> MusicXml.Music
+        notateBreath _ x = x
+        notateFermata :: Fermata -> MusicXml.Music -> MusicXml.Music
+        notateFermata _ x = x
+        notateTremolo :: TremoloNotation -> MusicXml.Music -> MusicXml.Music
+        notateTremolo n = case n of
+          -- TODO optionally use z cross-beam
+          -- TODO support multi-pitch
+          NoTremolo -> id
+          CrossBeamTremolo (Just n) -> MusicXml.tremolo (fromIntegral n)
+          CrossBeamTremolo Nothing -> MusicXml.tremolo 3
+          MultiPitchTremolo _ -> id
+        notateText :: [String] -> MusicXml.Music -> MusicXml.Music
+        notateText texts a = mconcat (fmap MusicXml.text texts) <> a
+        notateHarmonic :: HarmonicNotation -> MusicXml.Music -> MusicXml.Music
+        notateHarmonic (Any isNat, Sum n) = notate isNat n
+          where
+            notate _ 0 = id
+            notate True n = notateNatural n
+            notate False n = notateArtificial n
+            -- notateNatural n = Xml.harmonic -- openString?
+            notateNatural n = MusicXml.setNoteHead MusicXml.DiamondNoteHead
+            -- Most programs do not recognize the harmonic tag
+            -- We set a single diamond notehead instead, which can be manually replaced
+            notateArtificial n = id -- TODO
+        notateSlide :: SlideNotation -> MusicXml.Music -> MusicXml.Music
+        notateSlide ((eg, es), (bg, bs)) = notate
+          where
+            notate = neg . nes . nbg . nbs
+            neg = if getAny eg then MusicXml.endGliss else id
+            nes = if getAny es then MusicXml.endSlide else id
+            nbg = if getAny bg then MusicXml.beginGliss else id
+            nbs = if getAny bs then MusicXml.beginSlide else id
+        notateTie :: Ties -> MusicXml.Music -> MusicXml.Music
+        notateTie (Any ta, Any tb)
+          | ta && tb = MusicXml.beginTie . MusicXml.endTie -- TODO flip order?
+          | tb = MusicXml.beginTie
+          | ta = MusicXml.endTie
+          | otherwise = id
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -1863,7 +1864,7 @@ fromAspects sc = do
   {-
     Separate voices (called "layers" to avoid confusion)
     This is currently a trivial algorithm that assumes overlapping notes are in different parts
-  
+
     TODO layer sepration (which, again, does not actually happen in current code)
     should happen after ties have been split.
   -}
@@ -1921,89 +1922,91 @@ fromAspects sc = do
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
     asp1ToAsp2 :: Asp1 -> Asp2
     asp1ToAsp2 = pure . (fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap) pure
-    toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
-    toLayer p =
-      maybe
-        (throwError $ "Overlapping events in part: " ++ show p)
-        return
-        . preview Music.Score.Phrases.singleMVoice
-    asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
-    asp2ToAsp3 =
+
+
+toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
+toLayer p =
+  maybe
+    (throwError $ "Overlapping events in part: " ++ show p)
+    return
+    . preview Music.Score.Phrases.singleMVoice
+asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
+asp2ToAsp3 =
+  id
+    . ( DN.removeCloseDynMarks
+          . over Music.Score.Dynamics.dynamics DN.notateDynamic
+          . Music.Score.Dynamics.addDynCon
+      )
+    . ( over Music.Score.Articulation.articulations AN.notateArticulation
+          . Music.Score.Articulation.addArtCon
+      )
+    . (
+        -- TODO do "removeCloseDynMarks for playing techniques"
+        over techniques TN.notateTechnique
+          . Music.Score.Technique.addTechniqueCon
+      )
+-- TODO optionally log quantization
+quantizeBar ::
+  (StandardNotationExportM m, Tiable a) =>
+  Voice (Maybe a) ->
+  m (Rhythm (Maybe a))
+quantizeBar = fmap rewrite . quantize' . view Music.Time.pairs
+  where
+    quantize' x = case quantize x of
+      Left e -> throwError $ "Quantization failed: " ++ e
+      Right x -> return x
+generateStaffGrouping :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
+generateStaffGrouping = groupToLabelTree . partDefault
+aspectsToStaff :: (Music.Parts.Part, [Rhythm (Maybe Asp3)]) -> Staff
+aspectsToStaff (part, bars) = Staff info (fmap aspectsToBar bars)
+  where
+    info =
       id
-        . ( DN.removeCloseDynMarks
-              . over Music.Score.Dynamics.dynamics DN.notateDynamic
-              . Music.Score.Dynamics.addDynCon
-          )
-        . ( over Music.Score.Articulation.articulations AN.notateArticulation
-              . Music.Score.Articulation.addArtCon
-          )
-        . (
-            -- TODO do "removeCloseDynMarks for playing techniques"
-            over techniques TN.notateTechnique
-              . Music.Score.Technique.addTechniqueCon
-          )
-    -- TODO optionally log quantization
-    quantizeBar ::
-      (StandardNotationExportM m, Tiable a) =>
-      Voice (Maybe a) ->
-      m (Rhythm (Maybe a))
-    quantizeBar = fmap rewrite . quantize' . view Music.Time.pairs
-      where
-        quantize' x = case quantize x of
-          Left e -> throwError $ "Quantization failed: " ++ e
-          Right x -> return x
-    generateStaffGrouping :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
-    generateStaffGrouping = groupToLabelTree . partDefault
-    aspectsToStaff :: (Music.Parts.Part, [Rhythm (Maybe Asp3)]) -> Staff
-    aspectsToStaff (part, bars) = Staff info (fmap aspectsToBar bars)
-      where
-        info =
-          id
-            $ transposition
-              .~ (part ^. (Music.Parts.instrument) . (to Music.Parts.transposition))
-            $ instrumentDefaultClef
-              .~ Data.Maybe.fromMaybe
-                Music.Pitch.trebleClef
-                (part ^. (Music.Parts.instrument) . (to Music.Parts.standardClef))
-            $ instrumentShortName
-              .~ Data.Maybe.fromMaybe "" (part ^. (Music.Parts.instrument) . (to Music.Parts.shortName))
-            $ instrumentFullName
-              .~ (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr])
-            $ mempty
-          where
-            soloStr = if (part ^. (Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
-            nameStr = (part ^. (Music.Parts.instrument) . (to Music.Parts.fullName))
-            subpartStr = Just $ show (part ^. (Music.Parts.subpart))
-    partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
-    partDefault xs = Music.Parts.groupDefault $ fmap (\(p, x) -> (p ^. (Music.Parts.instrument), (p, x))) xs
-    groupToLabelTree :: Group a -> LabelTree (BracketType) a
-    groupToLabelTree (Single (_, a)) = Leaf a
-    groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
-      where
-        k Music.Parts.Bracket = Bracket
-        k Music.Parts.Invisible = NoBracket
-        k Music.Parts.PianoStaff = Brace
-        k Music.Parts.GrandStaff = Brace
-        k _ = NoBracket
-    aspectsToChord :: Maybe Asp3 -> Chord
-    aspectsToChord Nothing = mempty
-    aspectsToChord (Just asp) =
-      id
-        $ ties .~ (Any endTie, Any beginTie)
-        $ dynamicNotation .~ (asp ^. (Music.Score.Dynamics.dynamic))
-        $ articulationNotation .~ (asp ^. (Music.Score.Articulation.articulation))
-        $ pitches .~ (asp ^.. (Music.Score.Pitch.pitches))
-        $ chordText .~ TN.textualNotations (asp ^. Music.Score.Technique.technique)
-        -- TODO: $ harmonicNotation .~ _ asp
+        $ transposition
+          .~ (part ^. (Music.Parts.instrument) . (to Music.Parts.transposition))
+        $ instrumentDefaultClef
+          .~ Data.Maybe.fromMaybe
+            Music.Pitch.trebleClef
+            (part ^. (Music.Parts.instrument) . (to Music.Parts.standardClef))
+        $ instrumentShortName
+          .~ Data.Maybe.fromMaybe "" (part ^. (Music.Parts.instrument) . (to Music.Parts.shortName))
+        $ instrumentFullName
+          .~ (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr])
         $ mempty
       where
-        (endTie, beginTie) = Music.Score.Ties.isTieEndBeginning asp
-    aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
-    -- TODO handle >1 layers (see below)
-    -- TODO place clef changes here
-    aspectsToBar rh = Bar mempty [PitchLayer layer1]
-      where
-        layer1 = fmap aspectsToChord rh
+        soloStr = if (part ^. (Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
+        nameStr = (part ^. (Music.Parts.instrument) . (to Music.Parts.fullName))
+        subpartStr = Just $ show (part ^. (Music.Parts.subpart))
+partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
+partDefault xs = Music.Parts.groupDefault $ fmap (\(p, x) -> (p ^. (Music.Parts.instrument), (p, x))) xs
+groupToLabelTree :: Group a -> LabelTree (BracketType) a
+groupToLabelTree (Single (_, a)) = Leaf a
+groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
+  where
+    k Music.Parts.Bracket = Bracket
+    k Music.Parts.Invisible = NoBracket
+    k Music.Parts.PianoStaff = Brace
+    k Music.Parts.GrandStaff = Brace
+    k _ = NoBracket
+aspectsToChord :: Maybe Asp3 -> Chord
+aspectsToChord Nothing = mempty
+aspectsToChord (Just asp) =
+  id
+    $ ties .~ (Any endTie, Any beginTie)
+    $ dynamicNotation .~ (asp ^. (Music.Score.Dynamics.dynamic))
+    $ articulationNotation .~ (asp ^. (Music.Score.Articulation.articulation))
+    $ pitches .~ (asp ^.. (Music.Score.Pitch.pitches))
+    $ chordText .~ TN.textualNotations (asp ^. Music.Score.Technique.technique)
+    -- TODO: $ harmonicNotation .~ _ asp
+    $ mempty
+  where
+    (endTie, beginTie) = Music.Score.Ties.isTieEndBeginning asp
+aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
+-- TODO handle >1 layers (see below)
+-- TODO place clef changes here
+aspectsToBar rh = Bar mempty [PitchLayer layer1]
+  where
+    layer1 = fmap aspectsToChord rh
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
