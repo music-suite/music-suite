@@ -332,19 +332,19 @@ data SystemBar
   = SystemBar
       {-
       We treat all the following information as global.
-
+      
       This is more restrictive than most classical notations, but greatly
       simplifies representation. In this view, a score is a matrix of bars
       (each belonging to a single staff). Each bar must have a single
       time sig/key sig/rehearsal mark/tempo mark.
-
+      
       ----
       Note: Option First ~ Maybe
-
+      
       Alternatively we could just make these things into Monoids such that
       mempty means "no notation at this point", and remove the "Option First"
       part here.
-
+      
       Actually I'm pretty sure this is the right approach. See also #242
       -}
       { _barNumbers :: Option (First BarNumber),
@@ -387,11 +387,11 @@ data StaffInfo
         _sibeliusFriendlyName :: SibeliusFriendlyName,
         {-
         See also clefChanges
-
+        
         TODO change name of _instrumentDefaultClef
         More accurately, it represents the first clef to be used on the staff
         (and the only one if there are no changes.)
-
+        
         OTOH having clef in the staff at all is redundant, specifying clef
         is optional (along with everything else) in this representation anyway.
         This is arguably wrong, as stanard notation generally requires a clef.
@@ -399,7 +399,7 @@ data StaffInfo
         _instrumentDefaultClef :: Music.Pitch.Clef,
         {-
         I.e. -P5 for horn
-
+        
         Note that this representation indicates *written pitch*, not sounding (as does MusicXML),
         so this value is redundant when rendering a graphical score. OTOH if this representation
         is used to render *sound*, pitches need to be transposed acconrdingly.
@@ -1053,7 +1053,6 @@ toLy opts work = do
   music <- toLyMusic $ firstMovement
   return (header, music)
 
-
 toLyMusic :: (LilypondExportM m) => Movement -> m Lilypond.Music
 toLyMusic m2 = do
   let m = movementAssureSameNumberOfBars m2
@@ -1064,6 +1063,7 @@ toLyMusic m2 = do
   -- Now we still have (LabelTree BracketType), which is converted to a parallel
   -- music expression, using \StaffGroup etc
   toLyStaffGroup renderedStaves
+
 toLyStaff :: (LilypondExportM m) => SystemStaff -> Staff -> m Lilypond.Music
 toLyStaff sysBars staff =
   id
@@ -1074,17 +1074,21 @@ toLyStaff sysBars staff =
     -- TODO Currently score is always in C with no oct-transp.
     -- To get a transposing score, add \transpose <written> <sounding>
     <$> (sequence $ zipWith toLyBar sysBars (staff ^. bars))
+
 toLyClef c
   | c == Music.Pitch.trebleClef = Lilypond.Treble
   | c == Music.Pitch.altoClef = Lilypond.Alto
   | c == Music.Pitch.tenorClef = Lilypond.Tenor
   | c == Music.Pitch.bassClef = Lilypond.Bass
   | otherwise = Lilypond.Treble
+
 addClef c xs = Lilypond.Clef c : xs
+
 addPartName partName xs = longName : shortName : xs
   where
     longName = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
     shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
+
 toLyBar :: (LilypondExportM m) => SystemBar -> Bar -> m Lilypond.Music
 toLyBar sysBar bar = do
   let layers = bar ^. pitchLayers
@@ -1107,6 +1111,7 @@ toLyBar sysBar bar = do
         ifJust = maybe id
         setTimeSignature (Music.Score.Meta.Time.getTimeSignature -> (ms, n)) x =
           Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
+
 toLyLayer :: (LilypondExportM m) => Rhythm Chord -> m Lilypond.Music
 toLyLayer (Beat d x) = toLyChord d x
 toLyLayer (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
@@ -1116,6 +1121,7 @@ toLyLayer (Tuplet m r) = Lilypond.Times (realToFrac m) <$> (toLyLayer r)
   where
     (a, b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
     unRatio = Music.Score.Internal.Util.unRatio
+
 {-
 TODO _arpeggioNotation::Maybe ArpeggioNotation,
 TODO _tremoloNotation::Maybe TremoloNotation,
@@ -1256,6 +1262,7 @@ toLyChord d chord =
     -- Use rcomposed as notateDynamic returns "mark" order, not application order
     composed = Music.Score.Internal.Util.composed
     rcomposed = Music.Score.Internal.Util.composed . reverse
+
 toLyStaffGroup ::
   (LilypondExportM m) =>
   LabelTree BracketType (Lilypond.Music) ->
@@ -1309,6 +1316,7 @@ toXml work = do
   partWise <- movementToPartwiseXml firstMovement
   return $ MusicXml.fromParts title composer partList partWise
   where
+
 {-
   Returns the part list, specifying instruments, staves and gruops
   (but not the musical contents of the staves).
@@ -1324,6 +1332,7 @@ movementToPartList m = return $ foldLabelTree f g (m ^. staves)
       Subbracket -> mconcat pl
       Bracket -> MusicXml.bracket $ mconcat pl
       Brace -> MusicXml.brace $ mconcat pl
+
 {-
   Returns a matrix of bars in in row-major order, i.e. each inner list
   represents the bars of one particular MusicXML part[1].
@@ -1351,7 +1360,7 @@ movementToPartwiseXml movement = music
             We could also prepend it to other staves, but that is reduntant and makes the
             generated XML file much larger.
       Trying a new approach here by including this in all parts.
-
+    
       ---
       Again, this definition is a sequnce of elements to be prepended to each bar
       (typically divisions and attributes).
@@ -1394,7 +1403,7 @@ movementToPartwiseXml movement = music
     {-
       A matrix similar to the one returned from movementToPartwiseXml, but
       not including information from the system staff.
-
+    
       TODO we use movementAssureSameNumberOfBars
       We should do a sumilar check on the transpose of the bar/staff matrix
       to assure that all /bars/ have the same duration.
@@ -1443,12 +1452,12 @@ movementToPartwiseXml movement = music
            about this, are we always emitting the voice?)
             YES, see setDefaultVoice below?
             How about staff, are we always emitting that?
-
+        
           - TODO how does this interact with the staff-crossing feature?
             (are we always emitting staff?)
           - TODO how does it interact with clefs/other in-measure elements not
             connected to chords?
-
+        
             Lots of meta-stuff here about how a bar is represented, would be nice to write up music-score
             eloquently!
         -}
@@ -1485,7 +1494,7 @@ movementToPartwiseXml movement = music
         renderPitchLayer = renderBarMusic . fmap renderChord . getPitchLayer
         {-
         Render a rest/note/chord.
-
+        
         This returns a series of <note> elements, with appropriate <chord> tags.
         -}
         renderChord :: Chord -> Duration -> MusicXml.Music
@@ -1864,7 +1873,7 @@ fromAspects sc = do
   {-
     Separate voices (called "layers" to avoid confusion)
     This is currently a trivial algorithm that assumes overlapping notes are in different parts
-
+  
     TODO layer sepration (which, again, does not actually happen in current code)
     should happen after ties have been split.
   -}
@@ -1920,11 +1929,8 @@ fromAspects sc = do
     -- This is being used for the actual score!
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
 
-
-
 asp1ToAsp2 :: Asp1 -> Asp2
 asp1ToAsp2 = pure . (fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap) pure
-
 
 toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
 toLayer p =
@@ -1932,6 +1938,7 @@ toLayer p =
     (throwError $ "Overlapping events in part: " ++ show p)
     return
     . preview Music.Score.Phrases.singleMVoice
+
 asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
 asp2ToAsp3 =
   id
@@ -1947,6 +1954,7 @@ asp2ToAsp3 =
         over techniques TN.notateTechnique
           . Music.Score.Technique.addTechniqueCon
       )
+
 -- TODO optionally log quantization
 quantizeBar ::
   (StandardNotationExportM m, Tiable a) =>
@@ -1957,8 +1965,10 @@ quantizeBar = fmap rewrite . quantize' . view Music.Time.pairs
     quantize' x = case quantize x of
       Left e -> throwError $ "Quantization failed: " ++ e
       Right x -> return x
+
 generateStaffGrouping :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
 generateStaffGrouping = groupToLabelTree . partDefault
+
 aspectsToStaff :: (Music.Parts.Part, [Rhythm (Maybe Asp3)]) -> Staff
 aspectsToStaff (part, bars) = Staff info (fmap aspectsToBar bars)
   where
@@ -1979,8 +1989,10 @@ aspectsToStaff (part, bars) = Staff info (fmap aspectsToBar bars)
         soloStr = if (part ^. (Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
         nameStr = (part ^. (Music.Parts.instrument) . (to Music.Parts.fullName))
         subpartStr = Just $ show (part ^. (Music.Parts.subpart))
+
 partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
 partDefault xs = Music.Parts.groupDefault $ fmap (\(p, x) -> (p ^. (Music.Parts.instrument), (p, x))) xs
+
 groupToLabelTree :: Group a -> LabelTree (BracketType) a
 groupToLabelTree (Single (_, a)) = Leaf a
 groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
@@ -1990,6 +2002,7 @@ groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
     k Music.Parts.PianoStaff = Brace
     k Music.Parts.GrandStaff = Brace
     k _ = NoBracket
+
 aspectsToChord :: Maybe Asp3 -> Chord
 aspectsToChord Nothing = mempty
 aspectsToChord (Just asp) =
@@ -2003,6 +2016,7 @@ aspectsToChord (Just asp) =
     $ mempty
   where
     (endTie, beginTie) = Music.Score.Ties.isTieEndBeginning asp
+
 aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
 -- TODO handle >1 layers (see below)
 -- TODO place clef changes here
