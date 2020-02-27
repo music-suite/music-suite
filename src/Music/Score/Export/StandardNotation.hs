@@ -1871,11 +1871,36 @@ fromAspects sc = do
   -- postChordMerge :: [(Music.Parts.Part,Score Asp2)]
 
   {-
-    Separate voices (called "layers" to avoid confusion)
-    This is currently a trivial algorithm that assumes overlapping notes are in different parts
+    Currently we:
+      - Simultaneous note merging (into chords)
+      - MVoice conversion (assuming a single voice)
+      - Context rewriting (dynamics, articulation, technique)
+      - Bar splitting (adding ties)
+      - Quantization
+    We want:
+      - Simultaneous note merging (into chords)
+      - Context rewriting (dynamics, articulation, technique)
+          TODO how? This only works for single voices as currently written
+      - Bar splitting
+      - Voice separation
+      - Quantization
+    OR:
+      - Simultaneous note merging (into chords)
+      - Voice sepration (whatever currently works remains a single voice)
+        - TODO VS must be linear or nearly!
+        - Is "greedy interval coloring" + posthoc good enough?
+      - Context rewriting (dynamics, articulation, technique)
+        - TODO iff the separated voices are rendered on the *same staff*
+          we'll need to rethink the contextual notations carefully. Do not
+          support multi-voice staves as a starting point.
+      - Bar splitting (adding ties)
+      - Quantization
+
+
 
     TODO layer sepration (which, again, does not actually happen in current code)
     should happen after bars have been split.
+
   -}
   say "Separating voices in parts (assuming no overlaps)"
   postVoiceSeparation :: [(Music.Parts.Part, MVoice Asp2)] <-
