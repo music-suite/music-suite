@@ -1888,7 +1888,8 @@ fromAspects sc = do
       - Simultaneous note merging (into chords)
       - Voice sepration (whatever currently works remains a single voice)
         - TODO VS must be linear or nearly!
-        - Is "greedy interval coloring" + posthoc good enough?
+        - Is "greedy interval coloring" (or "interval partitioning" + posthoc good enough?
+          - https://algorithmsandme.com/interval-partitioning-problem/
       - Context rewriting (dynamics, articulation, technique)
         - TODO iff the separated voices are rendered on the *same staff*
           we'll need to rethink the contextual notations carefully. Do not
