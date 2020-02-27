@@ -1858,7 +1858,7 @@ fromAspects sc = do
   -- Change aspect type as we need Semigroup to compose all simultanous notes
   -- Merge simultanous notes into chords, to simplify voice-separation
   say "Merging overlapping notes into chords"
-  let postChordMerge :: [(Music.Parts.Part, Score Asp2)] = fmap2 (simultaneous . fmap asp1ToAsp2) postPartExtract
+  let postChordMerge :: [(Music.Parts.Part, Score Asp2)] = (fmap . fmap) (simultaneous . fmap asp1ToAsp2) postPartExtract
   -- postChordMerge :: [(Music.Parts.Part,Score Asp2)]
 
   {-
@@ -1878,14 +1878,14 @@ fromAspects sc = do
   -- Rewrite dynamics and articulation to be context-sensitive
   -- This changes the aspect type again
   say "Notate dynamics, articulation and playing techniques"
-  postContextSensitiveNotationRewrite <- return $ fmap2 asp2ToAsp3 $ postVoiceSeparation
+  postContextSensitiveNotationRewrite <- return $ (fmap . fmap) asp2ToAsp3 $ postVoiceSeparation
   -- postContextSensitiveNotationRewrite :: [(Music.Parts.Part,Voice (Maybe Asp3))]
 
   -- Split each part into bars, splitting notes and adding ties when necessary
   -- Resulting list is list of bars, there is no layering (yet)
   say "Divide score into bars, adding ties where necessary"
   let postTieSplit :: [(Part, [Voice (Maybe Asp3)])] =
-        fmap2 (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
+        (fmap . fmap) (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
   -- For each bar, quantize all layers. This is where tuplets/note values are generated.
   say "Quantize rhythms (generating dotted notes and tuplets)"
   postQuantize <- traverse (traverse (traverse quantizeBar)) postTieSplit
@@ -1903,7 +1903,6 @@ fromAspects sc = do
   say $ "Regular staff bars: " ++ show (fmap (length . _bars) . toList $ staves)
   return $ Work mempty [Movement info systemStaff staves]
   where
-    fmap2 = fmap . fmap
     info =
       id
         $ movementTitle
@@ -1920,8 +1919,11 @@ fromAspects sc = do
     -- Make this more prominent!
     -- This is being used for the actual score!
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
-    asp1ToAsp2 :: Asp1 -> Asp2
-    asp1ToAsp2 = pure . (fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap) pure
+
+
+
+asp1ToAsp2 :: Asp1 -> Asp2
+asp1ToAsp2 = pure . (fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap) pure
 
 
 toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
