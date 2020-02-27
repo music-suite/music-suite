@@ -849,6 +849,7 @@ midpointsRelative o v = zipWith between (onsetsRelative o v) (offsetsRelative o 
 -- | Returns the eras of all notes in a voice given the onset of the first note.
 erasRelative :: Time -> Voice a -> [Span]
 erasRelative o v = zipWith (<->) (onsetsRelative o v) (offsetsRelative o v)
+
 {-
 onsetMap  :: Score a -> Map Time a
 onsetMap = fmap (view onset) . eraMap
@@ -875,4 +876,3 @@ rotateValues :: Int -> Voice a -> Voice a
 rotateValues n x = view voice $ fmap (view note) $ zip ds (rotate n vs)
   where
     (ds, vs) = unzip $ fmap (view $ from note) $ view notes x
-

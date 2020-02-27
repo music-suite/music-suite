@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -10,9 +11,7 @@
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
   -fno-warn-unused-imports
-  -fno-warn-missing-signatures
-  #-}
-
+  -fno-warn-missing-signatures #-}
 {-# OPTIONS_HADDOCK hide #-}
 
 module Music.Pitch.Common.Internal where
@@ -22,13 +21,16 @@ import Control.Lens hiding (simple)
 import Control.Monad
 import Data.AdditiveGroup
 import Data.Aeson (FromJSON (..), ToJSON (..))
+import qualified Data.Aeson
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.AffineSpace.Point (relative)
 import Data.Basis
+import qualified Data.Char as Char
 import Data.Either
 import Data.Fixed (Fixed (..), HasResolution (..))
 import Data.Functor.Couple
+import qualified Data.List as List
 import Data.Maybe
 import Data.Monoid (Ap (..))
 import Data.Ratio
@@ -39,9 +41,6 @@ import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 import Music.Time.Transform (Transformable (..))
 import Numeric.Positive
-import qualified Data.Aeson
-import qualified Data.Char as Char
-import qualified Data.List as List
 
 -- |
 -- Number of chromatic steps.
@@ -144,9 +143,7 @@ instance Semigroup Interval where
   (<>) = (^+^)
 
 instance Monoid Interval where
-
   mempty = _P1
-
 
 instance VectorSpace Interval where
 
@@ -349,7 +346,6 @@ intervals.
 > steps   a = semitones a `mod` 12
 -}
 
-
 -- |
 -- Returns whether the given interval is negative.
 --
@@ -390,13 +386,6 @@ instance HasBasis Interval where
   decompose' (Interval (c, d)) Diatonic = fromIntegral d
 
 instance HasQuality Interval where
-  -- | Return the quality of an interval.
-  --
-  -- >>> quality m3
-  -- Minor
-  --
-  -- >>> quality (augment _A4)
-  -- Augmented 2
   quality :: Interval -> Quality
   quality = go
     where
@@ -714,7 +703,6 @@ intervalAlterationSteps :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 intervalAlterationSteps =
   iso
     (\(d, s) -> mkInterval' (fromIntegral d) (fromIntegral s))
-
     (\x -> (qualityToDiff (number x) (expectedQualityType (number x)) (quality x), view diatonicSteps $ number x))
   where
     qualityToDiff n qt q = fromMaybe e $ qualityToAlteration (numberDirection n) qt q
@@ -725,7 +713,6 @@ mkIntervalS :: Quality -> Number -> Maybe Interval
 mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ steps n)
   where
     diff = qualityToAlteration (numberDirection n) (expectedQualityType n) (q)
-
 
 -- TODO rename numberToDiatonicSteps? Compare other Isos
 
@@ -741,11 +728,11 @@ mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ steps n)
 diatonicSteps :: Iso' Number DiatonicSteps
 diatonicSteps = iso steps d2n
   where
-
     d2n :: DiatonicSteps -> Number
-    d2n n | n >= 0 = fromIntegral (n + 1)
-          | n < 0  = fromIntegral (n - 1)
-          | otherwise = error "Impossible"
+    d2n n
+      | n >= 0 = fromIntegral (n + 1)
+      | n < 0 = fromIntegral (n - 1)
+      | otherwise = error "Impossible"
 
 steps :: Integral a => Number -> a
 steps n = case fromIntegral n `compare` (0 :: Integer) of
@@ -1201,7 +1188,6 @@ class HasNumber a where
   -- 3
   number :: a -> Number
 
-
 -- | Whether the given interval is a (harmonic) dissonance.
 --
 -- This does /not/ check for augmented or dominished intervals,
@@ -1229,7 +1215,6 @@ isConsonance x = isPerfectConsonance x || isImperfectConsonance x
 --
 -- This does /not/ check for augmented or dominished intervals,
 -- see 'isMelodicDissonance'.
---
 isPerfectConsonance :: Interval -> Bool
 isPerfectConsonance x = case number (simple x) of
   1 -> True
@@ -1241,7 +1226,6 @@ isPerfectConsonance x = case number (simple x) of
 --
 -- This does /not/ check for augmented or dominished intervals,
 -- see 'isMelodicDissonance'.
---
 isImperfectConsonance :: Interval -> Bool
 isImperfectConsonance x = case number (simple x) of
   3 -> True
@@ -1395,13 +1379,12 @@ usingFlats = go
     go 11 = 6
     go _ = error "TODO: Use mod-12 arith type for argument to Spelling"
 
-{- |
-Respell preserving general augmented/diminished diretion, but disallow all qualities
-except the standard ones.
-
-Standard qualities include major, minor, perfect, augmented/diminished or
-doubly augmented/diminished.
--}
+-- |
+-- Respell preserving general augmented/diminished diretion, but disallow all qualities
+-- except the standard ones.
+--
+-- Standard qualities include major, minor, perfect, augmented/diminished or
+-- doubly augmented/diminished.
 useStandardQualities :: Interval -> Interval
 useStandardQualities i
   | quality i > Perfect && not (ok i) = spell usingSharps i
@@ -1410,9 +1393,8 @@ useStandardQualities i
   where
     ok i = isStandardQuality (quality i)
 
-{- |
-Same as 'useStandardQualities' but disallow doubly augmented/diminished.
--}
+-- |
+-- Same as 'useStandardQualities' but disallow doubly augmented/diminished.
 useSimpleQualities :: Interval -> Interval
 useSimpleQualities i
   | quality i > Perfect && not (ok i) = spell usingSharps i
@@ -1421,12 +1403,11 @@ useSimpleQualities i
   where
     ok i = isSimpleQuality (quality i)
 
-{- |
-Respell preserving general sharp/flat diretion, but disallow all qualities
-except the standard ones.
-
-Standard qualities include natural, sharp, flat, double sharp and double flat.
--}
+-- |
+-- Respell preserving general sharp/flat diretion, but disallow all qualities
+-- except the standard ones.
+--
+-- Standard qualities include natural, sharp, flat, double sharp and double flat.
 useStandardAlterations :: Tonic -> Pitch -> Pitch
 useStandardAlterations tonic p
   | quality i > Perfect && not (ok i) = spellPitchRelative tonic usingSharps p
@@ -1436,9 +1417,8 @@ useStandardAlterations tonic p
     i = p .-. tonic
     ok i = isStandardQuality (quality i)
 
-{- |
-Same as 'useStandardAlterations' but disallow double sharp/flat.
--}
+-- |
+-- Same as 'useStandardAlterations' but disallow double sharp/flat.
 useSimpleAlterations :: Tonic -> Pitch -> Pitch
 useSimpleAlterations tonic p
   | quality i > Perfect && not (ok i) = spellPitchRelative tonic usingSharps p
@@ -2084,7 +2064,6 @@ ab____ = fromPitch $ viaPitchL (5, (-1), -4)
 
 bb____ = fromPitch $ viaPitchL (6, (-1), -4)
 
-
 class IsInterval a where
   fromInterval :: Interval -> a
 
@@ -2129,11 +2108,6 @@ fromIntervalL = fromInterval . go
   where
     go :: IntervalL -> Interval
     go (IntervalL (o, d, c)) = (_P8 ^* o) ^+^ (_A1 ^* c) ^+^ (d2 ^* d)
-
-
-
-
-
 
 d1 = fromIntervalL $ IntervalL (0, 0, -1)
 

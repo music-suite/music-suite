@@ -1,7 +1,6 @@
 module Music.Time.Behavior
   ( -- * Behavior type
     Behavior,
-
     behavior,
     sampled,
 

@@ -84,30 +84,31 @@ defaultMain music = do
   args <- System.Environment.getArgs
   opts <- parse args
   handle opts
-    where
-      handle opts = case opts of
-        Help ->
-          putStrLn
-            "Usage: <executable> -f [xml|ly|mid] -o PATH"
-        ToLyAndMidi lyOpts path -> do
-          -- TODO run in parallel?
-          handle $ ToMidi
+  where
+    handle opts = case opts of
+      Help ->
+        putStrLn
+          "Usage: <executable> -f [xml|ly|mid] -o PATH"
+      ToLyAndMidi lyOpts path -> do
+        -- TODO run in parallel?
+        handle $
+          ToMidi
             (stripSuffix path ++ ".mid")
-          handle $ ToLy lyOpts path
-        ToMidi path -> do
-          midi <- runIOExportM $ toMidi music
-          Codec.Midi.exportFile path midi
-        ToLy opts path -> do
-          work <- runIOExportM $ fromAspects music
-          (h, ly) <- runIOExportM $ toLy opts work
-          let ly' = h ++ show (Text.Pretty.pretty ly)
-          -- TODO use ByteString/builders, not String?
-          writeFile path ly'
-        ToXml path -> do
-          work <- runIOExportM $ fromAspects music
-          work' <- runIOExportM $ toXml work
-          -- TODO use ByteString/builders, not String?
-          writeFile path $ Data.Music.MusicXml.showXml work'
+        handle $ ToLy lyOpts path
+      ToMidi path -> do
+        midi <- runIOExportM $ toMidi music
+        Codec.Midi.exportFile path midi
+      ToLy opts path -> do
+        work <- runIOExportM $ fromAspects music
+        (h, ly) <- runIOExportM $ toLy opts work
+        let ly' = h ++ show (Text.Pretty.pretty ly)
+        -- TODO use ByteString/builders, not String?
+        writeFile path ly'
+      ToXml path -> do
+        work <- runIOExportM $ fromAspects music
+        work' <- runIOExportM $ toXml work
+        -- TODO use ByteString/builders, not String?
+        writeFile path $ Data.Music.MusicXml.showXml work'
 
 stripSuffix :: String -> String
 stripSuffix xs
@@ -115,11 +116,13 @@ stripSuffix xs
   | otherwise = xs
 
 -- TODO move
+
 -- | Orchestrate in the given parts.
 singleParts :: (Monoid a, Semigroup a, HasParts' a) => [Music.Score.Part.Part a] -> [a] -> a
 singleParts ens = ppar . zipWith (set parts') (reverse $ ens)
 
 -- TODO move
+
 -- | Orchestrate by doubling the given music in all given parts.
 --
 -- >>> doublePartsInOctave [violins,flutes] $ pseq[c,d,e]
@@ -131,6 +134,7 @@ doublePartsF :: (Monoid (f a), HasParts' a, Functor f) => [Music.Score.Part.Part
 doublePartsF ps x = mconcat $ fmap (\p -> set (mapped . parts') p x) ps
 
 -- TODO move
+
 -- | Orchestrate by doubling in all given parts.
 --
 -- >>> doublePartsInOctave [(violins,0),(flutes,1)] $ pseq[c,d,e]
