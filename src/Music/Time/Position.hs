@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 -- |
 -- Provides a way to query a value for its 'position'.
 module Music.Time.Position
@@ -43,7 +52,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,
@@ -93,15 +101,6 @@ class HasDuration a => HasPosition a where
 
 instance HasPosition Span where
   _era = id
-
-instance (HasPosition a, Transformable a) => HasDuration [a] where
-  _duration x = _offset x .-. _onset x
-
-instance (HasPosition a, Transformable a) => HasPosition [a] where
-  _era x = (f x, g x) ^. from onsetAndOffset
-    where
-      f = foldr min 0 . fmap _onset
-      g = foldr max 0 . fmap _offset
 
 -- |
 -- Position of the given value.

@@ -6,7 +6,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+  #-}
 
 module Music.Time.Voice
   ( -- * Voice type
@@ -87,16 +87,12 @@ import Control.Monad.Zip
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson as JSON
 import Data.AffineSpace
-import Data.AffineSpace.Point
 import qualified Data.Either
 import Data.Foldable (Foldable)
 import qualified Data.Foldable
 import Data.Functor.Context
 import qualified Data.List
-import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe
-import Data.Semigroup
-import Data.Sequence (Seq)
 import Data.String
 import Data.Traversable (Traversable)
 import Data.Typeable (Typeable)

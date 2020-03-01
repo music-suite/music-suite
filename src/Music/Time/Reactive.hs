@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 module Music.Time.Reactive
   ( -- * Reactive type
     Reactive,
@@ -47,7 +56,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,
@@ -188,8 +196,8 @@ atTime = (!) . snd . (^. _Wrapped')
 -- Get the final value.
 final :: Reactive a -> a
 final x = case (initial x, updates x) of
-  (i, []) -> i
-  (i, xs) -> snd $ last xs
+  (i,  []) -> i
+  (_i, xs) -> snd $ last xs
 
 -- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
 switchR :: Time -> Reactive a -> Reactive a -> Reactive a

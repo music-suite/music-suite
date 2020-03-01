@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 module Music.Time.Aligned
   ( -- * Alignable class
     Alignable (..),
@@ -65,7 +74,7 @@ aligned t d a = Aligned ((t, d), a)
 
 -- | Align so that the given local duration occurs at the given time.
 alignTo :: (Transformable a, HasDuration a) => Time -> Duration -> a -> Aligned a
-alignTo t d x = aligned 0 (d / view duration x) x
+alignTo t d x = aligned t (d / view duration x) x
 
 -- | Upbeat composition.
 --
@@ -98,7 +107,7 @@ instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
 --  x^.'era' = ('realign' l x)^.'era'
 --  @
 realign :: (HasDuration a, Transformable a) => Alignment -> Aligned a -> Aligned a
-realign l a@(Aligned ((t, _), x)) = Aligned ((a ^. position l, l), x)
+realign l a@(Aligned ((_t, _), x)) = Aligned ((a ^. position l, l), x)
 
 -- | Render an aligned value. The given span represents the actual span of the aligned value.
 renderAligned :: (HasDuration a, Transformable a) => (Span -> a -> b) -> Aligned a -> b

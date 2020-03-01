@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 module Music.Time.Behavior
   ( -- * Behavior type
     Behavior,
@@ -231,10 +240,12 @@ unit = switch 0 0 (switch 1 line 1)
 -- >     | t > 1     = 1
 -- >     | otherwise = t
 
+{-
 -- |
 -- A behavior that
 interval :: (Fractional a, Transformable a) => Time -> Time -> Event (Behavior a)
 interval t u = (t <-> u, line) ^. event
+-}
 
 -- |
 -- A behavior that
@@ -315,7 +326,7 @@ tau :: Floating a => a
 tau = 2 * pi
 
 floor' :: RealFrac a => a -> a
-floor' = fromIntegral . floor
+floor' = fromInteger . floor
 
 turnOn :: Num a => Behavior a
 
