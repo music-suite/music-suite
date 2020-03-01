@@ -208,6 +208,8 @@ import Data.Functor.Couple
 import Data.Functor.Identity (Identity (..))
 import qualified Data.List
 import qualified Data.List.Split
+import Data.Set (Set)
+import qualified Data.Set
 import Data.Map (Map)
 import qualified Data.Map
 import qualified Data.Maybe
@@ -1871,6 +1873,37 @@ list2 x y = UnsafeList0To4 [x,y]
 list3 x y z = UnsafeList0To4 [x,y,z]
 list4 x y z a = UnsafeList0To4 [x,y,z,a]
 
+
+-- TODO move
+
+-- |
+-- Partition intervals into non-overlapping subsets.
+--
+-- @
+-- mconcat (partitionIntervals xs) = xs
+-- @
+--
+-- TODO track the fact that the returned sets are all non-overlapping
+-- in the type system?
+partitionIntervals :: Ord a => Set ((a,a),b) -> [Set ((a,a),b)]
+partitionIntervals max = undefined
+
+toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (List0To4 (MVoice a))
+toLayer p =
+  -- TODO:
+  --  Use partitionIntervals
+  --    If it returns >4 voices, fail (or do custom tie-based sepration?)
+  --
+  --  Use (error "partitionIntervals returned overlapping partition") for now, see notes
+  --  in partitionIntervals about tracking non-overlappingness in the types.
+  fmap list1 .
+    maybe
+      (throwError $ "Overlapping events in part: " ++ show p)
+      return
+      . preview Music.Score.Phrases.singleMVoice
+
+
+
 fromAspects :: (StandardNotationExportM m) => Asp -> m Work
 fromAspects sc = do
   say "Simplifying pitches"
@@ -1926,7 +1959,7 @@ fromAspects sc = do
     traverse
       ( \a@(p, _) ->
           -- TODO VS: Do actual voice separation here
-          traverse (fmap list1 . toLayer p) a
+          traverse (toLayer p) a
       )
       $ postChordMerge
   -- Rewrite dynamics and articulation to be context-sensitive
@@ -1986,12 +2019,6 @@ fromAspects sc = do
 asp1ToAsp2 :: Asp1 -> Asp2
 asp1ToAsp2 = pure . (fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap) pure
 
-toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
-toLayer p =
-  maybe
-    (throwError $ "Overlapping events in part: " ++ show p)
-    return
-    . preview Music.Score.Phrases.singleMVoice
 
 asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
 asp2ToAsp3 =
@@ -2045,7 +2072,7 @@ aspectsToStaff (part, UnsafeList0To4 [bars]) = Staff info (fmap aspectsToBar bar
         soloStr = if (part ^. (Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
         nameStr = (part ^. (Music.Parts.instrument) . (to Music.Parts.fullName))
         subpartStr = Just $ show (part ^. (Music.Parts.subpart))
-aspectsToStaff (part, _) = error "TODO support >1 voice per part"
+aspectsToStaff (part, _) = error "FIXME support >1 voice per part"
 
 -- | Group all parts in the default way (e.g. a standard orchestral score with woodwinds
 -- on top, followed by brass, etc).
