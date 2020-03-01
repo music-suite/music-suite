@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -5,9 +6,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
-{-# LANGUAGE RankNTypes #-}
+  -fno-warn-redundant-constraints #-}
 
 -- | Generic equal temperament pitch.
 --
@@ -85,9 +84,7 @@ instance IsNat a => Semigroup (Equal a) where
   (<>) = (+)
 
 instance IsNat a => Monoid (Equal a) where
-
   mempty = 0
-
 
 instance IsNat a => AdditiveGroup (Equal a) where
 

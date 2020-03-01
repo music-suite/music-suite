@@ -5,8 +5,8 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
+  -fno-warn-redundant-constraints #-}
+
 module Music.Time.Juxtapose
   ( module Music.Time.Split,
     module Music.Time.Reverse,
@@ -130,7 +130,6 @@ times n = pseq . replicate n
 -- @
 group :: (Monoid a, Transformable a, HasPosition a) => Int -> a -> a
 group n x = times n x |/ fromIntegral n
-
 {-
 -- |
 -- Compose sequentially by aligning the nominal position of each value to the

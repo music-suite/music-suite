@@ -5,8 +5,8 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
+  -fno-warn-redundant-constraints #-}
+
 -- | Representation of musical instruments.
 --
 -- The 'Instrument' type represent any instrument in the MusicXML Standard Sounds 3.0 set,
@@ -127,7 +127,6 @@ allowedClefs = Data.Set.fromList . Data._allowedClefs . fetchInstrumentDef
 -- | Standard clef used for this instrument.
 standardClef :: Instrument -> Maybe Clef
 standardClef = Data.Maybe.listToMaybe . Data._standardClef . fetchInstrumentDef
-
 
 -- | Playable range for this instrument.
 playableRange :: Instrument -> Ambitus Pitch

@@ -5,8 +5,8 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
+  -fno-warn-redundant-constraints #-}
+
 -- | Clefs and staff positions.
 module Music.Pitch.Clef
   ( -- * Staff lines

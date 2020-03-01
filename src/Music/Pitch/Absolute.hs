@@ -5,8 +5,8 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
+  -fno-warn-redundant-constraints #-}
+
 -- | Absolute pitch representation.
 module Music.Pitch.Absolute
   ( -- * Absolute pitch representation
@@ -138,7 +138,6 @@ diss xs = lcms xs / minimum xs
 
 lcmG :: RealFrac a => a -> a -> a
 lcmG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (lcm a1 b1) / fromIntegral (gcd a2 b2)
-
 
 lcms :: RealFrac a => [a] -> a
 lcms = foldr lcmG 1

@@ -10,7 +10,7 @@ import Control.Lens (Rewrapped (..), Wrapped (..), (^.), _Wrapped, from, iso, ov
 import Control.Monad (join)
 import Data.AffineSpace
 import Data.VectorSpace
-import Music.Pitch (IsPitch(..))
+import Music.Pitch (IsPitch (..))
 import Music.Score.Pitch
 import Music.Time.Aligned
 import Music.Time.Event
@@ -25,7 +25,6 @@ import Music.Time.Voice
 
 instance (IsPitch a, Reversible a) => IsPitch (Pattern a) where
   fromPitch = pureP . fromPitch
-
 
 sppar = pseq . fmap ppar
 

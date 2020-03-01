@@ -1,12 +1,3 @@
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFoldable #-}
@@ -18,6 +9,14 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------

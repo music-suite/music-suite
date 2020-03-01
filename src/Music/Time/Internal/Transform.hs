@@ -1,13 +1,3 @@
-{-# OPTIONS_HADDOCK hide #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFoldable #-}
@@ -23,6 +13,15 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------
 
@@ -338,7 +337,6 @@ whilstL id
 -}
 
 -- type LensLike (f :: * -> *) s t a b = (a -> f b) -> s -> f t
-
 
 -- :: Functor f => (x -> afb -> afb') -> (afb' -> s -> f t) -> afb -> (x, s) -> f (x, t)
 -- TODO rename

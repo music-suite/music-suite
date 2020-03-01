@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -5,9 +6,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+  -fno-warn-redundant-constraints #-}
 
 -------------------------------------------------------------------------------------
 

@@ -4,8 +4,8 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  #-}
+  -fno-warn-unused-matches #-}
+
 module Music.Time.Transform
   ( module Music.Time.Types,
 

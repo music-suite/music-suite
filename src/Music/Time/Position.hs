@@ -5,8 +5,8 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
+  -fno-warn-redundant-constraints #-}
+
 -- |
 -- Provides a way to query a value for its 'position'.
 module Music.Time.Position

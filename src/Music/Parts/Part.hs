@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -5,10 +7,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE InstanceSigs #-}
+  -fno-warn-redundant-constraints #-}
 
 module Music.Parts.Part
   ( Part,
@@ -67,9 +66,7 @@ instance Show Part where
 
 -- Semantics: Monoid (Option . First)
 instance Monoid Part where
-
   mempty = def
-
 
 instance Semigroup Part where
   x <> y

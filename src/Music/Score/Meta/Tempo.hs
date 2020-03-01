@@ -1,12 +1,3 @@
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFoldable #-}
@@ -17,8 +8,17 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------
@@ -142,9 +142,7 @@ instance Semigroup Tempo where
     | otherwise = a
 
 instance Monoid Tempo where
-
   mempty = metronome (1 / 4) 120
-
 
 -- | Create a tempo from a duration and a number of beats per minute.
 --
@@ -197,7 +195,6 @@ tempo c x = tempoDuring (_era x) c x
 -- | Set the tempo of the given part of a score.
 tempoDuring :: HasMeta a => Span -> Tempo -> a -> a
 tempoDuring s c = addMetaNote $ view event (s, c)
-
 
 -- | Extract all tempi from the given score, using the given default tempo.
 -- withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a

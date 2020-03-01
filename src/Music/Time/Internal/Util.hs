@@ -1,3 +1,6 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -7,11 +10,7 @@
   -fno-warn-unused-imports
   -fno-warn-unused-top-binds
   -fno-warn-unused-matches
-  -fno-warn-redundant-constraints
-  #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE ViewPatterns #-}
+  -fno-warn-redundant-constraints #-}
 
 -------------------------------------------------------------------------------------
 

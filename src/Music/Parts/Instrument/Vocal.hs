@@ -5,8 +5,8 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
+  -fno-warn-redundant-constraints #-}
+
 -- | Vocal part "instruments".
 -- Of course voices are not instruments, but for the sake of consistency.
 module Music.Parts.Instrument.Vocal
