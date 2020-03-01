@@ -12,7 +12,6 @@ module Music.Time.Types
     Time,
     Duration,
     Alignment,
-    LocalDuration,
 
     -- ** Convert between time and duration
     -- $convert
@@ -28,9 +27,6 @@ module Music.Time.Types
     (<->),
     (>->),
     (<-<),
-    delta,
-    range,
-    codelta,
     onsetAndOffset,
     onsetAndDuration,
     durationAndOffset,
@@ -56,12 +52,10 @@ module Music.Time.Types
     strictlyInside,
     closestPointInside,
 
-    -- ** Partial orders
+    -- ** Predicates
     encloses,
     properlyEncloses,
     overlaps,
-
-    -- *** etc.
     isBefore,
     afterOnset,
     strictlyAfterOnset,
@@ -71,23 +65,23 @@ module Music.Time.Types
     strictlyAfterOffset,
     beforeOffset,
     strictlyBeforeOffset,
-    startsWhenStarts,
-    startsWhenStops,
-    stopsWhenStops,
-    stopsWhenStarts,
-    startsBefore,
-    startsLater,
-    stopsAtTheSameTime,
-    stopsBefore,
-    stopsLater,
+    -- startsWhenStarts,
+    -- startsWhenStops,
+    -- stopsWhenStops,
+    -- stopsWhenStarts,
+    -- startsBefore,
+    -- startsLater,
+    -- stopsAtTheSameTime,
+    -- stopsBefore,
+    -- stopsLater,
     -- union
     -- intersection (alt name 'overlap')
     -- difference (would actually become a split)
 
     -- ** Read/Show
-    showRange,
-    showDelta,
-    showCodelta,
+    showOnsetAndOffset,
+    showOnsetAndDuration,
+    showDurationAndOffset,
   )
 where
 
@@ -145,11 +139,10 @@ deriving instance Floating Time
 deriving instance Floating Duration
 -}
 
+-- | 'Alignment' is a synonym for 'Duration'.
+--
+-- See "Music.Time.Alignment" for its intended use.
 type Alignment = Duration
-
-type LocalDuration = Alignment
-
-{-# DEPRECATED LocalDuration "Use 'Alignment'" #-}
 
 -- |
 -- Duration, corresponding to note values in standard notation.
@@ -246,13 +239,13 @@ instance AdditiveGroup Time where
 
 instance VectorSpace Time where
 
-  type Scalar Time = LocalDuration
+  type Scalar Time = Duration
 
   Duration x *^ Time y = Time (x * y)
 
 instance AffineSpace Time where
 
-  type Diff Time = LocalDuration
+  type Diff Time = Duration
 
   Time x .-. Time y = Duration (x - y)
 
@@ -338,7 +331,7 @@ newtype Span = Span {getSpan :: (Time, Duration)}
 -- (10,5)
 
 instance Show Span where
-  show = showRange
+  show = showOnsetAndOffset
 
 -- Which form should we use?
 
@@ -416,37 +409,19 @@ durationAndOffset :: Iso' Span (Duration, Time)
 durationAndOffset = iso (\x -> let (t, d) = getSpan x in (d, t .+^ d)) (uncurry (<-<))
 
 -- |
--- View a span as pair of onset and offset.
-range :: Iso' Span (Time, Time)
-range = onsetAndOffset
-{-# DEPRECATED range "Use onsetAndOffset" #-}
+-- Show a span as a pair of onset and offset, i.e. @t1 \<-\> t2@.
+showOnsetAndOffset :: Span -> String
+showOnsetAndOffset (view onsetAndOffset -> (t, u)) = show t ++ " <-> " ++ show u
 
 -- |
--- View a span as a pair of onset and duration.
-delta :: Iso' Span (Time, Duration)
-delta = onsetAndDuration
-{-# DEPRECATED delta "Use onsetAndDuration" #-}
+-- Show a span as a pair of onset and duration, i.e. @t >-> d@.
+showOnsetAndDuration :: Span -> String
+showOnsetAndDuration (view onsetAndDuration -> (t, d)) = show t ++ " >-> " ++ show d
 
 -- |
--- View a span as a pair of duration and offset.
-codelta :: Iso' Span (Duration, Time)
-codelta = durationAndOffset
-{-# DEPRECATED codelta "Use durationAndOffset" #-}
-
--- |
--- Show a span in range notation, i.e. @t1 \<-\> t2@.
-showRange :: Span -> String
-showRange (view onsetAndOffset -> (t, u)) = show t ++ " <-> " ++ show u
-
--- |
--- Show a span in delta notation, i.e. @t >-> d@.
-showDelta :: Span -> String
-showDelta (view onsetAndDuration -> (t, d)) = show t ++ " >-> " ++ show d
-
--- |
--- Show a span in codelta notation, i.e. @t <-< d@.
-showCodelta :: Span -> String
-showCodelta (view durationAndOffset -> (d, u)) = show d ++ " <-< " ++ show u
+-- Show a span as a pair of duration and offset, i.e. @t <-< d@.
+showDurationAndOffset :: Span -> String
+showDurationAndOffset (view durationAndOffset -> (d, u)) = show d ++ " <-< " ++ show u
 
 -- |
 -- Access the delay component in a span.
@@ -634,6 +609,7 @@ t `strictlyBeforeOffset` s = t < _offsetS s
 
 -- Param order OK
 
+{-
 -- Name?
 startsWhenStarts :: Span -> Span -> Bool
 a `startsWhenStarts` b = _onsetS a == _onsetS b
@@ -664,7 +640,7 @@ a `stopsBefore` b = _offsetS a < _offsetS b
 
 stopsLater :: Span -> Span -> Bool
 a `stopsLater` b = _offsetS a > _offsetS b
-
+-}
 {-
 contains
 curtails
@@ -736,4 +712,4 @@ _offsetS :: Span -> Time
 
 _midpointS :: Span -> Time
 
-_durationS :: Span -> LocalDuration
+_durationS :: Span -> Duration
