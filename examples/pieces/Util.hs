@@ -606,20 +606,6 @@ showAmbitus a = let (m,n) = a^.from ambitus in ppar $ fmap (pure . colorBlue . f
 
 ----
 
-data Permutation
-  = Perm4 Int -- Index into Data.List.permutations [1..4], mod 24
-  | Perm5 Int -- Index into Data.List.permutations [1..5], mod 120
-
-permutationLength :: Permutation -> Int
-permutationLength (Perm4 _) = 4
-permutationLength (Perm5 _) = 5
-
-indexPermutation :: Permutation -> [Int]
-indexPermutation (Perm4 n) = Data.List.permutations [0..3] !! (n `mod` 24)
-indexPermutation (Perm5 n) = Data.List.permutations [0..4] !! (n `mod` 120)
-
-showPermutation :: (Enum a, IsPitch a) => Permutation -> Score a
-showPermutation p = stretchTo 1 $ pseq . fmap ([c..] !!) $ indexPermutation p
 
 --------
 

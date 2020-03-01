@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
@@ -81,3 +90,4 @@ augmentN n x
   | n < 0 = iterate diminish x !! n
   | n == 0 = x
   | n > 0 = iterate augment x !! n
+  | otherwise = error "impossible"

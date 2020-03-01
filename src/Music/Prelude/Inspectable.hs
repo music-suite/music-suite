@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -28,7 +37,7 @@ module Music.Prelude.Inspectable
 where
 
 import Data.Foldable (toList)
-import Music.Prelude.Standard hiding (open, play)
+import Music.Prelude.Standard
 import Music.Score ()
 import qualified Music.Time
 import qualified System.Info
@@ -49,9 +58,6 @@ class InspectableNote a where
 -- TODO not just Pitch
 instance Inspectable (Pattern Pitch) where
   inspectableToMusic = fmap fromPitch . flip renderPattern (0 <-> 1)
-
-instance (IsPitch a, Reversible a) => IsPitch (Pattern a) where
-  fromPitch = pureP . fromPitch
 
 instance Inspectable a => Inspectable (Maybe a) where
   inspectableToMusic = maybe mempty id . fmap inspectableToMusic

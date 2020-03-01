@@ -6,7 +6,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+  #-}
 
 module Music.Time.Voice
   ( -- * Voice type
@@ -19,10 +19,8 @@ module Music.Time.Voice
     pairs,
     durationsAsVoice,
 
-    -- * Conversion
-    noteToVoice,
 
-    -- * Maps
+    -- * Map
     mapWithOnsetRelative,
     mapWithOffsetRelative,
     mapWithEraRelative,
@@ -65,6 +63,9 @@ module Music.Time.Voice
     -- * Context
     -- TODO clean
     withContext,
+
+    -- * Conversion
+    noteToVoice,
   )
 where
 
@@ -87,16 +88,12 @@ import Control.Monad.Zip
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson as JSON
 import Data.AffineSpace
-import Data.AffineSpace.Point
 import qualified Data.Either
 import Data.Foldable (Foldable)
 import qualified Data.Foldable
 import Data.Functor.Context
 import qualified Data.List
-import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe
-import Data.Semigroup
-import Data.Sequence (Seq)
 import Data.String
 import Data.Traversable (Traversable)
 import Data.Typeable (Typeable)
@@ -107,9 +104,6 @@ import Music.Time.Internal.Util
 import Music.Time.Juxtapose
 import Music.Time.Note
 
--- |
--- A 'Voice' is a sequential composition of non-overlapping note values.
---
 -- Both 'Voice' and 'Note' have duration but no position. The difference
 -- is that 'Note' sustains a single value throughout its duration, while
 -- a voice may contain multiple values. It is called voice because it is
@@ -117,6 +111,10 @@ import Music.Time.Note
 --
 -- It may be useful to think about 'Voice' and 'Note' as vectors in time space
 -- (i.e. 'Duration'), that also happens to carry around other values, such as pitches.
+
+-- |
+-- A sequential composition of values with associated durations.
+--
 newtype Voice a = Voice {getVoice :: [Note a]}
   deriving (Eq, Ord, Typeable, Foldable, Traversable, Functor, Semigroup, Monoid)
 
@@ -867,11 +865,19 @@ durations :: Voice a -> [Duration]
 durations = view durationsV
 -}
 
+-- | Rotate the durations of a voice.
+--
+-- >>> rotateDurations 1 [(1,'c'), (2, 'd'), (1, 'e')]
+-- [(2,'c'), (1, 'd'), (1, 'e')]
 rotateDurations :: Int -> Voice a -> Voice a
 rotateDurations n x = view voice $ fmap (view note) $ zip (rotate n ds) vs
   where
     (ds, vs) = unzip $ fmap (view $ from note) $ view notes x
 
+-- | Rotate the values of a voice.
+--
+-- >>> rotateValues 1 [(1,'c'), (2, 'd'), (1, 'e')]
+-- [(1,'d'), (2, 'e'), (1, 'c')]
 rotateValues :: Int -> Voice a -> Voice a
 rotateValues n x = view voice $ fmap (view note) $ zip ds (rotate n vs)
   where

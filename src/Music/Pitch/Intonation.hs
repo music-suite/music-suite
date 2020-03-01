@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 -- | Intonation and tuning.
@@ -124,6 +133,7 @@ standardIntonation = intone (a, 440) twelveToneEqual
 just :: Tuning Interval
 just = Tuning justT'
 
+justT' :: Floating a => Interval -> a
 justT' i = 2 ** (fromIntegral o) * go (spell usingSharps s)
   where
     (o, s) = separate i

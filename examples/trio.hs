@@ -49,8 +49,8 @@ mainCanon = timeSignature (time 6 8) $
     set parts' cellos a'|*(25*5/8)
 
 music :: Music
-music = mainCanon2
+music = tremCanon <> mainCanon2
 
 main :: IO ()
-main = defaultMain music
+main = defaultMain $ filterTriples (\t _d _x -> 0 <= t && t < 32) music
 

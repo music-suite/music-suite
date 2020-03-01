@@ -1,19 +1,24 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Music.Time.Score
   ( -- * Score type
     Score,
 
-    -- * Query
-
     -- * Construction
     score,
     events,
     eras,
     triples,
-
-    -- * Conversion
-    eventToScore,
 
     -- * Traversal
     mapWithSpan,
@@ -33,12 +38,12 @@ module Music.Time.Score
     normalizeScore,
     removeRests,
 
-    -- * Utility
-    printEras,
-
     -- * Unsafe versions
     eventsIgnoringMeta,
     triplesIgnoringMeta,
+
+    -- * Conversion
+    eventToScore,
   )
 where
 
@@ -48,7 +53,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,
@@ -104,7 +108,7 @@ import Music.Time.Voice
 -- You can also use '<>' and 'mempty' of course.
 --
 
--- | A 'Score' is a sequential or parallel composition of values, and allows overlapping events
+-- | A set of events of type @a@, with an associated time spans.
 newtype Score a = Score {getScore :: (Meta, Score' a)}
   deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable {-, Show, Eq, Ord-})
 
@@ -421,16 +425,12 @@ normalizeScore = reset . normalizeScoreDurations
     reset x = set onset (view onset x `max` 0) x
     normalizeScoreDurations = over (events . each . era) normalizeSpan
 
+-- | Remove all 'Nothing' values in the score.
 removeRests :: Score (Maybe a) -> Score a
 removeRests = mcatMaybes
 
 -- TODO version that reverses the values where appropriate
 -- Use over (events . each) normalizeEvent or similar
-
--- |
--- Print the span of each event, as given by 'eras'.
-printEras :: Score a -> IO ()
-printEras = mapM_ print . toListOf eras
 
 -- |
 -- Print all eras of the given score.
@@ -478,5 +478,3 @@ anyDistinctOverlaps xs = hasDuplicates xs || anyOverlaps xs
 combined :: Eq a => (a -> a -> b) -> [a] -> [b]
 combined f as = mcatMaybes [if x == y then Nothing else Just (x `f` y) | x <- as, y <- as]
 
-squared :: (a -> a -> b) -> [a] -> [b]
-squared f as = [x `f` y | x <- as, y <- as]

@@ -9,7 +9,15 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 
 -------------------------------------------------------------------------------------
 
@@ -30,7 +38,6 @@ module Music.Score.Meta.Title
     Title,
 
     -- ** Creating and modifying
-    -- titleFromString,
     denoteTitle,
     getTitle,
     getTitleAt,
@@ -95,10 +102,6 @@ instance IsString Title where
 
 instance Show Title where
   show = List.intercalate " " . getTitle
-
--- | Create a title from a string. See also 'fromString'.
-titleFromString :: String -> Title
-titleFromString = fromString
 
 -- | Denote a title to a lower level, i.e title becomes subtitle, subtitle becomes subsubtitle etc.
 denoteTitle :: Title -> Title

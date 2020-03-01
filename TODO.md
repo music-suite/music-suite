@@ -13,8 +13,8 @@ Consider switching to a decentralized issue tracker such as:
 - [X] BUG: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
   Intervals not displayed properly
 
-- $doctests!
-  - [ ] Run locally (README)
+- $doctests
+  - [X] Run locally (README)
     - [X] Tool works
     - [ ] Fix hack for default-extensions (see Doctester.hs)
     - [ ] Make this work for all modules
@@ -134,16 +134,16 @@ Consider switching to a decentralized issue tracker such as:
     - https://github.com/music-suite/music-suite/issues/11
 
   - More 12-tone/equal temperament stuff
-    - Set theory concepts
+    - Essentially combinatorics
     - Binary scales (?)
     https://github.com/music-suite/music-pitch/issues/56
-  - Pitch normalization which preserves spelling direction
+  - [X] Pitch normalization which preserves spelling direction
     https://github.com/music-suite/music-pitch/issues/55
   - Parse Helmholtz, SPN etc
     https://github.com/music-suite/music-pitch/issues/54
   - Pitch invert should be called invertChromatic
     https://github.com/music-suite/music-pitch/issues/51
-  - Iso `interval` is partial
+  - [X] Iso `interval` is partial
     https://github.com/music-suite/music-pitch/issues/46
   - Harmony support
     https://github.com/music-suite/music-pitch/issues/35
@@ -151,29 +151,39 @@ Consider switching to a decentralized issue tracker such as:
   - Articulation should track agogic prolongation in addition to shortining/separation and accentuation
     https://github.com/music-suite/music-articulation/issues/3
 
-  - Phrase traversals currently fail at runtime if there are overlapping notes in a single part.
+  - [X] Phrase traversals currently fail at runtime if there are overlapping notes in a single part.
     https://github.com/music-suite/music-score/issues/208
 
   - $reversibleMeta
     https://github.com/music-suite/music-score/issues/119
 
-  - Issues from the following repos have been ported to this file:
-    - music-pitch
-    - music-suite
-    - music-dynamics
-    - music-articulation
+  - [X] Port issues from all old Github trackers:
+    - [X] music-pitch
+    - [X] music-suite
+    - [X] music-dynamics
+    - [X] music-articulation
 
-- [ ] Never fail export on overlapping/simultaneously events
-  $needsTests
-  - What is the correct behavior if a score is exported where a some part has overlapping notes?
-  - Generally this should be fine, though currently the backend/export code does not handle it
-    correctly.
-  - Putting overlapping events in monophonic instruments (e.g. flute) should be a linting error,
-    similar to range etc.
-  - The general problem of breaking up a score: $voiceSeparation
+- [X] Never fail export on overlapping/simultaneously events
+  - [X] Basic voice sepration added
+    - What is the correct behavior if a score is exported where a some part has overlapping notes?
+    - Generally this should be fine, though currently the backend/export code does not handle it
+      correctly.
+    - Putting overlapping events in monophonic instruments (e.g. flute) should be a linting error,
+      similar to range etc.
+    - The general problem of breaking up a score: $voiceSeparation
+
+- $voiceSeparation
+  - Basic things work
+  - [ ] Render (>1) voice per staff, e.g. for keyboard music
+  - We currently use a simple greedy interval partitioning algorithm. Look into music-specific approaches,
+    e.g. https://archives.ismir.net/ismir2002/paper/000005.pdf
 
 - Music.Score.Export contains internal modules and should be renamed accordingly
   - What top-level interface should we support other than defaultMain?
+      MonadLog, MonadError,
+      IOExportM, PureExportM, runPureExportM, runIOExportM,
+      toMidi, fromAspects, toLy, toXml
+      Score, Asp1 (renamed!)
 
 - In Parts: extracted/extractedWithInfo should be Traversals, not lenses to lists (the latter
   is generally law-breaking)
@@ -208,6 +218,8 @@ Consider switching to a decentralized issue tracker such as:
 - [ ] Examples should not be Cabal executables
   - Test in CI with cabal runhaskell
   - Saves the slow linking step when doing Cabal build
+  - Related: [ ]
+    - Get rid of duplication in music-suite.cabal
 
 - Test generating all examples/documentation (and add more) in CI (nightly?)
   - [ ] Make CI validate MIDI output (how?)
@@ -457,7 +469,6 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] Get rid of Prelude.StandardNote et al, use Asp1 (renamed!) instead
 
-- Get rid of duplication in music-suite.cabal
 
 - [X] https://github.com/music-suite/music-score/issues/340
 
@@ -486,11 +497,13 @@ Consider switching to a decentralized issue tracker such as:
 
 - Make doc generation work in CI (again)
 
-- IDE allowing "preview on hover"
-  - Normal text editor
-  - When moving around in a single file (with/without a 'main' function) any hovered expression should
-    trigger a preview (visual/audial) in an editor window, as if the expression had been applied to
-    defaultMain (see above).
+- [ ] IDE allowing "preview on hover"
+  - [X] Basic implementation works now (in separate repository), uses the CLI + Cabal/Nix for invocation
+  - [ ] More stability and documentation
+    - Normal text editor
+    - When moving around in a single file (with/without a 'main' function) any hovered expression should
+      trigger a preview (visual/audial) in an editor window, as if the expression had been applied to
+      defaultMain (see above).
 
 - [ ] Deprecate Track/Placed?
   - It's rarely useful to just 'delay'

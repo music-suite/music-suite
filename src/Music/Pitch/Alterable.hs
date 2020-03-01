@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
@@ -90,3 +99,4 @@ alter n x
   | n < 0 = iterate flatten x !! (abs n)
   | n == 0 = x
   | n > 0 = iterate sharpen x !! n
+  | otherwise = error "impossible"

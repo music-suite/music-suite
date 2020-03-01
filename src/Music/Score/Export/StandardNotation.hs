@@ -1,3 +1,16 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  -fno-warn-unused-local-binds
+  -fno-warn-noncanonical-monoid-instances
+  #-}
+-- TODO fix noncanonical-monoid
+-- TODO reenable local-binds after removing tests
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFoldable #-}
@@ -170,8 +183,6 @@ module Music.Score.Export.StandardNotation
 
     -- * Test
     -- TODO hide/remove
-    test2,
-    exportLilypond,
     umts_export,
   )
 where
@@ -180,7 +191,7 @@ import BasePrelude hiding ((<>), First (..), first, second)
 import qualified Codec.Midi as Midi
 import qualified Codec.Midi as M
 import Control.Lens
-  ( Lens' (..),
+  ( Lens',
     _1,
     _2,
     _head,
@@ -191,13 +202,15 @@ import Control.Lens
     to,
     under,
     view,
+    from,
   )
 import Control.Lens.Operators hiding ((|>))
 import Control.Lens.TH (makeLenses)
 import Control.Monad.Except
 import Control.Monad.Plus
+import Control.Monad.State
 import Control.Monad.Writer hiding ((<>), First (..))
-import Data.AffineSpace hiding (Sum)
+import Data.AffineSpace
 import Data.Bifunctor (bimap, first, second)
 import qualified Data.ByteString.Char8
 import qualified Data.Char
@@ -206,8 +219,12 @@ import Data.Colour.Names
 import Data.FileEmbed
 import Data.Functor.Couple
 import Data.Functor.Identity (Identity (..))
+import Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty
 import qualified Data.List
 import qualified Data.List.Split
+import Data.Set (Set)
+import qualified Data.Set
 import Data.Map (Map)
 import qualified Data.Map
 import qualified Data.Maybe
@@ -268,12 +285,12 @@ import qualified Music.Score.Meta.Title
 import qualified Music.Score.Part
 import Music.Score.Part (PartT (..))
 import qualified Music.Score.Phrases
-import Music.Score.Phrases (MVoice (..))
+import Music.Score.Phrases (MVoice)
 import qualified Music.Score.Pitch
 import Music.Score.Pitch ()
 import Music.Score.Slide (SlideT, runSlideT)
 import Music.Score.StaffNumber (StaffNumberT, runStaffNumberT)
-import Music.Score.Technique (HasTechniques (techniques), SomeTechnique (..), TechniqueT (..))
+import Music.Score.Technique (HasTechniques (techniques), SomeTechnique, TechniqueT (..))
 import qualified Music.Score.Technique
 import Music.Score.Text (TextT, runTextT)
 import qualified Music.Score.Ties
@@ -290,11 +307,18 @@ import qualified Text.Pretty
 data LabelTree b a = Branch b [LabelTree b a] | Leaf a
   deriving (Functor, Foldable, Traversable, Eq, Ord, Show)
 
+-- forall x . concatLT x . fmap pure = id
+concatLT :: b -> LabelTree b [a] -> LabelTree b a
+concatLT b = foldLabelTree f Branch
+  where
+    f [x] = Leaf x
+    f xs  = Branch b (fmap Leaf xs)
+
 fromListLT :: Monoid b => [a] -> LabelTree b a
 fromListLT = Branch mempty . fmap Leaf
 
 foldLabelTree :: (a -> c) -> (b -> [c] -> c) -> LabelTree b a -> c
-foldLabelTree f g (Leaf x) = f x
+foldLabelTree f _ (Leaf x) = f x
 foldLabelTree f g (Branch b xs) = g b (fmap (foldLabelTree f g) xs)
 
 {-
@@ -861,7 +885,7 @@ staffTakeBars :: Int -> Staff -> Staff
 staffTakeBars n (Staff i bs) = Staff i (take n bs)
 
 staffLength :: Staff -> Int
-staffLength (Staff i bs) = length bs
+staffLength (Staff _i bs) = length bs
 
 -- |
 -- If all layers have the same duration, return this duration wrapped in 'Right',
@@ -1075,6 +1099,7 @@ toLyStaff sysBars staff =
     -- To get a transposing score, add \transpose <written> <sounding>
     <$> (sequence $ zipWith toLyBar sysBars (staff ^. bars))
 
+toLyClef :: Music.Pitch.Clef -> L.Clef
 toLyClef c
   | c == Music.Pitch.trebleClef = Lilypond.Treble
   | c == Music.Pitch.altoClef = Lilypond.Alto
@@ -1082,8 +1107,10 @@ toLyClef c
   | c == Music.Pitch.bassClef = Lilypond.Bass
   | otherwise = Lilypond.Treble
 
+addClef :: L.Clef -> [L.Music] -> [L.Music]
 addClef c xs = Lilypond.Clef c : xs
 
+addPartName :: String -> [L.Music] -> [L.Music]
 addPartName partName xs = longName : shortName : xs
   where
     longName = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
@@ -1115,12 +1142,9 @@ toLyBar sysBar bar = do
 toLyLayer :: (LilypondExportM m) => Rhythm Chord -> m Lilypond.Music
 toLyLayer (Beat d x) = toLyChord d x
 toLyLayer (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
-toLyLayer (Dotted n _) = error "FIXME"
+toLyLayer (Dotted _n _) = error "Lilypond export: (Dotted x) requires x to be (Beat _)"
 toLyLayer (Group rs) = Lilypond.Sequential <$> traverse toLyLayer rs
 toLyLayer (Tuplet m r) = Lilypond.Times (realToFrac m) <$> (toLyLayer r)
-  where
-    (a, b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
-    unRatio = Music.Score.Internal.Util.unRatio
 
 {-
 TODO _arpeggioNotation::Maybe ArpeggioNotation,
@@ -1181,7 +1205,7 @@ toLyChord d chord =
                   )
               )
         fixLevel :: Double -> Double
-        fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
+        fixLevel x = fromInteger (round (x - 0.5)) + 0.5
     notateArticulationLy ::
       ArticulationNotation ->
       Lilypond.Music ->
@@ -1246,10 +1270,10 @@ toLyChord d chord =
       (True, n) -> notateNatural n
       (False, n) -> notateArtificial n
       where
-        notateNatural n = Lilypond.addFlageolet -- addOpen?
-        notateArtificial n = id -- TODO
+        notateNatural _n = Lilypond.addFlageolet -- addOpen?
+        notateArtificial _n = id -- TODO
     notateGliss :: SlideNotation -> Lilypond.Music -> Lilypond.Music
-    notateGliss ((Any eg, Any es), (Any bg, Any bs))
+    notateGliss ((Any _eg, Any _es), (Any bg, Any bs))
       | bg = Lilypond.beginGlissando
       | bs = Lilypond.beginGlissando
       | otherwise = id
@@ -1413,7 +1437,7 @@ movementToPartwiseXml movement = music
       where
         renderClef :: Music.Pitch.Clef -> MusicXml.Music
         renderClef (Music.Pitch.Clef clef) = case clef of
-          (clefSymbol, octCh, line) ->
+          (clefSymbol, _octCh, line) ->
             X.Music $ pure $ X.MusicAttributes $
               X.Clef (exportSymbol clefSymbol) (fromIntegral line + 3)
           where
@@ -1431,8 +1455,8 @@ movementToPartwiseXml movement = music
           let clef = renderClef initClef
           pure $ mapHead ((transposeInfo <> clef) <>) fromBars
           where
-            mapHead f [] = []
-            mapHead f (x : xs) = f x : xs
+            mapHead _f [] = []
+            mapHead f  (x : xs) = f x : xs
             transposeInfo :: MusicXml.Music
             transposeInfo = mempty
             {-
@@ -1529,7 +1553,7 @@ movementToPartwiseXml movement = music
             go (Group rs) = mconcat $ map renderBarMusic rs
             go (Tuplet m r) = MusicXml.tuplet b a (renderBarMusic r)
               where
-                (a, b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
+                (a, b) = bimap fromInteger fromInteger $ unRatio $ realToFrac m
             go _ = error "MusicXML export: (Dotted x) requires x to be (Beat _)"
         setDefaultVoice :: MusicXml.Music -> MusicXml.Music
         setDefaultVoice = MusicXml.setVoice 1
@@ -1556,7 +1580,7 @@ movementToPartwiseXml movement = music
                         )
                     )
             fixLevel :: Double -> Double
-            fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
+            fixLevel x = fromIntegral @Integer (round (x - 0.5)) + 0.5
         -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
         -- rcomposed = composed . reverse
 
@@ -1601,10 +1625,10 @@ movementToPartwiseXml movement = music
             notate True n = notateNatural n
             notate False n = notateArtificial n
             -- notateNatural n = Xml.harmonic -- openString?
-            notateNatural n = MusicXml.setNoteHead MusicXml.DiamondNoteHead
+            notateNatural _n = MusicXml.setNoteHead MusicXml.DiamondNoteHead
             -- Most programs do not recognize the harmonic tag
             -- We set a single diamond notehead instead, which can be manually replaced
-            notateArtificial n = id -- TODO
+            notateArtificial _n = id -- TODO
         notateSlide :: SlideNotation -> MusicXml.Music -> MusicXml.Music
         notateSlide ((eg, es), (bg, bs)) = notate
           where
@@ -1627,8 +1651,6 @@ movementToPartwiseXml movement = music
 --   getMidiProgram :: a -> Midi.Preset
 --   getMidiChannel _ = 0
 
--- | Every note may give rise to a number of messages. We represent this as a score of messages.
-type MidiEvent = Score Midi.Message
 
 -- | The MIDI channel allocation is somewhat simplistic.
 --   We use a dedicated channel and program number for each instrument (there *will* be colissions).
@@ -1643,7 +1665,7 @@ data MidiScore a = MidiScore [(MidiInstr, Score a)]
 
 type MidiExportM m = (MonadLog String m, MonadError String m)
 
-toMidi :: (AbcNotationExportM m) => Asp -> m M.Midi
+toMidi :: (MidiExportM m) => Asp -> m M.Midi
 toMidi = pure . finalizeExport . fmap (exportNote) . exportScore
   where
     exportScore :: Score Asp1 -> MidiScore Asp1
@@ -1737,25 +1759,6 @@ toMidi = pure . finalizeExport . fmap (exportNote) . exportScore
         go (Midi.ChannelPrefix _) = Midi.ChannelPrefix c
         go x = x
 
-----------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
-
-type AbcNotationExportM m = (MonadLog String m, MonadError String m)
-
-toAbc :: (AbcNotationExportM m) => Work -> m (String, ())
-toAbc work = error "Not implemented"
-
-{-
-Basic implementation
--}
-
-----------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
-
-type FomusExportM m = (MonadLog String m, MonadError String m)
-
-toFomus :: (FomusExportM m) => Work -> m (String, ())
-toFomus work = error "Not implemented"
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -1854,14 +1857,103 @@ type Asp = Score Asp1
 
 type StandardNotationExportM m = (MonadLog String m, MonadError String m)
 
+-- TODO move and hide constructor.
+-- TODO generalize
+-- | List with 0 to 4 elements.
+newtype List0To4 a = UnsafeList0To4 { _unsafeGetList0To4 :: [a] }
+  deriving (Functor, Foldable, Traversable)
+
+-- list0 :: List0To4 a
+-- list1 :: a -> List0To4 a
+-- list2 :: a -> a -> List0To4 a
+-- list3 :: a -> a -> a -> List0To4 a
+-- list4 :: a -> a -> a -> a -> List0To4 a
+-- list0 = UnsafeList0To4 []
+-- list1 x = UnsafeList0To4 [x]
+-- list2 x y = UnsafeList0To4 [x,y]
+-- list3 x y z = UnsafeList0To4 [x,y,z]
+-- list4 x y z a = UnsafeList0To4 [x,y,z,a]
+
+parseList :: [a] -> Maybe (List0To4 a)
+parseList xs
+  | length xs <= 4 = Just $ UnsafeList0To4 xs
+  | otherwise      = Nothing
+
+
+-- TODO move
+
+-- |
+-- Partition intervals into non-overlapping subsets.
+--
+-- @
+-- mconcat (partitionIntervals xs) = xs
+-- @
+--
+-- TODO track the fact that the returned maps are all non-overlapping
+-- in the type system?
+partitionIntervals :: forall a b . Ord a => Map (a,a) b -> [Map (a,a) b]
+partitionIntervals xs = fmap (Data.Map.fromList . toList) $ snd $ (`runState` []) $ for sorted $ \ev@((start, _stop), _val) -> do
+  -- Out list of state is the voices/resources
+  -- Inner non-empty list is the spans in chronological order
+  currentResources :: [NonEmpty (((a, a), b))] <- get
+  let currentEndTimes :: [a] = fmap (snd . fst . Data.List.NonEmpty.head) currentResources
+  let nextVoice :: Maybe Int = findIndex (<= start) currentEndTimes
+  case nextVoice of
+    -- A new voice is needed
+    Nothing ->
+      modify (++ [pure ev])
+    -- This fits in current voice n (0-index)
+    Just n ->
+      modify (update n $ (Data.List.NonEmpty.cons ev))
+  where
+    sorted :: [((a,a), b)]
+    sorted = Data.Map.toAscList xs
+
+update :: Int -> (a -> a) -> [a] -> [a]
+update n f xs = take n xs ++ rest
+  where
+    rest = case drop n xs of
+      [] -> []
+      x : xs -> f x : xs
+
+
+toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (List0To4 (MVoice a))
+toLayer p xs = case parseList $ partitionIntervals $ scoreToMap xs of
+  Nothing -> throwError $ "Part has more than four overlapping events: " ++ show p
+  Just xs -> pure $ fmap (maybe (error bug) id . preview Music.Score.Phrases.singleMVoice . mapToScore) xs
+  where
+    bug = "partitionIntervals returned overlapping partition. Plese report this as a bug in music-suite."
+  {-
+  -- TODO:
+  --  Use partitionIntervals
+  --    If it returns >4 voices, fail (or do custom tie-based sepration?)
+  --
+  --  Use (error "partitionIntervals returned overlapping partition") for now, see notes
+  --  in partitionIntervals about tracking non-overlappingness in the types.
+  fmap list1 .
+    maybe
+      (throwError $ "Overlapping events in part: " ++ show p)
+      return
+      . preview Music.Score.Phrases.singleMVoice
+  -}
+
+-- TODO move
+scoreToMap :: Score a -> Map (Time, Time) a
+scoreToMap = Data.Map.fromList . fmap (first (view onsetAndOffset) . (view (from event))) . view events
+
+mapToScore :: Map (Time, Time) a -> Score a
+mapToScore = view score . fmap (view event . first (view $ from onsetAndOffset)) . Data.Map.toList
+
+
 fromAspects :: (StandardNotationExportM m) => Asp -> m Work
 fromAspects sc = do
+  say "Simplifying pitches"
   -- Simplify pitch spelling
   let postPitchSimplification = Music.Score.Pitch.simplifyPitches normScore
   -- Part extraction
   say "Extracting parts"
   let postPartExtract :: [(Music.Parts.Part, Score Asp1)] = Music.Score.Part.extractPartsWithInfo postPitchSimplification
-  say $ "Done, " ++ show (length postPartExtract) ++ " parts"
+  say $ "  Done, " ++ show (length postPartExtract) ++ " parts"
   -- postPartExtract :: [(Music.Parts.Part,Score Asp1)]
 
   -- Change aspect type as we need Semigroup to compose all simultanous notes
@@ -1903,37 +1995,53 @@ fromAspects sc = do
     should happen after bars have been split.
 
   -}
-  say "Separating voices in parts (assuming no overlaps)"
-  postVoiceSeparation :: [(Music.Parts.Part, MVoice Asp2)] <-
+  say "Separating voices"
+  postVoiceSeparation :: [(Part, List0To4 (MVoice Asp2))] <-
     traverse
       ( \a@(p, _) ->
+          -- TODO VS: Do actual voice separation here
           traverse (toLayer p) a
       )
       $ postChordMerge
   -- Rewrite dynamics and articulation to be context-sensitive
   -- This changes the aspect type again
-  say "Notate dynamics, articulation and playing techniques"
-  postContextSensitiveNotationRewrite <- return $ (fmap . fmap) asp2ToAsp3 $ postVoiceSeparation
+  say "Notating dynamics, articulation and playing techniques"
+  let postContextSensitiveNotationRewrite
+          :: [(Part, List0To4 (MVoice Asp3))]
+          = (fmap . fmap . fmap) asp2ToAsp3 $ postVoiceSeparation
   -- postContextSensitiveNotationRewrite :: [(Music.Parts.Part,Voice (Maybe Asp3))]
 
   -- Split each part into bars, splitting notes and adding ties when necessary
   -- Resulting list is list of bars, there is no layering (yet)
-  say "Divide score into bars, adding ties where necessary"
-  let postTieSplit :: [(Part, [Voice (Maybe Asp3)])] =
-        (fmap . fmap) (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
-  -- For each bar, quantize all layers. This is where tuplets/note values are generated.
-  say "Quantize rhythms (generating dotted notes and tuplets)"
-  postQuantize <- traverse (traverse (traverse quantizeBar)) postTieSplit
-  -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
+  say "Dividing the score into bars"
+  let postTieSplit
+        :: [(Part, List0To4 [Voice (Maybe Asp3)])]
+        =
+        (fmap . fmap . fmap) (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
 
-  -- TODO all steps above that start with fmap or traverse can be factored out (functor law)
+  -- For each bar, quantize all layers. This is where tuplets/note values are generated.
+  say "Rewriting rhythms"
+  postQuantize
+          :: [(Part, List0To4 [Rhythm (Maybe Asp3)])]
+          <- traverse (traverse (traverse (traverse quantizeBar))) postTieSplit
+  -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
 
   -- Group staves, generating brackets and braces
   say "Generate staff groups"
-  let postStaffGrouping = generateStaffGrouping postQuantize
-  -- postStaffGrouping :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
+  let postStaffGrouping
+          :: LabelTree BracketType (Part, List0To4 [Rhythm (Maybe Asp3)])
+          = generateStaffGrouping postQuantize
 
-  let staves :: LabelTree BracketType Staff = fmap aspectsToStaff postStaffGrouping
+  -- All staves with brackets/braces, with one staff generated per voice
+  -- We fold those into the LabelTree using SubBracket
+  -- TODO support rendering multiple voices per staff instead
+  let staffVoices
+          :: LabelTree BracketType [Staff]
+          = fmap aspectsToStaff postStaffGrouping
+  let staves
+          :: LabelTree BracketType Staff
+          = concatLT Subbracket staffVoices
+
   say $ "System staff bars: " ++ show (length systemStaff)
   say $ "Regular staff bars: " ++ show (fmap (length . _bars) . toList $ staves)
   return $ Work mempty [Movement info systemStaff staves]
@@ -1958,12 +2066,6 @@ fromAspects sc = do
 asp1ToAsp2 :: Asp1 -> Asp2
 asp1ToAsp2 = pure . (fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap) pure
 
-toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
-toLayer p =
-  maybe
-    (throwError $ "Overlapping events in part: " ++ show p)
-    return
-    . preview Music.Score.Phrases.singleMVoice
 
 asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
 asp2ToAsp3 =
@@ -1992,11 +2094,17 @@ quantizeBar = fmap rewrite . quantize' . view Music.Time.pairs
       Left e -> throwError $ "Quantization failed: " ++ e
       Right x -> return x
 
-generateStaffGrouping :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
+-- | Convert a list of part into a 'LabelTree BracketType' of parts (e.g.
+-- a tree with bracket/brace information).
+generateStaffGrouping :: [(Part, a)] -> LabelTree BracketType (Part, a)
 generateStaffGrouping = groupToLabelTree . partDefault
 
-aspectsToStaff :: (Music.Parts.Part, [Rhythm (Maybe Asp3)]) -> Staff
-aspectsToStaff (part, bars) = Staff info (fmap aspectsToBar bars)
+aspectsToStaff :: (Music.Parts.Part, List0To4 [Rhythm (Maybe Asp3)]) -> [Staff]
+aspectsToStaff (part, UnsafeList0To4 voices) =
+  fmap (singleStaff part) voices
+
+singleStaff :: Part -> [Rhythm (Maybe Asp3)] -> Staff
+singleStaff part bars = Staff info (fmap aspectsToBar bars)
   where
     info =
       id
@@ -2016,10 +2124,14 @@ aspectsToStaff (part, bars) = Staff info (fmap aspectsToBar bars)
         nameStr = (part ^. (Music.Parts.instrument) . (to Music.Parts.fullName))
         subpartStr = Just $ show (part ^. (Music.Parts.subpart))
 
+-- | Group all parts in the default way (e.g. a standard orchestral score with woodwinds
+-- on top, followed by brass, etc).
 partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
 partDefault xs = Music.Parts.groupDefault $ fmap (\(p, x) -> (p ^. (Music.Parts.instrument), (p, x))) xs
 
-groupToLabelTree :: Group a -> LabelTree (BracketType) a
+-- | Transform the staff grouping representation from `Music.Parts` into the one
+-- used by 'Work'.
+groupToLabelTree :: Group a -> LabelTree BracketType a
 groupToLabelTree (Single (_, a)) = Leaf a
 groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
   where
@@ -2050,42 +2162,8 @@ aspectsToBar rh = Bar mempty [PitchLayer layer1]
   where
     layer1 = fmap aspectsToChord rh
 
-----------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------
 
--- Test
 
-test =
-  runPureExportMNoLog $ toLy defaultLilypondOptions $
-    Work
-      mempty
-      [ Movement
-          mempty
-          [mempty]
-          ( Branch
-              Bracket
-              [ Leaf (Staff mempty [Bar mempty [PitchLayer $ Beat 1 mempty]]),
-                Leaf (Staff mempty [Bar mempty [PitchLayer $ Beat 1 mempty]])
-              ]
-          )
-      ]
-
-test2 x = runPureExportMNoLog $ toLy defaultLilypondOptions =<< fromAspects x
-
--- | Write t.ly and run Lilypond on it
-exportLilypond :: Asp -> IO ()
-exportLilypond x = do
-  let r = test2 x
-  case r of
-    Left e -> fail ("test3: " ++ e)
-    Right (h, ly) -> do
-      let ly2 = h ++ show (Text.Pretty.pretty ly)
-      -- putStrLn ly2
-      writeFile "t.ly" $ ly2
-      void $ System.Process.system "lilypond t.ly"
-
-toMusicXml :: Asp -> Either String X.Score
-toMusicXml x = runPureExportMNoLog $ toXml =<< fromAspects x
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -2369,14 +2447,14 @@ umts_02d =
     quant :: a -> Duration -> Rhythm a
     quant x d = case d of
       d | d == 2 / 4 -> Beat (1 / 2) x
-      d | d == 3 / 4 -> Dotted 1 $ Beat (1 / 2) x
-      d | d == 4 / 4 -> Beat 1 x
-      d | otherwise -> error "umts_02d: bad duration"
+        | d == 3 / 4 -> Dotted 1 $ Beat (1 / 2) x
+        | d == 4 / 4 -> Beat 1 x
+        | otherwise -> error "umts_02d: bad duration"
     timeSigs2 =
       concat $ zipWith (\n ts -> Just ts : replicate (n -1) Nothing) numBarRests timeSigs ::
         [Maybe TimeSignature]
     durs =
-      concat $ zipWith (\n ts -> replicate n (realToFrac ts)) numBarRests timeSigs ::
+      concat $ zipWith (\n ts -> replicate n (realToFrac @Double ts)) numBarRests timeSigs ::
         [Duration]
     numBarRests = [2, 3, 2, 2]
     timeSigs = [4 / 4, 3 / 4, 2 / 4, 4 / 4]
@@ -2512,12 +2590,12 @@ umts_11a =
     quant :: (Bool -> a -> a) -> a -> Duration -> Rhythm a
     quant addTie x d = case d of
       d | d == (3 / 8) -> Dotted 1 $ Beat (1 / 4) x
-      d | d == (1 / 2) -> Beat (1 / 2) x
-      d | d == (3 / 4) -> Dotted 1 $ Beat (1 / 2) x
-      d | d == (1) -> Beat 1 x
-      d | d == (5 / 4) -> Group [Beat 1 (addTie True x), Beat (1 / 4) (addTie False x)] -- TODO ties
-      d | d == (6 / 4) -> Dotted 1 $ Beat 1 x
-      d | otherwise -> error "umts_11a: bad duration"
+        | d == (1 / 2) -> Beat (1 / 2) x
+        | d == (3 / 4) -> Dotted 1 $ Beat (1 / 2) x
+        | d == (1) -> Beat 1 x
+        | d == (5 / 4) -> Group [Beat 1 (addTie True x), Beat (1 / 4) (addTie False x)] -- TODO ties
+        | d == (6 / 4) -> Dotted 1 $ Beat 1 x
+        | otherwise -> error "umts_11a: bad duration"
     durs :: [Duration]
     durs = fmap realToFrac timeSigs
     timeSigs :: [TimeSignature]
@@ -3638,7 +3716,7 @@ umts_41a =
               ]
         )
         pitches_
-    names = ["Part " ++ show n | n <- [1 .. 4]]
+    names = ["Part " ++ show @Integer n | n <- [1 .. 4]]
     pitches_ =
       [ Music.Pitch.c :: Music.Pitch.Pitch,
         Music.Pitch.e,
@@ -3666,7 +3744,7 @@ umts_41b =
                 [ Beat 1 (pitches .~ [] $ mempty)
                 ]
           ]
-    names = ["P" ++ show n | n <- [1 .. 19]]
+    names = ["P" ++ show @Integer n | n <- [1 .. 19]]
 
 -- ‘41c-StaffGroups.xml’
 {-
@@ -3681,8 +3759,8 @@ umts_41b =
 umts_41c :: Work
 umts_41c = mempty
   where
-    ls :: LabelTree BracketType String
-    ls =
+    _ls :: LabelTree BracketType String
+    _ls =
       Branch
         NoBracket
         [ Branch
@@ -3736,8 +3814,8 @@ umts_41c = mempty
 umts_41d :: Work
 umts_41d = mempty
   where
-    ls :: LabelTree BracketType ()
-    ls =
+    _ls :: LabelTree BracketType ()
+    _ls =
       Branch
         NoBracket
         [ Leaf (),
@@ -3757,8 +3835,8 @@ umts_41d = mempty
 umts_41e :: Work
 umts_41e = mempty
   where
-    longName = "Long Staff Name"
-    shortName = "St. Nm."
+    _longName = "Long Staff Name"
+    _shortName = "St. Nm."
 
 -- ‘41f-StaffGroups-Overlapping.xml’
 umts_41f :: Work
@@ -3867,7 +3945,7 @@ umts_46a =
   where
     sysStaff = repeat mempty
     staff = mempty
-    barLines =
+    _barLines =
       []
 
 -- ‘46b-MidmeasureBarline.xml’
@@ -4040,10 +4118,10 @@ umts_72a =
   where
     sysStaff = repeat mempty
     staff = mempty
-    pitches = [] -- TODO [c,d,e,f,g,a,b,c']
-    origKeySig = (Music.Pitch.g, True) -- G major
-    instruments :: [Instrument]
-    instruments =
+    _pitches = [] -- TODO [c,d,e,f,g,a,b,c']
+    _origKeySig = (Music.Pitch.g, True) -- G major
+    _instruments :: [Instrument]
+    _instruments =
       [ Music.Parts.trumpet,
         -- TODO can't represent Eb horn, use F
         Music.Parts.horn,
@@ -4112,15 +4190,16 @@ umts_73a =
   where
     sysStaff = repeat mempty
     staff = mempty
-    timpNotes =
+    -- TODO use these:
+    _timpNotes =
       [ [(1, P.e_, True)],
         [(1 / 2, P.e_, False), (1 / 2, P.a__, False)]
       ]
-    cymbalNotes =
+    _cymbalNotes =
       [ [(3 / 4, P.c, False), (1 / 4, P.c, False)],
         [(1, P.c, False)]
       ]
-    triangleNotes =
+    _triangleNotes =
       [ [(3 / 4, P.c, False), (1 / 4, P.c, False)],
         [(1, P.c, False)]
       ]
@@ -4143,7 +4222,6 @@ umts_73a =
 umts_export :: IO ()
 umts_export = do
   putStrLn $ "Starting UTMS export"
-  let hash = "/tmp/music-suite/umts-hash"
   let dir = "/tmp/music-suite/umts"
   let refDir = "/tmp/music-suite/umts-ref"
   System.Directory.createDirectoryIfMissing True dir
@@ -4152,7 +4230,7 @@ umts_export = do
   -- currentHash <- readFile hash
 
   -- Generate files, counting errors
-  errorCount <- newIORef 0
+  errorCount <- newIORef @Integer 0
   forM_ umts_all $ \(name, work) -> do
     let baseName = dir ++ "/" ++ name
         xmlName = baseName ++ ".xml"
@@ -4250,6 +4328,3 @@ umts_all =
     ("umts_73a", umts_73a)
   ]
 
-test :: Either String (String, L.Music)
-
-test2 :: Asp -> Either String (String, L.Music)

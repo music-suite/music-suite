@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 -- | Common pitch names in various (human) languages.
 module Music.Pitch.Common.Names
   ( Language (..),

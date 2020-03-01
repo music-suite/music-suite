@@ -1,14 +1,28 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 module Music.Time.Behavior
   ( -- * Behavior type
     Behavior,
+
+    -- * Construction
     behavior,
     sampled,
+
+    -- * Lookup
+    (!),
 
     -- * Combinators
     switch,
     switch',
     -- splice,
-    trimB,
+    trim,
     trimBefore,
     trimAfter,
     concatB,
@@ -26,7 +40,6 @@ module Music.Time.Behavior
     impulse,
     turnOn,
     turnOff,
-    (!),
   )
 where
 
@@ -51,7 +64,7 @@ import Music.Time.Score
 -- > localRep (/ t) = stretch t
 
 -- |
--- A 'Behavior' is a value varying over time.
+-- A time-dependent value.
 newtype Behavior a = Behavior {getBehavior :: Time -> a}
   deriving (Functor, Applicative, Monad, Typeable)
 
@@ -212,8 +225,9 @@ sampled = from behavior
 -- |
 -- A behavior that gives the current time.
 --
--- Should really have the type 'Behavior' 'Time', but is provided in a more general form
--- for convenience.
+-- @
+-- (line !) = id
+-- @
 line :: Fractional a => Behavior a
 line = realToFrac ^. behavior
 
@@ -231,10 +245,12 @@ unit = switch 0 0 (switch 1 line 1)
 -- >     | t > 1     = 1
 -- >     | otherwise = t
 
+{-
 -- |
 -- A behavior that
 interval :: (Fractional a, Transformable a) => Time -> Time -> Event (Behavior a)
 interval t u = (t <-> u, line) ^. event
+-}
 
 -- |
 -- A behavior that
@@ -298,24 +314,26 @@ switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
   EQ -> ry ! u
   GT -> rz ! u
 
--- TODO restore to public API?
+-- | Sample the given behavior at the given time.
 (!) :: Behavior a -> Time -> a
 b ! t = getBehavior b t
 
-trimB :: Monoid a => Span -> Behavior a -> Behavior a
-trimB (view onsetAndOffset -> (on, off)) x = (\t -> if on <= t && t <= off then x ! t else mempty) ^. behavior
+-- | Replace everything outside the given span by 'mempty'.
+trim :: Monoid a => Span -> Behavior a -> Behavior a
+trim (view onsetAndOffset -> (on, off)) x = (\t -> if on <= t && t <= off then x ! t else mempty) ^. behavior
 
 -- Treat each event as a segment in the range (0<->1) and compose.
 concatB :: Monoid a => Score (Behavior a) -> Behavior a
-concatB = mconcat . toListOf traverse . mapWithSpan transform . fmap (trimB mempty)
+concatB = mconcat . toListOf traverse . mapWithSpan transform . fmap (trim mempty)
 
 -- Internal
 
 tau :: Floating a => a
 tau = 2 * pi
 
+-- TODO use Internal.Util version
 floor' :: RealFrac a => a -> a
-floor' = fromIntegral . floor
+floor' = fromInteger . floor
 
 turnOn :: Num a => Behavior a
 

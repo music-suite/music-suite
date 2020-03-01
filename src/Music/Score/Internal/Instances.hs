@@ -1,3 +1,13 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  -fno-warn-orphans
+  #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFoldable #-}
@@ -31,7 +41,7 @@ where
 
 import Control.Applicative
 import Control.Comonad
-import Control.Lens hiding (part, transform)
+import Control.Lens hiding (transform)
 import Control.Monad
 import Data.AffineSpace
 import Data.Foldable
@@ -87,7 +97,7 @@ instance Semigroup a => Semigroup (TextT a) where
   (<>) = liftA2 (<>)
 
 instance Semigroup a => Semigroup (PartT n a) where
-  PartT (v1, x1) <> PartT (v2, x2) = PartT (v1, x1 <> x2)
+  PartT (v1, x1) <> PartT (_v2, x2) = PartT (v1, x1 <> x2)
 
 -- -------------------------------------------------------------------------------------
 
@@ -395,7 +405,7 @@ instance (Monoid v, Enum a) => Enum (PartT v a) where
 
   toEnum a = PartT (mempty, toEnum a)
 
-  fromEnum (PartT (v, a)) = fromEnum a
+  fromEnum (PartT (_v, a)) = fromEnum a
 
 instance (Monoid v, Bounded a) => Bounded (PartT v a) where
 

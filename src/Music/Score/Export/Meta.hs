@@ -1,5 +1,13 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -- Utility to extract meta-data at a specific point in time.
 module Music.Score.Export.Meta where

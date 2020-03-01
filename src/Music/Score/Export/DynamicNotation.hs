@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE DeriveFoldable #-}
@@ -57,11 +66,9 @@ instance Monoid CrescDim where
 
   mempty = NoCrescDim
 
-  mappend = (<>)
 
 instance Semigroup CrescDim where
   NoCrescDim <> a = a
-  a <> NoCrescDim = a
   a <> _ = a
 
 newtype DynamicNotation
@@ -95,8 +102,7 @@ instance Monoid DynamicNotation where
 
 instance Semigroup DynamicNotation where
   DynamicNotation ([], Nothing) <> y = y
-  x <> DynamicNotation ([], Nothing) = x
-  x <> y = x
+  x <> _ = x
 
 crescDim :: Lens' DynamicNotation [CrescDim]
 crescDim = _Wrapped' . _1
@@ -111,7 +117,7 @@ dynamicLevel = _Wrapped' . _2
 --
 notateDynamic :: (Ord a, Real a) => Ctxt a -> DynamicNotation
 notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case getCtxt x of
-  (Nothing, y, Nothing) -> ([], True)
+  (Nothing, _, Nothing) -> ([], True)
   (Nothing, y, Just z) -> case (y `compare` z) of
     LT -> ([BeginCresc], True)
     EQ -> ([], True)
@@ -135,7 +141,7 @@ removeCloseDynMarks :: forall s a. (HasPhrases' s a, HasDynamics' a, Dynamic a ~
 removeCloseDynMarks = mapPhrasesWithPrevAndCurrentOnset f
   where
     f :: Maybe (Time, Phrase a) -> Time -> Phrase a -> Phrase a
-    f Nothing t x = x
+    f Nothing _ x = x
     f (Just (t1, x1)) t2 x =
       if (t2 .-. t1) > 1.5
         || ((x1 ^? (_last . dynamics')) /= (x ^? (_head . dynamics')))

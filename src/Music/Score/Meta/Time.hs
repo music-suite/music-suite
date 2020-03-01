@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFoldable #-}
@@ -73,7 +82,7 @@ import Music.Score.Internal.Util
 import Music.Score.Meta
 import Music.Score.Part
 import Music.Score.Pitch
-import Music.Time hiding (time)
+import Music.Time
 
 -- |
 -- A time signature is a sequence of beat numbers and a note value (i.e. an expression on the

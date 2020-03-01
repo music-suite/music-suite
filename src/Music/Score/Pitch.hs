@@ -95,7 +95,7 @@ import qualified Data.Sequence as Seq
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.VectorSpace hiding (Sum)
-import Music.Pitch.Absolute
+import Music.Pitch.Absolute hiding (octaves)
 import Music.Pitch.Ambitus
 import Music.Pitch.Common hiding (Interval, Pitch)
 import qualified Music.Pitch.Common as Common
@@ -275,6 +275,13 @@ instance HasPitches a b => HasPitches (Voice a) (Voice b) where
   pitches = traverse . pitches
 
 instance HasPitches a b => HasPitches (Track a) (Track b) where
+  pitches = traverse . pitches
+
+type instance Pitch (NonEmpty a) = Pitch a
+
+type instance SetPitch b (NonEmpty a) = NonEmpty (SetPitch b a)
+
+instance HasPitches a b => HasPitches (NonEmpty a) (NonEmpty b) where
   pitches = traverse . pitches
 
 {-
