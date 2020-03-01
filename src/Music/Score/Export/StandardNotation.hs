@@ -196,6 +196,7 @@ import Control.Lens.Operators hiding ((|>))
 import Control.Lens.TH (makeLenses)
 import Control.Monad.Except
 import Control.Monad.Plus
+import Control.Monad.State
 import Control.Monad.Writer hiding ((<>), First (..))
 import Data.AffineSpace hiding (Sum)
 import Data.Bifunctor (bimap, first, second)
@@ -206,6 +207,8 @@ import Data.Colour.Names
 import Data.FileEmbed
 import Data.Functor.Couple
 import Data.Functor.Identity (Identity (..))
+import Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty
 import qualified Data.List
 import qualified Data.List.Split
 import Data.Set (Set)
@@ -1883,10 +1886,41 @@ list4 x y z a = UnsafeList0To4 [x,y,z,a]
 -- mconcat (partitionIntervals xs) = xs
 -- @
 --
--- TODO track the fact that the returned sets are all non-overlapping
+-- TODO track the fact that the returned maps are all non-overlapping
 -- in the type system?
-partitionIntervals :: Ord a => Set ((a,a),b) -> [Set ((a,a),b)]
-partitionIntervals max = undefined
+partitionIntervals :: forall a b . Ord a => Map (a,a) b -> [Map (a,a) b]
+partitionIntervals xs = fmap (Data.Map.fromList . toList) $ snd $ (`runState` []) $ for sorted $ \ev@((start, stop), val) -> do
+  -- Out list of state is the voices/resources
+  -- Inner non-empty list is the spans in chronological order
+  -- (TODO use reverse chronological order for performance)
+  currentResources :: [NonEmpty (((a, a), b))] <- get
+  let currentEndTimes :: [a] = fmap (snd . fst . Data.List.NonEmpty.last) currentResources
+  let nextVoice :: Maybe Int = findIndex (<= start) currentEndTimes
+  case nextVoice of
+    -- A new voice is needed
+    Nothing ->
+      modify (++ [pure ev])
+    -- This fits in current voice n (0-index)
+    Just n ->
+      modify (update n $ (<> pure ev))
+  where
+    sorted :: [((a,a), b)]
+    sorted = Data.Map.toAscList xs
+
+update :: Int -> (a -> a) -> [a] -> [a]
+update n f xs = take n xs ++ rest
+  where
+    rest = case drop n xs of
+      [] -> []
+      x : xs -> f x : xs
+
+-- TODO DEBUG
+t = partitionIntervals $ Data.Map.fromList
+  [ ((0,1),'a')
+  , ((0,2),'b')
+  , ((1,2),'b')
+  , ((1,3),'b')
+  ]
 
 toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (List0To4 (MVoice a))
 toLayer p =
