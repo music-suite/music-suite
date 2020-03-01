@@ -191,6 +191,7 @@ import Control.Lens
     to,
     under,
     view,
+    from,
   )
 import Control.Lens.Operators hiding ((|>))
 import Control.Lens.TH (makeLenses)
@@ -1876,6 +1877,11 @@ list2 x y = UnsafeList0To4 [x,y]
 list3 x y z = UnsafeList0To4 [x,y,z]
 list4 x y z a = UnsafeList0To4 [x,y,z,a]
 
+parseList :: [a] -> Maybe (List0To4 a)
+parseList xs
+  | length xs <= 4 = Just $ UnsafeList0To4 xs
+  | otherwise      = Nothing
+
 
 -- TODO move
 
@@ -1894,7 +1900,7 @@ partitionIntervals xs = fmap (Data.Map.fromList . toList) $ snd $ (`runState` []
   -- Inner non-empty list is the spans in chronological order
   -- (TODO use reverse chronological order for performance)
   currentResources :: [NonEmpty (((a, a), b))] <- get
-  let currentEndTimes :: [a] = fmap (snd . fst . Data.List.NonEmpty.last) currentResources
+  let currentEndTimes :: [a] = fmap (snd . fst . Data.List.NonEmpty.head) currentResources
   let nextVoice :: Maybe Int = findIndex (<= start) currentEndTimes
   case nextVoice of
     -- A new voice is needed
@@ -1902,7 +1908,7 @@ partitionIntervals xs = fmap (Data.Map.fromList . toList) $ snd $ (`runState` []
       modify (++ [pure ev])
     -- This fits in current voice n (0-index)
     Just n ->
-      modify (update n $ (<> pure ev))
+      modify (update n $ (Data.List.NonEmpty.cons ev))
   where
     sorted :: [((a,a), b)]
     sorted = Data.Map.toAscList xs
@@ -1923,7 +1929,12 @@ t = partitionIntervals $ Data.Map.fromList
   ]
 
 toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (List0To4 (MVoice a))
-toLayer p =
+toLayer p xs = case parseList $ partitionIntervals $ scoreToMap xs of
+  Nothing -> throwError $ "Part has more than four overlapping events: " ++ show p
+  Just xs -> pure $ fmap (maybe (error bug) id . preview Music.Score.Phrases.singleMVoice . mapToScore) xs
+  where
+    bug = "partitionIntervals returned overlapping partition. Plese report this as a bug in music-suite."
+  {-
   -- TODO:
   --  Use partitionIntervals
   --    If it returns >4 voices, fail (or do custom tie-based sepration?)
@@ -1935,7 +1946,14 @@ toLayer p =
       (throwError $ "Overlapping events in part: " ++ show p)
       return
       . preview Music.Score.Phrases.singleMVoice
+  -}
 
+-- TODO move
+scoreToMap :: Score a -> Map (Time, Time) a
+scoreToMap = Data.Map.fromList . fmap (first (view onsetAndOffset) . (view (from event))) . view events
+
+mapToScore :: Map (Time, Time) a -> Score a
+mapToScore = view score . fmap (view event . first (view $ from onsetAndOffset)) . Data.Map.toList
 
 
 fromAspects :: (StandardNotationExportM m) => Asp -> m Work
