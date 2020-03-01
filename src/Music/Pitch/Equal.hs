@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE RankNTypes #-}
 
 -- | Generic equal temperament pitch.
@@ -79,7 +88,6 @@ instance IsNat a => Monoid (Equal a) where
 
   mempty = 0
 
-  mappend = (+)
 
 instance IsNat a => AdditiveGroup (Equal a) where
 

@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 -- | Absolute pitch representation.
 module Music.Pitch.Absolute
   ( -- * Absolute pitch representation
@@ -8,7 +17,7 @@ module Music.Pitch.Absolute
 
     -- * HasFrequency class
     HasFrequency (..),
-    -- octaves,
+    octaves,
     fifths,
     cents,
 
@@ -71,13 +80,13 @@ instance Semigroup Fifths where (<>) = (+)
 
 instance Semigroup Cents where (<>) = (+)
 
-instance Monoid Hertz where mempty = 1; mappend = (*)
+instance Monoid Hertz where mempty = 1
 
-instance Monoid Octaves where mempty = 0; mappend = (+)
+instance Monoid Octaves where mempty = 0
 
-instance Monoid Fifths where mempty = 0; mappend = (+)
+instance Monoid Fifths where mempty = 0
 
-instance Monoid Cents where mempty = 0; mappend = (+)
+instance Monoid Cents where mempty = 0
 
 instance AffineSpace Hertz where
 
@@ -124,14 +133,15 @@ cents a = Cents $ logBase (2 / 1) (frequency a) * 1200
 diss :: RealFrac a => [a] -> a
 diss xs = lcms xs / minimum xs
 
-gcdG :: RealFrac a => a -> a -> a
+-- gcdG :: RealFrac a => a -> a -> a
+-- gcdG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (gcd a1 b1) / fromIntegral (lcm a2 b2)
 
 lcmG :: RealFrac a => a -> a -> a
 lcmG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (lcm a1 b1) / fromIntegral (gcd a2 b2)
 
-gcdG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (gcd a1 b1) / fromIntegral (lcm a2 b2)
 
 lcms :: RealFrac a => [a] -> a
 lcms = foldr lcmG 1
 
+unRatio :: Rational -> (Integer, Integer)
 unRatio x = (Data.Ratio.numerator x, Data.Ratio.denominator x)

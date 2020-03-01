@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 -- | Pitch range or ambitus.
@@ -44,10 +53,10 @@ ambitusInterval :: (AffineSpace a) => Ambitus a -> Diff a
 ambitusInterval (Ambitus x y) = x .-. y
 
 ambitusLowest :: () => Ambitus a -> a
-ambitusLowest (Ambitus x y) = x
+ambitusLowest (Ambitus x _y) = x
 
 ambitusHighest :: () => Ambitus a -> a
-ambitusHighest (Ambitus x y) = y
+ambitusHighest (Ambitus _x y) = y
 
 inAmbitus :: (AffineSpace a, HasSemitones (Diff a)) => Ambitus a -> a -> Bool
 inAmbitus (Ambitus a c) b =

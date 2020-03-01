@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 -- | Clefs and staff positions.
 module Music.Pitch.Clef
   ( -- * Staff lines
@@ -104,7 +113,6 @@ symbolPitch _ = Nothing
 positionPitch :: Clef -> StaffLines -> Maybe Pitch
 positionPitch (Clef (s, o, l)) x = fmap (upDiatonic relativePosition) referencePitch
   where
-    numbersPerOctave = 7
     referencePitch = symbolPitch s :: Maybe Pitch
     relativePosition = fromIntegral $ (x - l) + fromIntegral (o * 7)
 
@@ -167,11 +175,12 @@ percussionClef = Clef (PercClef, 0 :: ClefOctave, 0 :: ClefLine)
 
 -- | Is this a clef used in contemporary notation?
 isModernClef :: Clef -> Bool
-isModernClef x | x == trebleClef = True
-isModernClef x | x == bassClef = True
-isModernClef x | x == altoClef = True
-isModernClef x | x == tenorClef = True
-isModernClef x | otherwise = False
+isModernClef x
+  | x == trebleClef = True
+  | x == bassClef = True
+  | x == altoClef = True
+  | x == tenorClef = True
+  | otherwise = False
 
 -- | Is this an historical clef?
 isHistoricalClef :: Clef -> Bool
@@ -179,6 +188,7 @@ isHistoricalClef _ = False
 
 -- | Is this a traditional voice clef, i.e. a C clef on some staff.
 isVoiceClef :: Clef -> Bool
-isVoiceClef x | x == altoClef = True
-isVoiceClef x | x == tenorClef = True
-isVoiceClef x | otherwise = False
+isVoiceClef x
+  | x == altoClef = True
+  | x == tenorClef = True
+  | otherwise = False

@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE InstanceSigs #-}
@@ -51,6 +60,7 @@ module Music.Pitch.Scale
     invertChord,
     chord,
     chordToList,
+    repeatingInterval,
 
     -- * Common modes, scales and chords
 
@@ -166,13 +176,6 @@ deriving instance (Ord a, Ord (Diff a)) => Ord (Scale a)
 
 deriving instance (Show a, Show (Diff a)) => Show (Scale a)
 
--- TODO move:
-type instance S.Pitch (NonEmpty a) = S.Pitch a
-
-type instance S.SetPitch b (NonEmpty a) = NonEmpty (S.SetPitch b a)
-
-instance HasPitches a b => HasPitches (NonEmpty a) (NonEmpty b) where
-  pitches = traverse . pitches
 
 type instance S.Pitch (Scale a) = S.Pitch a
 
@@ -259,12 +262,13 @@ instance FiniteSequence [] where
 -- TODO optimize
 instance FiniteSequence NonEmpty where
   rotate :: Integer -> NonEmpty a -> NonEmpty a
-  rotate 0 xs = xs
   rotate n xs
     | n > 0 =
       NonEmpty.iterate left xs NonEmpty.!! fromInteger n
+    | n == 0 = xs
     | n < 0 =
       NonEmpty.iterate right xs NonEmpty.!! (negate $ fromInteger n)
+    | otherwise = error "impossible"
     where
       left (x :| []) = x :| []
       left (x :| y : rs) = y :| (rs ++ [x])
@@ -305,6 +309,7 @@ class Countable f where
       | n > 0 -> pos Stream.!! (n - 1)
       | n == 0 -> z
       | n < 0 -> neg Stream.!! negate (n + 1)
+      | otherwise -> error "impossible"
     where
       (neg, z, pos) = scaleToSet s
 
@@ -313,6 +318,7 @@ class Countable f where
       | p > z -> p `isHeadOf` Stream.dropWhile (< p) pos
       | p == z -> True
       | p < z -> p `isHeadOf` Stream.dropWhile (> p) neg
+      | otherwise -> error "impossible"
     where
       (neg, z, pos) = scaleToSet s
 
