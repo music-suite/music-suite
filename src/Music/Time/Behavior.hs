@@ -325,6 +325,7 @@ concatB = mconcat . toListOf traverse . mapWithSpan transform . fmap (trimB memp
 tau :: Floating a => a
 tau = 2 * pi
 
+-- TODO use Internal.Util version
 floor' :: RealFrac a => a -> a
 floor' = fromInteger . floor
 

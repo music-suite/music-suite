@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 module Music.Time.Internal.Preliminaries
   ( module Control.Applicative,
     module Control.Comonad,
@@ -23,7 +32,6 @@ import Control.Lens hiding
     (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,

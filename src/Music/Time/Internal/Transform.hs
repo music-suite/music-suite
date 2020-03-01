@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFoldable #-}
@@ -38,6 +47,8 @@ module Music.Time.Internal.Transform
     whilstL,
     whilstLT,
     whilstLD,
+    whilstDelay,
+    whilstStretch,
     onSpan,
 
     -- * Specific transformations
@@ -47,6 +58,7 @@ module Music.Time.Internal.Transform
     undelaying,
     stretching,
     compressing,
+    conjugateS,
 
     -- ** Transforming values
     delay,
@@ -61,7 +73,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,
@@ -327,9 +338,6 @@ whilstL id
 
 -- type LensLike (f :: * -> *) s t a b = (a -> f b) -> s -> f t
 
--- TODO rename
-dofoo :: Functor f => (x -> s -> a) -> (x -> b -> t) -> LensLike f (x, s) (x, t) a b
-dofoo v w = \f (s, a) -> (s,) <$> w s <$> f ((v s) a)
 
 -- :: Functor f => (x -> afb -> afb') -> (afb' -> s -> f t) -> afb -> (x, s) -> f (x, t)
 -- TODO rename
