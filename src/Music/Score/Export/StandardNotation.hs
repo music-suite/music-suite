@@ -1115,7 +1115,7 @@ toLyBar sysBar bar = do
 toLyLayer :: (LilypondExportM m) => Rhythm Chord -> m Lilypond.Music
 toLyLayer (Beat d x) = toLyChord d x
 toLyLayer (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
-toLyLayer (Dotted n _) = error "FIXME"
+toLyLayer (Dotted n _) = error "Lilypond export: (Dotted x) requires x to be (Beat _)"
 toLyLayer (Group rs) = Lilypond.Sequential <$> traverse toLyLayer rs
 toLyLayer (Tuplet m r) = Lilypond.Times (realToFrac m) <$> (toLyLayer r)
   where
@@ -1854,14 +1854,32 @@ type Asp = Score Asp1
 
 type StandardNotationExportM m = (MonadLog String m, MonadError String m)
 
+-- TODO move and hide constructor.
+-- TODO generalize
+-- | List with 0 to 4 elements.
+newtype List0To4 a = UnsafeList0To4 { unsafeGetList0To4 :: [a] }
+  deriving (Functor, Foldable, Traversable)
+
+list0 :: List0To4 a
+list1 :: a -> List0To4 a
+list2 :: a -> a -> List0To4 a
+list3 :: a -> a -> a -> List0To4 a
+list4 :: a -> a -> a -> a -> List0To4 a
+list0 = UnsafeList0To4 []
+list1 x = UnsafeList0To4 [x]
+list2 x y = UnsafeList0To4 [x,y]
+list3 x y z = UnsafeList0To4 [x,y,z]
+list4 x y z a = UnsafeList0To4 [x,y,z,a]
+
 fromAspects :: (StandardNotationExportM m) => Asp -> m Work
 fromAspects sc = do
+  say "Simplifying pitches"
   -- Simplify pitch spelling
   let postPitchSimplification = Music.Score.Pitch.simplifyPitches normScore
   -- Part extraction
   say "Extracting parts"
   let postPartExtract :: [(Music.Parts.Part, Score Asp1)] = Music.Score.Part.extractPartsWithInfo postPitchSimplification
-  say $ "Done, " ++ show (length postPartExtract) ++ " parts"
+  say $ "  Done, " ++ show (length postPartExtract) ++ " parts"
   -- postPartExtract :: [(Music.Parts.Part,Score Asp1)]
 
   -- Change aspect type as we need Semigroup to compose all simultanous notes
@@ -1903,37 +1921,47 @@ fromAspects sc = do
     should happen after bars have been split.
 
   -}
-  say "Separating voices in parts (assuming no overlaps)"
-  postVoiceSeparation :: [(Music.Parts.Part, MVoice Asp2)] <-
+  say "Separating voices"
+  postVoiceSeparation :: [(Part, List0To4 (MVoice Asp2))] <-
     traverse
       ( \a@(p, _) ->
-          traverse (toLayer p) a
+          -- TODO VS: Do actual voice separation here
+          traverse (fmap list1 . toLayer p) a
       )
       $ postChordMerge
   -- Rewrite dynamics and articulation to be context-sensitive
   -- This changes the aspect type again
-  say "Notate dynamics, articulation and playing techniques"
-  postContextSensitiveNotationRewrite <- return $ (fmap . fmap) asp2ToAsp3 $ postVoiceSeparation
+  say "Notating dynamics, articulation and playing techniques"
+  let postContextSensitiveNotationRewrite
+          :: [(Part, List0To4 (MVoice Asp3))]
+          = (fmap . fmap . fmap) asp2ToAsp3 $ postVoiceSeparation
   -- postContextSensitiveNotationRewrite :: [(Music.Parts.Part,Voice (Maybe Asp3))]
 
   -- Split each part into bars, splitting notes and adding ties when necessary
   -- Resulting list is list of bars, there is no layering (yet)
-  say "Divide score into bars, adding ties where necessary"
-  let postTieSplit :: [(Part, [Voice (Maybe Asp3)])] =
-        (fmap . fmap) (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
-  -- For each bar, quantize all layers. This is where tuplets/note values are generated.
-  say "Quantize rhythms (generating dotted notes and tuplets)"
-  postQuantize <- traverse (traverse (traverse quantizeBar)) postTieSplit
-  -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
+  say "Dividing the score into bars"
+  let postTieSplit
+        :: [(Part, List0To4 [Voice (Maybe Asp3)])]
+        =
+        (fmap . fmap . fmap) (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
 
-  -- TODO all steps above that start with fmap or traverse can be factored out (functor law)
+  -- For each bar, quantize all layers. This is where tuplets/note values are generated.
+  say "Rewriting rhythms"
+  postQuantize
+          :: [(Part, List0To4 [Rhythm (Maybe Asp3)])]
+          <- traverse (traverse (traverse (traverse quantizeBar))) postTieSplit
+  -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
 
   -- Group staves, generating brackets and braces
   say "Generate staff groups"
-  let postStaffGrouping = generateStaffGrouping postQuantize
+  let postStaffGrouping
+          :: LabelTree BracketType (Part, List0To4 [Rhythm (Maybe Asp3)])
+          = generateStaffGrouping postQuantize
   -- postStaffGrouping :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
 
-  let staves :: LabelTree BracketType Staff = fmap aspectsToStaff postStaffGrouping
+  let staves
+          :: LabelTree BracketType Staff
+          = fmap aspectsToStaff postStaffGrouping
   say $ "System staff bars: " ++ show (length systemStaff)
   say $ "Regular staff bars: " ++ show (fmap (length . _bars) . toList $ staves)
   return $ Work mempty [Movement info systemStaff staves]
@@ -1992,11 +2020,13 @@ quantizeBar = fmap rewrite . quantize' . view Music.Time.pairs
       Left e -> throwError $ "Quantization failed: " ++ e
       Right x -> return x
 
-generateStaffGrouping :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
+-- | Convert a list of part into a 'LabelTree BracketType' of parts (e.g.
+-- a tree with bracket/brace information).
+generateStaffGrouping :: [(Part, a)] -> LabelTree BracketType (Part, a)
 generateStaffGrouping = groupToLabelTree . partDefault
 
-aspectsToStaff :: (Music.Parts.Part, [Rhythm (Maybe Asp3)]) -> Staff
-aspectsToStaff (part, bars) = Staff info (fmap aspectsToBar bars)
+aspectsToStaff :: (Music.Parts.Part, List0To4 [Rhythm (Maybe Asp3)]) -> Staff
+aspectsToStaff (part, UnsafeList0To4 [bars]) = Staff info (fmap aspectsToBar bars)
   where
     info =
       id
@@ -2015,11 +2045,16 @@ aspectsToStaff (part, bars) = Staff info (fmap aspectsToBar bars)
         soloStr = if (part ^. (Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
         nameStr = (part ^. (Music.Parts.instrument) . (to Music.Parts.fullName))
         subpartStr = Just $ show (part ^. (Music.Parts.subpart))
+aspectsToStaff (part, _) = error "TODO support >1 voice per part"
 
+-- | Group all parts in the default way (e.g. a standard orchestral score with woodwinds
+-- on top, followed by brass, etc).
 partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
 partDefault xs = Music.Parts.groupDefault $ fmap (\(p, x) -> (p ^. (Music.Parts.instrument), (p, x))) xs
 
-groupToLabelTree :: Group a -> LabelTree (BracketType) a
+-- | Transform the staff grouping representation from `Music.Parts` into the one
+-- used by 'Work'.
+groupToLabelTree :: Group a -> LabelTree BracketType a
 groupToLabelTree (Single (_, a)) = Leaf a
 groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
   where
