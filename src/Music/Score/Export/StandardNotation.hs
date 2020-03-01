@@ -296,6 +296,13 @@ import qualified Text.Pretty
 data LabelTree b a = Branch b [LabelTree b a] | Leaf a
   deriving (Functor, Foldable, Traversable, Eq, Ord, Show)
 
+-- forall x . concatLT x . fmap pure = id
+concatLT :: b -> LabelTree b [a] -> LabelTree b a
+concatLT b = foldLabelTree f Branch
+  where
+    f [x] = Leaf x
+    f xs  = Branch b (fmap Leaf xs)
+
 fromListLT :: Monoid b => [a] -> LabelTree b a
 fromListLT = Branch mempty . fmap Leaf
 
@@ -2042,11 +2049,17 @@ fromAspects sc = do
   let postStaffGrouping
           :: LabelTree BracketType (Part, List0To4 [Rhythm (Maybe Asp3)])
           = generateStaffGrouping postQuantize
-  -- postStaffGrouping :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
 
+  -- All staves with brackets/braces, with one staff generated per voice
+  -- We fold those into the LabelTree using SubBracket
+  -- TODO support rendering multiple voices per staff instead
+  let staffVoices
+          :: LabelTree BracketType [Staff]
+          = fmap aspectsToStaff postStaffGrouping
   let staves
           :: LabelTree BracketType Staff
-          = fmap aspectsToStaff postStaffGrouping
+          = concatLT Subbracket staffVoices
+
   say $ "System staff bars: " ++ show (length systemStaff)
   say $ "Regular staff bars: " ++ show (fmap (length . _bars) . toList $ staves)
   return $ Work mempty [Movement info systemStaff staves]
@@ -2104,8 +2117,12 @@ quantizeBar = fmap rewrite . quantize' . view Music.Time.pairs
 generateStaffGrouping :: [(Part, a)] -> LabelTree BracketType (Part, a)
 generateStaffGrouping = groupToLabelTree . partDefault
 
-aspectsToStaff :: (Music.Parts.Part, List0To4 [Rhythm (Maybe Asp3)]) -> Staff
-aspectsToStaff (part, UnsafeList0To4 [bars]) = Staff info (fmap aspectsToBar bars)
+aspectsToStaff :: (Music.Parts.Part, List0To4 [Rhythm (Maybe Asp3)]) -> [Staff]
+aspectsToStaff (part, UnsafeList0To4 voices) =
+  fmap (singleStaff part) voices
+
+singleStaff :: Part -> [Rhythm (Maybe Asp3)] -> Staff
+singleStaff part bars = Staff info (fmap aspectsToBar bars)
   where
     info =
       id
@@ -2124,7 +2141,6 @@ aspectsToStaff (part, UnsafeList0To4 [bars]) = Staff info (fmap aspectsToBar bar
         soloStr = if (part ^. (Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
         nameStr = (part ^. (Music.Parts.instrument) . (to Music.Parts.fullName))
         subpartStr = Just $ show (part ^. (Music.Parts.subpart))
-aspectsToStaff (part, _) = error "FIXME support >1 voice per part"
 
 -- | Group all parts in the default way (e.g. a standard orchestral score with woodwinds
 -- on top, followed by brass, etc).
