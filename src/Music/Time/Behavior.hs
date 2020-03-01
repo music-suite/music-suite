@@ -10,8 +10,13 @@
 module Music.Time.Behavior
   ( -- * Behavior type
     Behavior,
+
+    -- * Construction
     behavior,
     sampled,
+
+    -- * Lookup
+    (!),
 
     -- * Combinators
     switch,
@@ -35,7 +40,6 @@ module Music.Time.Behavior
     impulse,
     turnOn,
     turnOff,
-    (!),
   )
 where
 
@@ -60,7 +64,7 @@ import Music.Time.Score
 -- > localRep (/ t) = stretch t
 
 -- |
--- A 'Behavior' is a value varying over time.
+-- A time-dependent value.
 newtype Behavior a = Behavior {getBehavior :: Time -> a}
   deriving (Functor, Applicative, Monad, Typeable)
 
@@ -221,8 +225,9 @@ sampled = from behavior
 -- |
 -- A behavior that gives the current time.
 --
--- Should really have the type 'Behavior' 'Time', but is provided in a more general form
--- for convenience.
+-- @
+-- (line !) = id
+-- @
 line :: Fractional a => Behavior a
 line = realToFrac ^. behavior
 

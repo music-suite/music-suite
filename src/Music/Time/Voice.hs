@@ -19,10 +19,8 @@ module Music.Time.Voice
     pairs,
     durationsAsVoice,
 
-    -- * Conversion
-    noteToVoice,
 
-    -- * Maps
+    -- * Map
     mapWithOnsetRelative,
     mapWithOffsetRelative,
     mapWithEraRelative,
@@ -65,6 +63,9 @@ module Music.Time.Voice
     -- * Context
     -- TODO clean
     withContext,
+
+    -- * Conversion
+    noteToVoice,
   )
 where
 
@@ -103,9 +104,6 @@ import Music.Time.Internal.Util
 import Music.Time.Juxtapose
 import Music.Time.Note
 
--- |
--- A 'Voice' is a sequential composition of non-overlapping note values.
---
 -- Both 'Voice' and 'Note' have duration but no position. The difference
 -- is that 'Note' sustains a single value throughout its duration, while
 -- a voice may contain multiple values. It is called voice because it is
@@ -113,6 +111,10 @@ import Music.Time.Note
 --
 -- It may be useful to think about 'Voice' and 'Note' as vectors in time space
 -- (i.e. 'Duration'), that also happens to carry around other values, such as pitches.
+
+-- |
+-- A sequential composition of values with associated durations.
+--
 newtype Voice a = Voice {getVoice :: [Note a]}
   deriving (Eq, Ord, Typeable, Foldable, Traversable, Functor, Semigroup, Monoid)
 

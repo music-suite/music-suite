@@ -14,16 +14,11 @@ module Music.Time.Score
   ( -- * Score type
     Score,
 
-    -- * Query
-
     -- * Construction
     score,
     events,
     eras,
     triples,
-
-    -- * Conversion
-    eventToScore,
 
     -- * Traversal
     mapWithSpan,
@@ -46,6 +41,9 @@ module Music.Time.Score
     -- * Unsafe versions
     eventsIgnoringMeta,
     triplesIgnoringMeta,
+
+    -- * Conversion
+    eventToScore,
   )
 where
 
@@ -110,7 +108,7 @@ import Music.Time.Voice
 -- You can also use '<>' and 'mempty' of course.
 --
 
--- | A 'Score' is a sequential or parallel composition of values, and allows overlapping events
+-- | A set of events of type @a@, with an associated time spans.
 newtype Score a = Score {getScore :: (Meta, Score' a)}
   deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable {-, Show, Eq, Ord-})
 
