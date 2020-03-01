@@ -17,7 +17,7 @@ module Music.Time.Behavior
     switch,
     switch',
     -- splice,
-    trimB,
+    trim,
     trimBefore,
     trimAfter,
     concatB,
@@ -309,16 +309,17 @@ switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
   EQ -> ry ! u
   GT -> rz ! u
 
--- TODO restore to public API?
+-- | Sample the given behavior at the given time.
 (!) :: Behavior a -> Time -> a
 b ! t = getBehavior b t
 
-trimB :: Monoid a => Span -> Behavior a -> Behavior a
-trimB (view onsetAndOffset -> (on, off)) x = (\t -> if on <= t && t <= off then x ! t else mempty) ^. behavior
+-- | Replace everything outside the given span by 'mempty'.
+trim :: Monoid a => Span -> Behavior a -> Behavior a
+trim (view onsetAndOffset -> (on, off)) x = (\t -> if on <= t && t <= off then x ! t else mempty) ^. behavior
 
 -- Treat each event as a segment in the range (0<->1) and compose.
 concatB :: Monoid a => Score (Behavior a) -> Behavior a
-concatB = mconcat . toListOf traverse . mapWithSpan transform . fmap (trimB mempty)
+concatB = mconcat . toListOf traverse . mapWithSpan transform . fmap (trim mempty)
 
 -- Internal
 

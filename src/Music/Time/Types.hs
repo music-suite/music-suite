@@ -141,7 +141,7 @@ deriving instance Floating Duration
 
 -- | 'Alignment' is a synonym for 'Duration'.
 --
--- See "Music.Time.Alignment" for its intended use.
+-- See "Music.Time.Aligned" for its intended use.
 type Alignment = Duration
 
 -- |
