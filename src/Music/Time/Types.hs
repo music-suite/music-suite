@@ -154,6 +154,10 @@ type LocalDuration = Alignment
 -- |
 -- Duration, corresponding to note values in standard notation.
 -- The standard names can be used: @1\/2@ for half note @1\/4@ for a quarter note and so on.
+--
+-- 'Duration' is isomorphic to 'Rational'. You can use 'toRational' and 'fromRational'
+-- to convert it. To convert between 'Time' and 'Duration', use the 'AffineSpace'
+-- instance.
 newtype Duration = Duration {_getDuration :: TimeBase}
   deriving (Eq, Ord, Typeable, Enum, Num, Fractional, Real, RealFrac)
 
@@ -205,6 +209,10 @@ instance InnerSpace Duration where
 -- Time has an origin (zero) which usually represents the beginning of the musical
 -- performance, but this may not always be the case, as the modelled music may be
 -- infinite, or contain a musical pickup. Hence 'Time' values can be negative.
+--
+-- 'Duration' is isomorphic to 'Rational'. You can use 'toRational' and 'fromRational'
+-- to convert it. To convert between 'Time' and 'Duration', use the 'AffineSpace'
+-- instance.
 newtype Time = Time {_getTime :: TimeBase}
   deriving (Eq, Ord, Typeable, Enum, Num, Fractional, Real, RealFrac)
 
@@ -288,12 +296,13 @@ toRelativeTimeN [] = []
 toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 
 -- |
--- A 'Span' represents a specific time interval.
+-- A 'Span' represents a /time interval/. It has a starting point called 'onset' and
+-- an ending point called 'offset'.
 --
 -- Another way of looking at 'Span' is that it represents a time transformation where
 -- onset is translation and duration is scaling.
 --
--- This type is known as 'Arc' in Tidal and as 'Era' in the active package.
+-- This type is sometimes known as /arc/ or /era/.
 newtype Span = Span {getSpan :: (Time, Duration)}
   deriving (Eq, Ord, Typeable)
 

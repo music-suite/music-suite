@@ -1,3 +1,4 @@
+{-# OPTIONS_HADDOCK hide #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates

@@ -863,11 +863,19 @@ durations :: Voice a -> [Duration]
 durations = view durationsV
 -}
 
+-- | Rotate the durations of a voice.
+--
+-- >>> rotateDurations 1 [(1,'c'), (2, 'd'), (1, 'e')]
+-- [(2,'c'), (1, 'd'), (1, 'e')]
 rotateDurations :: Int -> Voice a -> Voice a
 rotateDurations n x = view voice $ fmap (view note) $ zip (rotate n ds) vs
   where
     (ds, vs) = unzip $ fmap (view $ from note) $ view notes x
 
+-- | Rotate the values of a voice.
+--
+-- >>> rotateValues 1 [(1,'c'), (2, 'd'), (1, 'e')]
+-- [(1,'d'), (2, 'e'), (1, 'c')]
 rotateValues :: Int -> Voice a -> Voice a
 rotateValues n x = view voice $ fmap (view note) $ zip ds (rotate n vs)
   where

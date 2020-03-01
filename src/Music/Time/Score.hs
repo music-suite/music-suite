@@ -43,9 +43,6 @@ module Music.Time.Score
     normalizeScore,
     removeRests,
 
-    -- * Utility
-    printEras,
-
     -- * Unsafe versions
     eventsIgnoringMeta,
     triplesIgnoringMeta,
@@ -430,16 +427,12 @@ normalizeScore = reset . normalizeScoreDurations
     reset x = set onset (view onset x `max` 0) x
     normalizeScoreDurations = over (events . each . era) normalizeSpan
 
+-- | Remove all 'Nothing' values in the score.
 removeRests :: Score (Maybe a) -> Score a
 removeRests = mcatMaybes
 
 -- TODO version that reverses the values where appropriate
 -- Use over (events . each) normalizeEvent or similar
-
--- |
--- Print the span of each event, as given by 'eras'.
-printEras :: Score a -> IO ()
-printEras = mapM_ print . toListOf eras
 
 -- |
 -- Print all eras of the given score.

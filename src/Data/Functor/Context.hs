@@ -17,7 +17,9 @@ import Control.Lens.Iso
 import Control.Lens.Wrapped
 
 -- | A value with a possible predecessor and successor.
--- Can be used to traverse values with their immediate context.
+--
+--   This can be thought of as a limited version of a list zipper,
+--   showing only the direct neighbours.
 newtype Ctxt a = Ctxt {getCtxt :: (Maybe a, a, Maybe a)}
   deriving (Functor, Eq, Ord)
 
@@ -53,6 +55,13 @@ mapCtxt = fmap
 extractCtxt :: Ctxt a -> a
 extractCtxt (Ctxt (_, x, _)) = x
 
+-- | Add context to a sequence.
+--
+-- >>> addCtxt []
+-- []
+--
+-- >>> addCtxt [1..3]
+-- [Ctxt (Nothing, 1, Just 2), Ctxt (Just 1, 2, Just 3), Ctxt (Just 2, 3, Nothing)]
 addCtxt :: [a] -> [Ctxt a]
 addCtxt = fmap Ctxt . withPrevNext
   where
