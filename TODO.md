@@ -134,16 +134,16 @@ Consider switching to a decentralized issue tracker such as:
     - https://github.com/music-suite/music-suite/issues/11
 
   - More 12-tone/equal temperament stuff
-    - Set theory concepts
+    - Essentially combinatorics
     - Binary scales (?)
     https://github.com/music-suite/music-pitch/issues/56
-  - Pitch normalization which preserves spelling direction
+  - [X] Pitch normalization which preserves spelling direction
     https://github.com/music-suite/music-pitch/issues/55
   - Parse Helmholtz, SPN etc
     https://github.com/music-suite/music-pitch/issues/54
   - Pitch invert should be called invertChromatic
     https://github.com/music-suite/music-pitch/issues/51
-  - Iso `interval` is partial
+  - [X] Iso `interval` is partial
     https://github.com/music-suite/music-pitch/issues/46
   - Harmony support
     https://github.com/music-suite/music-pitch/issues/35
@@ -151,17 +151,17 @@ Consider switching to a decentralized issue tracker such as:
   - Articulation should track agogic prolongation in addition to shortining/separation and accentuation
     https://github.com/music-suite/music-articulation/issues/3
 
-  - Phrase traversals currently fail at runtime if there are overlapping notes in a single part.
+  - [X] Phrase traversals currently fail at runtime if there are overlapping notes in a single part.
     https://github.com/music-suite/music-score/issues/208
 
   - $reversibleMeta
     https://github.com/music-suite/music-score/issues/119
 
-  - Issues from the following repos have been ported to this file:
-    - music-pitch
-    - music-suite
-    - music-dynamics
-    - music-articulation
+  - [X] Port issues from all old Github trackers:
+    - [X] music-pitch
+    - [X] music-suite
+    - [X] music-dynamics
+    - [X] music-articulation
 
 - [X] Never fail export on overlapping/simultaneously events
   - [X] Basic voice sepration added
@@ -180,6 +180,10 @@ Consider switching to a decentralized issue tracker such as:
 
 - Music.Score.Export contains internal modules and should be renamed accordingly
   - What top-level interface should we support other than defaultMain?
+      MonadLog, MonadError,
+      IOExportM, PureExportM, runPureExportM, runIOExportM,
+      toMidi, fromAspects, toLy, toXml
+      Score, Asp1 (renamed!)
 
 - In Parts: extracted/extractedWithInfo should be Traversals, not lenses to lists (the latter
   is generally law-breaking)
