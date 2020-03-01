@@ -13,8 +13,8 @@ Consider switching to a decentralized issue tracker such as:
 - [X] BUG: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
   Intervals not displayed properly
 
-- $doctests!
-  - [ ] Run locally (README)
+- $doctests
+  - [X] Run locally (README)
     - [X] Tool works
     - [ ] Fix hack for default-extensions (see Doctester.hs)
     - [ ] Make this work for all modules
@@ -163,14 +163,20 @@ Consider switching to a decentralized issue tracker such as:
     - music-dynamics
     - music-articulation
 
-- [ ] Never fail export on overlapping/simultaneously events
-  $needsTests
-  - What is the correct behavior if a score is exported where a some part has overlapping notes?
-  - Generally this should be fine, though currently the backend/export code does not handle it
-    correctly.
-  - Putting overlapping events in monophonic instruments (e.g. flute) should be a linting error,
-    similar to range etc.
-  - The general problem of breaking up a score: $voiceSeparation
+- [X] Never fail export on overlapping/simultaneously events
+  - [X] Basic voice sepration added
+    - What is the correct behavior if a score is exported where a some part has overlapping notes?
+    - Generally this should be fine, though currently the backend/export code does not handle it
+      correctly.
+    - Putting overlapping events in monophonic instruments (e.g. flute) should be a linting error,
+      similar to range etc.
+    - The general problem of breaking up a score: $voiceSeparation
+
+- $voiceSeparation
+  - Basic things work
+  - [ ] Render (>1) voice per staff, e.g. for keyboard music
+  - We currently use a simple greedy interval partitioning algorithm. Look into music-specific approaches,
+    e.g. https://archives.ismir.net/ismir2002/paper/000005.pdf
 
 - Music.Score.Export contains internal modules and should be renamed accordingly
   - What top-level interface should we support other than defaultMain?
