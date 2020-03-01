@@ -492,11 +492,13 @@ Consider switching to a decentralized issue tracker such as:
 
 - Make doc generation work in CI (again)
 
-- IDE allowing "preview on hover"
-  - Normal text editor
-  - When moving around in a single file (with/without a 'main' function) any hovered expression should
-    trigger a preview (visual/audial) in an editor window, as if the expression had been applied to
-    defaultMain (see above).
+- [ ] IDE allowing "preview on hover"
+  - [X] Basic implementation works now (in separate repository), uses the CLI + Cabal/Nix for invocation
+  - [ ] More stability and documentation
+    - Normal text editor
+    - When moving around in a single file (with/without a 'main' function) any hovered expression should
+      trigger a preview (visual/audial) in an editor window, as if the expression had been applied to
+      defaultMain (see above).
 
 - [ ] Deprecate Track/Placed?
   - It's rarely useful to just 'delay'
