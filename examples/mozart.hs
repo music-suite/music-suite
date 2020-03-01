@@ -1,6 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
 
 import Music.Prelude
 import qualified Music.Score
@@ -40,7 +41,7 @@ info = id
 
 score' :: Music
 score' = info $ compress 4 $ tempo (metronome (1/4) 30) $ {-delay (4*2) $ -}
-    stanza1_instr </> stanza1_voc
+    stanza1_voc </> stanza1_instr
 
 -- Rhythm helper functions
 lss l s1 s2     = l|*2 |> s1 |> s2
@@ -100,7 +101,7 @@ stanza1_bass = delay 8 $ octavesDown 1 $ empty
     |> ll d  d     |> ll d d       |> ls cs  cs            |> ll d d
     |> ls a  a     |> s4 d d cs cs |> ls d             d   |> l4 a_
 
-stanza1_instr = stanza1_vl1 </> stanza1_vl2 </> stanza1_vla </> stanza1_bc
+stanza1_instr = set parts' violins $ stanza1_vl1 <> stanza1_vl2 <> stanza1_vla <> stanza1_bc
 stanza1_vl1 = empty
     |> s4 d a_ d e |> s4 fs d fs g
     |> lss a d' fs |> ssl a gs g   |> s4 g b a g           |> ssl g fs fs
