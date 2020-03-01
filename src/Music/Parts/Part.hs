@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE InstanceSigs #-}
 
@@ -61,12 +70,11 @@ instance Monoid Part where
 
   mempty = def
 
-  mappend x y
-    | x == mempty = y
-    | otherwise = x
 
 instance Semigroup Part where
-  (<>) = mappend
+  x <> y
+    | x == mempty = y
+    | otherwise = x
 
 instance Default Part where
   def = Part def def def
@@ -100,6 +108,8 @@ smallestPart :: Part -> Part -> Part
 smallestPart p1@(Part _ _ sp1) p2@(Part _ _ sp2)
   | sp1 `smallestSubpart` sp2 == sp1 = p1
   | sp1 `smallestSubpart` sp2 == sp2 = p2
+  -- arbitrarily:
+  | otherwise = p1
 
 smallestSubpart :: Subpart -> Subpart -> Subpart
 smallestSubpart x y
@@ -112,6 +122,8 @@ largestPart :: Part -> Part -> Part
 largestPart p1@(Part _ _ sp1) p2@(Part _ _ sp2)
   | sp1 `largestSubpart` sp2 == sp1 = p1
   | sp1 `largestSubpart` sp2 == sp2 = p2
+  -- arbitrarily:
+  | otherwise = p1
 
 largestSubpart :: Subpart -> Subpart -> Subpart
 largestSubpart x y
@@ -165,6 +177,8 @@ divide n (Part solo instr subp) = fmap (\x -> Part solo instr (subp <> Subpart (
   where
     divisions n = [0 .. (fromIntegral n - 1)]
 
+solo :: Instrument -> Part
 solo instr = Part Solo instr def
 
+tutti :: Instrument -> Part
 tutti instr = Part Tutti instr def

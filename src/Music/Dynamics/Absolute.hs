@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -59,11 +68,11 @@ instance Semigroup Decibel where (<>) = (+)
 
 instance Semigroup Bel where (<>) = (+)
 
-instance Monoid Amplitude where mempty = 1; mappend = (*)
+instance Monoid Amplitude where mempty = 1
 
-instance Monoid Decibel where mempty = 0; mappend = (+)
+instance Monoid Decibel where mempty = 0
 
-instance Monoid Bel where mempty = 0; mappend = (+)
+instance Monoid Bel where mempty = 0
 
 class HasAmplitude a where
   amplitude :: a -> Amplitude

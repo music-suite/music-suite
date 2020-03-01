@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  #-}
 -- | Representation of musical instruments.
 --
 -- The 'Instrument' type represent any instrument in the MusicXML Standard Sounds 3.0 set,
@@ -119,14 +128,6 @@ allowedClefs = Data.Set.fromList . Data._allowedClefs . fetchInstrumentDef
 standardClef :: Instrument -> Maybe Clef
 standardClef = Data.Maybe.listToMaybe . Data._standardClef . fetchInstrumentDef
 
--- TODO what about multi-staves?
-
-data BracketType = Bracket | Brace | SubBracket
-
-data StaffLayout = Staff Clef | Staves BracketType [StaffLayout]
-
-pianoStaff :: StaffLayout
-pianoStaff = Staves Brace [Staff trebleClef, Staff bassClef]
 
 -- | Playable range for this instrument.
 playableRange :: Instrument -> Ambitus Pitch
@@ -175,6 +176,7 @@ pitchToPCString x = show (name x) ++ showA (accidental x)
     showA 1 = "#"
     showA 0 = ""
     showA (-1) = "b"
+    showA _ = error "pitchToPCString: Unexpected transposition"
 
 scoreOrder :: Instrument -> Double
 scoreOrder = Data._scoreOrder . fetchInstrumentDef
