@@ -5,8 +5,8 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
+  -fno-warn-redundant-constraints #-}
+
 -- |
 -- Many time structures such as 'Score' allows for rests between notes. Generally rests
 -- are simply treated as blank space, and thus have no duration. Sometimes it is useful

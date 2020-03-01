@@ -5,8 +5,7 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  #-}
+  -fno-warn-unused-matches #-}
 
 module Music.Time.Voice
   ( -- * Voice type
@@ -18,7 +17,6 @@ module Music.Time.Voice
     notes,
     pairs,
     durationsAsVoice,
-
 
     -- * Map
     mapWithOnsetRelative,
@@ -114,7 +112,6 @@ import Music.Time.Note
 
 -- |
 -- A sequential composition of values with associated durations.
---
 newtype Voice a = Voice {getVoice :: [Note a]}
   deriving (Eq, Ord, Typeable, Foldable, Traversable, Functor, Semigroup, Monoid)
 

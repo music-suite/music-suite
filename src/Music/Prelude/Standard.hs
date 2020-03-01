@@ -1,3 +1,7 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -5,12 +9,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies #-}
+  -fno-warn-redundant-constraints #-}
 
 ------------------------------------------------------------------------------------
 
@@ -60,7 +59,7 @@ import Music.Articulation
 import Music.Dynamics
 import Music.Parts
 import Music.Pitch
-import Music.Score hiding (Articulation, Clef (..), view, Fifths, Interval, Part, Pitch)
+import Music.Score hiding (Articulation, Clef (..), Fifths, Interval, Part, Pitch, view)
 import Music.Score.Export.StandardNotation (Asp1, LilypondLayout (..), LilypondOptions (..), defaultLilypondOptions, fromAspects, runIOExportM, toLy, toMidi, toXml)
 import qualified Music.Score.Part
 import qualified System.Environment
@@ -149,4 +148,3 @@ doublePartsF ps x = mconcat $ fmap (\p -> set (mapped . parts') p x) ps
 -- >>> doublePartsInOctave [(violins,0),(flutes,1)] $ pseq[c,d,e]
 doublePartsInOctave :: (Monoid a, Transposable a, HasParts' a) => [(Music.Score.Part.Part a, Int)] -> a -> a
 doublePartsInOctave ps x = mconcat $ fmap (\(p, n) -> set parts' p $ octavesUp (fromIntegral n) x) ps
-

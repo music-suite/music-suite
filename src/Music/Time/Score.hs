@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -6,9 +7,7 @@
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
-{-# LANGUAGE FlexibleContexts #-}
+  -fno-warn-redundant-constraints #-}
 
 module Music.Time.Score
   ( -- * Score type
@@ -477,4 +476,3 @@ anyDistinctOverlaps xs = hasDuplicates xs || anyOverlaps xs
 
 combined :: Eq a => (a -> a -> b) -> [a] -> [b]
 combined f as = mcatMaybes [if x == y then Nothing else Just (x `f` y) | x <- as, y <- as]
-

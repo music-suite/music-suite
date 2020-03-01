@@ -5,8 +5,8 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
+  -fno-warn-redundant-constraints #-}
+
 module Music.Time.Reactive
   ( -- * Reactive type
     Reactive,
@@ -196,7 +196,7 @@ atTime = (!) . snd . (^. _Wrapped')
 -- Get the final value.
 final :: Reactive a -> a
 final x = case (initial x, updates x) of
-  (i,  []) -> i
+  (i, []) -> i
   (_i, xs) -> snd $ last xs
 
 -- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.

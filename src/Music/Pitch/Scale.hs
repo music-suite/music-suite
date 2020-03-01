@@ -1,12 +1,3 @@
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE InstanceSigs #-}
@@ -16,6 +7,14 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 {-
  - TODO get rid of UndecidableInstances by tracking both pitch and interval in the type
@@ -175,7 +174,6 @@ deriving instance (Eq a, Eq (Diff a)) => Eq (Scale a)
 deriving instance (Ord a, Ord (Diff a)) => Ord (Scale a)
 
 deriving instance (Show a, Show (Diff a)) => Show (Scale a)
-
 
 type instance S.Pitch (Scale a) = S.Pitch a
 

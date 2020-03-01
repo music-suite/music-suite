@@ -5,8 +5,8 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
+  -fno-warn-redundant-constraints #-}
+
 module Music.Time.Note
   ( -- * Note type
     Note,
@@ -211,7 +211,6 @@ notee = _Wrapped `dependingOn` (transformed . stretching)
 -- (2,())^.note
 durationNote :: Iso' Duration (Note ())
 durationNote = iso (\d -> (d, ()) ^. note) (^. duration)
-
 -- >>> (pure ())^.from durationNote
 -- 1
 -- >>> (pure () :: Note ())^.duration
