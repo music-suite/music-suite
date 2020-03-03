@@ -23,9 +23,9 @@ module Music.Time.Score
     mapWithSpan,
     filterWithSpan,
     mapFilterWithSpan,
-    mapTriples,
-    filterTriples,
-    mapFilterTriples,
+    mapWithTime,
+    filterWithTime,
+    mapFilterWithTime,
 
     -- * Simultaneous
     -- TODO check for overlapping values etc
@@ -318,6 +318,7 @@ events = _Wrapped . _2 . _Wrapped . sorted
     sorted = iso (List.sortBy (Ord.comparing (^. onset))) (List.sortBy (Ord.comparing (^. onset)))
 {-# INLINE events #-}
 
+-- | Convert an event to a singleton score.
 eventToScore :: Event a -> Score a
 eventToScore = view score . pure
 
@@ -399,21 +400,21 @@ mapWithSpan f = mapScore (uncurry f . view (from event))
 filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
 filterWithSpan f = mapFilterWithSpan (partial2 f)
 
--- | Combination of 'mapTriples' and 'filterTriples'.
+-- | Efficient combination of 'mapWithSpan' and 'filterWithTime'.
 mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
 mapFilterWithSpan f = mcatMaybes . mapWithSpan f
 
 -- | Map over the values in a score.
-mapTriples :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapTriples f = mapWithSpan (uncurry f . view onsetAndDuration)
+mapWithTime :: (Time -> Duration -> a -> b) -> Score a -> Score b
+mapWithTime f = mapWithSpan (uncurry f . view onsetAndDuration)
 
 -- | Filter the values in a score.
-filterTriples :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
-filterTriples f = mapFilterTriples (partial3 f)
+filterWithTime :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
+filterWithTime f = mapFilterWithTime (partial3 f)
 
--- | Efficient combination of 'mapTriples' and 'filterTriples'.
-mapFilterTriples :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
-mapFilterTriples f = mcatMaybes . mapTriples f
+-- | Efficient combination of 'mapWithTime' and 'filterWithTime'.
+mapFilterWithTime :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
+mapFilterWithTime f = mcatMaybes . mapWithTime f
 
 -- | Normalize a score, assuring its events spans are all forward (as by 'isForwardSpan'),
 -- and that its onset is at least zero. Consequently, the onset and offset of each event
@@ -461,6 +462,11 @@ simultaneous' sc = (^. from triplesIgnoringMeta) vs
 simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
 simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 
+-- | True if the score has more than one overlapping event.
+--
+-- @
+-- hasOverlappingEvents (simultaneous x) = False
+-- @
 hasOverlappingEvents :: Score a -> Bool
 hasOverlappingEvents = anyDistinctOverlaps . toListOf (events . each . era)
 
