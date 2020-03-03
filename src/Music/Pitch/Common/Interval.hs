@@ -8,7 +8,7 @@ module Music.Pitch.Common.Interval
     intervalTotalSteps,
     intervalAlterationSteps,
     steps,
-    _alteration,
+    alteration,
 
     -- ** Synonyms
     perfect,

@@ -455,7 +455,7 @@ instance FromJSON ChromaticSteps where
   parseJSON = fmap fromInteger . parseJSON
 
 instance ToJSON Interval where
-  toJSON i = Data.Aeson.object [("steps", toJSON $ i ^. steps), ("alteration", toJSON $ i ^. _alteration)]
+  toJSON i = Data.Aeson.object [("steps", toJSON $ i ^. steps), ("alteration", toJSON $ i ^. alteration)]
 
 instance FromJSON Interval where
   parseJSON (Data.Aeson.Object x) = liftA2 (curry (^. intervalAlterationSteps)) alteration steps
@@ -655,8 +655,8 @@ invert :: Interval -> Interval
 invert = simple . negateV
 
 -- | View or set the alteration (i.e. the number of chromatic steps differing from the excepted number) in an interval.
-_alteration :: Lens' Interval ChromaticSteps
-_alteration = from intervalAlterationSteps . _1
+alteration :: Lens' Interval ChromaticSteps
+alteration = from intervalAlterationSteps . _1
 
 -- | View or set the number of chromatic steps in an interval.
 steps :: Lens' Interval DiatonicSteps
@@ -1615,13 +1615,13 @@ name x =
 -- >>> accidental (flatten cb)
 -- doubleFlat
 accidental :: Pitch -> Accidental
-accidental = fromIntegral . view _alteration . simple . getPitch
+accidental = fromIntegral . view alteration . simple . getPitch
 
 upChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
-upChromaticP origin n = relative origin $ (_alteration +~ n)
+upChromaticP origin n = relative origin $ (alteration +~ n)
 
 downChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
-downChromaticP origin n = relative origin $ (_alteration -~ n)
+downChromaticP origin n = relative origin $ (alteration -~ n)
 
 upDiatonicP :: Pitch -> DiatonicSteps -> Pitch -> Pitch
 upDiatonicP origin n = relative origin $ (steps +~ n)
@@ -1633,7 +1633,7 @@ invertDiatonicallyP :: Pitch -> Pitch -> Pitch
 invertDiatonicallyP origin = relative origin $ (steps %~ negate)
 
 invertChromaticallyP :: Pitch -> Pitch -> Pitch
-invertChromaticallyP origin = relative origin $ (_alteration %~ negate)
+invertChromaticallyP origin = relative origin $ (alteration %~ negate)
 
 -- Pitch literal, defined as @(class, alteration, octave)@, where
 --
