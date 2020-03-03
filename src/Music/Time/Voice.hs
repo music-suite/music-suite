@@ -290,6 +290,7 @@ noteToVoice = view voice . pure
 notes :: Iso (Voice a) (Voice b) [Note a] [Note b]
 notes = notesIgnoringMeta
 
+
 -- $smartConstructors
 --
 -- @

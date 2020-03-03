@@ -51,8 +51,7 @@ import Data.Ratio
 import Data.Semigroup
 import Data.VectorSpace
 import Music.Pitch.Absolute
-import Music.Pitch.Common.Interval
-import Music.Pitch.Common.Pitch
+import Music.Pitch.Common.Internal
 import Music.Pitch.Common.Spell
 import Music.Pitch.Literal as Intervals
 

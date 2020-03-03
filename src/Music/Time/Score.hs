@@ -14,6 +14,7 @@ module Music.Time.Score
     Score,
 
     -- * Construction
+    -- $traversals
     score,
     events,
     eras,
@@ -93,6 +94,19 @@ import Music.Time.Juxtapose
 import Music.Time.Meta
 import Music.Time.Note
 import Music.Time.Voice
+
+-- $traversals
+-- @
+-- events . each . from event . swapped . mapping onsetAndDuration . swapped
+--    :: Traversal (Score a) (Score b) ((Time, Duration), a) ((Time, Duration), b)
+-- @
+--
+-- @
+-- events . each . from event . swapped . mapping onsetAndOffset . swapped
+--    :: Traversal (Score a) (Score b) ((Time, Time), a) ((Time, Time), b)
+-- @
+--
+
 
 --   * 'empty' creates an empty score
 --
@@ -389,6 +403,8 @@ reifyScore :: Score a -> Score (Event a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
 -- | View a score as a list of time-duration-value triplets.
+--
+-- TODO replace this with traversals
 triples {-Transformable a => -} :: Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 triples = triplesIgnoringMeta
 
