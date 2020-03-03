@@ -455,7 +455,7 @@ instance FromJSON ChromaticSteps where
   parseJSON = fmap fromInteger . parseJSON
 
 instance ToJSON Interval where
-  toJSON i = Data.Aeson.object [("steps", toJSON $ i ^. _steps), ("alteration", toJSON $ i ^. _alteration)]
+  toJSON i = Data.Aeson.object [("steps", toJSON $ i ^. steps), ("alteration", toJSON $ i ^. _alteration)]
 
 instance FromJSON Interval where
   parseJSON (Data.Aeson.Object x) = liftA2 (curry (^. intervalAlterationSteps)) alteration steps
@@ -659,8 +659,8 @@ _alteration :: Lens' Interval ChromaticSteps
 _alteration = from intervalAlterationSteps . _1
 
 -- | View or set the number of chromatic steps in an interval.
-_steps :: Lens' Interval DiatonicSteps
-_steps = from intervalAlterationSteps . _2
+steps :: Lens' Interval DiatonicSteps
+steps = from intervalAlterationSteps . _2
 
 -- | View an interval as a pair of quality and number or vice versa.
 --
@@ -710,7 +710,7 @@ intervalAlterationSteps =
         e = error "Impossible (TODO prove)"
 
 mkIntervalS :: Quality -> Number -> Maybe Interval
-mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ steps n)
+mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ fromIntegral $ view diatonicSteps n)
   where
     diff = qualityToAlteration (numberDirection n) (expectedQualityType n) (q)
 
@@ -734,11 +734,11 @@ diatonicSteps = iso steps d2n
       | n < 0 = fromIntegral (n - 1)
       | otherwise = error "Impossible"
 
-steps :: Integral a => Number -> a
-steps n = case fromIntegral n `compare` (0 :: Integer) of
-  GT -> fromIntegral n - 1
-  EQ -> error "Impossible: Number can not be 0"
-  LT -> fromIntegral n + 1
+    steps :: Integral a => Number -> a
+    steps n = case fromIntegral n `compare` (0 :: Integer) of
+      GT -> fromIntegral n - 1
+      EQ -> error "Impossible: Number can not be 0"
+      LT -> fromIntegral n + 1
 
 numberDirection :: Number -> Direction
 numberDirection n = case fromIntegral n `compare` (0 :: Integer) of
@@ -1624,13 +1624,13 @@ downChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
 downChromaticP origin n = relative origin $ (_alteration -~ n)
 
 upDiatonicP :: Pitch -> DiatonicSteps -> Pitch -> Pitch
-upDiatonicP origin n = relative origin $ (_steps +~ n)
+upDiatonicP origin n = relative origin $ (steps +~ n)
 
 downDiatonicP :: Pitch -> DiatonicSteps -> Pitch -> Pitch
-downDiatonicP origin n = relative origin $ (_steps -~ n)
+downDiatonicP origin n = relative origin $ (steps -~ n)
 
 invertDiatonicallyP :: Pitch -> Pitch -> Pitch
-invertDiatonicallyP origin = relative origin $ (_steps %~ negate)
+invertDiatonicallyP origin = relative origin $ (steps %~ negate)
 
 invertChromaticallyP :: Pitch -> Pitch -> Pitch
 invertChromaticallyP origin = relative origin $ (_alteration %~ negate)

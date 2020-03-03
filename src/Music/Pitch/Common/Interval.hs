@@ -7,7 +7,7 @@ module Music.Pitch.Common.Interval
     interval,
     intervalTotalSteps,
     intervalAlterationSteps,
-    _steps,
+    steps,
     _alteration,
 
     -- ** Synonyms
