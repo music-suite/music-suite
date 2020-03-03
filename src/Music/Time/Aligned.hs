@@ -34,7 +34,12 @@ import Music.Time.Note
 import Music.Time.Score
 import Music.Time.Voice
 
--- TODO should this be a Setter or a Lens instead?
+-- |
+-- TODO docs/laws
+--
+-- Aligned is like a "free HasPosition"
+--
+-- renderAligned... is forgetting local origin
 class Alignable a where
   align :: Alignment -> a -> a
 

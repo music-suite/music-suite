@@ -323,6 +323,15 @@ trim :: Monoid a => Span -> Behavior a -> Behavior a
 trim (view onsetAndOffset -> (on, off)) x = (\t -> if on <= t && t <= off then x ! t else mempty) ^. behavior
 
 -- Treat each event as a segment in the range (0<->1) and compose.
+
+-- | Flatten a score of behaviors. The behavior for each note is sampled in the units span @0 <-> 1@. Overlapping notes are merged using the monoid instance.
+--
+-- 'concatB' is a monoid homomorphism, that is:
+--
+-- @
+-- concatB mempty   = mempty
+-- concatB (a <> b) = concatB a <> concatB b
+-- @
 concatB :: Monoid a => Score (Behavior a) -> Behavior a
 concatB = mconcat . toListOf traverse . mapWithSpan transform . fmap (trim mempty)
 

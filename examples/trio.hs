@@ -52,5 +52,5 @@ music :: Music
 music = tremCanon <> mainCanon2
 
 main :: IO ()
-main = defaultMain $ filterTriples (\t _d _x -> 0 <= t && t < 32) music
+main = defaultMain $ filterWithTime (\t _d _x -> 0 <= t && t < 32) music
 

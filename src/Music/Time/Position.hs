@@ -109,13 +109,13 @@ position d = lens (`_position` d) (flip $ placeAt d)
 {-# INLINE position #-}
 
 -- |
--- Onset of the given value.
+-- Onset of the given value, corresponding to alignment @0@.
 onset :: (HasPosition a, Transformable a) => Lens' a Time
 onset = position 0
 {-# INLINE onset #-}
 
 -- |
--- Onset of the given value.
+-- Offset of the given value, corresponding to alignment @1@.
 offset :: (HasPosition a, Transformable a) => Lens' a Time
 offset = position 1
 {-# INLINE offset #-}
@@ -161,7 +161,7 @@ stopAt t x = (t .-. x ^. offset) `delay` x
 -- 'placeAt' 0 = 'startAt'
 -- 'placeAt' 1 = 'stopAt'
 -- @
-placeAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
+placeAt :: (Transformable a, HasPosition a) => Alignment -> Time -> a -> a
 placeAt p t x = (t .-. x `_position` p) `delay` x
 
 _onset, _offset :: (HasPosition a, Transformable a) => a -> Time
@@ -182,12 +182,14 @@ era = lens _era (flip _setEra)
 {-# INLINE era #-}
 
 -- |
+-- Stretch a value relative to its local origin.
+--
 -- @
 -- stretchRelativeOnset    = stretchRelative 0
 -- stretchRelativeMidpoint = stretchRelative 0.5
 -- stretchRelativeOffset   = stretchRelative 1
 -- @
-stretchRelative :: (HasPosition a, Transformable a) => Duration -> Duration -> a -> a
+stretchRelative :: (HasPosition a, Transformable a) => Alignment -> Duration -> a -> a
 stretchRelative p n x = over (transformed $ undelaying (realToFrac $ x ^. position p)) (stretch n) x
 
 -- |
@@ -214,14 +216,46 @@ stretchRelativeMidpoint = stretchRelative 0.5
 stretchRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
 stretchRelativeOffset = stretchRelative 1
 
-transformRelative :: (HasPosition a, Transformable a) => Duration -> Span -> a -> a
+-- |
+-- Transform a value relative to its local origin.
+--
+-- @
+-- stretchRelativeOnset    = stretchRelative 0
+-- stretchRelativeMidpoint = stretchRelative 0.5
+-- stretchRelativeOffset   = stretchRelative 1
+-- @
+transformRelative :: (HasPosition a, Transformable a) => Alignment -> Span -> a -> a
 transformRelative p n x = over (transformed $ undelaying (realToFrac $ x ^. position p)) (transform n) x
 
+-- |
+-- Transform a value relative to its local origin.
+--
+-- @
+-- stretchRelativeOnset    = stretchRelative 0
+-- stretchRelativeMidpoint = stretchRelative 0.5
+-- stretchRelativeOffset   = stretchRelative 1
+-- @
 transformRelativeOnset :: (HasPosition a, Transformable a) => Span -> a -> a
 transformRelativeOnset = transformRelative 0
 
+-- |
+-- Transform a value relative to its local origin.
+--
+-- @
+-- stretchRelativeOnset    = stretchRelative 0
+-- stretchRelativeMidpoint = stretchRelative 0.5
+-- stretchRelativeOffset   = stretchRelative 1
+-- @
 transformRelativeMidpoint :: (HasPosition a, Transformable a) => Span -> a -> a
 transformRelativeMidpoint = transformRelative 0.5
 
+-- |
+-- Transform a value relative to its local origin.
+--
+-- @
+-- stretchRelativeOnset    = stretchRelative 0
+-- stretchRelativeMidpoint = stretchRelative 0.5
+-- stretchRelativeOffset   = stretchRelative 1
+-- @
 transformRelativeOffset :: (HasPosition a, Transformable a) => Span -> a -> a
 transformRelativeOffset = transformRelative 1
