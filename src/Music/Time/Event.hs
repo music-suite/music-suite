@@ -6,7 +6,6 @@ module Music.Time.Event
     event,
     eventee,
     spanEvent,
-    triple,
   )
 where
 

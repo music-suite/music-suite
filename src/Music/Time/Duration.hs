@@ -16,9 +16,6 @@ module Music.Time.Duration
     -- * Absolute duration
     duration,
     stretchTo,
-
-    -- ** Utility
-    mapWithDuration,
   )
 where
 
@@ -120,11 +117,3 @@ duration :: (Transformable a, HasDuration a) => Lens' a Duration
 duration = lens _duration (flip stretchTo)
 {-# INLINE duration #-}
 
--- TODO generalize and move
-mapWithDuration :: HasDuration a => (Duration -> a -> b) -> a -> b
-mapWithDuration = over dual withDurationL . uncurry
-  where
-    withDurationL :: (Contravariant f, HasDuration a) => f (Duration, a) -> f a
-    withDurationL = contramap $ \x -> (_duration x, x)
-    dual :: Iso (a -> b) (c -> d) (Op b a) (Op d c)
-    dual = iso Op getOp
