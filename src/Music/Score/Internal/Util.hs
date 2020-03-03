@@ -8,6 +8,7 @@
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 module Music.Score.Internal.Util
   ( unRatio,

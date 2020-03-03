@@ -6,6 +6,7 @@
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 module Music.Time.Internal.Preliminaries
   ( module Control.Applicative,

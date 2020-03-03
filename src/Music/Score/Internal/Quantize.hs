@@ -6,6 +6,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------
 

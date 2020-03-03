@@ -11,6 +11,7 @@
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
 {-# OPTIONS_GHC -Wwarn #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------
 

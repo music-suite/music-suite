@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 module Music.Parts.Internal.Data
   ( SoundId,

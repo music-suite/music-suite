@@ -11,6 +11,7 @@
   -fno-warn-unused-top-binds
   -fno-warn-unused-matches
   -fno-warn-redundant-constraints #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------
 
