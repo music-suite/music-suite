@@ -172,8 +172,6 @@ instance FromRecord InstrumentDef where
       <*> v .! 11
       <*> v .! 12
 
--- TODO remove IO and use TH to make this fail at compile time on CSV parse error.
-
 getInstrumentData' :: [Map String String]
 getInstrumentData' =
   let d = Data.ByteString.Lazy.fromStrict $(embedFile "data/instruments.csv")
