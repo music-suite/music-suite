@@ -1506,19 +1506,21 @@ instance Show Pitch where
         | otherwise = replicate (negate $ fromIntegral n) 'b'
 
 -- |
--- This instance exists only for the syntactic convenience of writing @-m3@, rather
+-- This instance exists for the syntactic convenience of writing @-m3@, rather
 -- than @negateV m3@.
 --
--- Avoid using '(*)', 'signum' or `fromInteger` on intervals. For multiplication,
--- see the `VectorSpace` instance.
+-- Avoid using 'abs', '(*)', 'signum' or `fromInteger` on intervals.
+-- For multiplication, see the `VectorSpace` instance.
 instance Num Interval where
 
+  -- Point-wise implementation for the group methods.
   negate = negateV
 
-  -- TODO (+)/abs should not be used
   (+) = (^+^)
 
-  abs a = if isNegative a then negate a else a
+  -- A similar strategy is lawful for the other methods, but likely confusing,
+  -- so we fail-fast instead.
+  abs = error "Music.Pitch.Common.Interval: no overloading for abs"
 
   (*) = error "Music.Pitch.Common.Interval: no overloading for (*)"
 
