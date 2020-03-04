@@ -33,7 +33,5 @@ complement = (List.\\) full
 -- showPitchSet :: PitchSet -> Score
 showPitchSet = asScore . pseq . map (fromPitch' . pure . pitchClassToPitch) . List.nub
 
--- showPitchSetV :: PitchSet -> IO ()
-showPitchSetV = asScore . ppar . map (fromPitch' . pure . pitchClassToPitch) . List.nub
 
 -}

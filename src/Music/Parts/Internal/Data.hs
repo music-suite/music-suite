@@ -36,7 +36,6 @@ import Data.VectorSpace
 import Music.Pitch
 import Music.Pitch.Ambitus
 import Music.Pitch.Clef
-import qualified System.IO.Unsafe
 
 type SoundId = String
 
@@ -72,20 +71,17 @@ data InstrumentDef
 getInstrumentDefById :: String -> Maybe InstrumentDef
 getInstrumentDefById a = Data.List.find (\x -> _soundId x == a) defs
   where
-    -- Safe as this file never change
-    defs = System.IO.Unsafe.unsafePerformIO getInstrumentData
+    defs = getInstrumentData
 
 getInstrumentDefByGeneralMidiProgram :: Int -> Maybe InstrumentDef
 getInstrumentDefByGeneralMidiProgram a = Data.List.find (\x -> a `elem` _generalMidiProgram x) defs
   where
-    -- Safe as this file never change
-    defs = System.IO.Unsafe.unsafePerformIO getInstrumentData
+    defs = getInstrumentData
 
 getInstrumentDefByGeneralMidiPercussionNote :: Int -> Maybe InstrumentDef
 getInstrumentDefByGeneralMidiPercussionNote a = Data.List.find (\x -> a `elem` _generalMidiPercussionNote x) defs
   where
-    -- Safe as this file never change
-    defs = System.IO.Unsafe.unsafePerformIO getInstrumentData
+    defs = getInstrumentData
 
 pitchFromScientificPitchNotation :: String -> Maybe Pitch
 pitchFromScientificPitchNotation x = fmap (\on -> (.+^ _P8 ^* (on -4))) (safeRead octS) <*> pc pcS
@@ -178,17 +174,17 @@ instance FromRecord InstrumentDef where
 
 -- TODO remove IO and use TH to make this fail at compile time on CSV parse error.
 
-getInstrumentData' :: IO [Map String String]
-getInstrumentData' = do
+getInstrumentData' :: [Map String String]
+getInstrumentData' =
   let d = Data.ByteString.Lazy.fromStrict $(embedFile "data/instruments.csv")
-  return $ case Data.Csv.decodeByName d of
+  in case Data.Csv.decodeByName d of
     Left e -> error $ "Could not read data/instruments.csv " ++ show e
     Right (_header, x) -> toListOf traverse x
 
-getInstrumentData :: IO [InstrumentDef]
-getInstrumentData = do
+getInstrumentData :: [InstrumentDef]
+getInstrumentData =
   let d = Data.ByteString.Lazy.fromStrict $(embedFile "data/instruments.csv")
-  return $ case Data.Csv.decode Data.Csv.HasHeader d of
+  in case Data.Csv.decode Data.Csv.HasHeader d of
     Left e -> error $ "Could not read data/instruments.csv " ++ show e
     Right (x) -> toListOf traverse x
 
