@@ -54,6 +54,10 @@ Consider switching to a decentralized issue tracker such as:
   - Remove HasOctaves (retain interval instance)
   - Remove Augmentable/Alterable (?)
   - Remove triples/pairs in favor of explicit traversals (see example in Time.Score)
+  - Use DataKinds/phantom type to distinguish chord vs scale (only difference is Inspectable instance)
+  - Pitch/Interval containers should be bifunctors (taking pitch and interval). Can use AffinePair
+    constraint on operations.
+
 
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
