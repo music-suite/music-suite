@@ -33,9 +33,6 @@ module Music.Pitch.Intonation
     -- standardTuning,
     standardIntonation,
     just,
-
-    -- * Spectral dissonance
-    chordDiss,
   )
 where
 
@@ -169,6 +166,7 @@ instance Integral a => IsInterval (Ratio a) where
     fromInterval x = realToFrac (fromInterval x :: Double)
 -}
 
+{-
 -- Sort a chord based on dissonance, in C major just intonation
 -- Higher value means more dissonant
 chordDiss :: Tuning Interval -> [Pitch] -> Hertz
@@ -176,3 +174,4 @@ chordDiss tuning = diss . fmap inton
   where
     inton = (getIntonation $ intone (c, 264) tuning)
 -- inton = standardIntonation
+-}

@@ -20,9 +20,6 @@ module Music.Pitch.Absolute
     octaves,
     fifths,
     cents,
-
-    -- * Spectral dissonance
-    diss,
   )
 where
 
@@ -126,6 +123,7 @@ fifths a = Fifths $ logBase (3 / 2) (frequency a)
 cents :: HasFrequency a => a -> Cents
 cents a = Cents $ logBase (2 / 1) (frequency a) * 1200
 
+{-
 -- Calculate spectral dissonance.
 -- Only works as exp for freqs > 1
 --
@@ -141,6 +139,4 @@ lcmG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fro
 
 lcms :: RealFrac a => [a] -> a
 lcms = foldr lcmG 1
-
-unRatio :: Rational -> (Integer, Integer)
-unRatio x = (Data.Ratio.numerator x, Data.Ratio.denominator x)
+-}
