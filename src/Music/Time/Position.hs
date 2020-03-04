@@ -101,37 +101,37 @@ instance HasPosition Span where
 -- Position of the given value.
 position :: (HasPosition a, Transformable a) => Duration -> Lens' a Time
 position d = lens (`_position` d) (flip $ placeAt d)
-{-# INLINABLE position #-}
+{-# INLINEABLE position #-}
 
 -- |
 -- Onset of the given value, corresponding to alignment @0@.
 onset :: (HasPosition a, Transformable a) => Lens' a Time
 onset = position 0
-{-# INLINABLE onset #-}
+{-# INLINEABLE onset #-}
 
 -- |
 -- Offset of the given value, corresponding to alignment @1@.
 offset :: (HasPosition a, Transformable a) => Lens' a Time
 offset = position 1
-{-# INLINABLE offset #-}
+{-# INLINEABLE offset #-}
 
 -- |
 -- Pre-onset of the given value, or the value right before the attack phase.
 preOnset :: (HasPosition a, Transformable a) => Lens' a Time
 preOnset = position (-0.5)
-{-# INLINABLE preOnset #-}
+{-# INLINEABLE preOnset #-}
 
 -- |
 -- Midpoint of the given value, or the value between the decay and sustain phases.
 midpoint :: (HasPosition a, Transformable a) => Lens' a Time
 midpoint = position 0.5
-{-# INLINABLE midpoint #-}
+{-# INLINEABLE midpoint #-}
 
 -- |
 -- Post-offset of the given value, or the value right after the release phase.
 postOffset :: (HasPosition a, Transformable a) => Lens' a Time
 postOffset = position 1.5
-{-# INLINABLE postOffset #-}
+{-# INLINEABLE postOffset #-}
 
 -- |
 -- Move a value forward in time.
@@ -170,7 +170,7 @@ _setEra s x = transform (s ^-^ view era x) x
 -- A lens to the position
 era :: (HasPosition a, Transformable a) => Lens' a Span
 era = lens _era (flip _setEra)
-{-# INLINABLE era #-}
+{-# INLINEABLE era #-}
 
 -- |
 -- Stretch a value relative to its local origin.

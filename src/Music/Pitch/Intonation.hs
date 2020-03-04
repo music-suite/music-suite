@@ -146,7 +146,6 @@ justT' i = 2 ** (fromIntegral o) * go (spell usingSharps s)
       | i == _A5 = (5 / 4) * (5 / 4)
       | i == _A6 = (7 / 4)
       | otherwise = error $ "justT got" ++ show i
-
 {-
 Possible instances for numeric types based on standard intonation.
 

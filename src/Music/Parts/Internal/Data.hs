@@ -175,16 +175,16 @@ instance FromRecord InstrumentDef where
 getInstrumentData' :: [Map String String]
 getInstrumentData' =
   let d = Data.ByteString.Lazy.fromStrict $(embedFile "data/instruments.csv")
-  in case Data.Csv.decodeByName d of
-    Left e -> error $ "Could not read data/instruments.csv " ++ show e
-    Right (_header, x) -> toListOf traverse x
+   in case Data.Csv.decodeByName d of
+        Left e -> error $ "Could not read data/instruments.csv " ++ show e
+        Right (_header, x) -> toListOf traverse x
 
 getInstrumentData :: [InstrumentDef]
 getInstrumentData =
   let d = Data.ByteString.Lazy.fromStrict $(embedFile "data/instruments.csv")
-  in case Data.Csv.decode Data.Csv.HasHeader d of
-    Left e -> error $ "Could not read data/instruments.csv " ++ show e
-    Right (x) -> toListOf traverse x
+   in case Data.Csv.decode Data.Csv.HasHeader d of
+        Left e -> error $ "Could not read data/instruments.csv " ++ show e
+        Right (x) -> toListOf traverse x
 
 splitBy :: Eq a => a -> [a] -> [[a]]
 splitBy _ [] = []

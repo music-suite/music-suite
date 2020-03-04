@@ -10,7 +10,7 @@
 
 -- | Pitch range or ambitus.
 module Music.Pitch.Ambitus
-  ( Ambitus(..),
+  ( Ambitus (..),
     ambitus,
     ambitusHighest,
     ambitusLowest,

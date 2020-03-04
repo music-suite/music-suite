@@ -122,7 +122,6 @@ fifths a = Fifths $ logBase (3 / 2) (frequency a)
 -- |  Convert a frequency to cents.
 cents :: HasFrequency a => a -> Cents
 cents a = Cents $ logBase (2 / 1) (frequency a) * 1200
-
 {-
 -- Calculate spectral dissonance.
 -- Only works as exp for freqs > 1

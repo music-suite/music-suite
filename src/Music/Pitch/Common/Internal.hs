@@ -681,7 +681,6 @@ steps = from intervalAlterationSteps . _2
 --
 -- >>> (Minor, 4)^?interval
 -- Nothing
---
 interval :: Prism' (Quality, Number) Interval
 interval =
   prism'
@@ -729,7 +728,6 @@ diatonicSteps = iso steps d2n
       | n >= 0 = fromIntegral (n + 1)
       | n < 0 = fromIntegral (n - 1)
       | otherwise = error "Impossible"
-
     steps :: Integral a => Number -> a
     steps n = case fromIntegral n `compare` (0 :: Integer) of
       GT -> fromIntegral n - 1

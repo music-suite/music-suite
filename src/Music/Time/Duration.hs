@@ -116,4 +116,3 @@ stretchTo d x = (d ^/ _duration x) `stretch` x
 duration :: (Transformable a, HasDuration a) => Lens' a Duration
 duration = lens _duration (flip stretchTo)
 {-# INLINE duration #-}
-

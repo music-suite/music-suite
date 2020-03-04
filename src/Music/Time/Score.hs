@@ -105,8 +105,6 @@ import Music.Time.Voice
 -- events . each . from event . swapped . mapping onsetAndOffset . swapped
 --    :: Traversal (Score a) (Score b) ((Time, Time), a) ((Time, Time), b)
 -- @
---
-
 
 --   * 'empty' creates an empty score
 --

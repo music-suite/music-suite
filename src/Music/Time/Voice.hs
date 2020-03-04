@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -89,13 +89,13 @@ import Control.Monad.Zip
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson as JSON
 import Data.AffineSpace
+import Data.Coerce (coerce)
 import qualified Data.Either
 import Data.Foldable (Foldable)
 import qualified Data.Foldable
 import Data.Functor.Context
 import qualified Data.List
 import Data.Maybe
-import Data.Coerce (coerce)
 import Data.String
 import Data.Traversable (Traversable)
 import Data.Typeable (Typeable)
@@ -150,7 +150,7 @@ instance Monad Voice where
 
   return = Voice . return . return
 
-  (>>=) :: forall a b . Voice a -> (a -> Voice b) -> Voice b
+  (>>=) :: forall a b. Voice a -> (a -> Voice b) -> Voice b
   xs >>= f = coerce @[Note b] @(Voice b) $ (coerce @(Voice b) @[Note b] . f) `mbind` coerce xs
 
 instance MonadPlus Voice where
@@ -286,7 +286,6 @@ noteToVoice = view voice . pure
 -- | View a 'Voice' as a list of 'Note' values.
 notes :: Iso (Voice a) (Voice b) [Note a] [Note b]
 notes = coerced
-
 
 -- $smartConstructors
 --

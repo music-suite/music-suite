@@ -98,6 +98,7 @@ pseq = Prelude.foldr (|>) mempty
 -- For positioned types this is the same as 'mconcat'.
 ppar :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
 ppar = mconcat
+
 -- Though (ppar = mconcat), the extra constraints prevents ppar from being used on sequential
 -- types such as Voice.
 
