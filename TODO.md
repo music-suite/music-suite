@@ -53,6 +53,7 @@ Consider switching to a decentralized issue tracker such as:
   - Remove meta-data extraction (withTempo et al) from public API
   - Remove HasOctaves (retain interval instance)
   - Remove Augmentable/Alterable (?)
+  - Remove triples/pairs in favor of explicit traversals (see example in Time.Score)
 
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
