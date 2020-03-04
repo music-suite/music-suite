@@ -166,6 +166,9 @@ _HasPosition t = eqd .&&. ond .&&. ofd .&&. sd .&&. ass
     ass s a p = True ==> (s `transform` (a .: t)) `_position` p === s `transform` (a `_position` p)
     -- TODO more general
 
+_onset, _offset :: (HasPosition a, Transformable a) => a -> Time
+_onset = view onset
+_offset = view offset
 
 {-
   _duration (beginning t x) + _duration (ending t x) = _duration x
