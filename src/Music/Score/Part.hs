@@ -345,11 +345,7 @@ type instance Part (Voice a) = Part a
 type instance SetPart g (Voice a) = Voice (SetPart g a)
 
 instance (HasParts a b) => HasParts (Voice a) (Voice b) where
-  parts =
-    _Wrapped
-      . traverse
-      . _Wrapped -- this needed?
-      . whilstLD parts
+  parts = traverse . parts
 
 infixl 5 </>
 

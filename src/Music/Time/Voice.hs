@@ -1,4 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -92,6 +95,7 @@ import qualified Data.Foldable
 import Data.Functor.Context
 import qualified Data.List
 import Data.Maybe
+import Data.Coerce (coerce)
 import Data.String
 import Data.Traversable (Traversable)
 import Data.Typeable (Typeable)
@@ -144,9 +148,10 @@ instance Alternative Voice where
 
 instance Monad Voice where
 
-  return = view _Unwrapped . return . return
+  return = Voice . return . return
 
-  xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
+  (>>=) :: forall a b . Voice a -> (a -> Voice b) -> Voice b
+  xs >>= f = coerce @[Note b] @(Voice b) $ (coerce @(Voice b) @[Note b] . f) `mbind` coerce xs
 
 instance MonadPlus Voice where
 
@@ -162,14 +167,6 @@ instance IsList (Voice a) where
   toList = view notesIgnoringMeta
 
   fromList = view (re notesIgnoringMeta)
-
-instance Wrapped (Voice a) where
-
-  type Unwrapped (Voice a) = [Note a]
-
-  _Wrapped' = iso getVoice Voice
-
-instance Rewrapped (Voice a) (Voice b)
 
 instance Cons (Voice a) (Voice b) (Note a) (Note b) where
   _Cons = prism (\(s, v) -> (view voice . return $ s) <> v) $ \v -> case view notes v of
@@ -279,7 +276,7 @@ instance Num a => Num (Voice a) where
 
 -- | Create a 'Voice' from a list of 'Note's.
 voice :: Iso' [Note a] (Voice a)
-voice = from notesIgnoringMeta
+voice = coerced
 {-# INLINE voice #-}
 
 -- | Convert a note to a singleton voice.
@@ -288,7 +285,7 @@ noteToVoice = view voice . pure
 
 -- | View a 'Voice' as a list of 'Note' values.
 notes :: Iso (Voice a) (Voice b) [Note a] [Note b]
-notes = notesIgnoringMeta
+notes = coerced
 
 
 -- $smartConstructors
@@ -331,7 +328,7 @@ pairs = pairsIgnoringMeta
 -- | A voice is a list of notes up to meta-data. To preserve meta-data, use the more
 -- restricted 'voice' and 'notes'.
 notesIgnoringMeta :: Iso (Voice a) (Voice b) [Note a] [Note b]
-notesIgnoringMeta = _Wrapped
+notesIgnoringMeta = iso getVoice Voice
 
 -- | A score is a list of (duration-value pairs) up to meta-data.
 -- To preserve meta-data, use the more restricted 'pairs'.
