@@ -19,9 +19,9 @@ and so on.
 -}
 
 subj :: Voice StandardNote
-subj  = compress 16 $ simplifyPitches $ (!! 3) $ stitchTogether $ ppar $ concat $ replicate 5 [c,g,bb,g,cs,b_]
--- subj2 = compress 16 $ simplifyPitches $ (!! 3) $ stitchTogether $ ppar $ concat $ replicate 5 [c,e,f,e,c,cs]
-subj2 = compress 16 $ simplifyPitches $ (!! 3) $ stitchTogether $ ppar $ concat $ replicate 5 [c,e,f,e,c,ds]
+subj  = compress 16 $ simplifyPitches $ (!! 3) $ stitchTogether $ mconcat $ concat $ replicate 5 [c,g,bb,g,cs,b_]
+-- subj2 = compress 16 $ simplifyPitches $ (!! 3) $ stitchTogether $ mconcat $ concat $ replicate 5 [c,e,f,e,c,cs]
+subj2 = compress 16 $ simplifyPitches $ (!! 3) $ stitchTogether $ mconcat $ concat $ replicate 5 [c,e,f,e,c,ds]
 
 otherNotes :: Voice a -> Score a
 otherNotes v = ppar $ zipWith (\t n -> delay t (pure n)) ts (fmap (fromMaybe (error "Outside voice") . voiceAtDuration v) ts)

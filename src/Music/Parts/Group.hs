@@ -116,12 +116,14 @@ data GroupType
   | GrandStaff -- ly: GrandStaff,  xml: GroupSymbol=brace
   deriving (Eq, Ord, Show)
 
-data Group a
+-- | A tree of values with instruments and bracketing.
+data ScoreLayout a
   = Single (Instrument, a)
-  | Many GroupType BarLines [Group a]
-  deriving (Eq, Ord, Show, Functor)
+  | Many GroupType BarLines [ScoreLayout a]
+  deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
-groupDefault :: [(Instrument, a)] -> Group a
+-- | Default score layout with woodwinds at the top, strings at the bottom.
+groupDefault :: [(Instrument, a)] -> ScoreLayout a
 groupDefault xs =
   Many
     Invisible
