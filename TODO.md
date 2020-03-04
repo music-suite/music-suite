@@ -57,6 +57,8 @@ Consider switching to a decentralized issue tracker such as:
   - Use DataKinds/phantom type to distinguish chord vs scale (only difference is Inspectable instance)
   - Pitch/Interval containers should be bifunctors (taking pitch and interval). Can use AffinePair
     constraint on operations.
+  - Make PVoice and MVoice newtype wrappers
+  - Remove Cons/Snoc instances for Voice
 
 
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
