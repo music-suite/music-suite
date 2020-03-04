@@ -103,8 +103,11 @@ import Text.Numeral.Roman (toRoman)
 
 -}
 
-type BarLines = Bool
+-- | How to draw to barlines between staff groups.
+data BarLines = HideBarlines | ShowBarlines
+  deriving (Eq, Ord, Show, Enum, Bounded)
 
+-- | Staff group types.
 data GroupType
   = Invisible
   | Bracket -- ly: StaffGroup,  xml: GroupSymbol=bracket
@@ -122,13 +125,13 @@ groupDefault :: [(Instrument, a)] -> Group a
 groupDefault xs =
   Many
     Invisible
-    False
-    [ Many Bracket True $ fmap Single ww,
-      Many Bracket True $ fmap Single br,
-      Many Bracket True $ fmap Single pc,
-      Many Invisible True $ fmap Single kb,
-      Many Bracket False $ fmap Single voc,
-      Many Bracket True $ fmap Single str
+    HideBarlines
+    [ Many Bracket ShowBarlines $ fmap Single ww,
+      Many Bracket ShowBarlines $ fmap Single br,
+      Many Bracket ShowBarlines $ fmap Single pc,
+      Many Invisible ShowBarlines $ fmap Single kb,
+      Many Bracket HideBarlines $ fmap Single voc,
+      Many Bracket ShowBarlines $ fmap Single str
     ]
   where
     ww = filter (isWoodwindInstrument . fst) xs
