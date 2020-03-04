@@ -511,7 +511,7 @@ interpolateAmbitus a = let (m, n) = a ^. from ambitus in alerp m n
 -- Same as @interpolateAmbitus@ but allow continous interpolation of standard pitch
 -- (as @Scalar (Diff Pitch) ~ Integer@).
 interpolateAmbitus' :: Ambitus Common.Pitch -> Double -> Common.Pitch
-interpolateAmbitus' a x = (^. from pitchDouble) $ interpolateAmbitus (mapAmbitus (^. pitchDouble) a) x
+interpolateAmbitus' a x = (^. from pitchDouble) $ interpolateAmbitus (fmap (^. pitchDouble) a) x
   where
     -- We can't interpolate an (Ambitus Pitch) using fractions because of music-pitch/issues/16
     -- Work around by converting pitches into doubles and back

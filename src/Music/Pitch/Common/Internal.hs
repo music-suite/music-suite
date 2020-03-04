@@ -673,8 +673,8 @@ steps = from intervalAlterationSteps . _2
 -- >>> (Perfect, 12)^?interval
 -- Just _P12
 --
--- This is a 'Prism', as only certain combinations of quality and number
--- make sense.
+-- This is a prism rather than an isomorphism, as only certain combinations of
+-- quality and number make sense.
 --
 -- >>> (Perfect, 3)^?interval
 -- Nothing
@@ -682,10 +682,6 @@ steps = from intervalAlterationSteps . _2
 -- >>> (Minor, 4)^?interval
 -- Nothing
 --
--- This being a 'Prism', you can also use it backwards:
---
--- >>> m3^.re interval
--- (Minor,3)
 interval :: Prism' (Quality, Number) Interval
 interval =
   prism'

@@ -10,10 +10,8 @@
 
 -- | Pitch range or ambitus.
 module Music.Pitch.Ambitus
-  ( Ambitus,
+  ( Ambitus(..),
     ambitus,
-    -- ambitus',
-    mapAmbitus,
     ambitusHighest,
     ambitusLowest,
     ambitusInterval,
@@ -33,6 +31,7 @@ import Music.Pitch.Common.Semitones
 -- Also known as /range/ or /tessitura/, this type can be used to restrict the
 -- range instruments, chords, melodies etc.
 data Ambitus a = Ambitus !a !a -- {getAmbitus :: (I.Interval a)}
+  deriving (Functor)
 
 instance Show a => Show (Ambitus a) where
   show a = show (a ^. from ambitus) ++ "^.ambitus"
@@ -42,10 +41,6 @@ ambitus = iso f g
   where
     f (x, y) = Ambitus x y
     g (Ambitus x y) = (x, y)
-
--- | Not a true functor for similar reasons as sets.
-mapAmbitus :: () => (a -> b) -> Ambitus a -> Ambitus b
-mapAmbitus f (Ambitus x y) = Ambitus (f x) (f y)
 
 -- | Returns a postive interval (or _P1 for empty ambitus)
 ambitusInterval :: (AffineSpace a) => Ambitus a -> Diff a
