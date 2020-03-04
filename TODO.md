@@ -37,6 +37,19 @@ Consider switching to a decentralized issue tracker such as:
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
 
+- API improvements:
+  - Remove Alignable class (use Aligned the type)
+  - Remove Time parameter from aligned/alignTo (use delay)
+  - Rename eventee/notee to transformed or similar (could be a class)
+  - withContext/addCtxt can be generalized to any Traversable
+  - Remove Placed in favor of Aligned
+  - Lunga is a Monad (though maybe a confusing one)
+  - Aligned is an Applicative/Monad (also maybe confusing)
+  - (Placed . Lunga) and (Aligned . Lunga) is an Applicative
+  - Pattern is an Applicative (at least)
+    - Compare Tidal instace for patterns
+  - Remove Track in place of Score
+
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
 - [ ] New (current) export does not render tremolo/gliss/harmonics/text/color
