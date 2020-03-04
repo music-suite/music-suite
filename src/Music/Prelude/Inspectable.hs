@@ -32,6 +32,7 @@
 -- Provides miscellaneous instances.
 module Music.Prelude.Inspectable
   ( Inspectable (..),
+    InspectableNote(..),
   )
 where
 

@@ -162,6 +162,7 @@ initial r = r `atTime` minB (occs r)
 updates :: Reactive a -> [(Time, a)]
 updates r = (\t -> (t, r `atTime` t)) <$> (List.sort . List.nub) (occs r)
 
+-- | Get the time of all updates.
 occs :: Reactive a -> [Time]
 occs = fst . (^. _Wrapped')
 
@@ -189,6 +190,11 @@ splitReactive r = case updates r of
         go [x] = [(x, Nothing)]
         go (x : y : rs) = (x, Just y) : withNext (y : rs)
 
+-- | Sample a reactive at the given time.
+--
+-- @
+-- x `atTime` t = discrete x ! t
+-- @
 atTime :: Reactive a -> Time -> a
 atTime = (!) . snd . (^. _Wrapped')
 
@@ -207,6 +213,7 @@ switchR t (Reactive (tx, bx)) (Reactive (ty, by)) =
       (filter (< t) tx <> [t] <> filter (> t) ty)
       (switch t bx by)
 
+-- | Replace everything outside the given span by mempty.
 trimR :: Monoid a => Span -> Reactive a -> Reactive a
 trimR (view onsetAndOffset -> (t, u)) x = switchR t mempty (switchR u x mempty)
 
@@ -223,6 +230,7 @@ intermediate (updates -> xs) = fmap (\((t1, x), (t2, _)) -> (t1 <-> t2, x) ^. ev
 discrete :: Reactive a -> Behavior a
 discrete = continous . fmap pure
 
+-- | A behavior only defined on the unit span ('mempty' for 'Span').
 type Segment a = Behavior a
 
 -- | Realize a 'Reactive' value as an continous behavior.
