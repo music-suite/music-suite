@@ -49,6 +49,7 @@ Consider switching to a decentralized issue tracker such as:
   - Pattern is an Applicative (at least)
     - Compare Tidal instace for patterns
   - Remove Track in place of Score
+  - Get rid of DynamicsL
 
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
