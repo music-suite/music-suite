@@ -95,7 +95,7 @@ instance Monoid RehearsalMark where
 -- metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
 
 rehearsalMark :: (HasMeta a, HasPosition a, Transformable a) => a -> a
-rehearsalMark x = rehearsalMarkAt (_onset x) x
+rehearsalMark x = rehearsalMarkAt (view onset x) x
 
 rehearsalMarkAt :: HasMeta a => Time -> a -> a
 rehearsalMarkAt t = addMetaNote $ view event (t <-> t, RehearsalMark)
