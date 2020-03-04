@@ -89,19 +89,17 @@ infixr 6 <|
 
 -- |
 -- Compose a list of sequential objects, with onset and offset tangent to one another.
---
--- For non-positioned types, this is the often same as 'mconcat'
--- For positioned types, this is the same as 'afterAnother'
 pseq :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
 pseq = Prelude.foldr (|>) mempty
 
 -- |
 -- Compose a list of parallel objects, so that their local origins align.
 --
--- This not possible for non-positioned types, as they have no notion of an origin.
 -- For positioned types this is the same as 'mconcat'.
-ppar :: (Semigroup a, Monoid a) => [a] -> a
-ppar = Prelude.foldr (<>) mempty
+ppar :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
+ppar = mconcat
+-- Though (ppar = mconcat), the extra constraints prevents ppar from being used on sequential
+-- types such as Voice.
 
 -- |
 -- Move a value so that its era is equal to the era of another value.

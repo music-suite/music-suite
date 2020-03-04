@@ -126,7 +126,7 @@ stripSuffix xs
 -- TODO move
 
 -- | Orchestrate in the given parts.
-singleParts :: (Monoid a, Semigroup a, HasParts' a) => [Music.Score.Part.Part a] -> [a] -> a
+singleParts :: (Monoid a, Semigroup a, HasPosition a, Transformable a, HasParts' a) => [Music.Score.Part.Part a] -> [a] -> a
 singleParts ens = ppar . zipWith (set parts') (reverse $ ens)
 
 -- TODO move
