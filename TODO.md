@@ -42,14 +42,17 @@ Consider switching to a decentralized issue tracker such as:
   - Remove Time parameter from aligned/alignTo (use delay)
   - Rename eventee/notee to transformed or similar (could be a class)
   - withContext/addCtxt can be generalized to any Traversable
-  - Remove Placed in favor of Aligned
   - Lunga is a Monad (though maybe a confusing one)
   - Aligned is an Applicative/Monad (also maybe confusing)
   - (Placed . Lunga) and (Aligned . Lunga) is an Applicative
   - Pattern is an Applicative (at least)
     - Compare Tidal instace for patterns
-  - Remove Track in place of Score
+  - Remove Placed in favor of Aligned
+  - Remove Track in place of Score and ([] . Aligned)
   - Get rid of DynamicsL
+  - Remove meta-data extraction (withTempo et al) from public API
+  - Remove HasOctaves (retain interval instance)
+  - Remove Augmentable/Alterable (?)
 
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
