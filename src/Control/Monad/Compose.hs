@@ -30,7 +30,7 @@ import Data.Typeable
 --  Folds inner level to get             m (n a)
 
 mjoin :: (Monad m, Monad n, Functor m, Traversable n) => m (n (m (n a))) -> m (n a)
-mjoin = fmap join . join . fmap T.sequence
+mjoin = fmap join . join . fmap sequence
 
 mbind :: (Monad m, Monad n, Functor m, Traversable n) => (a -> m (n b)) -> m (n a) -> m (n b)
-mbind = (join .) . fmap . (fmap join .) . T.mapM
+mbind = (join .) . fmap . (fmap join .) . traverse
