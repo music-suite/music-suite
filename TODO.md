@@ -60,6 +60,8 @@ Consider switching to a decentralized issue tracker such as:
   - Make PVoice and MVoice newtype wrappers
   - Remove Cons/Snoc instances for Voice
 
+- Internal improvements:
+  - Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
 
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
