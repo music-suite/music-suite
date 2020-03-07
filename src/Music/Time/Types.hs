@@ -57,14 +57,14 @@ module Music.Time.Types
     properlyEncloses,
     overlaps,
     isBefore,
-    afterOnset,
-    strictlyAfterOnset,
-    beforeOnset,
-    strictlyBeforeOnset,
-    afterOffset,
-    strictlyAfterOffset,
-    beforeOffset,
-    strictlyBeforeOffset,
+    -- afterOnset,
+    -- strictlyAfterOnset,
+    -- beforeOnset,
+    -- strictlyBeforeOnset,
+    -- afterOffset,
+    -- strictlyAfterOffset,
+    -- beforeOffset,
+    -- strictlyBeforeOffset,
     -- startsWhenStarts,
     -- startsWhenStops,
     -- stopsWhenStops,
@@ -74,7 +74,7 @@ module Music.Time.Types
     -- stopsAtTheSameTime,
     -- stopsBefore,
     -- stopsLater,
-    -- union
+    -- union/hull
     -- intersection (alt name 'overlap')
     -- difference (would actually become a split)
 
@@ -502,7 +502,7 @@ infixl 5 `properlyEncloses`
 infixl 5 `overlaps`
 
 -- |
--- Whether the given point falls inside the given span (inclusively).
+-- Whether the given point falls inside the given span.
 --
 -- Designed to be used infix, for example
 --
@@ -517,6 +517,9 @@ infixl 5 `overlaps`
 inside :: Time -> Span -> Bool
 inside x (view onsetAndOffset -> (t, u)) = t <= x && x <= u
 
+-- |
+-- Whether the given point falls inside the given span.
+--
 -- >>> 2 `inside` (3<->4)
 -- False
 -- >>> 3 `inside` (3<->4)
@@ -583,6 +586,7 @@ a `properlyEncloses` b = a `encloses` b && a /= b
 
 -- TODO more intuitive param order
 
+{-
 afterOnset :: Time -> Span -> Bool
 t `afterOnset` s = t >= _onsetS s
 
@@ -606,7 +610,7 @@ t `beforeOffset` s = t <= _offsetS s
 
 strictlyBeforeOffset :: Time -> Span -> Bool
 t `strictlyBeforeOffset` s = t < _offsetS s
-
+-}
 -- Param order OK
 
 {-
