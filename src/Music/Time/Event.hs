@@ -1,3 +1,10 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-redundant-constraints #-}
 module Music.Time.Event
   ( -- * Event type
     Event,
@@ -15,8 +22,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
-    below,
     index,
     inside,
     parts,
@@ -24,24 +29,15 @@ import Control.Lens hiding
     transform,
     (|>),
   )
-import Control.Monad (join, mapM)
-import Control.Monad.Compose
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson as JSON
-import Data.Foldable (Foldable)
-import qualified Data.Foldable as Foldable
-import Data.Functor.Classes
-import Data.Functor.Compose
 import Data.Functor.Couple
-import Data.Semigroup
 import Data.String
 import Data.Typeable
-import Data.VectorSpace
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
-import Music.Time.Internal.Util (dependingOn, through, tripped)
+import Music.Time.Internal.Util (dependingOn)
 import Music.Time.Juxtapose
-import Music.Time.Meta
 
 -- |
 -- A 'Event' is a value transformed to appear in some 'Span'. Like 'Span', it is an instance of 'Transformable'.
@@ -115,9 +111,6 @@ event = from _Wrapped
 eventSpan :: Lens' (Event a) Span
 eventSpan = from event . _1
 
-eventValue :: Lens (Event a) (Event b) a b
-eventValue = from event . _2
-
 -- | View the value in the event.
 eventee :: (Transformable a, Transformable b) => Lens (Event a) (Event b) a b
 eventee = from event `dependingOn` (transformed)
@@ -126,6 +119,3 @@ eventee = from event `dependingOn` (transformed)
 spanEvent :: Iso' Span (Event ())
 spanEvent = iso (\s -> (s, ()) ^. event) (^. era)
 
--- | View a event as a @(time, duration, value)@ triple.
-triple :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
-triple = from event . bimapping onsetAndDuration id . tripped
