@@ -84,6 +84,7 @@ import BasePrelude hiding ((<>))
 import Control.Lens hiding (below, transform)
 import Data.AffineSpace
 import Data.AffineSpace.Point
+import Data.AffineSpace.Point.Offsets (AffinePair)
 import Data.Functor.Couple
 import qualified Data.List
 import Data.Map (Map)
@@ -372,7 +373,6 @@ type Interval a = Diff (Pitch a)
 
 type PitchPair v w = (Num (Scalar v), IsInterval v, IsPitch w)
 
-type AffinePair v w = (VectorSpace v, AffineSpace w)
 
 -- |
 -- Class of types that can be transposed, inverted and so on.
@@ -494,23 +494,23 @@ averagePitch :: (HasPitches' a, Fractional (Pitch a)) => a -> Maybe (Pitch a)
 averagePitch = maybeAverage . Average . toListOf pitches'
 
 -- | The number of whole octaves in an ambitus.
-ambitusOctaves :: Ambitus Common.Pitch -> Int
+ambitusOctaves :: Ambitus Common.Interval Common.Pitch -> Int
 ambitusOctaves = fromIntegral . octaves . ambitusInterval
 
 -- | The lowest octave (relative middle C) in present a given ambitus.
-ambitusLowestOctave :: Ambitus Common.Pitch -> Int
+ambitusLowestOctave :: Ambitus Common.Interval Common.Pitch -> Int
 ambitusLowestOctave = fromIntegral . octaves . (.-. c) . ambitusLowest
 
 -- |  Interpolate between the highest and lowest points in an ambitus.
 --
 --  Can be used as a primitive contour-based melody generator.
-interpolateAmbitus :: (AffinePair (Diff a) a) => Ambitus a -> Scalar (Diff a) -> a
+interpolateAmbitus :: AffinePair v p => Ambitus v p -> Scalar v -> p
 interpolateAmbitus a = let (m, n) = a ^. from ambitus in alerp m n
 
 -- |
 -- Same as @interpolateAmbitus@ but allow continous interpolation of standard pitch
 -- (as @Scalar (Diff Pitch) ~ Integer@).
-interpolateAmbitus' :: Ambitus Common.Pitch -> Double -> Common.Pitch
+interpolateAmbitus' :: Ambitus Double Common.Pitch -> Double -> Common.Pitch
 interpolateAmbitus' a x = (^. from pitchDouble) $ interpolateAmbitus (fmap (^. pitchDouble) a) x
   where
     -- We can't interpolate an (Ambitus Pitch) using fractions because of music-pitch/issues/16

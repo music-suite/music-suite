@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# OPTIONS_HADDOCK hide #-}
@@ -60,8 +61,8 @@ data InstrumentDef
         _allowedClefs :: [Clef], -- Allowed Clefs
         _standardClef :: [Clef], -- Standard Clef (1 elem for single staff, more otherwise, never empty)
         _transposition :: Interval, -- Transposition
-        _playableRange :: Maybe (Ambitus Pitch), -- Playable Range
-        _comfortableRange :: Maybe (Ambitus Pitch), -- Comfortable Range
+        _playableRange :: Maybe (Ambitus Interval Pitch), -- Playable Range
+        _comfortableRange :: Maybe (Ambitus Interval Pitch), -- Comfortable Range
         _longName :: Maybe String,
         _shortName :: Maybe String,
         _sibeliusName :: Maybe String
@@ -143,7 +144,7 @@ instance FromField [Int] where
 instance FromField Pitch where
   parseField v = mcatMaybes $ fmap pitchFromScientificPitchNotation $ parseField v
 
-instance {-# OVERLAPPING #-} FromField (Maybe (Ambitus Pitch)) where
+instance {-# OVERLAPPING #-} FromField (Maybe (Ambitus Interval Pitch)) where
   parseField v = fmap (listToAmbitus . mcatMaybes . map pitchFromScientificPitchNotation) $ fmap (splitBy '-') $ parseField v
     where
       listToAmbitus [a, b] = Just $ (a, b) ^. ambitus

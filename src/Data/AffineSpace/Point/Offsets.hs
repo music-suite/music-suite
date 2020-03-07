@@ -4,6 +4,7 @@ module Data.AffineSpace.Point.Offsets
     pointOffsets,
     offsetVs,
     distanceVs,
+    AffinePair,
   )
 where
 
@@ -15,6 +16,9 @@ import Data.List
 import Data.Stream.Infinite (Stream)
 import qualified Data.Stream.Infinite as Stream
 import Data.VectorSpace
+
+-- TODO move to separate module
+type AffinePair v w = (VectorSpace v, AffineSpace w, Diff w ~ v)
 
 -- | Lay out a series of vectors from a given point. Return all intermediate points.
 --

@@ -40,9 +40,9 @@ isWoodwindInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
   Just i -> Data.List.isPrefixOf "wind" i
 
-type GlissandoRange = Ambitus Pitch
+type GlissandoRange = Ambitus Interval Pitch
 
-type Glissando = Ambitus Pitch
+type Glissando = Ambitus Interval Pitch
 
 allowedGlissandi :: Set GlissandoRange
 allowedGlissandi = error "No allowedGlissandi"

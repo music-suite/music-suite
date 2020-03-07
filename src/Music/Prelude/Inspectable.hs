@@ -96,7 +96,7 @@ instance InspectableNote a => Inspectable (Note a) where
 
 -- instance Inspectable (Voice ()) where
 -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
-instance Inspectable (Ambitus Pitch) where
+instance Inspectable (Ambitus Interval Pitch) where
   inspectableToMusic x = let (m, n) = x ^. from ambitus in glissando $ fromPitch m |> fromPitch n
 
 -- instance Inspectable (Mode Pitch) where

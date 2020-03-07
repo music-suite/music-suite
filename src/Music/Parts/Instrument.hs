@@ -129,11 +129,11 @@ standardClef :: Instrument -> Maybe Clef
 standardClef = Data.Maybe.listToMaybe . Data._standardClef . fetchInstrumentDef
 
 -- | Playable range for this instrument.
-playableRange :: Instrument -> Ambitus Pitch
+playableRange :: Instrument -> Ambitus Interval Pitch
 playableRange = Data.Maybe.fromMaybe (error "Missing comfortableRange for instrument") . Data._playableRange . fetchInstrumentDef
 
 -- | Comfortable range for this instrument.
-comfortableRange :: Instrument -> Ambitus Pitch
+comfortableRange :: Instrument -> Ambitus Interval Pitch
 comfortableRange = Data.Maybe.fromMaybe (error "Missing comfortableRange for instrument") . Data._comfortableRange . fetchInstrumentDef
 
 -- playableDynamics :: Instrument -> Pitch -> Dynamics

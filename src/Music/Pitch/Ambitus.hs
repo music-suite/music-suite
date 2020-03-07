@@ -22,37 +22,36 @@ where
 import Control.Lens
 import Data.AffineSpace
 import Data.Interval hiding (Interval, interval)
-import qualified Data.Interval as I
 import Data.VectorSpace
+import Data.AffineSpace.Point.Offsets (AffinePair)
 import Music.Pitch.Common.Semitones
 
--- | An ambitus is (mathematical) interval.
+-- | A set of pitches between two extremes.
 --
--- Also known as /range/ or /tessitura/, this type can be used to restrict the
--- range instruments, chords, melodies etc.
-data Ambitus a = Ambitus !a !a -- {getAmbitus :: (I.Interval a)}
-  deriving (Functor)
+-- Also known as range, tessitura or (in maths) interval.
+data Ambitus v p = Ambitus !p !p
+  deriving (Functor, Show)
 
-instance Show a => Show (Ambitus a) where
-  show a = show (a ^. from ambitus) ++ "^.ambitus"
-
-ambitus :: () => Iso (a, a) (b, b) (Ambitus a) (Ambitus b)
+-- TODO replace with accessors a la Span
+-- In fact this type could be unified with Span
+ambitus :: (AffinePair v p, AffinePair v' p') =>
+  Iso (p, p) (p', p') (Ambitus v p) (Ambitus v' p')
 ambitus = iso f g
   where
     f (x, y) = Ambitus x y
     g (Ambitus x y) = (x, y)
 
 -- | Returns a postive interval (or _P1 for empty ambitus)
-ambitusInterval :: (AffineSpace a) => Ambitus a -> Diff a
+ambitusInterval :: (AffinePair v p) => Ambitus v p -> v
 ambitusInterval (Ambitus x y) = x .-. y
 
-ambitusLowest :: () => Ambitus a -> a
+ambitusLowest :: AffinePair v p => Ambitus v p -> p
 ambitusLowest (Ambitus x _y) = x
 
-ambitusHighest :: () => Ambitus a -> a
+ambitusHighest :: AffinePair v p => Ambitus v p -> p
 ambitusHighest (Ambitus _x y) = y
 
-inAmbitus :: (AffineSpace a, HasSemitones (Diff a)) => Ambitus a -> a -> Bool
+inAmbitus :: (AffinePair v p, HasSemitones v) => Ambitus v p -> p -> Bool
 inAmbitus (Ambitus a c) b =
   semitones (c .-. b) >= 0 && semitones (b .-. a) >= 0
 {-
