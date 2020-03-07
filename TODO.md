@@ -54,11 +54,13 @@ Consider switching to a decentralized issue tracker such as:
   - Remove HasOctaves/HasQuality/HasNumber (retain interval instance)
   - Remove Augmentable/Alterable (?)
   - Remove triples/pairs in favor of explicit traversals (see example in Time.Score)
-  - Use DataKinds/phantom type to distinguish chord vs scale (only difference is Inspectable instance)
-  - Pitch/Interval containers should be bifunctors (taking pitch and interval). Can use AffinePair
-    constraint on operations.
-  - Make PVoice and MVoice newtype wrappers
+  - Chord/Scale:
+    - Use DataKinds/phantom type to distinguish chord vs scale (only difference is Inspectable instance)
+    - Pitch/Interval containers should be bifunctors (taking pitch and interval). i
+      Use AffinePair constraint on operations.
+  - Make PVoice and MVoice newtype wrappers (hiding instances)
   - Remove Cons/Snoc instances for Voice
+  - Hide FromField Ambitus instance (by using newtype wrappers)
 
 - Internal improvements:
   - Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
