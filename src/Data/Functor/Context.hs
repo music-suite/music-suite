@@ -21,10 +21,7 @@ import Control.Lens.Wrapped
 --   This can be thought of as a limited version of a list zipper,
 --   showing only the direct neighbours.
 newtype Ctxt a = Ctxt {getCtxt :: (Maybe a, a, Maybe a)}
-  deriving (Functor, Eq, Ord)
-
-instance Show a => Show (Ctxt a) where
-  show (Ctxt vs) = "toCtxt " ++ show vs
+  deriving (Functor, Eq, Ord, Show)
 
 instance Wrapped (Ctxt a) where
 
@@ -34,17 +31,6 @@ instance Wrapped (Ctxt a) where
 
 instance Rewrapped (Ctxt a) (Ctxt b)
 
--- instance Applicative Ctxt where
---   pure x = Ctxt (Nothing, x, Nothing)
---   Ctxt (b,x,a) <*> Ctxt (b',x',a') = Ctxt (b <*> b', x x', a <*> a')
-
--- instance Comonad Ctxt where
--- extract (Ctxt (b,x,a)) = x
-
--- duplicate (Ctxt (Nothing,x,Nothing)) = Ctxt (Nothing, Ctxt (Nothing, x, Nothing), Nothing)
--- duplicate (Ctxt (Just b,x,Nothing)) = Ctxt (Ctxt Just b, Ctxt (Just b, x, Nothing), Nothing)
--- duplicate (Ctxt (Nothing,x,Just a)) = Ctxt (Nothing, Ctxt (Nothing, x, Just a), Just a)
--- duplicate (Ctxt (Just b,x,Just a)) = Ctxt (b, Ctxt (b, x, Just a), Just a)
 
 toCtxt :: (Maybe a, a, Maybe a) -> Ctxt a
 toCtxt = Ctxt
@@ -61,7 +47,7 @@ extractCtxt (Ctxt (_, x, _)) = x
 -- []
 --
 -- >>> addCtxt [1..3]
--- [Ctxt (Nothing, 1, Just 2), Ctxt (Just 1, 2, Just 3), Ctxt (Just 2, 3, Nothing)]
+-- [Ctxt {getCtxt = (Nothing,1,Just 2)},Ctxt {getCtxt = (Just 1,2,Just 3)},Ctxt {getCtxt = (Just 2,3,Nothing)}]
 addCtxt :: [a] -> [Ctxt a]
 addCtxt = fmap Ctxt . withPrevNext
   where
