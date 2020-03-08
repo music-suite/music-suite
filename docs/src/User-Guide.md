@@ -2110,10 +2110,6 @@ TODO very simple space representation (e.g. Angle), minimal example using Ambiso
 
 TODO basic structure/aproach to import and export
 
-## Native format/Serialization
-
-TODO
-
 ## Prelude/Inspectable
 
 TODO point here is to fix a "default" type for rendering/export purposes. This is used to monomorphize expressions written in the polymorphic combinators of the library. The default type is knonw as `Music`.
