@@ -566,7 +566,7 @@ isSimple x = octaves x == 0
 --
 -- >>> isCompound (-m3)
 -- True
--- >>> isCompound $ abs (-m3)
+-- >>> isCompound m3
 -- False
 isCompound :: Interval -> Bool
 isCompound x = octaves x /= 0
