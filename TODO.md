@@ -77,6 +77,20 @@ Consider switching to a decentralized issue tracker such as:
 - Internal improvements:
   - Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
 
+- [ ] Docs: User-Guide
+  - Title/Attribution not shown in examples (because the example uses the inline LY template?)
+  - Key sigs not shown
+  - Tempi not shown
+  - Fermatas not shown
+  - Caesura/Breathing mark not shown
+  - Rit/Acc not shown
+  - Special barlines not shown
+  - Clef override not shown
+  - Reh marks
+  - Annotations
+
+
+
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
 - [ ] New (current) export does not render tremolo/gliss/harmonics/text/color
