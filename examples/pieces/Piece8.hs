@@ -194,7 +194,7 @@ I.e. it becomes possible to cut out notes.
 
 
 -- Melody as vector
-melodicAmbitus :: (HasPitch' a, Music.Score.Pitch.Pitch a ~ Pitch) => Voice a -> Ambitus Pitch
+melodicAmbitus :: (HasPitch' a, Music.Score.Pitch.Pitch a ~ Pitch) => Voice a -> Ambitus Interval Pitch
 melodicAmbitus ys =
   let xs = fmap (^.pitch) ys in case (headV xs, lastV xs) of
   (Just a, Just b) -> (a `min` b, a `max` b)^.ambitus
