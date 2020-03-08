@@ -61,6 +61,18 @@ Consider switching to a decentralized issue tracker such as:
   - Make PVoice and MVoice newtype wrappers (hiding instances)
   - Remove Cons/Snoc instances for Voice
   - Hide FromField Ambitus instance (by using newtype wrappers)
+  - Instruments
+    - Conventionally primary instrument (eg, flute) vs. doubling (eg, piccolo)
+    - Conventional staff layout (e.g. piano, organ)
+  - Model (in high-level API)
+    - Arpeggios
+    - LaissezVibrer
+    - Trills
+  - Pitch
+    - PitchClass, IntervalClass
+    - https://en.wikipedia.org/wiki/Interval_vector
+  - Time
+    - RTM tree support?
 
 - Internal improvements:
   - Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
