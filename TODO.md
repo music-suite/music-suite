@@ -71,7 +71,7 @@ Consider switching to a decentralized issue tracker such as:
   - Pitch
     - PitchClass, IntervalClass
     - https://en.wikipedia.org/wiki/Interval_vector
-  - Time
+    - Time
     - RTM tree support?
 
 - Internal improvements:
@@ -88,7 +88,6 @@ Consider switching to a decentralized issue tracker such as:
   - Clef override not shown
   - Reh marks
   - Annotations
-
 
 
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
@@ -297,7 +296,10 @@ Consider switching to a decentralized issue tracker such as:
   - [X] pseq, ppar
   - [ ] Rename rcat to pdiv (or similar)
 
-- Replace (Option :. Last) with Maybe now that Semigroup is a superclass of Monoid
+- Replace (Option :. Last/First) with Maybe now that Semigroup is a superclass of Monoid
+  - Though note in Score.Meta, all types should be refactored to be monoids in
+    themselves, rendering the wrapper obsolete.
+
 
 - [ ] Do not draw cresc/dim for voices like `[mf, f, p, mf]` (e.g. only a single note local max/min)
   - In other words, for a line to be drawn there must be a monotonic increase/decrease spanning >2 notes
