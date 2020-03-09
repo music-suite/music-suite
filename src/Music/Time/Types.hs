@@ -1,3 +1,4 @@
+{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -46,6 +47,9 @@ module Music.Time.Types
     isBackwardSpan,
     -- delayComponent,
     -- stretchComponent,
+
+    -- ** Combine
+    hull,
 
     -- ** Points in spans
     inside,
@@ -583,6 +587,13 @@ a `encloses` b = _onsetS b `inside` a && _offsetS b `inside` a
 -- False
 properlyEncloses :: Span -> Span -> Bool
 a `properlyEncloses` b = a `encloses` b && a /= b
+
+
+
+-- | Return the convex hull of two spans.
+hull :: Span -> Span -> Span
+hull (view onsetAndOffset -> (s, e)) (view onsetAndOffset -> (s', e')) = view (from onsetAndOffset) (min s s', max e e')
+
 
 -- TODO more intuitive param order
 

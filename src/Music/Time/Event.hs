@@ -88,7 +88,7 @@ instance IsInterval a => IsInterval (Event a) where
 instance IsDynamics a => IsDynamics (Event a) where
   fromDynamics = pure . fromDynamics
 
-instance (Show a, Transformable a) => Show (Event a) where
+instance (Show a) => Show (Event a) where
   show x = show (x ^. from event) ++ "^.event"
 
 instance ToJSON a => ToJSON (Event a) where
