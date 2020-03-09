@@ -1055,7 +1055,6 @@ keySignature (key db major) $ pseq [db,eb,f]
 
 @[keySignatureDuring]
 
-@[withKeySignature]
 
 ## Time signatures
 
@@ -1083,7 +1082,6 @@ timeSignature (3/8) $ pseq [db,eb,f]
 
 @[timeSignatureDuring]
 
-@[withTimeSignature]
 
 ### Converting from one time signature to another
 
@@ -1123,8 +1121,7 @@ tempo (metronome (1/4) 80) $ pseq [c,d,e,b,c] |/ (5*8) |> d |* (3/4)
 (tempo allegro $ pseq [c..g] |/ 4 )
 ```
 
-TODO rendering tempo
-@[renderTempo]
+TODO rendering tempo?
 
 ### Fermatas, caesuras and breathing marks
 
