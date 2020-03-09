@@ -357,24 +357,24 @@ data SystemBar
   = SystemBar
       {-
       We treat all the following information as global.
-      
+
       This is more restrictive than most classical notations, but greatly
       simplifies representation. In this view, a score is a matrix of bars
       (each belonging to a single staff). Each bar must have a single
       time sig/key sig/rehearsal mark/tempo mark.
-      
+
       ----
       Note: Option First ~ Maybe
-      
+
       Alternatively we could just make these things into Monoids such that
       mempty means "no notation at this point", and remove the "Option First"
       part here.
-      
+
       Actually I'm pretty sure this is the right approach. See also #242
       -}
       { _barNumbers :: Option (First BarNumber),
         _timeSignature :: Option (First TimeSignature),
-        _keySignature :: Option (First KeySignature),
+        _keySignature :: KeySignature,
         _rehearsalMark :: Option (First RehearsalMark),
         _tempoMark :: Option (First TempoMark)
         -- ,_barLines :: BarLines
@@ -412,11 +412,11 @@ data StaffInfo
         _sibeliusFriendlyName :: SibeliusFriendlyName,
         {-
         See also clefChanges
-        
+
         TODO change name of _instrumentDefaultClef
         More accurately, it represents the first clef to be used on the staff
         (and the only one if there are no changes.)
-        
+
         OTOH having clef in the staff at all is redundant, specifying clef
         is optional (along with everything else) in this representation anyway.
         This is arguably wrong, as stanard notation generally requires a clef.
@@ -424,7 +424,7 @@ data StaffInfo
         _instrumentDefaultClef :: Music.Pitch.Clef,
         {-
         I.e. -P5 for horn
-        
+
         Note that this representation indicates *written pitch*, not sounding (as does MusicXML),
         so this value is redundant when rendering a graphical score. OTOH if this representation
         is used to render *sound*, pitches need to be transposed acconrdingly.
@@ -1098,6 +1098,10 @@ toLyStaff sysBars staff =
     <$> addClef (toLyClef $ staff ^. staffInfo . instrumentDefaultClef)
     -- TODO Currently score is always in C with no oct-transp.
     -- To get a transposing score, add \transpose <written> <sounding>
+
+    -- Lilypond key signatures have to be applied to all staves
+    -- See http://lilypond.org/doc/v2.19/Documentation/learning/multiple-staves
+    -- TODO correct key sig
     <$> (sequence $ zipWith toLyBar sysBars (staff ^. bars))
 
 toLyClef :: Music.Pitch.Clef -> L.Clef
@@ -1120,25 +1124,44 @@ addPartName partName xs = longName : shortName : xs
 toLyBar :: (LilypondExportM m) => SystemBar -> Bar -> m Lilypond.Music
 toLyBar sysBar bar = do
   let layers = bar ^. pitchLayers
-  -- TODO emit \new Voice for eachlayer
+  -- TODO emit \new Voice for each layer?
   sim <$> sysStuff <$> traverse (toLyLayer . getPitchLayer) layers
   where
     -- System information need not be replicated in all layers
     -- TODO other system stuff (reh marks, special barlines etc)
+    --
+    -- TODO is this really necessary? Is duplicating system info
+    -- actually a problem? Is the empty case correct?
     sysStuff [] = []
-    sysStuff (x : xs) = (addTimeSignature (sysBar ^. timeSignature) x : xs)
+    sysStuff (x : xs) =
+      (
+        (
+          (addTimeSignature (sysBar ^. timeSignature))
+        $ (addKeySignature (sysBar ^. keySignature))
+        $ x
+        )
+      : xs)
+
     sim [x] = x
     sim xs = Lilypond.Simultaneous False xs
-    addTimeSignature ::
-      Option (First Music.Score.Meta.Time.TimeSignature) ->
-      Lilypond.Music ->
-      Lilypond.Music
-    addTimeSignature timeSignature x = (setTimeSignature `ifJust` (unOF timeSignature)) x
-      where
-        unOF = fmap getFirst . getOption
-        ifJust = maybe id
-        setTimeSignature (Music.Score.Meta.Time.getTimeSignature -> (ms, n)) x =
-          Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
+
+addKeySignature ::
+  KeySignature ->
+  Lilypond.Music ->
+  Lilypond.Music
+addKeySignature _ x = x -- TODO
+  -- TODO Lilypond.Key Music.Pitch.Literal.fs Lilypond.Minor
+
+addTimeSignature ::
+  Option (First TimeSignature) ->
+  Lilypond.Music ->
+  Lilypond.Music
+addTimeSignature timeSignature x = (setTimeSignature `ifJust` (unOF timeSignature)) x
+  where
+    unOF = fmap getFirst . getOption
+    ifJust = maybe id
+    setTimeSignature (Music.Score.Meta.Time.getTimeSignature -> (ms, n)) x =
+      Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
 
 toLyLayer :: (LilypondExportM m) => Rhythm Chord -> m Lilypond.Music
 toLyLayer (Beat d x) = toLyChord d x
@@ -1385,7 +1408,7 @@ movementToPartwiseXml movement = music
             We could also prepend it to other staves, but that is reduntant and makes the
             generated XML file much larger.
       Trying a new approach here by including this in all parts.
-    
+
       ---
       Again, this definition is a sequnce of elements to be prepended to each bar
       (typically divisions and attributes).
@@ -1405,15 +1428,17 @@ movementToPartwiseXml movement = music
 
         divisions_ :: [MusicXml.Music]
         divisions_ = MusicXml.defaultDivisions : repeat mempty
+
         keySignatures_ :: [MusicXml.Music]
-        keySignatures_ = fmap (expTS . unOF) $ fmap (^. keySignature) (movement ^. systemStaff)
-          where
-            unOF = fmap getFirst . getOption
-            -- TODO recognize common/cut
-            expTS Nothing = (mempty :: MusicXml.Music)
-            expTS (Just ks) =
-              let (fifths, mode) = Music.Score.Meta.Key.getKeySignature ks
-               in MusicXml.key (fromIntegral fifths) (if mode then MusicXml.Major else MusicXml.Minor)
+        keySignatures_ = undefined
+        -- keySignatures_ = fmap (expTS . unOF) $ fmap (^. keySignature) (movement ^. systemStaff)
+        --   where
+        --     unOF = fmap getFirst . getOption
+        --     -- TODO recognize common/cut
+        --     expTS Nothing = (mempty :: MusicXml.Music)
+        --     expTS (Just ks) =
+        --       let (fifths, mode) = Music.Score.Meta.Key.getKeySignature ks
+        --        in MusicXml.key (fromIntegral fifths) (if mode then MusicXml.Major else MusicXml.Minor)
         timeSignatures_ :: [MusicXml.Music]
         timeSignatures_ = fmap (expTS . unOF) $ fmap (^. timeSignature) (movement ^. systemStaff)
           where
@@ -1428,7 +1453,7 @@ movementToPartwiseXml movement = music
     {-
       A matrix similar to the one returned from movementToPartwiseXml, but
       not including information from the system staff.
-    
+
       TODO we use movementAssureSameNumberOfBars
       We should do a sumilar check on the transpose of the bar/staff matrix
       to assure that all /bars/ have the same duration.
@@ -1477,12 +1502,12 @@ movementToPartwiseXml movement = music
            about this, are we always emitting the voice?)
             YES, see setDefaultVoice below?
             How about staff, are we always emitting that?
-        
+
           - TODO how does this interact with the staff-crossing feature?
             (are we always emitting staff?)
           - TODO how does it interact with clefs/other in-measure elements not
             connected to chords?
-        
+
             Lots of meta-stuff here about how a bar is represented, would be nice to write up music-score
             eloquently!
         -}
@@ -1519,7 +1544,7 @@ movementToPartwiseXml movement = music
         renderPitchLayer = renderBarMusic . fmap renderChord . getPitchLayer
         {-
         Render a rest/note/chord.
-        
+
         This returns a series of <note> elements, with appropriate <chord> tags.
         -}
         renderChord :: Chord -> Duration -> MusicXml.Music
@@ -1905,8 +1930,8 @@ partitionIntervals xs = fmap (Data.Map.fromList . toList) $ snd $ (`runState` []
     Just n ->
       modify (update n $ (Data.List.NonEmpty.cons ev))
   where
-    sorted :: [((a, a), b)]
-    sorted = Data.Map.toAscList xs
+  sorted :: [((a, a), b)]
+  sorted = Data.Map.toAscList xs
 
 update :: Int -> (a -> a) -> [a] -> [a]
 update n f xs = take n xs ++ rest
@@ -1986,12 +2011,12 @@ fromAspects sc = do
           support multi-voice staves as a starting point.
       - Bar splitting (adding ties)
       - Quantization
-  
-  
-  
+
+
+
     TODO layer sepration (which, again, does not actually happen in current code)
     should happen after bars have been split.
-  
+
   -}
   say "Separating voices"
   postVoiceSeparation :: [(Part, List0To4 (MVoice Asp2))] <-
@@ -2732,7 +2757,7 @@ umts_13a =
     -- TODO include TS too!
     sysStaff =
       fmap
-        (\ks -> keySignature .~ (Option $ Just $ First $ ks) $ mempty)
+        (\ks -> keySignature .~ ks $ mempty)
         keySigs
     keySigs :: [KeySignature]
     keySigs = concatMap (\i -> fmap (\m -> Music.Score.Meta.Key.key i m) modesPerBar) fifthPerTwoBars
@@ -3692,7 +3717,7 @@ umts_41a =
     $ Movement mempty sysStaff
     $ fromListLT staves
   where
-    sysStaff = [keySignature .~ (Option $ Just $ First keySig) $ mempty]
+    sysStaff = [keySignature .~ keySig $ mempty]
     staves = zipWith (\name -> Staff (instrumentFullName .~ name $ mempty) . pure) names bars
     keySig = Music.Score.Meta.Key.key Music.Pitch.g True
     bars =
@@ -3724,7 +3749,7 @@ umts_41b =
     $ Movement mempty sysStaff
     $ fromListLT staves
   where
-    sysStaff = [keySignature .~ (Option $ Just $ First keySig) $ mempty]
+    sysStaff = [keySignature .~ keySig $ mempty]
     staves = zipWith (\name -> Staff (instrumentFullName .~ name $ mempty) . pure) names bars
     keySig = Music.Score.Meta.Key.key Music.Pitch.g True
     bars =
@@ -4134,7 +4159,7 @@ umts_72b =
     $ Movement mempty sysStaff
     $ fromListLT staves
   where
-    sysStaff = [keySignature .~ (Option $ Just $ First origKeySig) $ mempty]
+    sysStaff = [keySignature .~ origKeySig $ mempty]
     staves = fmap mkStaffFromInstrument instruments
     mkStaffFromInstrument _ =
       Staff

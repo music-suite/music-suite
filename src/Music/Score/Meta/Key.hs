@@ -40,15 +40,10 @@ module Music.Score.Meta.Key
     -- TODO hide internals
     KeySignature (..),
     key,
-    isMajorKey,
-    isMinorKey,
 
     -- * Adding key signatures to scores
     keySignature,
     keySignatureDuring,
-
-    -- * Extracting key signatures
-    withKeySignature,
   )
 where
 
@@ -61,14 +56,14 @@ import qualified Data.List
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
-import Data.Semigroup
+import Data.Monoid
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.String
 import Data.Traversable (Traversable)
 import qualified Data.Traversable as T
 import Data.Typeable
-import Music.Pitch hiding (Fifths, Pitch)
+import Music.Pitch hiding (Fifths, Pitch, First, Last)
 import qualified Music.Pitch as P
 import Music.Pitch.Literal
 import Music.Score.Internal.Util
@@ -141,21 +136,16 @@ instance IsPitch Fifths where
 -}
 
 -- | A key signature, represented by number of fifths from C and mode.
-newtype KeySignature = KeySignature {getKeySignature :: (Fifths, Bool)}
-  deriving (Eq, Ord, Typeable)
+newtype KeySignature = KeySignature {getKeySignature :: First (Fifths, Bool)}
+  deriving (Eq, Ord, Typeable, Semigroup, Monoid)
 
 instance Show KeySignature where
-  show (KeySignature (f, b)) = "key " ++ showsPrec 1 f "" ++ " " ++ showsPrec 1 b ""
+  show (KeySignature (First Nothing)) = "mempty"
+  show (KeySignature (First (Just (f, b)))) = "key " ++ showsPrec 1 f "" ++ " " ++ showsPrec 1 b ""
 
 -- | Create a major or minor signature.
 key :: Fifths -> Bool -> KeySignature
-key fifths mode = KeySignature (fifths, mode)
-
-isMajorKey :: KeySignature -> Bool
-isMajorKey (KeySignature (_, x)) = x
-
-isMinorKey :: KeySignature -> Bool
-isMinorKey = not . isMajorKey
+key fifths mode = KeySignature $ First $ Just (fifths, mode)
 
 -- | Set the key signature of the given score.
 keySignature :: (HasMeta a, HasPosition a) => KeySignature -> a -> a
@@ -163,8 +153,5 @@ keySignature c x = keySignatureDuring (_era x) c x
 
 -- | Set the key signature of the given part of a score.
 keySignatureDuring :: HasMeta a => Span -> KeySignature -> a -> a
-keySignatureDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
+keySignatureDuring s c = addMetaNote $ view event (s, c)
 
--- | Extract all key signatures from the given score, using the given default key signature.
-withKeySignature :: KeySignature -> (KeySignature -> Score a -> Score a) -> Score a -> Score a
-withKeySignature def f = withMeta (f . fromMaybe def . fmap getLast . getOption)
