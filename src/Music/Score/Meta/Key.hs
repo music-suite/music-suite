@@ -37,7 +37,7 @@
 module Music.Score.Meta.Key
   ( -- * Key signature type
     Fifths (..),
-    -- TODO hide internals
+    -- TODO hide internals?
     KeySignature (..),
     key,
 

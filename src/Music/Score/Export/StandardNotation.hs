@@ -212,6 +212,7 @@ import Control.Monad.Plus
 import Control.Monad.State
 import Control.Monad.Writer hiding ((<>), First (..))
 import Data.AffineSpace
+import qualified Data.Monoid
 import Data.Bifunctor (bimap, first, second)
 import qualified Data.ByteString.Char8
 import qualified Data.Char
@@ -1135,10 +1136,10 @@ toLyBar sysBar bar = do
     sysStuff [] = []
     sysStuff (x : xs) =
       (
-        (
-          (addTimeSignature (sysBar ^. timeSignature))
-        $ (addKeySignature (sysBar ^. keySignature))
-        $ x
+        ( lySeq
+        $ addTimeSignature (sysBar ^. timeSignature)
+        $ addKeySignature (sysBar ^. keySignature)
+        $ pure x
         )
       : xs)
 
@@ -1147,21 +1148,25 @@ toLyBar sysBar bar = do
 
 addKeySignature ::
   KeySignature ->
-  Lilypond.Music ->
-  Lilypond.Music
-addKeySignature _ x = x -- TODO
-  -- TODO Lilypond.Key Music.Pitch.Literal.fs Lilypond.Minor
+  [Lilypond.Music] ->
+  [Lilypond.Music]
+
+addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just (_fifths, _isMajor))))
+  -- TODO convert
+   = (Lilypond.Key Music.Pitch.Literal.fs Lilypond.Minor :)
+addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First Nothing)) = id
 
 addTimeSignature ::
   Option (First TimeSignature) ->
-  Lilypond.Music ->
-  Lilypond.Music
-addTimeSignature timeSignature x = (setTimeSignature `ifJust` (unOF timeSignature)) x
-  where
-    unOF = fmap getFirst . getOption
-    ifJust = maybe id
-    setTimeSignature (Music.Score.Meta.Time.getTimeSignature -> (ms, n)) x =
-      Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
+  [Lilypond.Music] ->
+  [Lilypond.Music]
+addTimeSignature (Option (Just (First (Music.Score.Meta.Time.getTimeSignature -> (ms, n)))))
+   = (Lilypond.Time (sum ms) n :)
+addTimeSignature (Option Nothing) = id
+
+lySeq :: [Lilypond.Music] -> Lilypond.Music
+lySeq [x] = x
+lySeq xs  = Lilypond.Sequential xs
 
 toLyLayer :: (LilypondExportM m) => Rhythm Chord -> m Lilypond.Music
 toLyLayer (Beat d x) = toLyChord d x
