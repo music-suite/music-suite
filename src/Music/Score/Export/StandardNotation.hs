@@ -2080,6 +2080,8 @@ fromAspects sc = do
           .~ ( flip Music.Score.Meta.Attribution.getAttribution "composer" $ Music.Score.Meta.metaAtStart sc
              )
         $ mempty
+    -- TODO also extract Barline, Key, RehearsalMark, Tempo here
+    -- (all of these should force a new bar)
     systemStaff :: SystemStaff
     systemStaff = fmap (\ts -> timeSignature .~ Option (fmap First ts) $ mempty) timeSignatureMarks
     (timeSignatureMarks, barDurations) = Music.Score.Internal.Export.extractTimeSignatures normScore

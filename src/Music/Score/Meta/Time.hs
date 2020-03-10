@@ -188,7 +188,7 @@ timeSignature c x = timeSignatureDuring (0 <-> x ^. offset) c x
 timeSignatureDuring :: HasMeta a => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addMetaNote $ view event (s, optionLast c)
 
-getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
+getTimeSignatures :: HasMeta a => TimeSignature -> a -> Reactive TimeSignature
 getTimeSignatures def = fmap (fromMaybe def . unOptionLast) . fromMetaReactive . (view meta)
 
 getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]

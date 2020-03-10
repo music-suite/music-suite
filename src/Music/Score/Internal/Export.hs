@@ -61,6 +61,7 @@ import Data.Traversable
 import Data.Typeable
 import Data.VectorSpace
 import Music.Dynamics.Literal
+import Music.Time.Meta (Meta, HasMeta)
 import Music.Pitch.Literal
 import Music.Score.Articulation
 import Music.Score.Dynamics
@@ -87,7 +88,13 @@ import Prelude hiding
     sum,
   )
 
-extractTimeSignatures :: Score a -> ([Maybe TimeSignature], [Duration])
+-- TODO also extract Barline, Key, RehearsalMark, Tempo here
+{-
+extractBars :: (HasMeta a, HasPosition a, Transformable a) => a ->
+  [(Duration, Maybe TimeSignature, Maybe Barline, Key, Maybe RehearsalMark, Maybe Tempo)]
+-}
+
+extractTimeSignatures :: (HasMeta a, HasPosition a, Transformable a) => a -> ([Maybe TimeSignature], [Duration])
 extractTimeSignatures score = (retainUpdates barTimeSignatures, barDurations)
   where
     defaultTimeSignature = time 4 4
