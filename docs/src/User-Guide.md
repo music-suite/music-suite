@@ -1055,6 +1055,7 @@ keySignature (key db major) $ pseq [db,eb,f]
 
 @[keySignatureDuring]
 
+Key signature changes will always force a new bar.
 
 ## Time signatures
 
@@ -1082,6 +1083,7 @@ timeSignature (3/8) $ pseq [db,eb,f]
 
 @[timeSignatureDuring]
 
+Time signature changes will always force a new bar.
 
 ### Converting from one time signature to another
 
@@ -1122,6 +1124,8 @@ tempo (metronome (1/4) 80) $ pseq [c,d,e,b,c] |/ (5*8) |> d |* (3/4)
 ```
 
 TODO rendering tempo?
+
+Tempo changes will always force a new bar.
 
 ### Fermatas, caesuras and breathing marks
 
@@ -1182,11 +1186,13 @@ compress 4 $ timeSignature (4/4) (pseq [c,d,e,c,d,e,f,d,g,d]) |> timeSignature (
 
 TODO repeats
 
+Explicitly set barlines will or course force a new bar.
+
 ## Clefs
 
-To set the clef for a whole passage, use @[clef]. The clef is used by most notation backends and ignored by audio backends.
+The standard for each instrument is used by default.
 
-TODO override the default clef selection
+TODO override the default
 
 ## Multi-movement scores
 
@@ -1206,12 +1212,13 @@ rehearsalMark $ pseq [c,d,e,d,f,e,d,c] |/ 3
 rehearsalMarkAt 2 $ pseq [c,d,e,d,f,e,d,c] |/3
 ```
 
+Rehearsal marks will always force a new bar.
 
 ## Annotations
 
 Annotations are simply textual values attached to a specific section of the score. In contrast to other types of meta-information annotations always apply to the whole score, not to a single part. To annotate a score use @[annotate], to annotate a specific span, use @[annotateSpan].
 
-Annotations are invisible by default. To show annotations in the generated output, use
+Annotations are *invisible by default*. To show annotations in the generated output, use
 @[showAnnotations].
 
 ```music+haskell
@@ -1220,15 +1227,10 @@ showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 
 ## Custom meta-information
 
-Meta-information is not restricted to the types described above. In fact, the user can add meta-information of any type that satisfies the @[AttributeClass] constraint, including user-defined types. Meta-information is required to implement `Monoid`. The `mempty` value is used as a default value for the type, while the `mappend` function is used to combine the default value and all values added by the user.
+TODO works for any `Typeable` `Monoid`.
 
-Typically, you want to use a monoid similar to `Maybe`, `First` or `Last`, but not one derived from the list type. The reason for this is that meta-scores compose, so that `getMeta (x <> y) = getMeta x <> getMeta y`.
+TODO Use more specicif wrappers to preserve `Transformable`, `Reversible` etc.
 
-<!--
-TODO unexpected results with filter and recompose, solve by using a good Monoid
-Acceptable Monoids are Maybe and Set/Map, but not lists (ordered sets/unique lists OK)
-See issue 103
--->
 
 @[HasMeta]
 
