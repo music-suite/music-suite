@@ -1371,21 +1371,17 @@ rcat [c,e,g]
 
 ## Staves and parts
 
-It is important to understand the difference between *parts* and *staves*. While parts have a clear semantics in terms of perfomance, staves are a way of presenting this information visually. There is usually no need to worry about staves, they are automatically created depending on the parts present in the score. While most instruments are drawn on a single staff, certain instruments are drawn on multiple staves by default.
+It is important to understand the difference between *parts* and *staves*. While parts have a clear semantics in terms of perfomance, staves are a way of presenting this information visually. There is usually no need to worry about staves, they are automatically created depending on the parts present in the score.
 
 ```music+haskell
 set parts' flutes c
 ```
 
+Most instruments are drawn on a single staff. Certain instruments are drawn on multiple staves by default, however:
+
 ```music+haskell
 set parts' (tutti celesta) c
 ```
-
-
-It isn't (and should never be) *necessary* to select staves manually.
-
-TODO proper multi-staff part support (see TODO.md).
-
 
 ## Updating several parts at once
 

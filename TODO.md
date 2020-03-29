@@ -231,6 +231,8 @@ Consider switching to a decentralized issue tracker such as:
 
 - Multi-staff customization: The current state will gracefully handle overlapping notes in a single part, drawing them on separate staves, however it may not distribute things ideally across the staves. The final state should do better by default *and* allow customization.
 
+- [ ] Draw celesta/piano/organ on >1 staff by default
+
 - [ ] Rename Inspectable -> Exportable?
 
 - [ ] Make parts such as "Piano 0", "Piano (-1)", etc, unrepresentable
