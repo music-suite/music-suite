@@ -24,7 +24,7 @@ import Data.Maybe
 import Data.Monoid.Average
 import Data.Semigroup
 
-type Articulation = (Average Double, Average Double)
+type Articulation = (Average Rational, Average Rational)
 {-
 
   References

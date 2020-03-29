@@ -33,4 +33,4 @@ import Data.Maybe
 import Data.Monoid.Average
 import Data.Semigroup
 
-type Dynamics = Average Double
+type Dynamics = Average Rational
