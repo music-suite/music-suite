@@ -30,7 +30,7 @@ import Music.Pitch.Common.Semitones
 --
 -- Also known as range, tessitura or (in maths) interval.
 data Ambitus v p = Ambitus !p !p
-  deriving (Functor, Show)
+  deriving (Functor, Foldable, Traversable, Show)
 
 -- TODO replace with accessors a la Span
 -- In fact this type could be unified with Span

@@ -97,7 +97,7 @@ instance InspectableNote a => Inspectable (Note a) where
 -- instance Inspectable (Voice ()) where
 -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
 instance Inspectable (Ambitus Interval Pitch) where
-  inspectableToMusic x = let (m, n) = x ^. from ambitus in glissando $ fromPitch m |> fromPitch n
+  inspectableToMusic x = stretch 0.5 $ let (m, n) = x ^. from ambitus in glissando $ fromPitch m |> fromPitch n
 
 -- instance Inspectable (Mode Pitch) where
 --  inspectableToMusic = inspectableToMusic . scale c
@@ -135,6 +135,9 @@ instance Inspectable [Voiced Chord Pitch] where
   inspectableToMusic = pseq . fmap inspectableToMusic
 
 instance Inspectable [Interval] where
+  inspectableToMusic = rcat . fmap inspectableToMusic
+
+instance Inspectable [Ambitus Interval Pitch] where
   inspectableToMusic = rcat . fmap inspectableToMusic
 
 -- instance Inspectable [Hertz] where

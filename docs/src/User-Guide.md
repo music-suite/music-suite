@@ -740,6 +740,7 @@ In this case, the origin is also used as the tonic of the implied diatonic scale
 
 TODO forward reference to traversals chapter, @[HasPitch]
 
+> Note: `pitches` is a example of a [traversal](#traversals). We'll learn more about these later on.
 
 
 
@@ -749,15 +750,41 @@ While the `Pitch` and `Interval` types allow us to represent any pitch (the West
 
 The simplest (and most general) way of doing this is to work with *generic* container types provided by Haskell: these include sets, lists, maps and so on. However music theory defines some very specific structures that are not always captured by generic containers. In this chapter we will look at some structures that make particular sense from a musical point of view.
 
-TODO data/codata
+## Ambitus
 
-## Ambitus and range
+The @[Ambitus] type represents a *range* of pitches. We can think of an ambitus as an interval with a starting point, or (equivalently) as a pair of pitches.
 
-The `Ambitus` type represents a *range* of pitches.
+> Note: For pitch, we use *ambitus* instead of the ambigous *range* or *interval*.
 
-TODO define/show/use
+```music+haskell
+inspectableToMusic @[Ambitus Interval Pitch] $
 
-> Note: The mathematical term for is a *interval*, which we avoid for obvious reasons.
+[ Ambitus c g
+, Ambitus c_ c''
+]
+```
+
+Note that the `Ambitus` type constructor is parameterized on both the pitch and interval type. Like most pitch contrainers it is a [bifunctor](http://hackage.haskell.org/package/base-4.12.0.0/docs/Data-Bifunctor.html).
+
+```music+haskell
+inspectableToMusic @[Ambitus Interval Pitch] $
+
+[          Ambitus c g
+, up _P5 $ Ambitus c g
+]
+```
+
+You can extract the range of any piece of music using @[pitchRange]:
+
+```music+haskell
+pseq [c,d,fs,g,db,c,b_,c,g,c,e] |/ 8
+```
+
+```music+haskell
+inspectableToMusic @(Maybe (Ambitus Interval Pitch)) $
+
+pitchRange @Music $ pseq [c,d,fs,g,db,c,b_,c,g,c,e] |/ 8
+```
 
 ## Scales and chords
 
@@ -1609,6 +1636,7 @@ TODO render e.g. snare drum parts correctly
 
 TODO render "drum kit" staff
 
+<!--
 # Lyrics and Vocals
 
 TODO adding lyrics (including syllables/word boundaries/melismas)
@@ -1633,6 +1661,7 @@ TODO
 ## Cues
 
 TODO
+-->
 
 # Text and Color
 
@@ -2010,9 +2039,7 @@ TODO time/span/duration examples
 
 ### Spans as transformations
 
-TODO explain
-
-An alternative view of span: as an *affine transformation*.
+Here is an alternative view of span: as an *affine transformation*.
 
 For those familiar with linear algebra or computer graphics: Because time is one-dimensional a *linear transformation matrix* in time is a 1x1 matrix (e.g. a scalar). Its *affine transformation matrix* is a 2x2 matrix. We can understand the monoid instance for @[Span] as multiplication of 2x2 matrices.
 
@@ -2057,7 +2084,7 @@ We will see much more of this distinction later on.
 
 The Note and Event types are similar to Duration, Time and Span respectively, except they also contain a *payload* of an arbitrary type. This is expressed as a type parameter (often written using a lowercase letter, as in `Note a`).  In practice the payload will usually contain (possibly overloaded) *aspects* such as part, pitch, dynamics and so on.
 
-@[Note]
+A @[Note] represents a single value tagged with a duration.
 
 ```music+haskell
 inspectableToMusic @(Note Pitch) $
@@ -2387,9 +2414,11 @@ TODO Behavior and Reactive, Sampling
 
 # Traversals
 
-TODO previous chapters have focused on *building* music by composing musical expressions. In this chapter we will look at various ways of *inspecting* musical expressions.
+In previous chapters have focused on *building* music by composing musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions.
 
 TODO explain how this works within pure FP: no change, just creating new structures
+
+TODO some traversals we have already seen: pitches, parts, dynamics, articulation, techniques.
 
 TODO traverals are a very powerful concept and we'll only
 
@@ -2610,6 +2639,8 @@ TODO very simple space representation (e.g. Angle), minimal example using Ambiso
 TODO basic structure/aproach to import and export
 
 ## Prelude/Inspectable
+
+The @[Inspectable] class represents types that can be converted into a standard musical representation and exported via an output backend. The top-level music expression in a file needs to be an instance of `Inspectable`.
 
 TODO point here is to fix a "default" type for rendering/export purposes. This is used to monomorphize expressions written in the polymorphic combinators of the library. The default type is knonw as `Music`.
 
