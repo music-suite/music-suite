@@ -97,7 +97,7 @@ A single note can be entered by its name: `c`, `d`, `e`, `f`, `g`, or `b`.
 
 The expression `c` enters a middle C (or C4) with a duration of a a whole note. Durations are measured in rational numbers: a duration of `1` is a whole note (or semibreve), a duration of `1/2` is a half note (or minim), and so on.
 
-Note: Unlike in many other languages Haskell numbers are *overloaded*. The syntax of numbers do not convey any type information, so `0.25` and `1/4` are equivalent. In Music Suite, all time values are implemented using arbitrary-precision rational numbers.
+> Note: In Haskell, numbers are *overloaded*. The syntax do not convey any type information: `0.25` and `1/4` are equivalent. In Music Suite, all time values are implemented using arbitrary-precision rational numbers.
 
 ```music+haskell
 c
@@ -121,7 +121,7 @@ stretch 2 c
 stretch (4+1/2) c
 ```
 
-Note: in Western classical theory *stretch* and *compress* are known as augmentation and diminishion, respectively.
+> Note: In classical theory *stretch* and *compress* are known as augmentation and diminishion, respectively.
 
 
 We count positions from the first beat in the first bar, so in 4/4 time, `0` means the first beat, `1/4` (or `0.25`) means the second beat and so on.
@@ -213,7 +213,7 @@ TODO understanding tyes, types of the above operators and that `|>` and `</>` ar
 
 ## Chords
 
-Note with the same onset and offset are rendered as chords by default. If you want to prevent this you must put them in separate parts.
+Notes with the same onset and offset are rendered as chords by default. If you want to prevent this you must put them in separate parts.
 
 ```music+haskell
 pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]

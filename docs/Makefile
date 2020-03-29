@@ -1,47 +1,23 @@
 
 SHELL=/usr/bin/env bash
 
-CSS	       =$(shell pwd)/templates/pandoc-bootstrap-template/template.css
-PANDOC_TEMPLATE=$(shell pwd)/templates/pandoc-bootstrap-template/template.html
-#CSS	       =../templates/music-suite/template.css
-#PANDOC_TEMPLATE=../templates/music-suite/template.html
+#CSS	       =$(shell pwd)/templates/pandoc-bootstrap-template/template.css
+#PANDOC_TEMPLATE=$(shell pwd)/templates/pandoc-bootstrap-template/template.html
+CSS	       =../templates/music-suite/template.css
+PANDOC_TEMPLATE=../templates/music-suite/template.html
 
 PANDOC=pandoc --standalone --toc
 PANDOC_PDF=$(PANDOC) --write=latex
 PANDOC_HTML=$(PANDOC) --write=html --toc-depth 4 --css styles.css --template $(PANDOC_TEMPLATE)
 
-CABAL_FILES=""
-# CABAL_FILES=\
-# 	../../music-score/music-score.cabal \
-# 	../../music-pitch/music-pitch.cabal \
-# 	../../music-dynamics/music-dynamics.cabal \
-# 	../../music-articulation/music-articulation.cabal \
-# 	../../music-parts/music-parts.cabal \
-# 	../../music-pitch-literal/music-pitch-literal.cabal \
-# 	../../music-dynamics-literal/music-dynamics-literal.cabal \
-
-# Can't include prelude, as that makes all refs point to the Prelude module
-# 	../../music-preludes/music-preludes.cabal
-
 TRANSFORM    =cabal exec transf -- +RTS -N4
 TRANSFORM_PDF=cabal exec transf -- --format=pdf
-#TRANSFORM    =transf +RTS -N4
-#TRANSFORM_PDF=transf --format=pdf
 RESOLVE_LINKS=cabal exec hslinks
 
 
 SRC=src
 OUT=build
 PAGE=index.html
-# MODULE_GRAPH=module-graph.png
-
-# upload-wiki: transform
-# 	pushd $(OUT) && \
-# 		git add *.png *.ly *.mid && \
-# 		git add *.md && \
-# 		git commit -m "Updated wiki" && \
-# 		git push && \
-# 	popd
 
 html: transform
 	pushd $(OUT) && \
@@ -52,8 +28,6 @@ html: transform
 		cp $(CSS) styles.css && \
 		cp -R ../js js && \
 	popd
-
-#	cp ../$(MODULE_GRAPH) module-graph.png && \
 
 
 pdf: transform-pdf
@@ -69,7 +43,6 @@ transform:
 	pushd $(OUT) && \
 		pwd && \
 		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/About.md 		>About.md  && \
-		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/Usage.md 		>Usage.md   && \
 		( $(TRANSFORM) | $(RESOLVE_LINKS) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
@@ -82,7 +55,6 @@ transform-pdf:
 	pushd $(OUT) && \
 		pwd && \
 		( $(RESOLVE_LINKS) | $(TRANSFORM_PDF) ) <../$(SRC)/About.md 	>About.md  && \
-		( $(RESOLVE_LINKS) | $(TRANSFORM_PDF) ) <../$(SRC)/Usage.md 	>Usage.md   && \
 		( $(RESOLVE_LINKS) | $(TRANSFORM_PDF) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
