@@ -1,8 +1,10 @@
-# First steps
+# Quick Start
 
 ## Installing
 
-TODO "easy" install options
+### Installing via Docker
+
+TODO Docker or other "easy" install options
 
 ### Installing from source
 
@@ -286,7 +288,7 @@ Maybe forward reference to Span/HasPosition?
 
 ## Summary
 
-We have now seen how to write basic pieces, using melody, harmony and voices. In the following chapters we will be looking at musical aspects such as pitch, dynamics and orchestration in more detail: these chapters can generally be read in any order, or simply used a reference.
+We have now seen how to write basic pieces, using melody, harmony and voices. In the following chapters we will be looking at musical aspects such as pitch, dynamics and orchestration in more detail: these chapters can generally be read in any order.
 
 
 
@@ -597,8 +599,6 @@ See the [Harmony][x] chapter.
 
 # Dynamics and Articulation
 
-Dynamic values are overloaded in the same way as pitches. The dynamic literals are defined in `Music.Dynamics.Literal` and have type `IsDynamics a => a`.
-
 @[level]
 
 An overview of the dynamic values:
@@ -704,6 +704,8 @@ in (accent . legato) (p1 </> p2 </> p3)
 These kind of traversals are not limited to articulation. See [Phrase traversals](#phrase-traversals) for a more general overview.
 
 ## Overloading of dynamics and artiulation
+
+Dynamic values are overloaded in the same way as pitches. The dynamic literals are defined in `Music.Dynamics.Literal` and have type `IsDynamics a => a`.
 
 We've already seen how the expression `c` is overloaded to mean many things: the pitch C4, an event containing the pitch `c` with the default onset and offset, a score containing a single event, and so on. (TODO make sure we have)
 
