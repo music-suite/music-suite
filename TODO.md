@@ -587,6 +587,7 @@ Consider switching to a decentralized issue tracker such as:
       In lieue of proper compiler support, we could do something like the following (for expressions in 'transf'):
         - First try the general form (any Inspectable, no custom type hint). This will succeed if the user provided an expression with an unambigious type.
         - Then try adding (Score StandardNote) and possibly other types in sequence. If they all fail, fail with the message from the original failure ("ambigous type").
+        - Could this be done with TH or a compiler plugin?
 
 
 - [X] For each instrument we want to know:
