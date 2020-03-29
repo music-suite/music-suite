@@ -46,10 +46,6 @@ module Music.Score.Meta.Time
     timeSignature,
     timeSignatureDuring,
 
-    -- * Extracting time signatures
-    getTimeSignatures,
-    getBarTimeSignatures,
-
     -- * Utility
     standardTimeSignature,
   )
@@ -176,25 +172,6 @@ timeSignature c x = timeSignatureDuring (0 <-> x ^. offset) c x
 timeSignatureDuring :: HasMeta a => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addMetaNote $ view event (s, optionLast c)
 
-getTimeSignatures :: HasMeta a => TimeSignature -> a -> Reactive TimeSignature
-getTimeSignatures def = fmap (fromMaybe def . unOptionLast) . fromMetaReactive . (view meta)
-
-
--- | Given a list of time signatures and the duration between them (TODO use voice), return a list of appropriate
---   time signatures for each bar.
-getBarTimeSignatures :: [(TimeSignature, Duration)] -> [TimeSignature]
-getBarTimeSignatures = concatMap $ uncurry getBarTimeSignatures1
-
-getBarTimeSignatures1 :: TimeSignature -> Duration -> [TimeSignature]
-getBarTimeSignatures1 ts d =
-  let (n, r) = numWholeBars ts d
-   in -- Repeat the chosen time signature as long as possible
-      -- If there is a rest duration, add a bar of that duration choosing an appropriate time signature
-      replic n ts ++ if r > 0 then [standardTimeSignature r] else []
-
--- | Return the number of whole bars needed to notate the given duration, as well as the remainder duration.
-numWholeBars :: TimeSignature -> Duration -> (Integer, Duration)
-numWholeBars ts dur = second (* barDur) $ properFraction (dur / barDur) where barDur = realToFrac ts
 
 -- | Time signature typically used for the given duration.
 standardTimeSignature :: Duration -> TimeSignature
@@ -228,8 +205,6 @@ standardTimeSignature x = case unRatio (toRational x) of
 -- TODO consolidate
 optionLast = Option . Just . Last
 
-unOptionLast = fmap getLast . getOption
-
 mapNums :: ([Integer] -> [Integer]) -> TimeSignature -> TimeSignature
 
 mapDenom :: (Integer -> Integer) -> TimeSignature -> TimeSignature
@@ -244,4 +219,3 @@ liftRational2 :: (Fractional a, Real a1, Real a2) => (Rational -> Rational -> Ra
 
 optionLast :: a -> Option (Last a)
 
-unOptionLast :: Option (Last b) -> Maybe b
