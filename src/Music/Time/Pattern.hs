@@ -11,6 +11,7 @@ import Control.Monad (join)
 import Data.AffineSpace
 import Data.VectorSpace
 import Music.Pitch (IsPitch (..))
+import Music.Pitch.Literal (c)
 import Music.Score.Pitch
 import Music.Score.Part
 import Music.Time.Aligned
@@ -187,6 +188,9 @@ pureP = newPattern . pure
 
 newPattern :: Reversible a => Voice a -> Pattern a
 newPattern v = Pattern [pure $ newLunga v]
+
+rhythmPattern :: (IsPitch a, Reversible a) => [Duration] -> Pattern a
+rhythmPattern a = newPattern $ fmap (const c) $ a^.durationsAsVoice
 
 newPattern' :: Voice a -> Voice a -> Pattern a
 newPattern' vb vf = Pattern [pure $ newLunga' vb vf]

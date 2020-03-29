@@ -2118,8 +2118,8 @@ TODO use proper percussion here:
 ```music+haskell
 renderPattern (a <> b) (0 <-> 4)
   where
-    a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
-    b = newPattern $ fmap (const $ parts' .~ flutes $ c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+    a = parts' .~ claves  $ rhythmPattern [3,3,4,2,4] |/ 8
+    b = parts' .~ maracas $ c |/ 8
 ```
 
 ```music+haskell

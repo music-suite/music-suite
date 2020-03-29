@@ -112,6 +112,9 @@ module Music.Parts
     cellos,
     doubleBasses,
     harp,
+
+    claves,
+    maracas,
   )
 where
 
@@ -235,6 +238,10 @@ marimba = fromMidiProgram 12
 xylophone = fromMidiProgram 13
 
 xylorimba = fromMusicXmlSoundId "pitched-percussion.xylorimba"
+
+claves = tutti $ fromMusicXmlSoundId "wood.claves"
+
+maracas = tutti $ fromMusicXmlSoundId "rattle.maraca"
 
 tubularBells = fromMidiProgram 14
 
