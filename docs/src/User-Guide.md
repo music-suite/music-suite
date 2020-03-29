@@ -97,20 +97,26 @@ Music Suite takes inspiration from diagrams in *separating points and vectors*. 
 
 ##  Our first score
 
-TODO this will be simple:
+The first musical expression we write will be simple: it consists of a single letter:
 
 ```music+haskell
 c
 ```
 
-TODO notice defaults: octave, accidental (none), duration, part and dynamics
+This of course represents the note C. You will notice that there is more information in the score than what we entered. This is because most musical aspects have a *default value* in Music Suite. We will see how to override them later, but for now we can note:
 
-The default octave is the octave containing "middle C", or *C4* in [scientific pitch notation](https://en.wikipedia.org/wiki/Scientific_pitch_notation).
+- The default *octave* is the octave containing "middle C", or *C4* in [scientific pitch notation](https://en.wikipedia.org/wiki/Scientific_pitch_notation).
 
-THe default duration is a whole note. Durations are measured in rational numbers: a duration of `1` is a whole note (or semibreve), a duration of `1/2` is a half note (or minim), and so on.
+- The default *duration* is a whole note. Durations are measured in rational numbers: a duration of `1` is a whole note (or semibreve), a duration of `1/2` is a half note (or minim), and so on.
+
+- The default *dynamic value* is *mf* (meaning *mezzo-forte*, "medium loud").
+
+- The default *instrument* is *Piano*.
+
 
 > Note: In Haskell, numbers are *overloaded*. The syntax do not convey any type information: `0.25` and `1/4` are equivalent. In Music Suite, all time values are implemented using arbitrary-precision integers and rational numbers, so you do not have to worry about rounding errors.
 
+By default note have no *accidentals* or *articulation marks*. We will see how to add those later as well.
 
 
 ## Duration and onset
@@ -153,8 +159,7 @@ The `|*` and `|/` operators can be used as shorthands for `stretch` and `compres
 (c |> d |> e |> c |> d|*2 |> d|*2) |/ 16
 ```
 
-
-## Functions, let, where and type signatures
+## Functions, let, where
 
 TODO basic functions, let bindings first
 
@@ -164,6 +169,13 @@ Here is a full example using function composition. The dot operator `.` is used 
 (up _P8 . compress 2 . delay 3) c
 ```
 
+## Octave changes
+
+TODO
+
+## Basic dynamics and articulations
+
+TODO example and forward reference
 
 ## Composition operators
 
@@ -278,9 +290,15 @@ Similarly, durations that do not fit into standard note durations are notated us
 compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
 ```
 
+## Type signatures
 
+TODO
 
-## Time and Duration
+## More examples
+
+TODO make very clear that stretch, `_8va` etc work on arbitrarily complex scores, not just single notes as in the first examples
+
+### Time and Duration
 
 TODO AffineSpace
 
@@ -1003,6 +1021,7 @@ over (articulations' . accentuation) (+ 2) c
 
 # Instruments and Parts
 
+
 TODO Parts vs Instruments
 
 @[Part]
@@ -1015,15 +1034,13 @@ flute :: Instrument
 flutes :: Part
 ```
 
-## Basic use
-
 TODO the default part is `Piano I`.
 
 ```music+haskell
 ppar [c,d,fs]
 ```
 
-### Setting instrument and subpart
+
 
 ```music+haskell
 (parts' . instrument) .~ trumpet $ ppar [c,d,fs]
@@ -1033,16 +1050,21 @@ ppar [c,d,fs]
 (parts' . subpart) .~ 2 $ (parts' . instrument) .~ trumpet $ ppar [c,d,fs]
 ```
 
-### Multi-staff parts
+## Subparts
+### TODO further subdivision
+
+TODO "Violin I.1", Soprano IIa etc
+
+## Multi-staff parts
 
 TODO multi-staff part support (see TODO.md)
 
 
-### The part composition operator
+## Partwise composition
 
 TODO rcat, then replacing instrument
 
-### Updating several parts at once
+## Updating several parts at once
 
 TODO updating and merging parts. Or should we write about this in cobination with pitch/dynamic etc (as they're all traversal-based).
 
@@ -1055,7 +1077,7 @@ arrangeFor stringOrchestra $ rcat [c',e,g_,c_]
 
 ```
 
-### Solo parts
+## Soloists
 
 The solo/tutti component is useful when working with concertante scores.
 
@@ -1069,13 +1091,12 @@ arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
     stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 ```
 
-### TODO further subdivision
+TODO by default `Tutti` is used. In chamber music there is usually no need to override this with `Solo`, the difference only make sense when you need to distinguish the solist.
 
-TODO "Violin I.1", Soprano IIa etc
+TODO soloists *from* the orchestra/altri
 
 
-
-## Extracting and modifying parts
+## Extracting parts
 
 TODO extractPart extractPartNamed extractParts extractPartsWithInfo
 
@@ -1644,6 +1665,10 @@ TODO time/span/duration examples
 
 TODO explain
 
+An alternative view of span: as an *affine transformation*.
+
+For those familiar with linear algebra or computer graphics: Because time is one-dimensional a *linear transformation matrix* in time is a 1x1 matrix (e.g. a scalar). Its *affine transformation matrix* is a 2x2 matrix. We can understand the monoid instance for @[Span] as multiplication of 2x2 matrices.
+
 @[Transformable]
 
 TODO Transformable laws
@@ -1820,7 +1845,6 @@ in trackToScore (1/8) y
 
 TODO empty scores and rests (see (HasPosition Score) in TODO.md)
 
-TODO Behavior and Reactive, Sampling
 
 TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
 
@@ -1982,6 +2006,10 @@ let
     melody = legato $ pseq [c,d,e,c]|/16
 in times 4 $ melody
 ```
+
+## Time, change and sampling
+
+TODO Behavior and Reactive, Sampling
 
 ## Building larger musical structures
 
