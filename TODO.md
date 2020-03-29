@@ -229,6 +229,10 @@ Consider switching to a decentralized issue tracker such as:
 
 - [ ] Pitch/Interval is a module, not a vector space.
 
+- Multi-staff customization: The current state will gracefully handle overlapping notes in a single part, drawing them on separate staves, however it may not distribute things ideally across the staves. The final state should do better by default *and* allow customization.
+
+- [ ] Make parts such as "Piano 0", "Piano (-1)", etc, unrepresentable
+
 - [ ] we should never see Music/StandardNote in the user guide (specific/nice-looking types instead). The only purpose of Music/StandardNote is to be defaults/final objects.
 
 
