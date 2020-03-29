@@ -28,6 +28,7 @@
 -- Portability : non-portable (TF,GNTD)
 module Music.Score.Internal.Export
   ( extractTimeSignatures,
+    extractBars
   )
 where
 
