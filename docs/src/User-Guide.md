@@ -22,7 +22,7 @@ Then follow the instructions in `README.md` to setup the environment and build M
 
 Music Suite is based on *expressions*. An expression may represent any piece of music, from a single note to a complex, multi-movement work.
 
-To use Music Suite, you will need to write and *render* expressions, which means to convert them into *audio* or *graphics* or both.  We'll now look at a couple of different ways of doing this. It's recommended to pick the one that works best for you, and follow along with the examples in this tutorial.
+To use Music Suite, you will need to write expressions, which Music Suite will convert into *audio* or *graphics* (or both) on your behalf. We can ask Music Suite to do this in a couple of different ways. Choose one that works for you so that you can follow along with the examples in the tutorial.
 
 <!--
 Note: While Music Suite was written with Western classical notation in mind and it is not restricted to these formats.
