@@ -799,9 +799,6 @@ inspectableToMusic @[Chord Pitch] $
 , chord eb diminishedChord
 ]
 ```
-### Triadic harmony
-
-TODO Basic triads, seventh and ninth chords
 
 ### Non-octave repeating scales
 
@@ -1196,8 +1193,6 @@ We've already seen how the expression `c` is overloaded to mean many things: the
 
 Dynamics and articulations are overloaded too. The default articulation means "no particular separation or accentuation", and renders as a note without any markings Similarly the default dynamic renders as *mf* (mezzo-forte).
 
-TODO show how to override/add/multiply much as with pitch.
-
 ```music+haskell
 c
 ```
@@ -1349,9 +1344,16 @@ rcat [c,e,g]
 
 ## Staves and parts
 
-TODO understand that staves and parts are distinct. By default each part is drawn on its own staff (or staves, depending on the instrument).
+It is important to understand the difference between *parts* and *staves*. While parts have a clear semantics in terms of perfomance, staves are a way of presenting this information visually. There is usually no need to worry about staves, they are automatically created depending on the parts present in the score. While most instruments are drawn on a single staff, certain instruments are drawn on multiple staves by default.
 
-The current state will gracefully handle overlapping notes in a single part, drawing them on separate staves, however it may not distribute things ideally across the staves. The final state should do better by default *and* allow customization.
+```music+haskell
+set parts' flutes c
+```
+
+```music+haskell
+set parts' (tutti celesta) c
+```
+
 
 It isn't (and should never be) *necessary* to select staves manually.
 
