@@ -43,7 +43,7 @@ import Data.Semigroup
 -- |
 -- Amplitude level, where @0@ is silent and @1@ is peak.
 newtype Amplitude = Amplitude {getAmplitude :: Double}
-  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
 -- A logarithmic representation of amplitude such that
@@ -51,7 +51,7 @@ newtype Amplitude = Amplitude {getAmplitude :: Double}
 -- >
 -- > x * 10 = amplitude (bel x + 1)
 newtype Bel = Bel {getBel :: Amplitude}
-  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
 -- A logarithmic representation of amplitude such that
@@ -59,7 +59,7 @@ newtype Bel = Bel {getBel :: Amplitude}
 -- >
 -- > x * 10 = amplitude (decibel x + 10)
 newtype Decibel = Decibel {getDecibel :: Amplitude}
-  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 instance Semigroup Amplitude where (<>) = (*)
 

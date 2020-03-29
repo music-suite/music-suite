@@ -38,7 +38,7 @@ import Music.Time.Transform (Transformable (..))
 -- |
 -- Absolute frequency in Hertz.
 newtype Hertz = Hertz {getHertz :: Double}
-  deriving (Read, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
 -- Number of pure octaves.
@@ -47,7 +47,7 @@ newtype Hertz = Hertz {getHertz :: Double}
 --
 -- > f * (2/1) = frequency (octaves f + 1)
 newtype Octaves = Octaves {getOctaves :: Hertz}
-  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
 -- Number of pure fifths.
@@ -56,7 +56,7 @@ newtype Octaves = Octaves {getOctaves :: Hertz}
 --
 -- > f * (3/2) = frequency (fifths f + 1)
 newtype Fifths = Fifths {getFifths :: Hertz}
-  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
 -- Number of cents.
@@ -65,7 +65,7 @@ newtype Fifths = Fifths {getFifths :: Hertz}
 --
 -- > f * (2/1) = frequency (cents f + 1200)
 newtype Cents = Cents {getCents :: Hertz}
-  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 instance Show Hertz where show h = (show (getHertz h)) ++ " Hz"
 
