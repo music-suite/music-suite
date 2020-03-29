@@ -395,21 +395,8 @@ There is of course also a shorthand for sharps and flats:
 
 > Note: Music Suite uses C major by default, so all altered pitches are rendered as accidentals. See [key signatures](TODO link) for how to change this.
 
-### Pitch equalituy and ordering
 
-TODO
-
-### Spelling
-
-As we have already seen, Music Suite does not enforce enharmonic equivalence, so e.g. Db and C# are considered distinct (see [enharmonics](TODO) for how to treat them as equivalent).
-
-We can *respell* enharmonically equivalent pitches by using a *speller*.
-
-TODO spell, usingSharps, usingFlats, simplifyPitches
-
-
-
-### Pitch overloading
+## Pitch overloading
 
 To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*.
 
@@ -452,20 +439,7 @@ let
 in pseq $ fmap (`up` c) intervals
 ```
 
-### Converting between intervals and pitches
 
-TODO AffineSpace
-
-We can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
-operators, think of pitches and points `.` and intervals as vectors `^`.
-
-
-
-### Interval overloading
-
-Interval names are overloaded in a manner similar to pitches, and are consequently referred to as *interval literals*. The corresponding class is called @[IsInterval].
-
-> Hint: Use [`-XTypeApplications`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-TypeApplications) to restrict the type of an interval. For example: `id @Interval m3`
 
 
 ### Simple and compound intervals
@@ -491,16 +465,57 @@ TODO intervals seen as:
 @[name]
 @[accidental]
 
-### Enharmonics
+## Interval overloading
+
+Interval names are overloaded in a manner similar to pitches, and are consequently referred to as *interval literals*. The corresponding class is called @[IsInterval].
+
+> Hint: Use [`-XTypeApplications`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-TypeApplications) to restrict the type of an interval. For example: `id @Interval m3`
+
+
+
+## Enharmonics
 
 TODO @[HasSemitones]
 
+### Pitch equality and ordering
 
-### Listing and traversing pithes
+The `Pitch` type has instances for the `Eq` and `Ord` type classes, representing equality and ordering respectively.
 
-TODO forward reference to traversals chapter, @[HasPitch]
+Equality of pitches takes spelling into account, so e.g. `cs /= db` holds. There are many ways of defining orderings on pitches: the default ordering compares diatonic steps first, alteration second.
+
+```haskell
+>>> sort [(cs :: Pitch), db, dbb]
+[cs, dbb, db]
+```
+
+To get compare or sort pitches enharmonically you can use `sortOn`:
+
+```haskell
+>>> sortOn (semitones . (.-. c)) [(cs :: Pitch), db, flatten db]
+[dbb, cs, db]
+```
+
+### Spelling
+
+We can *respell* enharmonically equivalent pitches by using a *speller*.
+
+TODO spell, usingSharps, usingFlats, simplifyPitches
 
 
+
+## Converting between intervals and pitches
+
+TODO AffineSpace
+
+We can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
+operators, think of pitches and points `.` and intervals as vectors `^`.
+
+
+TODO AdditiveGroup, VectorSpace, AffineSpace for pitch/interval.
+
+Show how this the first example of an affine space (more to come!)
+
+TODO affine space, relative, vector-space-points
 
 ## Transposing and inverting music
 
@@ -548,6 +563,9 @@ above m3 tune |> below m3 tune
 
 ### Diatonic transposition
 
+The @[up] and @[down] functions perform what is known as *chromatic transposition*, meaning they add *both* the diatonic and the alteration component of the given interval to all pitches in the given score.
+
+We can also perform *diatonic transposition*, which adds only the diatonic component. Diatonic transpotion only makes sense relative a given tonic, so we provide one:
 
 ```music+haskell
 let
@@ -555,15 +573,37 @@ let
 in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 ```
 
+Here is same example, using a different tonic (`fs` instead of `c`):
+
 ```music+haskell
 let
   ch x = ppar [x, upDiatonic fs 2 x, upDiatonic fs 5 x]
 in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 ```
 
+### Scaling pitch
+
+TODO
+
+TODO intervals are vectors and can be scaled. However pithes live in an affine space without a specific origin, so we have to pick one:
+
+```music+haskell
+m
+    </>
+(scale 2 c m)
+    </>
+(scale 2 e m)
+  where
+    scale n p = pitches %~ relative p (n *^)
+    m = pseq (fmap fromPitch [c..g]) |*(2/5)
+```
+
+Note how the origin stays the same under scaling.
+
 ### Inverting pitch
 
 @[invertPitches]
+
 ```music+haskell
 m
     </>
@@ -576,8 +616,7 @@ m
     m = pseq (fmap fromPitch [c..g]) |*(2/5)
 ```
 
-@[invertDiatonic]
-
+As with transposition we can define a *diatonic* form of inversion. The function is @[invertDiatonic].
 
 ```music+haskell
 m
@@ -591,26 +630,18 @@ m
     m = pseq (fmap fromPitch [c..g]) |*(2/5)
 ```
 
+In this case, the origin is also used as the tonic of the implied diatonic scale.
 
+## Listing and traversing pithes
 
+TODO forward reference to traversals chapter, @[HasPitch]
 
-## Adding pitches and intervals
-
-
-TODO AdditiveGroup, VectorSpace, AffineSpace for pitch/interval.
-
-Show how this the first example of an affine space (more to come!)
-
-
-
-
-The standard pitch representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling.
 
 
 
 # Harmony
 
-While the `Pitch` and `Interval` types allow us to represent pitch (at least in the Western/classical framework), they do not tell us much about *harmony*. We need types to represent *collections* and *relationships* between pitches, including modes, chords and scales.
+While the `Pitch` and `Interval` types allow us to represent any pitch (the Western/classical framework), they do not tell us much about *harmony*. We need types to represent *collections* and *relationships* between pitches, including modes, chords and scales.
 
 The simplest (and most general) way of doing this is to work with *generic* container types provided by Haskell: these include sets, lists, maps and so on. However music theory defines some very specific structures that are not always captured by generic containers. In this chapter we will look at some structures that make particular sense from a musical point of view.
 
@@ -618,7 +649,11 @@ TODO data/codata
 
 ## Ambitus and range
 
-TODO
+The `Ambitus` type represents a *range* of pitches.
+
+TODO define/show/use
+
+> Note: The mathematical term for is a *interval*, which we avoid for obvious reasons.
 
 ## Scales and chords
 
@@ -780,9 +815,11 @@ TODO set operations on chords/scales (e.g. union/difference/intersection/isSubse
 
 ### Scales versus Chords
 
-TODO there is little difference
+TODO there is little difference: convert back/forth
 
-Whole tone is a superset of augmented, octatonic a superset of dimimished and so on
+TODO examples: Whole tone is a superset of augmented, octatonic a superset of dimimished and so on
+
+TODO example: generate a "scale" by the union of two "chords"
 
 Consider "scale-chord texture"
 
@@ -864,7 +901,12 @@ Calculate dissonance of a chord (classical/"objective", by higest common fundame
 
 
 
-# Advanced Harmony
+# Absolute pitch
+
+TODO in previous chapters we worked exclusivey with Pitch/Interval. These restrict
+us to the Western/classical set of pitches and are relative (assuming, but not implying any particular tuning system). In this chapter we we will let go of these restrictions and look into working with both absolute pitch (arbitrary frequencies) and *alternative* pitch systems.
+
+We will also see how *tuning systems* relate structured pitch representations (such as `Pitch`) to unstructured ones (such as `Hertz`).
 
 ## Alternative pitch representations
 
@@ -1139,20 +1181,23 @@ Setting just the subpart:
 (parts' . subpart) .~ 2 $ (parts' . instrument) .~ trumpet $ ppar [c,d,fs]
 ```
 
-## More about subparts
-
-### TODO further subdivision
+## Subdivision
 
 TODO subparts allow arbitrarily deep nestings "Violin I.1.II" etc.
 
+TODO Understand "overlapping" semantics, e.g. if notes overlap in "I" and "I.2" we have "overlapping events" (not OK in monophonic instruments, but see solo/altri below)
+
 ## Multi-staff parts
 
-TODO multi-staff part support (see TODO.md)
+TODO proper multi-staff part support (see TODO.md).
 
+The current state will gracefully handle overlapping notes in a single part, drawing them on separate staves, however it may not distribute things ideally across the staves. The final state should do better by default *and* allow customization.
+
+It isn't (and should never be) *necessary* to select staves manually.
 
 ## Partwise composition
 
-TODO rcat, then replacing instrument
+TODO understand how `</>` and rcat works
 
 ## Updating several parts at once
 
@@ -1202,7 +1247,7 @@ extractPart violas fullScore
           stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 ```
 
-### Transposing instruments
+## Transposing instruments
 
 TODO we treat transposing instruments as different values. When one form of an instrument is more common this one is used as the "default", e.g. `trumpets` refers to trumpets in Bb. TODO add D trumpet etc.
 
@@ -1228,21 +1273,25 @@ TODO currently there is no way of preventing the a playing technique being used 
 
 ### Tremolo, trills and rolls
 
-TODO measured vs unmeasured
+A regular (measured) tremolo can be notated using the @[tremolo] function. Regular tremolo is is a shorthand for rapid iteration of a single note.
 
-@[tremolo]
+TODO `tremolo` should take a duration, not an integer!
 
 ```TODOmusic+haskell
 tremolo 2 $ times 2 $ (c |> d)|/2
 ```
 
-@[fastTremolo]
+An unmeasured tremolo is notated using @[fastTremolo]. Unmeasured tremolo means "play individually, as fast as possible" and is a coloristic effet rather than a rhythmical shorthand.
+
+Note that in keeping with traditional notation, we notate unmeasured tremolo using three beans. TODO allow use of Z-beam or other custoization.
 
 ```TODOmusic+haskell
 fastTremolo $ times 2 $ (c |> d)|/2
 ```
 
-TODO repeat trem vs. alternation trem. The former is rare but happen e.g. when double-stopped strings play bow tremolo (without bariolage). The more common one is a rapid alteration among a set of notes. Logically we should treat both as an optional the property of a single chord. Alas in StandardNotation the latter is commonly written as two chords with half the duration (OR as a trill).
+## Repeating vs. alternating tremolo
+
+The former is rare but happen e.g. when double-stopped strings play bow tremolo (without bariolage). The more common one is a rapid alteration among a set of notes. Logically we should treat both as an optional the property of a single chord. Alas in StandardNotation the latter is commonly written as two chords with half the duration (OR as a trill).
 
 TODO realising tremolo/trills
 
