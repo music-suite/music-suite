@@ -253,11 +253,6 @@ Or, equivalently:
 ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
 ```
 
-TODO how part separation works w.r.t. division etc
-
-@[simultaneous]
-
-
 Similarly, there is no need to handle rests explicitly.
 
 TODO show with examples how rests are added from delay/transform etc.
@@ -277,7 +272,6 @@ TODO explain how this works.
 ```music+haskell
 mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
-
 
 There is no need to explicitly enter tuplets or ties, these are added automatically as needed.
 
@@ -499,13 +493,13 @@ inspectableToMusic @[Interval] $
 ```
 
 
-### Number, quality, alteration, diatonic/chromatic
+### Number, quality, alteration
 
-TODO intervals seen as:
+Intervals be understood as:
 
-- Pair of diatonic and (total) chromatic steps
-- Pair of diatonic steps and alteration
-- Pair of number and quality
+- A pair of diatonic and (total) chromatic steps, *or*
+- A pair of diatonic steps and alteration, *or*
+- A pair of number and quality
 
 Not all combinations of number and quality makes sense.
 
@@ -543,6 +537,18 @@ Interval names are overloaded in a manner similar to pitches, and are consequent
 
 > Hint: Use [`-XTypeApplications`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-TypeApplications) to restrict the type of an interval. For example: `id @Interval m3`
 
+
+## Converting between intervals and pitches
+
+We can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
+operators, think of pitches and points `.` and intervals as vectors `^`.
+
+> Note: Pitches form an @[AffineSpace], which interval as the underlying @[VectorSpace]. Later on we will see that many types in Music Suite conform to this pattern.
+
+
+TODO AdditiveGroup, VectorSpace, AffineSpace operations for pitch/interval.
+
+TODO affine space, relative, vector-space-points, using over/relative:
 
 
 ## Enharmonics
@@ -588,7 +594,6 @@ We can *respell* enharmonically equivalent pitches by using a @[Spelling].
 _A4
 ```
 
-TODO using over/relative:
 
 ```music+haskell
 pseq $ fmap (\x -> over pitches' (relative c $ spell x)  $ ppar [as,cs,ds,fs])
@@ -607,27 +612,14 @@ x </> over pitches' (relative c $ spell modally) x
 ```
 
 
-## Converting between intervals and pitches
-
-TODO AffineSpace
-
-We can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
-operators, think of pitches and points `.` and intervals as vectors `^`.
-
-
-TODO AdditiveGroup, VectorSpace, AffineSpace for pitch/interval.
-
-Show how this the first example of an affine space (more to come!)
-
-TODO affine space, relative, vector-space-points
-
 ## Transposing and inverting music
 
 TODO basic "geometry" (affine transformations) of pitch: scaling and translating
 
 @[Transposable]
 
-> Note: Transposable is a synonym for the type expression `(HasPitches' a, AffinePair (Interval a) (Pitch a), PitchPair (Interval a) (Pitch a))`. We will explain what this means later.
+> Note: Transposable is a synonym for the type expression `(HasPitches' a, AffinePair (Interval a) (Pitch a), PitchPair (Interval a) (Pitch a))`.
+
 
 ### Basic transposition
 
@@ -2623,6 +2615,7 @@ TODO wind slurs vs string legato
 
 -->
 
+<!--
 # Randomness
 
 TODO Reader monad of seed/Random generator state
@@ -2631,7 +2624,7 @@ TODO Reader monad of seed/Random generator state
 # Space
 
 TODO very simple space representation (e.g. Angle), minimal example using Ambisonics?
-
+-->
 
 
 
@@ -2676,15 +2669,6 @@ The MusicXML backend is suitable if you want to use Music Suite for generating
 parts of a score, but perform manual editing on the output result.
 
 
-
-
-### ABC Notation
-
-TODO
-
-## Sibelius
-
-TODO
 
 
 # Tips and tricks
