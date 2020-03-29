@@ -280,7 +280,7 @@ compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
 
 
 
-## Working with Time and Duration
+## Time and Duration
 
 TODO AffineSpace
 
@@ -551,11 +551,10 @@ Show how this the first example of an affine space (more to come!)
 
 
 
-## Alternative pitch representations
 
 THe standard pitch representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling.
 
-### Absolute pitch
+## Absolute pitch
 
 @[Hertz]
 
@@ -564,15 +563,17 @@ Logarithmic scales:
 @[Fifths]
 @[Cents]
 
+## Tuning
+
+## Alternative pitch representations
+
 ### Equal tempered scales
 
 TODO equal tempered scales of any size
 
+## Basic harmony
 
-### Consonance and dissonance
-
-See the [Harmony][x] chapter.
-
+TODO consonance/dissonance
 
 
 
