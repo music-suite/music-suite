@@ -94,6 +94,9 @@ instance InspectableNote a => Inspectable [Aligned (Voice a)] where
 instance InspectableNote a => Inspectable (Note a) where
   inspectableToMusic x = inspectableToMusic $ [x] ^. voice
 
+instance InspectableNote a => Inspectable (Event a) where
+  inspectableToMusic x = inspectableToMusic $ [x] ^. score
+
 -- instance Inspectable (Voice ()) where
 -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
 instance Inspectable (Ambitus Interval Pitch) where
@@ -173,3 +176,4 @@ instance Inspectable [Voice Pitch] where
 
 instance Inspectable [Note Pitch] where
   inspectableToMusic = inspectableToMusic . fmap ((^. voice) . pure)
+

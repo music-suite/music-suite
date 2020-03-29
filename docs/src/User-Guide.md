@@ -1974,6 +1974,7 @@ Annotations are *invisible by default*. To show annotations in the generated out
 showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 ```
 
+<!--
 ## Custom meta-information
 
 TODO works for any `Typeable` `Monoid`.
@@ -1986,7 +1987,7 @@ TODO Use more specicif wrappers to preserve `Transformable`, `Reversible` etc.
 @[setMetaAttr]
 
 @[setMetaTAttr]
-
+-->
 
 
 
@@ -2080,7 +2081,7 @@ We will see much more of this distinction later on.
 
 The Note and Event types are similar to Duration, Time and Span respectively, except they also contain a *payload* of an arbitrary type. This is expressed as a type parameter (often written using a lowercase letter, as in `Note a`).  In practice the payload will usually contain (possibly overloaded) *aspects* such as part, pitch, dynamics and so on.
 
-A @[Note] represents a single value tagged with a duration.
+A @[Note] represents a single value tagged with a *duration*:
 
 ```music+haskell
 inspectableToMusic @(Note Pitch) $
@@ -2088,8 +2089,14 @@ inspectableToMusic @(Note Pitch) $
   c
 ```
 
+An @[Event] represents a single value tagged with a *time span*:
 
-@[Event]
+```music+haskell
+inspectableToMusic @(Event Pitch) $
+
+  c
+```
+
 
 ## Voices
 
@@ -2410,7 +2417,7 @@ TODO Behavior and Reactive, Sampling
 
 # Traversals
 
-In previous chapters have focused on *building* music by composing musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions.
+In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions.
 
 TODO explain how this works within pure FP: no change, just creating new structures
 
@@ -2632,11 +2639,9 @@ TODO very simple space representation (e.g. Angle), minimal example using Ambiso
 
 # Import and Export
 
-TODO basic structure/aproach to import and export
-
 ## Prelude/Inspectable
 
-The @[Inspectable] class represents types that can be converted into a standard musical representation and exported via an output backend. The top-level music expression in a file needs to be an instance of `Inspectable`.
+The @[Inspectable] class represents types that can be converted into a standard musical representation and exported via an *output backend*. The top-level music expression in a file needs to be an instance of `Inspectable`.
 
 TODO point here is to fix a "default" type for rendering/export purposes. This is used to monomorphize expressions written in the polymorphic combinators of the library. The default type is knonw as `Music`.
 
@@ -2645,7 +2650,7 @@ Inspectable renders a type by converting it into an exportable type. See TODO.md
 TODO how to export/pick format
 
 
-## Overview of formats
+## Overview of backends
 
 ### MIDI
 
