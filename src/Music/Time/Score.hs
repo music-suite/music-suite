@@ -241,6 +241,10 @@ instance Num a => Num (Score a) where
 instance HasMeta (Score a) where
   meta = iso getScore Score . _1
 
+-- | This instance exists only for the @enumFrom...@ methods.
+instance Enum a => Enum (Score a) where
+  toEnum = return . toEnum
+  fromEnum = list 0 (fromEnum . head) . Foldable.toList
 
 
 
