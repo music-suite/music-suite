@@ -6,7 +6,6 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
-  -fno-warn-redundant-constraints
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
 {-# OPTIONS_HADDOCK hide #-}
@@ -19,7 +18,6 @@ module Music.Score.Internal.Util
     divideList,
     retainUpdates,
     retainUpdates2,
-    retainUpdates3,
     swap,
     inspecting,
     single,
@@ -289,11 +287,16 @@ retainUpdates = snd . Data.List.mapAccumL g Nothing
     g Nothing x = (Just x, Just x)
     g (Just p) x = (Just x, if p == x then Nothing else Just x)
 
-retainUpdates2 :: Eq a => [(a, b)] -> [(Maybe a, Maybe b)]
-retainUpdates2 = undefined
+retainUpdates2 :: (Eq a, Eq b) => [(a, b)] -> [(Maybe a, Maybe b)]
+retainUpdates2 = snd . Data.List.mapAccumL g Nothing
+  where
+    g Nothing      (x,y) = (Just (x,y), (Just x, Just y))
+    g (Just (p,q)) (x,y) = (Just (x,y),
+        ( if p == x then Nothing else Just x
+        , if q == y then Nothing else Just y
+        )
+      )
 
-retainUpdates3 :: Eq a => [(a, b, c)] -> [(Maybe a, Maybe b, Maybe c)]
-retainUpdates3 = undefined
 -- hretainUpdates :: Eq a => [HList Identity xs] -> [HList Maybe xs]
 -- hretainUpdates = undefined
 
