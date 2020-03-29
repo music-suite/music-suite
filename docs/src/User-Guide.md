@@ -91,17 +91,24 @@ Most standard musical aspects are vector spaces:
 Music Suite takes inspiration from diagrams in *separating points and vectors*. XXX just briefly hint why this is important.
 -->
 
-## Entering notes
 
-A single note can be entered by its name: `c`, `d`, `e`, `f`, `g`, or `b`.
 
-The expression `c` enters a middle C (or C4) with a duration of a a whole note. Durations are measured in rational numbers: a duration of `1` is a whole note (or semibreve), a duration of `1/2` is a half note (or minim), and so on.
+##  Our first score
 
-> Note: In Haskell, numbers are *overloaded*. The syntax do not convey any type information: `0.25` and `1/4` are equivalent. In Music Suite, all time values are implemented using arbitrary-precision rational numbers.
+TODO this will be simple:
 
 ```music+haskell
 c
 ```
+
+TODO notice defaults: octave, accidental (none), duration, part and dynamics
+
+The default octave is the octave containing "middle C", or *C4* in [scientific pitch notation](https://en.wikipedia.org/wiki/Scientific_pitch_notation).
+
+THe default duration is a whole note. Durations are measured in rational numbers: a duration of `1` is a whole note (or semibreve), a duration of `1/2` is a half note (or minim), and so on.
+
+> Note: In Haskell, numbers are *overloaded*. The syntax do not convey any type information: `0.25` and `1/4` are equivalent. In Music Suite, all time values are implemented using arbitrary-precision integers and rational numbers, so you do not have to worry about rounding errors.
+
 
 
 ## Duration and onset
@@ -273,7 +280,9 @@ compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
 
 ## Working with Time and Duration
 
-TODO brief intro to adding time and duration? Introduce Time/Duration/Span/HasPosition properly later on?
+TODO AffineSpace
+
+Maybe forward reference to Span/HasPosition?
 
 ## Summary
 
@@ -285,19 +294,10 @@ We have now seen how to write basic pieces, using melody, harmony and voices. In
 
 # Pitch
 
-## Pitches and intervals
+## The Pitch  type
 
-## Pitch names
+TODO the pitch type represents common/Western classical pitch. As we shall see later this is not the only way of representing pitch in Music Suite, but it is common enough to be the default.
 
-To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*.
-
-To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type @[IsPitch] `a => a`.
-
-For Western-style pitch types, the standard pitch names can be used:
-
-```music+haskell
-pseq [c, d, e, f, g, a, b]
-```
 
 <!--
 Pitch names in other languages work as well, for example `ut, do, re, mi, fa, so, la, ti, si`.
@@ -358,6 +358,18 @@ flatten d             = db
 Note that `cs == db` may or may not hold depending on the pitch representation to understand this, read about *overloading* in the next section.
 
 
+### Pitch overloading
+
+To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*.
+
+To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type @[IsPitch] `a => a`.
+
+For Western-style pitch types, the standard pitch names can be used:
+
+```music+haskell
+pseq [c, d, e, f, g, a, b]
+```
+
 TODO explain overloading is not limited to pitch types but also to containers types (by lifting), so the following works:
 
 
@@ -365,13 +377,14 @@ TODO explain overloading is not limited to pitch types but also to containers ty
 return (c::Note) == (c::Score Note)
 ```
 
+> Hint: Use [`-XTypeApplications`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-TypeApplications) to restrict the type of an pitch. For example: `id @Pitch c`
 
-### Interval names
 
-Interval names are overloaded in a manner similar to pitches, and are consequently referred to as *interval literals*. The corresponding class is called @[IsInterval].
+## Intervals
 
-Here and elsewhere in Music Suite, the convention is to follow standard theoretical
-notation, so *minor* and *diminished* intervals are written in lower-case, while *major*
+TODO the interval type represents common/Western classical *intervals*.
+
+As is common in music theory notation, *minor* and *diminished* intervals are written in lower-case, while *major*
 and *perfect* intervals are written in upper-case. Unfortunately, Haskell does not support
 overloaded upper-case values, so we have to adopt an underscore prefix:
 
@@ -393,8 +406,44 @@ let
 in pseq $ fmap (`up` c) intervals
 ```
 
+## Converting between intervals and pitches
+
+TODO AffineSpace
+
 You can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
 operators, think of pitches and points `.` and intervals as vectors `^`.
+
+
+
+### Interval overloading
+
+Interval names are overloaded in a manner similar to pitches, and are consequently referred to as *interval literals*. The corresponding class is called @[IsInterval].
+
+> Hint: Use [`-XTypeApplications`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-TypeApplications) to restrict the type of an interval. For example: `id @Interval m3`
+
+
+### Simple and compound intervals
+
+@[invert]
+@[simple]
+@[octaves]
+
+TODO simple vs compound
+
+TODO positive vs negative: a negative interval is a compound interval with a negative octave number
+
+
+## Number, quality, alteration, diatonic/chromatic
+
+TODO intervals seen as:
+- Pair of diatonic/chromatic steps (vector)
+- Pair of diatonic steps + alteration
+- Pair of number and quality ("major" and "third") - this is partial
+
+@[number]
+@[quality]
+@[name]
+@[accidental]
 
 ### Enharmonics
 
@@ -411,7 +460,7 @@ TODO forward reference to traversals chapter, @[HasPitch]
 
 @[Transposable]
 
-Note: Transposable is a synonym for the type expression `(HasPitches' a, AffinePair (Interval a) (Pitch a), PitchPair (Interval a) (Pitch a))`. We will explain what this means later.
+> Note: Transposable is a synonym for the type expression `(HasPitches' a, AffinePair (Interval a) (Pitch a), PitchPair (Interval a) (Pitch a))`. We will explain what this means later.
 
 ### Basic transposition
 
@@ -437,7 +486,7 @@ up (-m3) tune
     tune = pseq [c,c,g,g,a,a,g|*2] |/8
 ```
 
-Note: transposing does *not* automatically change the key signature. See [key signatures](#key-signatures) for how to do this explicitly.
+> Note: transposing does *not* automatically change the key signature. See [key signatures](#key-signatures) for how to do this explicitly.
 
 ### Parallel motion
 
@@ -476,22 +525,7 @@ in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 (invertPitches e $ pseq [c..g]|*(2/5))
 ```
 
-### Qualities, numbers, names, accidentals
-
-
-
-@[number]
-@[quality]
-@[name]
-@[accidental]
-@[number]
-@[invert]
-@[simple]
-@[octaves]
-@[asPitch]
-@[asAccidental]
-
-TODO Ambitus, Chord and Scale
+## TODO Ambitus, Chord and Scale
 
 Double sharps/flats are supported:
 
@@ -924,7 +958,9 @@ TODO mutes
 
 TODO working with instruments for percussion (much like normal instruments, though pitch may be ignored)
 
-Note: for percussion we break the singular/plural naming convention and export a `Part` in the singular form. Note that the solo/tutti component is set to `Tutti` by default even though there might only be one performer in the group (the distinction would still make sense e.g. in a percussion concerto).
+Note: for percussion we break the singular/plural naming convention and export a `Part` in the singular form.
+
+The solo/tutti component is set to `Tutti` by default even though there might only be one performer in the group (the distinction would still make sense e.g. in a percussion concerto).
 
 ```music+haskell
 parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
@@ -2113,6 +2149,8 @@ TODO point here is to fix a "default" type for rendering/export purposes. This i
 
 Inspectable renders a type by converting it into an exportable type. See TODO.md re: defaulting.
 
+TODO how to export/pick format
+
 
 ## Overview of formats
 
@@ -2124,109 +2162,27 @@ Beware that MIDI input may contain time and pitch values that yield a non-readab
 
 ### Lilypond
 
-TODO how to export
+The Lilypond output backend generates Lilypond markup code compatible with Lilypond 2.18.2 or later.
 
-TODO re-add toLilypondString?
-
-```haskell
-toLilypondString $ asScore $ pseq [c,d,e]
-```
-
-    <<
-        \new Staff { <c'>1 <d'>1 <e'>1 }
-    >>
+Lilypond is a text-only music type setting program and produces very high-quality scores. The Lilypond backend is suitable if you want to generate an entire score using Music Suite. It is also suitable for small examples and is the backend used for all examples in the Music Suite documentation.
 
 
 ### MusicXML
 
-TODO export MusicXML 3.0
+The MusicXML output backend generates XML compatible with the MusicXML 3.0.
 
-There are no plans to support input at the moment.
+MusicXML files can be imported by most music typesetting programs, including
+Sibelius, Finale and MuseScore.
 
-TODO re-add toMusicXmlString?
+The MusicXML backend is suitable if you want to use Music Suite for generating
+parts of a score, but perform manual editing on the output result.
 
-```haskell
-toMusicXmlString $ asScore $ pseq [c,d,e]
-```
 
-    <?xml version='1.0' ?>
-    <score-partwise>
-      <movement-title>Title</movement-title>
-      <identification>
-        <creator type="composer">Composer</creator>
-      </identification>
-      <part-list>
-        <score-part id="P1">
-          <part-name></part-name>
-        </score-part>
-      </part-list>
-      <part id="P1">
-        <measure number="1">
-          <attributes>
-            <key>
-              <fifths>0</fifths>
-              <mode>major</mode>
-            </key>
-          </attributes>
-          <attributes>
-            <divisions>768</divisions>
-          </attributes>
-          <direction>
-            <direction-type>
-              <metronome>
-                <beat-unit>quarter</beat-unit>
-                <per-minute>60</per-minute>
-              </metronome>
-            </direction-type>
-          </direction>
-          <attributes>
-            <time symbol="common">
-              <beats>4</beats>
-              <beat-type>4</beat-type>
-            </time>
-          </attributes>
-          <note>
-            <pitch>
-              <step>C</step>
-              <alter>0.0</alter>
-              <octave>4</octave>
-            </pitch>
-            <duration>3072</duration>
-            <voice>1</voice>
-            <type>whole</type>
-          </note>
-        </measure>
-        <measure number="2">
-          <note>
-            <pitch>
-              <step>D</step>
-              <alter>0.0</alter>
-              <octave>4</octave>
-            </pitch>
-            <duration>3072</duration>
-            <voice>1</voice>
-            <type>whole</type>
-          </note>
-        </measure>
-        <measure number="3">
-          <note>
-            <pitch>
-              <step>E</step>
-              <alter>0.0</alter>
-              <octave>4</octave>
-            </pitch>
-            <duration>3072</duration>
-            <voice>1</voice>
-            <type>whole</type>
-          </note>
-        </measure>
-      </part>
-    </score-partwise>
 
 
 ### ABC Notation
 
-TODO ABC notation (for use with [abcjs](https://github.com/paulrosen/abcjs) or similar engines) is still experimental.
+TODO
 
 ## Sibelius
 
