@@ -7,10 +7,24 @@
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
--- | Representation of musical instruments.
+-- | A musical instrument.
 --
--- The 'Instrument' type represent any instrument in the MusicXML Standard Sounds 3.0 set,
--- with some extensions. See <http://www.musicxml.com/for-developers/standard-sounds>.
+-- You can think of this as a giant sum type:
+--
+-- @
+-- data Instrument
+--  = Violin
+--  | Trumpet
+--  ...
+-- @
+--
+-- All instruments in the MusicXML 3.1 Standard Sounds set are
+-- representable. For a full list, see:
+--
+-- See <http://www.musicxml.com/for-developers/standard-sounds>.
+--
+-- Partial mappings to MIDI instruments is available, see
+-- 'fromMidiProgram' and 'toMidiProgram'.
 module Music.Parts.Instrument
   ( Instrument,
 
