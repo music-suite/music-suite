@@ -35,14 +35,13 @@ in transform $ stretch (1/8) m
 
 ### Input and output
 
-The Music Suite works well with the following input and output formats.
+The Music Suite works particularly well with the following input and output formats.
 
 * MusicXML
 * Lilypond
-* ABC notation
 * MIDI
 
-Other formats are being added in the near future, see [Import and export](#import-and-export) for a more detailed overview.
+For a full list of supported formats, see [Import and export](#import-and-export) for a more detailed overview.
 
 <!--
 ### Version numbers and stability

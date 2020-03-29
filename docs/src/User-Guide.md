@@ -18,17 +18,13 @@ Then follow the instructions in `README.md` to setup the environment and build M
 
 ## Writing music
 
-Music Suite is an [embedded language](https://en.wikipedia.org/wiki/Domain-specific_language#External_and_Embedded_Domain_Specific_Languages), based on Haskell. A piece of music is described by a *expressions*. Much as arithmetic expressions describes numbers or other mathematical objects, music expressions describe music.
+Music Suite is based on *expressions*. An expression may represent any piece of music, from a single note to a complex, multi-movement work.
 
-Here is a very simple expression:
+To use Music Suite, you will need to write and *render* expressions, which means to convert them into *audio* or *graphics* or both.  We'll now look at a couple of different ways of doing this. It's recommended to pick the one that works best for you, and follow along with the examples in this tutorial.
 
-```haskell+haskell
-c <> e <> g
-```
-
-This consist of the notes C4, E4 and G4, played simultaneously. The `<>` symbol is an operator that means "compose this music in parallel".
-
-Generally we want to convert our expressions representing music into some audio or graphics, such as standard music notation. There are a couple of ways of doing this.
+<!--
+Note: While Music Suite was written with Western classical notation in mind and it is not restricted to these formats.
+-->
 
 
 ### Using files
@@ -56,10 +52,6 @@ You can copy-paste all examples from this file into the above template. Whatever
 
 TODO shell, notebook or similar interactive backend. See TODO.md.
 
-
-# Basic concepts
-
-TODO explain link to Haskell concepts such as values, functions, type errors, lenses, etc?
 
 <!--
 
@@ -99,18 +91,22 @@ Most standard musical aspects are vector spaces:
 Music Suite takes inspiration from diagrams in *separating points and vectors*. XXX just briefly hint why this is important.
 -->
 
+## Entering notes
 
-A single note can be entered by its name, e.g. `c`, `d` and so on.
+A single note can be entered by its name: `c`, `d`, `e`, `f`, `g`, or `b`.
 
-The expression `c` enters C4 (middle C) with a duration of a a whole note. Durations are measured in rational numbers: a duration of `1` is a whole note (or semibreve), a duration of `1/2` is a half note (minim), and so on.
+The expression `c` enters a middle C (or C4) with a duration of a a whole note. Durations are measured in rational numbers: a duration of `1` is a whole note (or semibreve), a duration of `1/2` is a half note (or minim), and so on.
+
+Note: Unlike in many other languages Haskell numbers are *overloaded*. The syntax of numbers do not convey any type information, so `0.25` and `1/4` are equivalent. In Music Suite, all time values are implemented using arbitrary-precision rational numbers.
 
 ```music+haskell
 c
 ```
 
+
 ## Duration and onset
 
-All notes we enter have duration `1` by default. To change this, we use @[stretch] and @[compress]
+All notes we enter have duration `1` by default. To change this, we use @[stretch] and @[compress]:
 
 
 ```music+haskell
@@ -124,6 +120,8 @@ stretch 2 c
 ```music+haskell
 stretch (4+1/2) c
 ```
+
+Note: in Western classical theory *stretch* and *compress* are known as augmentation and diminishion, respectively.
 
 
 We count positions from the first beat in the first bar, so in 4/4 time, `0` means the first beat, `1/4` (or `0.25`) means the second beat and so on.
@@ -140,32 +138,18 @@ Negative numbers work too:
 delay (-0.25) $ delay 1 $ c
 ```
 
-<!--
-Law: stretch/compress are related as follows:
-
-```haskell
-compress x = stretch (1/x)
-```
--->
-
-
-The `|*` and `|/` operators can be used as shorthands for `delay` and `compress`.
+The `|*` and `|/` operators can be used as shorthands for `stretch` and `compress`.
 
 ```music+haskell
-(c |> d |> e |> c |> d|*2 |> d|*2)|/16
+(c |> d |> e |> c |> d|*2 |> d|*2) |/ 16
 ```
 
-## Tuplets and ties
 
-TODO these are added automatically
+## Functions, let, where and type signatures
 
-```music+haskell
-c|*(9/8) |> d|*(7/8)
-```
+TODO basic functions, let bindings first
 
-## A few examples
-
-Here is a more complex example using function composition. The dot operator `.` is used to compose the function `up _P8` (transpose the music up one octave), `compress 2` ("compress" or "diminish" the music by a factor of two) and `delay 3` (delay the music by the duration of three whole notes). The composition applies the in left to right order.
+Here is a full example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
 
 ```music+haskell
 (up _P8 . compress 2 . delay 3) c
@@ -174,9 +158,9 @@ Here is a more complex example using function composition. The dot operator `.` 
 
 ## Composition operators
 
-TODO composition operators: central.
+So far we have worked with a single note, which is not particularly interesting from a musical point of view. To combine multiple notes into a largers score we need a form of *composition*.
 
-Music expressions can be composed @[<>]:
+The basic composition operator in Music Suite is @[<>], which combines two pieces of music *simultaneously*. For example, we can combine the expressions `c`, `e` and `g`.
 
 ```music+haskell
 c <> e <> g
@@ -224,7 +208,7 @@ let
 in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2
 ```
 
-TODO understanding that `|>` and `</>` are based on `<>`.
+TODO understanding tyes, types of the above operators and that `|>` and `</>` are based on `<>`. In other words `Semigroup` is used for all composition in Music Suite.
 
 
 ## Chords
@@ -268,11 +252,35 @@ TODO explain how this works.
 mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
 
-TODO round off basic intro.
+
+There is no need to explicitly enter tuplets or ties, these are added automatically as needed.
+
+Any note that crosses a barline will be notated using ties:
+
+```music+haskell
+c |* (9/8) |> d |* (7/8)
+```
+
+See also [time signatures](#time-signatures).
+
+Similarly, durations that do not fit into standard note durations are notated using dots or tuplets:
+
+```music+haskell
+compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
+```
+
+
 
 ## Working with Time and Duration
 
 TODO brief intro to adding time and duration? Introduce Time/Duration/Span/HasPosition properly later on?
+
+## Summary
+
+We have now seen how to write basic pieces, using melody, harmony and voices. In the following chapters we will be looking at musical aspects such as pitch, dynamics and orchestration in more detail: these chapters can generally be read in any order, or simply used a reference.
+
+
+
 
 
 # Pitch
@@ -330,7 +338,7 @@ sharpen c
 (sharpen . sharpen) c
 ```
 
-As you might expect, there is also a shorthand for sharp and flat notes:
+There is also a shorthand for sharps and flats:
 
 ```music+haskell
 (cs |> ds |> es)    -- sharp
@@ -338,7 +346,7 @@ As you might expect, there is also a shorthand for sharp and flat notes:
 (cb |> db |> eb)    -- flat
 ```
 
-Here is an overview of all pitch notations:
+Double flats and sharps work too, so the following holds:
 
 ```haskell
 sharpen c             = cs
@@ -350,15 +358,13 @@ flatten d             = db
 Note that `cs == db` may or may not hold depending on the pitch representation to understand this, read about *overloading* in the next section.
 
 
-### Overloading
+TODO explain overloading is not limited to pitch types but also to containers types (by lifting), so the following works:
 
-TODO overloading, explain why the following works:
 
 ```haskell
 return (c::Note) == (c::Score Note)
 ```
 
-TODO refer back to previous table. For example `Music.Pitch.Common` distinguishes between enharmonics, while `Integer` does not.
 
 ### Interval names
 
@@ -390,41 +396,26 @@ in pseq $ fmap (`up` c) intervals
 You can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
 operators, think of pitches and points `.` and intervals as vectors `^`.
 
+### Enharmonics
 
-### Where the literals are defined
-
-There is nothing special about the pitch and interval literals, they are simply values exported by the `Music.Pitch.Literal` module. While this module is reexported by the standard music preludes, you can also import it qualified. You can use this in combination with `hiding`.
+TODO @[HasSemitones]
 
 
-```haskell
-Pitch.c |> Pitch.d .+^ Interval.m3
-```
+### Listing and traversing pithes
 
-TODO NOTE: In this chapter, do go into details about HasPitches (see Traversals), just show example uses
+TODO forward reference to traversals chapter, @[HasPitch]
 
-@[HasPitch]
-
-@[pitch]
-
-@[pitch']
-
-@[HasPitches]
-
-@[pitches]
-
-@[pitches']
 
 
 ## Transposing music
 
 @[Transposable]
 
-NOTE Transposable is a synonym for the type expression `(HasPitches' a, AffinePair (Interval a) (Pitch a), PitchPair (Interval a) (Pitch a))`. We will explain what this means later.
+Note: Transposable is a synonym for the type expression `(HasPitches' a, AffinePair (Interval a) (Pitch a), PitchPair (Interval a) (Pitch a))`. We will explain what this means later.
 
 ### Basic transposition
 
-@[up]
-@[down]
+We can transpose a music expression using the @[up] and @[down] functions.
 
 ```music+haskell
 up m3 tune
@@ -438,12 +429,19 @@ down _A4 tune
     tune = pseq [c,c,g,g,a,a,g|*2] |/8
 ```
 
-Note that transposing will not automatically change the key signature. See [key signatures](#key-signatures) for how to do this explicitly.
+As you might expect `down` is the same as `up . negate` and vice versa.
+
+```music+haskell
+up (-m3) tune
+  where
+    tune = pseq [c,c,g,g,a,a,g|*2] |/8
+```
+
+Note: transposing does *not* automatically change the key signature. See [key signatures](#key-signatures) for how to do this explicitly.
 
 ### Parallel motion
 
-@[above]
-@[below]
+The @[above] and @[below] functions are similar to @[up] and @[down], but also retain the original music.
 
 ```music+haskell
 above m3 tune |> below m3 tune
