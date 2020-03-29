@@ -2499,10 +2499,9 @@ TODO explain the type families: Pitch, SetPitch etc.
 
 ## Phrase traversals
 
-TODO explain how they work
+*Phrase traversals* visit all the *phrases* in a score one at at time. They work in two steps: first they traverse each part in the score separately, and then each *consequtive* sequence of notes inside each part. Notes separated by rests are non-consequently, in other words, phrases are separated by rests.
 
-
-Any consequtive sequence of notes will be trated as a phrase. Rests separate phrases:
+Here is a phrase traversal applied to a single-part score:
 
 ```music+haskell
 over (phrases' . Control.Lens._head) (up _P8) $ bar <> delay 1 bar <> delay 2 bar
@@ -2510,7 +2509,7 @@ over (phrases' . Control.Lens._head) (up _P8) $ bar <> delay 1 bar <> delay 2 ba
     bar = pseq [c,c,c] |/ 4
 ```
 
-In a multi-part score phrases are traversed per part, so this works:
+This multi-part score is traversed partwise:
 
 ```music+haskell
 over (phrases' . Control.Lens._head) (up _P8) $ bar </> delay (3/4) bar </> delay (5/8) bar
@@ -2518,17 +2517,18 @@ over (phrases' . Control.Lens._head) (up _P8) $ bar </> delay (3/4) bar </> dela
     bar = pseq [c,c,c] |/ 4
 ```
 
-Overlapping notes *in the same part* are ignored:
+Any overlapping notes *within a single part* are ignored by phrase traversals:
 
 ```music+haskell
-over (phrases' . Control.Lens._head) (up _P8) $ bar <> delay (1/8) bar
+over (phrases' . Control.Lens._head) (up _P8) $
+  bar <> delay (1/8) bar
   where
     bar = pseq [c,c,c] |/ 4
 ```
 
 ## Filtered traversals
 
-Filtered traversals operate on the elements selected by another traversals if they match a specific predicate. This is similar to "where" clauses in query languages such as SQL:
+Filtered traversals operate on the elements selected by another traversals if they match a specific predicate. This is similar to where clauses in SQL:
 
 This example transposes all notes with a duration less than `2`:
 
@@ -2670,7 +2670,7 @@ parts of a score, but perform manual editing on the output result.
 
 ### Lists and streams
 
-TODO
+TODO use `[]` for finite, `Stream` for infinite
 
 
 ### Complex rhythms
