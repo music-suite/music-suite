@@ -206,15 +206,11 @@ instance Transformable (Score a) where
 -- (m1, m2) = split t m
 -- (x1, x2) = split t x
 
--- TODO move these two "implementations" to Score'
 instance HasPosition (Score a) where
-  _position = _position . snd . getScore {-. normalizeScore'-}
-        -- TODO clean up in terms of AddMeta and optimize
+  _position = _position . snd . getScore
 
 instance HasDuration (Score a) where
   _duration x = (^. offset) x .-. (^. onset) x
-
--- Lifted instances
 
 instance IsString a => IsString (Score a) where
   fromString = pure . fromString
@@ -227,13 +223,6 @@ instance IsInterval a => IsInterval (Score a) where
 
 instance IsDynamics a => IsDynamics (Score a) where
   fromDynamics = pure . fromDynamics
-
--- Bogus instance, so we can use [c..g] expressions
-instance Enum a => Enum (Score a) where
-
-  toEnum = return . toEnum
-
-  fromEnum = list 0 (fromEnum . head) . Foldable.toList
 
 instance Num a => Num (Score a) where
 
@@ -248,18 +237,6 @@ instance Num a => Num (Score a) where
   (-) = liftA2 (-)
 
   (*) = liftA2 (*)
-
-{-
--- Bogus instances, so we can use c^*2 etc.
-instance AdditiveGroup (Score a) where
-  zeroV   = error "Not implemented"
-  (^+^)   = error "Not implemented"
-  negateV = error "Not implemented"
-
-instance VectorSpace (Score a) where
-  type Scalar (Score a) = Duration
-  d *^ s = d `stretch` s
--}
 
 instance HasMeta (Score a) where
   meta = iso getScore Score . _1
