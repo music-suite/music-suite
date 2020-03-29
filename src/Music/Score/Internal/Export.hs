@@ -94,8 +94,14 @@ extractBars :: (HasMeta a, HasPosition a, Transformable a) => a ->
   [(Duration, Maybe TimeSignature, Maybe Barline, Key, Maybe RehearsalMark, Maybe Tempo)]
 -}
 
-extractTimeSignatures :: (HasMeta a, HasPosition a, Transformable a) => a -> ([Maybe TimeSignature], [Duration])
-extractTimeSignatures score = (retainUpdates barTimeSignatures, barDurations)
+
+-- | Extract bar-related information from score meta-data.
+--
+-- Returns a list of bars with durations and possibly time signature, key signature
+-- etc. For no change, Nothing or mempty is returned.
+extractTimeSignatures :: (HasMeta a, HasPosition a, Transformable a) => a
+  -> [(Duration, Maybe TimeSignature)]
+extractTimeSignatures score = zip barDurations (retainUpdates barTimeSignatures)
   where
     defaultTimeSignature = time 4 4
     timeSignatures :: [(TimeSignature, Duration)]

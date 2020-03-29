@@ -2084,7 +2084,7 @@ fromAspects sc = do
     -- (all of these should force a new bar)
     systemStaff :: SystemStaff
     systemStaff = fmap (\ts -> timeSignature .~ Option (fmap First ts) $ mempty) timeSignatureMarks
-    (timeSignatureMarks, barDurations) = Music.Score.Internal.Export.extractTimeSignatures normScore
+    (barDurations, timeSignatureMarks) = unzip $ Music.Score.Internal.Export.extractTimeSignatures normScore
     -- Make this more prominent!
     -- This is being used for the actual score!
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
