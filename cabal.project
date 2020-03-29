@@ -3,7 +3,7 @@ reject-unconstrained-dependencies: all
 index-state: 2020-01-02T22:25:18Z
 
 
--- No repos listed, so hackage.haskell.org with the default -- root keys is used.
+-- No repos listed, so hackage.haskell.org with the default root keys are used.
 --
 -- See https://github.com/haskell/cabal/blob/a07ef25229217a289433087c241d89e1c08e65e0/cabal-install/Distribution/Client/Config.hs#L654
 
