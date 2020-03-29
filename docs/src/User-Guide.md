@@ -2113,30 +2113,29 @@ TODO a Pattern can be throught of as a generalization of a rhythm or beat. They 
 TODO more idiomatic ways of buildings patterns
 
 
-TODO use proper percussion here:
 
 ```music+haskell
 renderPattern (a <> b) (0 <-> 4)
   where
-    a = parts' .~ claves  $ rhythmPattern [3,3,4,2,4] |/ 8
-    b = parts' .~ maracas $ c |/ 8
+    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
+    -- TODO use claves, maracas here
 ```
 
 ```music+haskell
 renderPattern (a <> b) (0.5 <-> 1.5)
   where
-    a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
-    b = newPattern $ fmap (const $ parts' .~ flutes $ c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
 ```
 
 TODO Patterns are @[Transformable], @[Transposing], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns.
 
 ```music+haskell
-renderPattern (stretch 0.5 $ up m3 p) (0 <-> 2)
+renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
   where
-    p = a <> b
-    a = parts' .~ flutes   $ newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
-    b = parts' .~ trumpets $ newPattern $ fmap (const c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
 ```
 
 TODO renderPatternsRel
@@ -2224,7 +2223,13 @@ music |> rev music
 
 
 
-## Repetition and variation
+
+
+## Building larger musical structures
+
+TODO general intro on how to build/organize larger forms in Haskell/pure FP.
+
+### Basic repetition
 
 @[times]
 
@@ -2234,13 +2239,8 @@ let
 in times 4 $ melody
 ```
 
-## Time, change and sampling
 
-TODO Behavior and Reactive, Sampling
-
-## Building larger musical structures
-
-TODO general intro on how to build/organize larger forms in Haskell/pure FP.
+variation
 
 - Basic repeatition: @[times], @[replicate]
 
@@ -2256,6 +2256,9 @@ TODO general intro on how to build/organize larger forms in Haskell/pure FP.
 
 - Do notation, comprehensions
 
+## Time, change and sampling
+
+TODO Behavior and Reactive, Sampling
 
 
 
