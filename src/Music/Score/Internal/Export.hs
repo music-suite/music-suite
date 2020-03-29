@@ -102,6 +102,12 @@ extractBars x = zip3 ds ts ks
 getKeySignatures :: HasMeta a => a -> Reactive KeySignature
 getKeySignatures = fromMetaReactive . view meta
 
+-- TODO generalize the below. We can get a Reactive for each meta property
+-- (time sig, key sig etc).
+--
+-- Use Applicative instance to merge reactives pointwise then reactiveToVoice'
+-- for the era of the score.
+
 -- | Extract bar-related information from score meta-data.
 --
 -- Returns a list of bars with durations and possibly time signature, key signature
@@ -111,6 +117,8 @@ extractTimeSignatures :: (HasMeta a, HasPosition a, Transformable a) => a
 extractTimeSignatures score = zip barDurations (retainUpdates barTimeSignatures)
   where
     defaultTimeSignature = time 4 4
+    -- The duration of each time signature and how long it lasts
+    --
     timeSignatures :: [(TimeSignature, Duration)]
     timeSignatures =
       fmap swap

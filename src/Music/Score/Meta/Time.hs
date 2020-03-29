@@ -174,6 +174,10 @@ timeSignatureDuring s c = addMetaNote $ view event (s, optionLast c)
 
 
 -- | Time signature typically used for the given duration.
+--
+-- Fails if the denominator of the canonical form of given duration is not a power of two.
+--
+-- TODO partial
 standardTimeSignature :: Duration -> TimeSignature
 standardTimeSignature x = case unRatio (toRational x) of
   -- (1,2) -> time 1 2
@@ -198,7 +202,9 @@ standardTimeSignature x = case unRatio (toRational x) of
   -- (3,4) -> time 6 8
   (7, 8) -> time 7 8
   -- TODO check divisible by 8 etc
-  _ -> time 4 4
+  (m, n)
+    | isMultipleOfTwo n -> time m n
+    | error $ "Expected multiple of two, but got " ++ show n
 
 -- _     -> error "standardTimeSignature: Stange value"
 
