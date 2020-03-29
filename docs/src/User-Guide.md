@@ -1452,10 +1452,22 @@ TODO key sounds, percussive attacks ("pizz"), haromonics/whistle tones
 
 ### Brass techniques
 
+Mutes are indicated just like string mutes:
+
+- Con sordino: With mute
+- Senza sordino: Without mute (the default)
+
+```music+haskell
+set parts' trombones $ pseq
+  [ conSord g_
+  , senzaSord g_
+  ]
+  |* (3/2)
+```
+
+TODO alternative mutes
+
 TODO hand stopping
-
-TODO mutes
-
 
 ## Percussion
 
