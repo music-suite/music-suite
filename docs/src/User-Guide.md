@@ -52,7 +52,9 @@ You can copy-paste all examples from this file into the above template. Whatever
 
 ### Using an interactive environment
 
-TODO shell, notebook or similar interactive backend. See TODO.md.
+TODO standard notebook format support?
+
+TODO "visual interpreter" support. See TODO.md.
 
 
 <!--
@@ -2130,7 +2132,7 @@ TODO explain how they work
 Any consequtive sequence of notes will be trated as a phrase. Rests separate phrases:
 
 ```music+haskell
-over (phrases' . Control.Lens._head) (up m2) $ bar <> delay 1 bar <> delay 2 bar
+over (phrases' . Control.Lens._head) (up _P8) $ bar <> delay 1 bar <> delay 2 bar
   where
     bar = pseq [c,c,c] |/ 4
 ```
@@ -2138,27 +2140,29 @@ over (phrases' . Control.Lens._head) (up m2) $ bar <> delay 1 bar <> delay 2 bar
 In a multi-part score phrases are traversed per part, so this works:
 
 ```music+haskell
-over (phrases' . Control.Lens._head) (up m2) $ bar </> delay (3/4) bar </> delay (5/8) bar
+over (phrases' . Control.Lens._head) (up _P8) $ bar </> delay (3/4) bar </> delay (5/8) bar
   where
     bar = pseq [c,c,c] |/ 4
 ```
 
-TODO phrase traversals currently fail at runtime if there are overlapping notes in a single part.
+Overlapping notes *in the same part* are ignored:
 
-```TODOmusic+haskell
-over (phrases' . Control.Lens._head) (up m2) $ bar <> delay (1/8) bar
+```music+haskell
+over (phrases' . Control.Lens._head) (up _P8) $ bar <> delay (1/8) bar
   where
     bar = pseq [c,c,c] |/ 4
 ```
 
 ## Filtered traversals
 
-Filtered traversals operate on the elements selected by another traversals if they match a specific predicate. If you have used a query language such as SQL this should be familiar, the corresponding construct is the `WHERE` clause:
+Filtered traversals operate on the elements selected by another traversals if they match a specific predicate. This is similar to "where" clauses in query languages such as SQL:
+
+This example transposes all notes with a duration less than `2`:
 
 ```music+haskell
 inspectableToMusic @(Voice [StandardNote]) $
 
-over t (up m2) [d,d,d |* 2,d] |/ 4
+over t (up _P8) [d,d,d |* 2,d] |/ 4
   where
     t = notes . each . filtered (\x -> x^.duration < 2)
 ```
