@@ -1144,29 +1144,45 @@ TODO artificial harmonics
 
 ### String techniques
 
+We can switch between bowed versus plucked strings using @[pizz] and @[arco]. The default is /arco/ (bowed). As in standard string notation this is indicated by text at the point of change:
 
 ```music+haskell
 set parts' violins $
   pseq [arco $ staccato $ times 4 c, times 4 $ pizz g_ ] |/ 4
 ```
 
+The text "arco" is used to cancel a previous "pizz". This is also inserted automatically. In the following example the first note in the second bar is using arco by default.
+
 ```music+haskell
 set parts' violins $
   pseq [pizz $ pseq [c,c,c,c], d |* 2, pizz e |*2 ] |/ 4
 ```
 
+Bow *position* on the string is indicated in a similar fashion. We support the following positions:
 
-TODO bow position (sul tasto, sul pont, nat)
+- Sul tasto: Close to the fingerboard
+- Sul ponticello: Close to the stable
+- Naturale: Normal position (the default)
+
+As with pizz/arco, only changes are indicated:
 
 ```music+haskell
 set parts' violins $
   pseq [sulTasto $ pseq [c,c,c,c], posNat d |* 2] |/ 4
 ```
 
+As with "arco, the text "nat" is used to cancel a previous position and inserted by default.
+
 ```music+haskell
 set parts' violins $
   pseq [posNat $ pseq [c,c,c,c], sulPont d |* 2] |/ 4
 ```
+
+Bow *rotation* can be indated using one of the following:
+
+- Col legno (tratto): play with the bow rotated to use the wooden part of the bow
+- Col legno battuto: play with the wooden part of the bow only. This is normally only used for sharp attacks, hence the name.
+- Senza legno: play with the bow hair (the default)
 
 ```music+haskell
 set parts' violins $ pseq
@@ -1176,7 +1192,10 @@ set parts' violins $ pseq
   ] |* 2
 ```
 
-TODO mutes
+Finally, string mutes are indicated using:
+
+- Con sordino: With mute
+- Senza sordino: Without mute (the default)
 
 ```music+haskell
 set parts' violins $ pseq
@@ -1185,6 +1204,8 @@ set parts' violins $ pseq
   ]
   |/ 4
 ```
+
+Here is an example using a combination of the above techniques:
 
 ```music+haskell
 set parts' violins $ pseq
@@ -1210,6 +1231,7 @@ TODO key sounds, percussive attacks ("pizz"), haromonics/whistle tones
 TODO hand stopping
 
 TODO mutes
+
 
 ## Percussion
 
@@ -1396,7 +1418,7 @@ Part-specific time signatures (save for transposing instruments) are not support
 
 ### Converting from one time signature to another
 
-TODO setting the time signature does *not* imply that the music is renotated, this has to be done using a separate application of @[stretch] or @[compress]. For example, the following music is notated using a quarter note pulse.
+Setting the time signature does *not* imply that the music is renotated. To accomplish this we'll need to use @[stretch] or @[compress]. For example, the following music is notated using a quarter note pulse.
 
 ```music+haskell
 let
@@ -1406,7 +1428,7 @@ in
 timeSignature (3/4) waltz
 ```
 
-To renotate this to eight notes, we stretch the music by `1/2` and apply the new time signature:
+To *renotate* this to eight notes, we stretch the music by `1/2` and apply the new time signature:
 
 ```music+haskell
 let
@@ -1961,6 +1983,23 @@ let
 in times 4 $ melody
 ```
 
+## Building larger musical structures
+
+TODO general intro on how to build/organize larger forms in Haskell/pure FP.
+
+- Basic repeatition: @[times], @[replicate]
+
+- Lambdas anda abstracting out
+
+- Infinite streams, take, drop
+
+- "Indexed loops", zips, zipWith [0..]
+
+- "Stateful" loops, `for`, `traverse` (state monad example)
+
+- Randomness
+
+- Do notation, comprehensions
 
 
 
@@ -1971,7 +2010,13 @@ in times 4 $ melody
 
 # Traversals
 
-TODO traverals are a powerful concept
+TODO previous chapters have focused on *building* music by composing musical expressions. In this chapter we will look at various ways of *inspecting* musical expressions.
+
+TODO explain how this works within pure FP: no change, just creating new structures
+
+TODO traverals are a very powerful concept and we'll only
+
+> Note: In the functional programming commonity, traverals have a powerful generalization known as optics, which also includes concepts such as lenses, prisms, folds and isomorphisms. Music Suite defines lenses and traversals compatible with `lens` and `microlens`.
 
 Can be used to:
 
@@ -1979,7 +2024,6 @@ Can be used to:
 - Querying/folding
 - Updating aspects
 
-In the functional programming commonity, traverals have a powerful generalization known as optics, which also includes concepts such as lenses, prisms, folds and isomorphisms. Music Suite defines lenses and traversals compatible with `lens` and `microlens`.
 
 TODO monomorphic and polymorphic traversals (and switch names: `pitch'` is used much more than `pitch`!)
 
