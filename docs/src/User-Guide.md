@@ -520,7 +520,17 @@ Interval names are overloaded in a manner similar to pitches, and are consequent
 
 ## Enharmonics
 
-TODO @[HasSemitones]
+The @[HasSemitones] class provides the enharmonic equivalence relation.
+
+You can use the `=:=` operator to compare for enharmonic equivalence.
+
+```haskell
+>>> id @Interval _A2 == m3
+False
+
+>>> id @Interval _A2 =:= m3
+True
+```
 
 ### Pitch equality and ordering
 
