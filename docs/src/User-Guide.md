@@ -1303,9 +1303,13 @@ TODO color
 
 # Meta-information
 
-TODO define this. Meta-information is presentational and not attached to a specific part. Shorten this intro. All presentational/extra info is meta, all *logical/semantic/sounding* information is not. We represent meta-information dynamically (Typeable).
+TODO rename meta to "global"?. Meta-information is global, rather than attached to a specific part. It is *defined at every point in the score with explicit change points (per type)* and always has a sensible default value (e.g. one (Reactive m) per type). All meta types are monoidal. Examples: key signature, time signature.
+
+For the most part *logical/semantic/sounding* information is not meta (exceptin: tempo).
 
 
+
+<!--
 It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In Music Suite these are grouped together under the common label *meta-information*.
 
 The notion of meta-data used in Music Suite is more extensive than just static values: any @[Transformable] container can be wrapped, and the meta-data will be transformed when the annotated value is transformed. This is why meta-data is often variable values, such as @[Reactive] or @[Behavior].
@@ -1313,7 +1317,7 @@ The notion of meta-data used in Music Suite is more extensive than just static v
 All time structures in Music Suite support an arbitrary number of meta-data fields, indexed by type. All meta-information is required to satisfy the `Typeable`, so that meta-data can be packed and unpacked dynamically), and `Monoid`, so that values can be created and composed without having to worry about meta-data. The `mempty` value is implicitly chosen if no meta-information of the given type has been entered: for example the default title is empty, the default time signature is `4/4`. If two values annotated with meta-data are composed, their associated meta-data maps are composed as well, using the `<>` operator on each of the types.
 
 The distinction between ordinary musical data and meta-data is not always clear-cut. As a rule of thumb, meta-events are any kind of event that does not directly affect how the represented music sounds when performed. However they might affect the appearance of the musical notation. For example, a *clef* is meta-information, while a *slur* is not. A notable exception to this rule is meta-events affecting tempo such as metronome marks and fermatas, which usually *do* affect the performance of the music.
-
+-->
 
 
 ## Title
