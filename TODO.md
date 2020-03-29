@@ -227,6 +227,8 @@ Consider switching to a decentralized issue tracker such as:
     - [X] music-dynamics
     - [X] music-articulation
 
+- [ ] Make parts such as "Piano 0", "Piano (-1)", etc, unrepresentable
+
 - [X] Never fail export on overlapping/simultaneously events
   - [X] Basic voice sepration added
     - What is the correct behavior if a score is exported where a some part has overlapping notes?
