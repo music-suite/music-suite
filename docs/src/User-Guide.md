@@ -427,8 +427,9 @@ TODO explain overloading is not limited to pitch types but also to containers ty
 return (c::Note) == (c::Score Note)
 ```
 
-  > Hint: Use [`-XTypeApplications`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-TypeApplications) to restrict the type of an pitch. For example: `id @Pitch c`
+> Hint: Use [`-XTypeApplications`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-TypeApplications) to restrict the type of an pitch. For example: `id @Pitch c`
 
+> Hint: Use `fromPitch` to convert a concrete pitch to `IsPitch a => a`.
 
 ## Intervals
 
@@ -501,12 +502,38 @@ inspectableToMusic @[Interval] $
 ### Number, quality, alteration, diatonic/chromatic
 
 TODO intervals seen as:
-- Pair of diatonic/chromatic steps (vector)
-- Pair of diatonic steps + alteration
-- Pair of number and quality ("major" and "third") - this is partial
+
+- Pair of diatonic and (total) chromatic steps
+- Pair of diatonic steps and alteration
+- Pair of number and quality
+
+Not all combinations of number and quality makes sense.
 
 @[number]
 @[quality]
+
+For numbers, we follow traditional music theory conventions in counting from one. In other words, a second consists of one diatonic step, a third of two diatonic steps, and so on. We can convert between these using @[diatonicSteps]:
+
+```haskell
+>>> second^.diatonicSteps
+1
+
+>>> (2 :: Number)^.diatonicSteps
+1 :: DiatonicSteps
+
+>>> (3 :: DiatonicSteps)^.from diatonicSteps
+4 :: Number
+```
+
+Beware of `0 :: Number`, which is undefined:
+
+```haskell
+>>> 0^.diatonicSteps
+*** Exception: Number can not be 0
+```
+
+TODO for pitches, extract name/accidental/octave:
+
 @[name]
 @[accidental]
 
@@ -2098,7 +2125,6 @@ inspectableToMusic @(Voice [Pitch]) $
 ```
 
 
-TODO we should never see Music/StandardNote in the user guide (specific/nice-looking types instead). The only purpose of Music/StandardNote is to be defaults/final objects.
 
 ```music+haskell
 inspectableToMusic @(Voice [StandardNote]) $
