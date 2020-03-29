@@ -67,8 +67,6 @@ newtype Fifths = Fifths {getFifths :: Hertz}
 newtype Cents = Cents {getCents :: Hertz}
   deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
-instance Show Hertz where show h = (show (getHertz h)) ++ " Hz"
-
 instance Semigroup Hertz where (<>) = (*)
 
 instance Semigroup Octaves where (<>) = (+)

@@ -176,36 +176,36 @@ timeSignatureDuring s c = addMetaNote $ view event (s, optionLast c)
 
 -- | Time signature typically used for the given duration.
 --
--- Fails if the denominator of the canonical form of given duration is not a power of two.
+-- Returns Nothing if the denominator of the canonical form of given duration is not a power of two.
 --
 -- TODO partial
-standardTimeSignature :: Duration -> TimeSignature
+standardTimeSignature :: Duration -> Maybe TimeSignature
 standardTimeSignature x = case unRatio (toRational x) of
   -- (1,2) -> time 1 2
-  (2, 2) -> time 2 2
-  (3, 2) -> time 3 2
-  (2, 1) -> time 4 2
-  (5, 2) -> time 5 2
-  (3, 1) -> time 6 2
-  (7, 2) -> time 7 2
-  (1, 4) -> time 1 4
-  (1, 2) -> time 2 4
-  (3, 4) -> time 3 4
-  (1, 1) -> time 4 4
-  (5, 4) -> time 5 4
-  -- (3,2) -> time 6 4
-  (7, 4) -> time 7 4
-  (1, 8) -> time 1 8
-  -- (1,4) -> time 2 8
-  (3, 8) -> time 3 8
-  -- (1,2) -> time 4 8
-  (5, 8) -> time 5 8
-  -- (3,4) -> time 6 8
-  (7, 8) -> time 7 8
+  (2, 2) -> pure $ time 2 2
+  (3, 2) -> pure $ time 3 2
+  (2, 1) -> pure $ time 4 2
+  (5, 2) -> pure $ time 5 2
+  (3, 1) -> pure $ time 6 2
+  (7, 2) -> pure $ time 7 2
+  (1, 4) -> pure $ time 1 4
+  (1, 2) -> pure $ time 2 4
+  (3, 4) -> pure $ time 3 4
+  (1, 1) -> pure $ time 4 4
+  (5, 4) -> pure $ time 5 4
+  -- (3,2) -> pure $ time 6 4
+  (7, 4) -> pure $ time 7 4
+  (1, 8) -> pure $ time 1 8
+  -- (1,4) -> pure $ time 2 8
+  (3, 8) -> pure $ time 3 8
+  -- (1,2) -> pure $ time 4 8
+  (5, 8) -> pure $ time 5 8
+  -- (3,4) -> pure $ time 6 8
+  (7, 8) -> pure $ time 7 8
   -- TODO check divisible by 8 etc
   (m, n)
-    | isPowerOfTwo n -> time m n
-    | otherwise -> error $ "Expected power of two, but got " ++ show n
+    | isPowerOfTwo n -> pure $ time m n
+    | otherwise -> Nothing
 
 isPowerOfTwo :: Integer -> Bool
 isPowerOfTwo 0 = True

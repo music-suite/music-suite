@@ -161,7 +161,11 @@ getBarTimeSignatures1 ts d =
   let (n, r) = numWholeBars ts d
    in -- Repeat the chosen time signature as long as possible
       -- If there is a rest duration, add a bar of that duration choosing an appropriate time signature
-      replic n ts ++ if r > 0 then [standardTimeSignature r] else []
+      replic n ts ++ if r > 0 then
+        case standardTimeSignature r of
+          Just x -> [x]
+          Nothing -> [time 4 4]
+        else []
 
 -- | Return the number of whole bars needed to notate the given duration, as well as the remainder duration.
 numWholeBars :: TimeSignature -> Duration -> (Integer, Duration)
