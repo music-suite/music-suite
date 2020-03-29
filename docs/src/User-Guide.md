@@ -2092,7 +2092,7 @@ With upbeat.
 ```music+haskell
 inspectableToMusic @[Aligned (Voice Pitch)] $
 
-delay 2 -- TODO lose, see wall of shame
+delay 2 -- TODO get rid of this, see wall of shame
 
 [ av |/ 2
 , av |/ 4
@@ -2129,14 +2129,14 @@ renderPattern (a <> b) (0.5 <-> 1.5)
     b = newPattern $ fmap (const $ parts' .~ flutes $ c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
 ```
 
-TODO Patterns are Transformable, Transposing, Attenuable and so on, so many expressions that work for scores and voices also work for patterns.
+TODO Patterns are @[Transformable], @[Transposing], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns.
 
 ```music+haskell
 renderPattern (stretch 0.5 $ up m3 p) (0 <-> 2)
   where
     p = a <> b
-    a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
-    b = newPattern $ fmap (const $ parts' .~ flutes $ c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+    a = parts' .~ flutes   $ newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
+    b = parts' .~ trumpets $ newPattern $ fmap (const c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
 ```
 
 TODO renderPatternsRel
