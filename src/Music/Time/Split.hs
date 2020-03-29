@@ -47,9 +47,9 @@ import Music.Time.Position
 -- Instances should satisfy:
 --
 -- @
--- ('beginning' t x)^.'duration' + ('ending' t x)^.'duration' = x^.'duration'
--- ('beginning' t x)^.'duration' = t `min` x^.'duration'                    iff t >= 0
--- ('ending' t x)^.'duration'    = x^.'duration' - (t `min` x^.'duration')    iff t >= 0
+-- (beginning t x)^.duration + (ending t x)^.duration = x^.duration
+-- (beginning t x)^.duration = t `min` x^.duration                    iff t >= 0
+-- (ending t x)^.duration    = x^.duration - (t `min` x^.duration)    iff t >= 0
 -- @
 --
 -- (Note that any of these three laws can be derived from the other two, so it is

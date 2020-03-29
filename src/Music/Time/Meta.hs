@@ -152,7 +152,12 @@ wrapMeta a = Meta $ Map.singleton key $ wrapAttr a
 
 -- | Type class for things which have meta-data.
 --
--- Laws: 'meta'
+-- Laws: 'meta' is a lens, e.g.
+-- @
+-- view meta (set meta v s) ≡ v
+-- set meta (view meta s) s ≡ s
+-- set meta v' (set meta v s) ≡ set meta v' s
+-- @
 class HasMeta a where
   -- | Access the meta-data.
   meta :: Lens' a Meta

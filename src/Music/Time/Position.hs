@@ -76,12 +76,16 @@ import Music.Time.Internal.Util
 -- a /global/ position. While the local position goes from zero to one, the global position
 -- goes from the 'onset' to the 'offset' of the value.
 --
--- Instances should satisfy:
+-- Laws:
 --
 -- @
--- x ^. 'duration'   = x ^. 'era' . 'duration'
--- x ^. 'position' n = x ^. 'era' . 'position' n
--- ('transform' s x) ^. 'era' = 'transform' s (x ^. 'era')
+-- _era . _duration = _duration
+-- @
+--
+-- For 'Transformable' types:
+--
+-- @
+-- _era (transform s x) = transform s (_era x)
 -- @
 class HasDuration a => HasPosition a where
 
