@@ -333,12 +333,7 @@ type instance Part (Score a) = Part a
 type instance SetPart g (Score a) = Score (SetPart g a)
 
 instance (HasParts a b) => HasParts (Score a) (Score b) where
-  parts =
-    _Wrapped . _2 -- into NScore
-      . _Wrapped
-      . traverse
-      . from event -- this needed?
-      . whilstL parts
+  parts = traverse . parts
 
 type instance Part (Voice a) = Part a
 

@@ -293,12 +293,7 @@ instance HasPitches a b => HasPitches (Chord a) (Chord b) where
 -}
 
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
-  pitches =
-    _Wrapped . _2 -- into NScore
-      . _Wrapped
-      . traverse
-      . from event -- this needed?
-      . whilstL pitches
+  pitches = traverse . pitches
 
 type instance Pitch (Sum a) = Pitch a
 

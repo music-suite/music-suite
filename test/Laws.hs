@@ -388,13 +388,12 @@ main = defaultMain $ testGroup "Instances" $ [
   -- TODO remove instance I_TEST2("HasDuration [Chord Int]", _HasDuration, [Chord Int]),
 
 
-  -- I_TEST2("HasPosition Time", _HasPosition, Time),
   I_TEST2("HasPosition Span", _HasPosition, Span),
   I_TEST2("HasPosition Event Int", _HasPosition, Event Int),
   I_TEST2("HasPosition Event Double", _HasPosition, Event Double),
   -- I_TEST2("HasPosition Placed Int", _HasPosition, Placed Int),
   -- I_TEST2("HasPosition Placed Double", _HasPosition, Placed Double),
-  -- I_TEST2("HasPosition Score Int", _HasPosition, Score Int),
+  I_TEST2("HasPosition Score Int", _HasPosition, Score Int),
   I_TEST2("HasPosition Event (Event Int)", _HasPosition, Event (Event Int)),
   I_TEST2("HasPosition Event (Score Int)", _HasPosition, Event (Score Int)),
   -- I_TEST2("HasPosition Score (Placed Int)", _HasPosition, Score (Placed Int)),

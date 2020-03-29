@@ -211,12 +211,7 @@ instance HasArticulations a b => HasArticulations (Track a) (Track b) where
   articulations = traverse . articulations
 
 instance HasArticulations a b => HasArticulations (Score a) (Score b) where
-  articulations =
-    _Wrapped . _2 -- into NScore
-      . _Wrapped
-      . traverse
-      . from event -- this needed?
-      . whilstL articulations
+  articulations = traverse . articulations
 
 type instance Articulation (Couple c a) = Articulation a
 
