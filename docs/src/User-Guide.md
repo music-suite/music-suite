@@ -538,14 +538,33 @@ in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 ### Inverting pitch
 
 @[invertPitches]
+```music+haskell
+m
+    </>
+(invertPitches c m)
+    </>
+(invertPitches e m)
+    </>
+(invertPitches f m)
+  where
+    m = pseq (fmap fromPitch [c..g]) |*(2/5)
+```
+
+@[invertDiatonic]
+
 
 ```music+haskell
-(pseq [c..g]|*(2/5))
+m
     </>
-(invertPitches c $ pseq [c..g]|*(2/5))
+(invertDiatonic c m)
     </>
-(invertPitches e $ pseq [c..g]|*(2/5))
+(invertDiatonic e m)
+    </>
+(invertDiatonic f m)
+  where
+    m = pseq (fmap fromPitch [c..g]) |*(2/5)
 ```
+
 
 
 Double sharps/flats are supported:
@@ -572,17 +591,6 @@ Show how this the first example of an affine space (more to come!)
 
 
 THe standard pitch representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling.
-
-## Absolute pitch
-
-@[Hertz]
-
-Logarithmic scales:
-
-@[Fifths]
-@[Cents]
-
-## Tuning
 
 ## Alternative pitch representations
 
@@ -839,11 +847,25 @@ Calculate dissonance of a chord (classical/"objective", by higest common fundame
 
 TODO the Common.Pitch type has built-in support for chromatic/diatonic harmony. We can construct types that support other system instead.
 
+
+
 ## Tuning and intonation
 
-TODO Hertz, absolute representation
+### Absolute pitch
 
-TODO tuning systems
+@[Hertz]
+
+Logarithmic scales:
+
+@[Fifths]
+@[Cents]
+
+
+## Tuning systems
+
+## Spectral music
+
+TODO Working "backwards" from absolute to relative pitch
 
 TODO spectral dissonance using HCF
 (https://harmonicratio.blogspot.com/2018/10/pursuing-clarity-through-openness-part_80.html)
@@ -1023,39 +1045,74 @@ over (articulations' . accentuation) (+ 2) c
 
 # Instruments and Parts
 
+For working with multi-part scores, we first need to look at the distinction between parts and instruments:
 
-TODO Parts vs Instruments
+- The @[Part] type represent a *vocal or instrumental part in a composition* such as `Violin I.I`, `Trumpet II`, etc.
 
-@[Part]
-@[Instrument]
+- The @[Instrument] type represents a *class of instruments* such as `Violin`, `Guitar`, `Maracas`, etc. This includes vocals types and, electronics etc.
 
-By convention a name in singlular refers to the instrument, and plural to the part.
 
-```haskell
-flute :: Instrument
-flutes :: Part
-```
+A *part* is a record type consisting of (among other things) an *instrument* and a *subpart* such as `I.I`.
 
-TODO the default part is `Piano I`.
+
+There is no need to explicitly create staves, brackets or braces. These are created automatically based on the parts present in the score.
+
+To illustrate this, here is an example of a score with all the notes in the same part:
 
 ```music+haskell
 ppar [c,d,fs]
 ```
+Here is a score with instruments in different parts:
+
+```music+haskell
+ppar [c,parts' .~ violins $ d,fs]
+```
+
+The most common parts and instruments are predefined. By convention names in singlular refers to instruments, and names in plural to parts:
+
+```haskell
+flute  :: Instrument
+flutes :: Part
+```
+
+It is also possible to create custom instruments and parts (TODO link).
+
+## Basic use
+
+### The default part
+
+The default part is `Piano I`.
+
+There is never any need to select the default part, but it is availble as `piano` for consistency. Equivalently, you can use `mempty :: Part`.
 
 
+### Setting part and instrument
+
+To choose a *non-default* parts or instruments, we use the `set` operator, or its infix version `.~`.
+
+Setting just the part looks like this:
+
+```music+haskell
+parts' .~ trumpets $ ppar [c,d,fs]
+```
+
+Setting just the instrument:
 
 ```music+haskell
 (parts' . instrument) .~ trumpet $ ppar [c,d,fs]
 ```
 
+Setting just the subpart:
+
 ```music+haskell
 (parts' . subpart) .~ 2 $ (parts' . instrument) .~ trumpet $ ppar [c,d,fs]
 ```
 
-## Subparts
+## More about subparts
+
 ### TODO further subdivision
 
-TODO "Violin I.1", Soprano IIa etc
+TODO subparts allow arbitrarily deep nestings "Violin I.1.II" etc.
 
 ## Multi-staff parts
 
@@ -1114,7 +1171,29 @@ extractPart violas fullScore
           stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 ```
 
-## Playing techniques
+### Transposing instruments
+
+TODO we treat transposing instruments as different values. When one form of an instrument is more common this one is used as the "default", e.g. `trumpets` refers to trumpets in Bb. TODO add D trumpet etc.
+
+TODO obtain transpotion infomation
+
+TODO extract parts automatically, with transpotion? Could be a dynamic/backend option.
+
+## Range
+
+TODO obtaining range info for instruments
+
+TODO automatica range checks
+
+
+
+# Playing techniques
+
+All instruments come with a variety of playing techniques, many of which produce fundamentally different sound types. We treat playing technique as a separate aspect from part and pitch.
+
+TODO currently there is no way of preventing the a playing technique being used with the "wrong" instrument.
+
+## Non-instrument specific techniques
 
 ### Tremolo, trills and rolls
 
@@ -1164,6 +1243,7 @@ TODO artificial harmonics
 
 @[artificial]
 
+## Instrument-specific techniques
 
 ### String techniques
 
@@ -2186,7 +2266,7 @@ TODO other SQL-like constructs, e.g. LIMIT and ORDER BY.
 
 
 
-
+<!--
 # Constraints
 
 
@@ -2245,6 +2325,7 @@ TODO dovetailing (e.g. for winds), with 1 note overlap
 
 TODO wind slurs vs string legato
 
+-->
 
 # Randomness
 
