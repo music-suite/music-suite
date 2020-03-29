@@ -61,13 +61,15 @@ import Data.Traversable
 import Data.Typeable
 import Data.VectorSpace
 import Music.Dynamics.Literal
-import Music.Time.Meta (Meta, HasMeta)
+import Music.Time.Meta (Meta, HasMeta(..))
+import Music.Score.Meta (fromMetaReactive)
 import Music.Pitch.Literal
 import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Internal.Quantize
 import Music.Score.Internal.Util
 import Music.Score.Meta.Time
+import Music.Score.Meta.Key
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Ties
@@ -89,11 +91,15 @@ import Prelude hiding
   )
 
 -- TODO also extract Barline, Key, RehearsalMark, Tempo here
-{-
 extractBars :: (HasMeta a, HasPosition a, Transformable a) => a ->
-  [(Duration, Maybe TimeSignature, Maybe Barline, Key, Maybe RehearsalMark, Maybe Tempo)]
--}
+  [(Duration, Maybe TimeSignature, KeySignature {-, Maybe Barline, Key, Maybe RehearsalMark, Maybe Tempo-})]
+extractBars x = zip3 ds ts ks
+  where
+    (ds, ts) = unzip $ extractTimeSignatures x
+    ks       = cycle [mempty] -- TODO
 
+getKeySignatures :: HasMeta a => a -> Reactive KeySignature
+getKeySignatures = fromMetaReactive . view meta
 
 -- | Extract bar-related information from score meta-data.
 --

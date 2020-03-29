@@ -35,26 +35,22 @@
 -- Provides time signatures and related meta-data.
 module Music.Score.Meta.Time
   ( -- * Time signature type
-    TimeSignature,
+    TimeSignature(..),
     time,
     compoundTime,
     isSimpleTime,
     isCompoundTime,
     toSimpleTime,
-    getTimeSignature,
 
     -- * Adding time signature to scores
     timeSignature,
     timeSignatureDuring,
 
     -- * Extracting time signatures
-    withTimeSignature,
     getTimeSignatures,
-    getTimeSignatureChanges,
+    getBarTimeSignatures,
 
     -- * Utility
-    getBarDurations,
-    getBarTimeSignatures,
     standardTimeSignature,
   )
 where
@@ -93,7 +89,7 @@ import Music.Time
 -- > timeSignature (4/4)
 -- > timeSignature (6/8)
 -- > timeSignature ((3+2)/4)
-newtype TimeSignature = TimeSignature ([Integer], Integer)
+newtype TimeSignature = TimeSignature { getTimeSignature :: ([Integer], Integer) }
   deriving (Eq, Ord, Typeable)
 
 mapNums f (TimeSignature (m, n)) = TimeSignature (f m, n)
@@ -169,14 +165,6 @@ isCompoundTime = not . isSimpleTime
 toSimpleTime :: TimeSignature -> TimeSignature
 toSimpleTime = fromRational . toRational
 
--- | Extract the components of a time signature. Semantic function.
---
--- Typically used with the @ViewPatterns@ extension, as in
---
--- > foo (getTimeSignature -> (beats, noteValue)) = ...
-getTimeSignature :: TimeSignature -> ([Integer], Integer)
-getTimeSignature (TimeSignature x) = x
-
 -- | Set the time signature of the given score.
 timeSignature :: (HasMeta a, HasPosition a, Transformable a) => TimeSignature -> a -> a
 timeSignature c x = timeSignatureDuring (0 <-> x ^. offset) c x
@@ -191,17 +179,6 @@ timeSignatureDuring s c = addMetaNote $ view event (s, optionLast c)
 getTimeSignatures :: HasMeta a => TimeSignature -> a -> Reactive TimeSignature
 getTimeSignatures def = fmap (fromMaybe def . unOptionLast) . fromMetaReactive . (view meta)
 
-getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
-getTimeSignatureChanges def = updates . getTimeSignatures def
-
--- | Extract the time signature from the given score, using the given default time signature.
-withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
-withTimeSignature def f = withMeta (f . fromMaybe def . unOptionLast)
-
--- | Given a list of time signatures and the duration between them (TODO use voice), return a list of appropriate
---   bar durations.
-getBarDurations :: [(TimeSignature, Duration)] -> [Duration]
-getBarDurations = fmap realToFrac . getBarTimeSignatures
 
 -- | Given a list of time signatures and the duration between them (TODO use voice), return a list of appropriate
 --   time signatures for each bar.
