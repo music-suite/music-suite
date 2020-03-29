@@ -2,7 +2,7 @@
 name:                   music-suite
 version:                2.0.0
 author:                 Hans Hoglund
-maintainer:             Hans Hoglund <music-suite-discuss@googlegroups.com>
+maintainer:             Hans Hoglund <info@hanshoglund.com>
 license:                BSD3
 license-file:           COPYING
 synopsis:               A set of libraries for composition, analysis and manipulation of music.
