@@ -33,7 +33,6 @@ RESOLVE_LINKS=cabal exec hslinks
 SRC=src
 OUT=build
 PAGE=index.html
-TUTORIAL_PAGE=tutorial.html
 # MODULE_GRAPH=module-graph.png
 
 # upload-wiki: transform
@@ -56,13 +55,6 @@ html: transform
 
 #	cp ../$(MODULE_GRAPH) module-graph.png && \
 
-html-tutorial: transform
-	pushd $(OUT) && \
-		(cat 	Tutorial.md \
-			) \
-			| $(PANDOC_HTML) -o $(TUTORIAL_PAGE) && \
-		cp $(CSS) styles.css && \
-	popd
 
 pdf: transform-pdf
 	pushd $(OUT) && \
@@ -79,7 +71,6 @@ transform:
 		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/About.md 		>About.md  && \
 		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/Usage.md 		>Usage.md   && \
 		( $(TRANSFORM) | $(RESOLVE_LINKS) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
-		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/Tutorial.md  	>Tutorial.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
 		rm -f *.tex	 && \
