@@ -275,8 +275,8 @@ Consider switching to a decentralized issue tracker such as:
 - [ ] Examples should not be Cabal executables
   - Test in CI with cabal runhaskell
   - Saves the slow linking step when doing Cabal build
-  - Related: [ ]
-    - Get rid of duplication in music-suite.cabal
+  - Related:
+    - [ ] Get rid of duplication in music-suite.cabal
 
 - Test generating all examples/documentation (and add more) in CI (nightly?)
   - [ ] Make CI validate MIDI output (how?)
