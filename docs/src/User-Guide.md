@@ -2201,9 +2201,9 @@ TODO how to export/pick format
 
 ### MIDI
 
-TODO how to export
+The MIDI output backend generates type 1 (multi-track) Standard MIDI files Standard MIDI files.
 
-Beware that MIDI input may contain time and pitch values that yield a non-readable notation, you need an sophisticated piece of analysis software to convert raw MIDI input to quantized input.
+The MIDI format is suitable for generating sound using a software synthesizer such as [Timidity](TODO link) or [Fluidsynth](TODO link), or for exporting music to a Digital Audio Workstation (DAW) software. It is not suitable for exporting to score writing software (use MusicXML).
 
 ### Lilypond
 
@@ -2293,6 +2293,16 @@ pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 
 ```music+haskell
 stretch (1/2) $ pseq [c..e]|/3 |> f |> g|*2
+```
+
+Should render >1 tuplet:
+
+```music+haskell
+let
+  ch = ppar [e,g,c']
+  waltz = times 2 $ pseq [c,ch,ch,g_,ch,ch] |* (1/4)
+in
+timeSignature (4/4) $ compress 3 $ waltz
 ```
 
 ### Alignment/pickups
