@@ -205,7 +205,7 @@ Consider switching to a decentralized issue tracker such as:
     https://github.com/music-suite/music-pitch/issues/55
   - Parse Helmholtz, SPN etc
     https://github.com/music-suite/music-pitch/issues/54
-  - Pitch invert should be called invertChromatic
+  - Remove current invertChromatic, rename current invertPitches to invertChromatic
     https://github.com/music-suite/music-pitch/issues/51
   - [X] Iso `interval` is partial
     https://github.com/music-suite/music-pitch/issues/46
