@@ -78,7 +78,7 @@ module Music.Parts
     cello,
     doubleBass,
 
-    -- ** Ensembles
+    -- ** Parts
     piccoloFlutes,
     flutes,
     altoFlutes,
@@ -112,6 +112,12 @@ module Music.Parts
     cellos,
     doubleBasses,
     harp,
+
+    claves,
+    maracas,
+
+    -- ** Ensembles (TODO move to separate module)
+    stringOrchestra,
   )
 where
 
@@ -236,6 +242,10 @@ xylophone = fromMidiProgram 13
 
 xylorimba = fromMusicXmlSoundId "pitched-percussion.xylorimba"
 
+claves = tutti $ fromMusicXmlSoundId "wood.claves"
+
+maracas = tutti $ fromMusicXmlSoundId "rattle.maraca"
+
 tubularBells = fromMidiProgram 14
 
 dulcimer = fromMidiProgram 15
@@ -307,3 +317,5 @@ doubleBasses = tutti doubleBass
 harp' = fromMidiProgram 46
 
 harp = tutti harp'
+
+stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere

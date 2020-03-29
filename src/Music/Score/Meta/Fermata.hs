@@ -40,9 +40,6 @@ module Music.Score.Meta.Fermata
     -- ** Adding fermatas to scores
     fermata,
     fermataAt,
-
-    -- ** Extracting fermatas
-    withFermata,
   )
 where
 
@@ -81,6 +78,3 @@ fermata c x = fermataAt (view onset x) c x
 fermataAt :: HasMeta a => Time -> Fermata -> a -> a
 fermataAt s c = addMetaNote $ view event (s <-> s, (Option $ Just $ Last c))
 
--- | Extract fermatas in from the given score, using the given default fermata.
-withFermata :: (Fermata -> Score a -> Score a) -> Score a -> Score a
-withFermata f = withMeta (maybe id f . fmap getLast . getOption)

@@ -40,6 +40,7 @@ module Music.Score.Pitch
     invertChromatic,
 
     -- ** Ambitus
+    pitchRange,
     highestPitch,
     lowestPitch,
     averagePitch,
@@ -293,12 +294,7 @@ instance HasPitches a b => HasPitches (Chord a) (Chord b) where
 -}
 
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
-  pitches =
-    _Wrapped . _2 -- into NScore
-      . _Wrapped
-      . traverse
-      . from event -- this needed?
-      . whilstL pitches
+  pitches = traverse . pitches
 
 type instance Pitch (Sum a) = Pitch a
 
@@ -337,6 +333,10 @@ type instance Pitch (SlideT a) = Pitch a
 
 type instance SetPitch g (SlideT a) = SlideT (SetPitch g a)
 
+type instance Pitch (Ambitus v a) = Pitch a
+
+type instance SetPitch g (Ambitus v a) = Ambitus v (SetPitch g a)
+
 instance (HasPitches a b) => HasPitches (Couple c a) (Couple c b) where
   pitches = _Wrapped . pitches
 
@@ -366,6 +366,10 @@ instance (HasPitches a b) => HasPitches (SlideT a) (SlideT b) where
 
 instance (HasPitch a b) => HasPitch (SlideT a) (SlideT b) where
   pitch = _Wrapped . pitch
+
+instance (HasPitches a b) => HasPitches (Ambitus v a) (Ambitus v b) where
+  pitches = traverse . pitches
+
 
 -- |
 -- Associated interval type.
@@ -485,6 +489,12 @@ highestPitch = maximumOf pitches'
 -- Just c
 lowestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
 lowestPitch = minimumOf pitches'
+
+pitchRange :: (HasPitches' a, Ord p, p ~ Pitch a) => a -> Maybe (Ambitus v p)
+pitchRange x = do
+  lo <- lowestPitch x
+  hi <- highestPitch x
+  pure $ Ambitus lo hi
 
 -- | Extract the average pitch. Returns @Nothing@ if there are none.
 --

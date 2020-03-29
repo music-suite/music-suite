@@ -50,7 +50,7 @@ Consider switching to a decentralized issue tracker such as:
   - Remove Placed in favor of Aligned
   - Remove Track in place of Score and ([] . Aligned)
   - Get rid of DynamicsL
-  - Remove meta-data extraction (withTempo et al) from public API
+  - [X] Remove meta-data extraction (withTempo et al) from public API
   - Remove HasOctaves/HasQuality/HasNumber (retain interval instance)
   - Remove Augmentable/Alterable (?)
   - Remove triples/pairs in favor of explicit traversals (see example in Time.Score)
@@ -79,7 +79,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - [ ] Docs: User-Guide
   - Title/Attribution not shown in examples (because the example uses the inline LY template?)
-  - Key sigs not shown
+  - [X] Key sigs not shown
   - Tempi not shown
   - Fermatas not shown
   - Caesura/Breathing mark not shown
@@ -89,6 +89,22 @@ Consider switching to a decentralized issue tracker such as:
   - Reh marks
   - Annotations
 
+- Voice/parsing ideas:
+  - Voice/Score ideas:
+    - Something like this for parsing voices out of "less structured" representations
+      https://twitter.com/taylorfausak/status/1238584847536467969/photo/1
+  - Maybe add new time type, a la Haskore/Mezzo:
+      data Mus a = Note Duration a | Rest Duration | Par (V2 (Mus a)) | Seq (V2 (Mus a))
+      - Would behave much like Time.Voice, e.g.
+          instance HasDuration (Mus a)
+          instance Transformable (Mus a) -- translation invariant
+      - Can be aligned, rendered to a score etc.
+
+  - Add parsers for aligned values, e.g.
+      parseAlignedVoice :: MonadError e m => Score a -> m [Aligned (Voice a)]
+      parseAlignedVoice :: MonadError e m => Score a -> m (Aligned (Mus a))
+      etc.
+    See $voiceSeparation
 
 - [X] Phrase traversal exampl in User Guide is broken (missing slurs and notes!)
 
@@ -118,10 +134,17 @@ Consider switching to a decentralized issue tracker such as:
   - Remaining work:
     - Make sure output look like the official Lilypond output (produced through running musicxml2ly on the official XML files) for both
       our Lilypond and MusicXML exports (using Sibelius/MuseScore).
-  - Turn into golden/regression tests assuring the XML/Ly output of Haskell encoded UMTS cases does not affect visual appearance. If the
     output changes the goldens will flag and the developer has to manually ensure that the visuals are unaffected.
   - Later: Maybe use approximate image diffs (comparing the entire rendering pipeline to musicxml2ly on the original XML files) instead
   - Run as part of CI builds
+
+- Visual golden/regression tests
+  - Currently we often do "rm docs/build" and build the documentation as a form of regression test
+  - This is wasteful because it re-invokes Lilypond
+  - Better would be to extract all documentation snippets (+ the other examples?) and use them as *golden* tests
+    - By default, check output output hash of each example snippiet
+    - If this has changed, generate visual view comparing the old to the new version
+      - Requires storing (checked-in) the *old output* with its input and output has
 
 - Use modern type-level nats in Music.Pitch.Equal
 
@@ -167,18 +190,6 @@ Consider switching to a decentralized issue tracker such as:
   - Try a polymorphic transformer first, e.g. PitchT (the rest should be easy)
 
 
-- Maybe add new time type, a la Haskore/Mezzo:
-    data Mus a = Note Duration a | Rest Duration | Par (V2 (Mus a)) | Seq (V2 (Mus a))
-    - Would behave much like Time.Voice, e.g.
-        instance HasDuration (Mus a)
-        instance Transformable (Mus a) -- translation invariant
-    - Can be aligned, rendered to a score etc.
-
-- Add parsers for aligned values, e.g.
-    parseAlignedVoice :: MonadError e m => Score a -> m [Aligned (Voice a)]
-    parseAlignedVoice :: MonadError e m => Score a -> m (Aligned (Mus a))
-    etc.
-  See $voiceSeparation
 
 - Issues from the old tracker
   - We have a CLI interface for dynamically exporting to various backends and providing options.
@@ -194,7 +205,7 @@ Consider switching to a decentralized issue tracker such as:
     https://github.com/music-suite/music-pitch/issues/55
   - Parse Helmholtz, SPN etc
     https://github.com/music-suite/music-pitch/issues/54
-  - Pitch invert should be called invertChromatic
+  - Remove current invertChromatic, rename current invertPitches to invertChromatic
     https://github.com/music-suite/music-pitch/issues/51
   - [X] Iso `interval` is partial
     https://github.com/music-suite/music-pitch/issues/46
@@ -215,6 +226,23 @@ Consider switching to a decentralized issue tracker such as:
     - [X] music-suite
     - [X] music-dynamics
     - [X] music-articulation
+
+- [ ] Pitch/Interval is a module, not a vector space.
+
+- Multi-staff customization: The current state will gracefully handle overlapping notes in a single part, drawing them on separate staves, however it may not distribute things ideally across the staves. The final state should do better by default *and* allow customization.
+
+- [ ] Draw celesta/piano/organ on >1 staff by default
+
+- [ ] Rename Inspectable -> Exportable?
+
+- [ ] Make parts such as "Piano 0", "Piano (-1)", etc, unrepresentable
+
+- [ ] we should never see Music/StandardNote in the user guide (specific/nice-looking types instead). The only purpose of Music/StandardNote is to be defaults/final objects.
+
+
+- [ ] Make parts such as "Piano 0", "Piano (-1)", etc, unrepresentable
+
+- [ ] Bug in rendering of "con sord" (see User Guide)
 
 - [X] Never fail export on overlapping/simultaneously events
   - [X] Basic voice sepration added
@@ -269,10 +297,13 @@ Consider switching to a decentralized issue tracker such as:
 - [ ] Large scores makes Lilypond segfault
 
 - [ ] Examples should not be Cabal executables
-  - Test in CI with cabal runhaskell
   - Saves the slow linking step when doing Cabal build
-  - Related: [ ]
-    - Get rid of duplication in music-suite.cabal
+    - Could also just disable codegen/linking!
+    - Test in CI with cabal runhaskell
+      - Note we need to *run* the examples to make sure the expressions don't
+        diverge.
+  - Related:
+    - [ ] Get rid of duplication in music-suite.cabal
 
 - Test generating all examples/documentation (and add more) in CI (nightly?)
   - [ ] Make CI validate MIDI output (how?)
@@ -379,6 +410,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - New backends (ideas):
   - ABC notation
+  - Guido
   - Audio engines:
     - csound-expression/temporal-media
     - scsynth
@@ -478,8 +510,9 @@ Consider switching to a decentralized issue tracker such as:
   - Idea 1: by adding default/empty position to class (a HasEnvelope in Diagrams)
     - Pros: simple. Same operators (e.g. for juxtaposition) can be used for Scores, Notes, Spans, etc.
     - Cons: Disallows the onset/offset lenses Music.Time.Position
-      - E.g. what happens if you set the era of a Note to Nothing?
-  - Idea 2: Make a separate class for things which may have empty positions (e.g. Scores)
+      - OTOH these lenses are probably not that necessary
+      - Most other combinators (e.g. |>) can manage Nothing too
+  - Idea 2: Remove (HasPosition (Score a)) and make a separate class for things which may have empty positions (e.g. Scores)
     - Pros:
       - Can retain lenses in Music.Time.Position
       - Allow a convenient definition of 'rest' as a synonym for 'mempty'. No more removeRests/mcatMaybes!
@@ -494,6 +527,9 @@ Consider switching to a decentralized issue tracker such as:
     - Pros:
       - Allows onset/offset lenses, etc
       - Same juxtaposition operators everywhere
+    - Cons:
+      - No monad instance
+  - Idea 4: Disallow empty scores
 
 
 
@@ -521,7 +557,7 @@ Consider switching to a decentralized issue tracker such as:
       - Melody inversion means (point-wise) negation
 
 
-- Get rid of asNote/asScore/asVoice/asTrack
+- [ ] Get rid of asNote/asScore/asVoice/asTrack
 
 - [X] Get rid of Prelude.StandardNote et al, use Asp1 (renamed!) instead
 
@@ -544,6 +580,8 @@ Consider switching to a decentralized issue tracker such as:
   - Closing this as actions are tracked under $playingTechniques
 
 - Purge lawless instances, do more property testing
+  - It is easy to forget to add tests for each instance. Could we automatically discover instances
+    and test them?
 
 - If possible, derive everything in Music.Score.Internal.Instances
 
@@ -583,6 +621,7 @@ Consider switching to a decentralized issue tracker such as:
       In lieue of proper compiler support, we could do something like the following (for expressions in 'transf'):
         - First try the general form (any Inspectable, no custom type hint). This will succeed if the user provided an expression with an unambigious type.
         - Then try adding (Score StandardNote) and possibly other types in sequence. If they all fail, fail with the message from the original failure ("ambigous type").
+        - Could this be done with TH or a compiler plugin?
 
 
 - [X] For each instrument we want to know:

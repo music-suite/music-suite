@@ -111,7 +111,7 @@ data Quality
 -- The actual alteration implied by a quality is dependent on whether it is attached
 -- to a major\/minor vs. a perfect-style number. This type represents the two possibilities.
 data QualityType = PerfectType | MajorMinorType
-  deriving (Eq, Ord, Read, Show)
+  deriving (Eq, Ord, Show)
 
 -- |
 -- Accidental, represented as number of alterations.

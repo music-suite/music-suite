@@ -1,4 +1,11 @@
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE DerivingVia #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -64,6 +71,7 @@ import Control.Lens hiding
 import Control.Monad
 import Control.Monad.Compose
 import Control.Monad.Plus
+import Control.Monad.Writer
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson as JSON
 import Data.AffineSpace
@@ -134,25 +142,18 @@ newtype Score a = Score {getScore :: (Meta, Score' a)}
 -- well as 'singleNote', 'singleVoice', and 'singlePhrase'
 --
 
-instance Wrapped (Score a) where
 
-  type Unwrapped (Score a) = (Meta, Score' a)
-
-  _Wrapped' = iso getScore Score
-
-instance Rewrapped (Score a) (Score b)
-
+-- | Up to meta-data.
 instance Applicative Score where
 
-  pure = return
+  pure = Score . pure . pure
 
   (<*>) = ap
 
+-- | Up to meta-data.
 instance Monad Score where
 
-  return = (^. _Unwrapped') . return . return
-
-  xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
+  Score (meta, xs) >>= f = Score (meta, xs >>= snd . getScore . f)
 
 instance Alternative Score where
 
@@ -160,6 +161,7 @@ instance Alternative Score where
 
   (<|>) = mappend
 
+-- | Up to meta-data.
 instance MonadPlus Score where
 
   mzero = mempty
@@ -204,15 +206,11 @@ instance Transformable (Score a) where
 -- (m1, m2) = split t m
 -- (x1, x2) = split t x
 
--- TODO move these two "implementations" to Score'
 instance HasPosition (Score a) where
-  _position = _position . snd . view _Wrapped' {-. normalizeScore'-}
-        -- TODO clean up in terms of AddMeta and optimize
+  _era = _era . snd . getScore
 
 instance HasDuration (Score a) where
   _duration x = (^. offset) x .-. (^. onset) x
-
--- Lifted instances
 
 instance IsString a => IsString (Score a) where
   fromString = pure . fromString
@@ -225,13 +223,6 @@ instance IsInterval a => IsInterval (Score a) where
 
 instance IsDynamics a => IsDynamics (Score a) where
   fromDynamics = pure . fromDynamics
-
--- Bogus instance, so we can use [c..g] expressions
-instance Enum a => Enum (Score a) where
-
-  toEnum = return . toEnum
-
-  fromEnum = list 0 (fromEnum . head) . Foldable.toList
 
 instance Num a => Num (Score a) where
 
@@ -247,20 +238,11 @@ instance Num a => Num (Score a) where
 
   (*) = liftA2 (*)
 
-{-
--- Bogus instances, so we can use c^*2 etc.
-instance AdditiveGroup (Score a) where
-  zeroV   = error "Not implemented"
-  (^+^)   = error "Not implemented"
-  negateV = error "Not implemented"
-
-instance VectorSpace (Score a) where
-  type Scalar (Score a) = Duration
-  d *^ s = d `stretch` s
--}
-
 instance HasMeta (Score a) where
-  meta = _Wrapped . _1
+  meta = iso getScore Score . _1
+
+
+
 
 newtype Score' a = Score' {getScore' :: [Event a]}
   deriving ({-Eq, -} {-Ord, -} {-Show, -} Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
@@ -268,25 +250,20 @@ newtype Score' a = Score' {getScore' :: [Event a]}
 instance (Show a, Transformable a) => Show (Score a) where
   show x = show (x ^. events) ++ "^.score"
 
-instance Wrapped (Score' a) where
+deriving
+  via (WriterT Span [] `As1` Score')
+  instance Applicative Score'
+deriving
+  via (WriterT Span [] `As1` Score')
+  instance Monad Score'
 
-  type Unwrapped (Score' a) = [Event a]
+instance Isomorphic (WriterT Span [] x) (Score' x) where
+  -- TODO zero-cost version
+  inj (WriterT xs) = Score' (fmap (view event . swap) xs)
+  prj (Score' xs)  = WriterT (fmap (swap . view (from event)) xs)
 
-  _Wrapped' = iso getScore' Score'
-
-instance Rewrapped (Score' a) (Score' b)
-
-instance Applicative Score' where
-
-  pure = return
-
-  (<*>) = ap
-
-instance Monad Score' where
-
-  return = (^. _Unwrapped) . pure . pure
-
-  xs >>= f = (^. _Unwrapped) $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
+swap :: (a, b) -> (b, a)
+swap (x, y) = (y, x)
 
 instance Alternative Score' where
 
@@ -301,16 +278,18 @@ instance MonadPlus Score' where
   mplus = mappend
 
 instance Transformable (Score' a) where
-  transform t = over (_Wrapped) (transform t)
+  transform t = Score' . transform t . getScore'
 
 -- instance Reversible a => Reversible (Score' a) where
 --   rev (Score' xs) = Score' (fmap rev xs)
 
+-- FIXME lawless
 instance HasPosition (Score' a) where
   _era x = (f x, g x) ^. from onsetAndOffset
     where
-      f = safeMinimum . fmap ((^. onset) . normalizeSpan) . toListOf (_Wrapped . each . era)
-      g = safeMaximum . fmap ((^. offset) . normalizeSpan) . toListOf (_Wrapped . each . era)
+      f, g :: Score' a -> Time
+      f = safeMinimum . fmap ((^. onset) . normalizeSpan) . toListOf (each . era) . getScore'
+      g = safeMaximum . fmap ((^. offset) . normalizeSpan) . toListOf (each . era) . getScore'
       safeMinimum xs = if null xs then 0 else minimum xs
       safeMaximum xs = if null xs then 0 else maximum xs
 
@@ -324,7 +303,7 @@ score = from eventsIgnoringMeta
 
 -- | View a 'Score' as a list of 'Event' values.
 events :: Lens (Score a) (Score b) [Event a] [Event b]
-events = _Wrapped . _2 . _Wrapped . sorted
+events = iso getScore Score . _2 . iso getScore' Score' . sorted
   where
     -- TODO should not have to sort...
     sorted = iso (List.sortBy (Ord.comparing (^. onset))) (List.sortBy (Ord.comparing (^. onset)))
@@ -369,7 +348,7 @@ eventToScore = view score . pure
 -- | A score is a list of events up to meta-data. To preserve meta-data, use the more
 -- restricted 'score' and 'events'.
 eventsIgnoringMeta :: Iso (Score a) (Score b) [Event a] [Event b]
-eventsIgnoringMeta = _Wrapped . noMeta . _Wrapped . sorted
+eventsIgnoringMeta = iso getScore Score . noMeta . iso getScore' Score' . sorted
   where
     sorted = iso (List.sortBy (Ord.comparing (^. onset))) (List.sortBy (Ord.comparing (^. onset)))
     noMeta = iso extract return
@@ -393,12 +372,12 @@ triplesIgnoringMeta = iso _getScore _score
 
 -- | Map with the associated time span.
 mapScore :: (Event a -> b) -> Score a -> Score b
-mapScore f = over (_Wrapped . _2) (mapScore' f)
+mapScore f = over (iso getScore Score . _2) (mapScore' f)
   where
-    mapScore' f = over (_Wrapped . traverse) (extend f)
+    mapScore' f = over (iso getScore' Score' . traverse) (extend f)
 
 reifyScore :: Score a -> Score (Event a)
-reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
+reifyScore = over (iso getScore Score . _2 . iso getScore' Score') $ fmap duplicate
 
 -- | View a score as a list of time-duration-value triplets.
 --
@@ -496,3 +475,47 @@ anyDistinctOverlaps xs = hasDuplicates xs || anyOverlaps xs
 
 combined :: Eq a => (a -> a -> b) -> [a] -> [b]
 combined f as = mcatMaybes [if x == y then Nothing else Just (x `f` y) | x <- as, y <- as]
+
+
+
+-- TODO move:
+-- type As1 :: k1 -> (k2 -> Type) -> k2 -> Type
+newtype As1 f g a   = As1 { getAs1 :: g a }
+
+
+-- |
+-- Laws: isom is an isomorphism, that is:
+--
+-- @
+-- view isom . view (from isom) = id = view (from isom) . view isom
+-- @
+class Isomorphic a b  where
+  isom :: Iso' a b
+  isom = iso inj prj
+
+  inj :: Isomorphic a b => a -> b
+  inj = view isom
+
+  prj :: Isomorphic a b => b -> a
+  prj = view $ from isom
+
+instance (forall x . Isomorphic (f x) (g x), Functor f) => Functor (As1 f g) where
+  fmap h (As1 x) = As1 $ inj $ fmap h $ prj @(f _) @(g _) x
+
+instance (forall x . Isomorphic (f x) (g x), Applicative f) => Applicative (As1 f g) where
+  pure x = As1 $ inj @(f _) @(g _) $ pure x
+  (<*>) :: forall a b . As1 f g (a -> b) -> As1 f g a -> As1 f g b
+  As1 h <*> As1 x = As1 $ inj @(f b) @(g b) $ (prj @(f (a -> b)) @(g (a -> b)) h) <*> (prj @(f a) @(g a) x)
+  -- TODO use liftA2 instead of <*>, requires recent base library!
+  -- liftA2 h (As1 x) (As1 y) = As1 $ inj $ liftA2 h (prj x) (prj y)
+
+instance (forall x . Isomorphic (f x) (g x), Alternative f) => Alternative (As1 f g) where
+  empty :: forall a . As1 f g a
+  empty = As1 $ inj @(f a) @(g a) $ empty
+
+  (<|>) :: forall a . As1 f g a -> As1 f g a -> As1 f g a
+  As1 h <|> As1 x = As1 $ inj @(f a) @(g a) $ (prj @(f a) @(g a) h) <|> (prj @(f a) @(g a) x)
+
+instance (forall x . Isomorphic (f x) (g x), Monad f) => Monad (As1 f g) where
+  (>>=) :: forall a b . As1 f g a -> (a -> As1 f g b) -> As1 f g b
+  As1 k >>= f = As1 $ inj @(f b) @(g b) $ (prj @(f a) @(g a) k) >>= prj . getAs1 . f

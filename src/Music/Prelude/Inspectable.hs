@@ -94,10 +94,13 @@ instance InspectableNote a => Inspectable [Aligned (Voice a)] where
 instance InspectableNote a => Inspectable (Note a) where
   inspectableToMusic x = inspectableToMusic $ [x] ^. voice
 
+instance InspectableNote a => Inspectable (Event a) where
+  inspectableToMusic x = inspectableToMusic $ [x] ^. score
+
 -- instance Inspectable (Voice ()) where
 -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
 instance Inspectable (Ambitus Interval Pitch) where
-  inspectableToMusic x = let (m, n) = x ^. from ambitus in glissando $ fromPitch m |> fromPitch n
+  inspectableToMusic x = stretch 0.5 $ let (m, n) = x ^. from ambitus in glissando $ fromPitch m |> fromPitch n
 
 -- instance Inspectable (Mode Pitch) where
 --  inspectableToMusic = inspectableToMusic . scale c
@@ -134,6 +137,12 @@ instance Inspectable [Chord Pitch] where
 instance Inspectable [Voiced Chord Pitch] where
   inspectableToMusic = pseq . fmap inspectableToMusic
 
+instance Inspectable [Interval] where
+  inspectableToMusic = rcat . fmap inspectableToMusic
+
+instance Inspectable [Ambitus Interval Pitch] where
+  inspectableToMusic = rcat . fmap inspectableToMusic
+
 -- instance Inspectable [Hertz] where
 --   inspectableToMusic xs = ppar $ map fromPitch $ map (^.from pitchHertz) xs
 -- instance Inspectable [[Hertz]] where
@@ -147,7 +156,7 @@ instance Inspectable Pitch where
   inspectableToMusic = inspectableToMusic . (: [])
 
 instance Inspectable Interval where
-  inspectableToMusic v = stretch 8 $ inspectableToMusic [c :: Pitch, c .+^ v]
+  inspectableToMusic v = stretch 4 $ inspectableToMusic [c :: Pitch, c .+^ v]
 
 instance Inspectable Span where
   inspectableToMusic s = transform s c
@@ -167,3 +176,4 @@ instance Inspectable [Voice Pitch] where
 
 instance Inspectable [Note Pitch] where
   inspectableToMusic = inspectableToMusic . fmap ((^. voice) . pure)
+

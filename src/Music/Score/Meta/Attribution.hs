@@ -49,10 +49,6 @@ module Music.Score.Meta.Attribution
     lyricistDuring,
     arranger,
     arrangerDuring,
-
-    -- ** Extracting attribution
-    withAttribution,
-    withAttribution',
   )
 where
 
@@ -150,10 +146,3 @@ arranger t x = arrangerDuring (_era x) t x
 arrangerDuring :: HasMeta a => Span -> String -> a -> a
 arrangerDuring s x = attributeDuring s ("arranger" `attribution` x)
 
--- | Extract attribution values of the given category from a score.
-withAttribution :: String -> (String -> Score a -> Score a) -> Score a -> Score a
-withAttribution name f = withAttribution' (fromMaybe id . fmap f . flip getAttribution name)
-
--- | Extract all attribution values from a score.
-withAttribution' :: (Attribution -> Score a -> Score a) -> Score a -> Score a
-withAttribution' = withMetaAtStart

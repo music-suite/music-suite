@@ -11,7 +11,9 @@ import Control.Monad (join)
 import Data.AffineSpace
 import Data.VectorSpace
 import Music.Pitch (IsPitch (..))
+import Music.Pitch.Literal (c)
 import Music.Score.Pitch
+import Music.Score.Part
 import Music.Time.Aligned
 import Music.Time.Event
 import Music.Time.Juxtapose
@@ -57,7 +59,7 @@ divModDur x v = (n, r)
 -- |
 -- An infinitely repeating monophonic pattern.
 newtype Lunga a = Lunga (Duration, Voice a, Voice a)
-  deriving (Functor)
+  deriving (Functor, Foldable, Traversable)
 
 instance Applicative Lunga where
 
@@ -72,11 +74,21 @@ type instance Pitch (Lunga a) = Pitch a
 
 type instance SetPitch b (Lunga a) = Lunga (SetPitch b a)
 
+type instance Part (Lunga a) = Part a
+
+type instance SetPart b (Lunga a) = Lunga (SetPart b a)
+
 instance HasPitches a b => HasPitches (Lunga a) (Lunga b) where
+{-
   pitches visit (Lunga (dur, back, front)) = do
     back' <- pitches visit $ back
     front' <- pitches visit $ front
     pure $ Lunga (dur, front', back')
+-}
+  pitches = traverse . pitches
+
+instance HasParts a b => HasParts (Lunga a) (Lunga b) where
+  parts = traverse . parts
 
 nominalDuration :: Lunga a -> Duration
 nominalDuration (Lunga (d, _, _)) = d
@@ -142,7 +154,7 @@ renderLunga s (Lunga (d, _, b))
 -- TODO is this isomorphic to Tidal's pattern (i.e. Span -> Score a)
 newtype Pattern a
   = Pattern {getPattern :: [Placed (Lunga a)]} -- origo, pattern
-  deriving (Semigroup, Monoid, Transformable, Functor)
+  deriving (Semigroup, Monoid, Transformable, Functor, Foldable, Traversable)
 
 instance Wrapped (Pattern a) where
 
@@ -159,6 +171,13 @@ type instance SetPitch b (Pattern a) = Pattern (SetPitch b a)
 instance HasPitches a b => HasPitches (Pattern a) (Pattern b) where
   pitches = _Wrapped . pitches
 
+type instance Part (Pattern a) = Part a
+
+type instance SetPart b (Pattern a) = Pattern (SetPart b a)
+
+instance HasParts a b => HasParts (Pattern a) (Pattern b) where
+  parts = traverse . parts
+
 -- What sort of Applicative is Pattern?
 -- instance Applicative Pattern where
 --   pure x = newPattern' (pure x) (pure x)
@@ -169,6 +188,9 @@ pureP = newPattern . pure
 
 newPattern :: Reversible a => Voice a -> Pattern a
 newPattern v = Pattern [pure $ newLunga v]
+
+rhythmPattern :: (IsPitch a, Reversible a) => [Duration] -> Pattern a
+rhythmPattern a = newPattern $ fmap (const c) $ a^.durationsAsVoice
 
 newPattern' :: Voice a -> Voice a -> Pattern a
 newPattern' vb vf = Pattern [pure $ newLunga' vb vf]

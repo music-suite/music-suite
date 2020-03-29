@@ -289,12 +289,7 @@ instance HasTechniques a b => HasTechniques (Chord a) (Chord b) where
 -}
 
 instance (HasTechniques a b) => HasTechniques (Score a) (Score b) where
-  techniques =
-    _Wrapped . _2 -- into NScore
-      . _Wrapped
-      . traverse
-      . from event -- this needed?
-      . techniques
+  techniques = traverse . techniques
 
 type instance Technique (Behavior a) = Behavior a
 

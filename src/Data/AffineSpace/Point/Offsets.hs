@@ -18,7 +18,7 @@ import qualified Data.Stream.Infinite as Stream
 import Data.VectorSpace
 
 -- TODO move to separate module
-type AffinePair v w = (VectorSpace v, AffineSpace w, Diff w ~ v)
+type AffinePair v p = (VectorSpace v, AffineSpace p, Diff p ~ v)
 
 -- | Lay out a series of vectors from a given point. Return all intermediate points.
 --

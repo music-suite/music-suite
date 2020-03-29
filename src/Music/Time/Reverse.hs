@@ -65,30 +65,18 @@ import Music.Time.Position
 --
 -- FIXME Second law is incompatible with 'revDefault' (and the 'Span' definition below)
 --
--- Law
+-- Laws:
 --
 -- @
--- 'rev' ('rev' a) = a
--- @
---
--- @
--- 'abs' (x^.'duration') = ('rev' x)^.'duration'
+-- rev . rev = id
 -- @
 --
 -- @
--- 'rev' s `transform` a = 'rev' (s `transform` a)
+-- abs (_duration x) = abs (_duration (rev x))
 -- @
 --
--- or equivalently,
---
 -- @
--- 'transform' . 'rev' = 'fmap' 'rev' . 'transform'
--- @
---
--- For 'Span'
---
--- @
--- 'rev' = 'over' 'onsetAndOffset' 'swap'
+-- transform (rev s) = rev . transform s
 -- @
 class Transformable a => Reversible a where
   -- | Reverse (retrograde) the given value.

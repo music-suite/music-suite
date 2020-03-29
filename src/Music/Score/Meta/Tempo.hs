@@ -59,9 +59,6 @@ module Music.Score.Meta.Tempo
     adagio,
     largo,
     lento,
-
-    -- * Extracting tempo
-    renderTempo,
   )
 where
 
@@ -196,11 +193,6 @@ tempo c x = tempoDuring (_era x) c x
 tempoDuring :: HasMeta a => Span -> Tempo -> a -> a
 tempoDuring s c = addMetaNote $ view event (s, c)
 
--- | Extract all tempi from the given score, using the given default tempo.
--- withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a
--- withTempo f = withMeta (f . fromMaybe def . fmap getFirst . getOption)
-renderTempo :: Score a -> Score a
-renderTempo = error "renderTempo: Not implemented"
 
 {-
 inSpan' (view onsetAndOffset -> (t,u)) x = t <= x && x < u

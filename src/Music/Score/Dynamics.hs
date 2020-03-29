@@ -212,12 +212,7 @@ instance HasDynamics a b => HasDynamics (Chord a) (Chord b) where
 -}
 
 instance (HasDynamics a b) => HasDynamics (Score a) (Score b) where
-  dynamics =
-    _Wrapped . _2 -- into NScore
-      . _Wrapped
-      . traverse
-      . from event -- this needed?
-      . whilstL dynamics
+  dynamics = traverse . dynamics
 
 type instance Dynamic (Behavior a) = Behavior a
 

@@ -42,9 +42,6 @@ module Music.Score.Meta.RehearsalMark
     -- * Adding rehearsal marks to scores
     rehearsalMark,
     rehearsalMarkAt,
-
-    -- * Extracting rehearsal marks
-    withRehearsalMark,
   )
 where
 
@@ -99,6 +96,3 @@ rehearsalMark x = rehearsalMarkAt (view onset x) x
 
 rehearsalMarkAt :: HasMeta a => Time -> a -> a
 rehearsalMarkAt t = addMetaNote $ view event (t <-> t, RehearsalMark)
-
-withRehearsalMark :: (RehearsalMark -> Score a -> Score a) -> Score a -> Score a
-withRehearsalMark = withMeta
