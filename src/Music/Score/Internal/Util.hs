@@ -6,6 +6,7 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
+  -fno-warn-redundant-constraints
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
 {-# OPTIONS_HADDOCK hide #-}
@@ -17,6 +18,8 @@ module Music.Score.Internal.Util
     replic,
     divideList,
     retainUpdates,
+    retainUpdates2,
+    retainUpdates3,
     swap,
     inspecting,
     single,
@@ -100,10 +103,7 @@ breakList n z = Data.Monoid.mconcat . Data.List.intersperse z . divideList n
 --  > category : List
 --  > depends : base
 mapIndexed :: (Int -> a -> b) -> [a] -> [b]
-mapIndexed f as = map (uncurry f) (zip is as)
-  where
-    n = length as - 1
-    is = [0 .. n]
+mapIndexed f = zipWith f [0..]
 
 -- test
 
@@ -288,6 +288,14 @@ retainUpdates = snd . Data.List.mapAccumL g Nothing
   where
     g Nothing x = (Just x, Just x)
     g (Just p) x = (Just x, if p == x then Nothing else Just x)
+
+retainUpdates2 :: Eq a => [(a, b)] -> [(Maybe a, Maybe b)]
+retainUpdates2 = undefined
+
+retainUpdates3 :: Eq a => [(a, b, c)] -> [(Maybe a, Maybe b, Maybe c)]
+retainUpdates3 = undefined
+-- hretainUpdates :: Eq a => [HList Identity xs] -> [HList Maybe xs]
+-- hretainUpdates = undefined
 
 -- Generic version of 'replicate'.
 -- > category: List

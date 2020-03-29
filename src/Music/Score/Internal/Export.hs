@@ -92,7 +92,6 @@ import Prelude hiding
     sum,
   )
 
--- TODO also extract Barline, Key, RehearsalMark, Tempo here
 --
 -- TODO generalize the below. We can get a Reactive for each meta property
 -- (time sig, key sig etc).
@@ -108,11 +107,25 @@ import Prelude hiding
 -- etc. For no change, Nothing is returned.
 extractBars :: (HasMeta a, HasPosition a, Transformable a) => a ->
   [(Duration, Maybe TimeSignature, Maybe KeySignature {-, Maybe Barline, Key, Maybe RehearsalMark, Maybe Tempo-})]
-extractBars x = zip3 ds ts ks
+extractBars x = zip3 dss tss kss
   where
-    (ds, ts) = unzip $ extractTimeSignatures x
-    ks       = cycle [mempty] -- TODO
-
+    dss :: [Duration]
+    dss = fmap (realToFrac . fst) foo2
+    (tss, kss) = unzip foo3
+    foo3 :: [(Maybe TimeSignature, Maybe KeySignature)]
+    foo3 = retainUpdates2 foo2
+    -- The time and key signature of each bar
+    foo2 :: [(TimeSignature, KeySignature)]
+    foo2 = prolongLastBarIfDifferent $
+      tsPerBar $ fmap (view $ from note) $ view notes foo1
+    -- Each /combination/ of time signature from 0 througout the duration
+    -- of the score
+    foo1 :: Voice (TimeSignature, KeySignature)
+    foo1 = reactiveToVoice' (0 <-> x^.offset) foo
+    -- Each /combination/ of time signature, key signature and so on
+    foo :: Reactive (TimeSignature, KeySignature)
+    foo = (,) <$> getTimeSignatures defaultTimeSignature x
+      <*> getKeySignatures x
 
 
 -- | Extract bar-related information from score meta-data.
@@ -124,16 +137,15 @@ extractTimeSignatures :: (HasMeta a, HasPosition a, Transformable a) => a
 extractTimeSignatures score = zip (fmap realToFrac barTimeSignatures) (retainUpdates barTimeSignatures)
   where
     -- From position 0, the duration of each time signature and how long it lasts
-    timeSignatures :: [(TimeSignature, Duration)]
+    timeSignatures :: [(Duration, TimeSignature)]
     timeSignatures =
-      fmap swap
-        $ view pairs . reactiveToVoice' (0 <-> (score ^. offset))
+        view pairs . reactiveToVoice' (0 <-> (score ^. offset))
         $ getTimeSignatures defaultTimeSignature score
     -- The time signature of each bar
     barTimeSignatures :: [TimeSignature]
     barTimeSignatures =
       fmap fst $ prolongLastBarIfDifferent $
-        tsPerBar $ fmap (, ()) timeSignatures
+        tsPerBar $ undefined timeSignatures
 
 -- | Extract the time signature meta-track, using the given default.
 getTimeSignatures :: HasMeta a => TimeSignature -> a -> Reactive TimeSignature
@@ -165,12 +177,12 @@ prolongLastBarIfDifferent = reverse . go . reverse
 
 -- | Given a list of time signatures and the duration between them return a
 -- list of appropriate time signatures for each bar.
-tsPerBar :: [((TimeSignature, Duration), a)] -> [(TimeSignature, a)]
-tsPerBar = concatMap $ uncurry $ uncurry go
+tsPerBar :: [(Duration, (TimeSignature, a))] -> [(TimeSignature, a)]
+tsPerBar = concatMap $ uncurry $ fmap uncurry go
 -- (TODO use voice instead of list?),
   where
-    go :: TimeSignature -> Duration -> a -> [(TimeSignature, a)]
-    go ts d a  =
+    go :: Duration -> TimeSignature -> a -> [(TimeSignature, a)]
+    go d ts a  =
       let (n, r) = numWholeBars ts d
        in -- Repeat the chosen time signature as long as possible
           -- If there is a rest duration, add a bar of that duration choosing an appropriate time signature
