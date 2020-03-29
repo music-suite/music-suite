@@ -273,8 +273,11 @@ Consider switching to a decentralized issue tracker such as:
 - [ ] Large scores makes Lilypond segfault
 
 - [ ] Examples should not be Cabal executables
-  - Test in CI with cabal runhaskell
   - Saves the slow linking step when doing Cabal build
+    - Could also just disable codegen/linking!
+    - Test in CI with cabal runhaskell
+      - Note we need to *run* the examples to make sure the expressions don't
+        diverge.
   - Related:
     - [ ] Get rid of duplication in music-suite.cabal
 
