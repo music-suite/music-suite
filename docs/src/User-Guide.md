@@ -1358,6 +1358,12 @@ keySignatureDuring (1 <-> 2) (key db major) $ pseq [db,eb,f]
 
 Key signature changes will always force a new bar.
 
+```music+haskell
+let major = True -- TODO!
+in
+keySignatureDuring (1.5 <-> 2) (key db major) $ pseq [db,eb,f]
+```
+
 ## Time signatures
 
 ```haskell
@@ -1386,7 +1392,11 @@ timeSignature (3/8) $ pseq [db,eb,f]
 
 Time signature changes will always force a new bar.
 
+Part-specific time signatures (save for transposing instruments) are not supported.
+
 ### Converting from one time signature to another
+
+TODO setting the time signature does *not* imply that the music is renotated, this has to be done using a separate application of @[stretch] or @[compress]. For example, the following music is notated using a quarter note pulse.
 
 ```music+haskell
 let
@@ -1396,6 +1406,8 @@ in
 timeSignature (3/4) waltz
 ```
 
+To renotate this to eight notes, we stretch the music by `1/2` and apply the new time signature:
+
 ```music+haskell
 let
   ch = ppar [e,g,c']
@@ -1403,6 +1415,27 @@ let
 in
 timeSignature (3/8) $ compress 2 waltz
 ```
+
+This provide more flexibility for renotation. For example we can easily renotate a passage from `4/4` to `12/8` as follows:
+
+```music+haskell
+let
+  ch = ppar [e,g,c']
+  waltz = times 2 $ pseq [c,ch,ch,g_,ch,ch] |* (1/4)
+in
+timeSignature (4/4) $ compress 3 $ waltz
+```
+
+```music+haskell
+let
+  ch = ppar [e,g,c']
+  waltz = times 2 $ pseq [c,ch,ch,g_,ch,ch] |* (1/4)
+in
+timeSignature (12/8) $ compress 2 $ waltz
+```
+
+Polymetric notation is not supported: you must pick one global time signature for each section of the score.
+
 
 ## Tempo
 
