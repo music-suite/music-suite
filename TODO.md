@@ -227,6 +227,8 @@ Consider switching to a decentralized issue tracker such as:
     - [X] music-dynamics
     - [X] music-articulation
 
+- [ ] Pitch/Interval is a module, not a vector space.
+
 - [ ] Make parts such as "Piano 0", "Piano (-1)", etc, unrepresentable
 
 - [ ] Bug in rendering of "con sord" (see User Guide)

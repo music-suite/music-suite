@@ -494,12 +494,34 @@ To get compare or sort pitches enharmonically you can use `sortOn`:
 [dbb, cs, db]
 ```
 
+Semitones are also used to describe "non-diatonic" intervals such as @[tone], @[tritone], etc.
+
 ### Spelling
 
-We can *respell* enharmonically equivalent pitches by using a *speller*.
+We can *respell* enharmonically equivalent pitches by using a @[Spelling].
 
-TODO spell, usingSharps, usingFlats, simplifyPitches
+```haskell
+>>> spell usingSharps tritone
+_A4
+```
 
+TODO using over/relative:
+
+```music+haskell
+pseq $ fmap (\x -> over pitches' (relative c $ spell x)  $ ppar [as,cs,ds,fs])
+[ usingSharps
+, usingFlats
+, modally
+]
+```
+
+TODO simpler short cut for `over pitches' (relative c $ spell ...)`:
+
+```music+haskell
+x </> over pitches' (relative c $ spell modally) x
+  where
+    x = pseq [cs,flatten db,bs]
+```
 
 
 ## Converting between intervals and pitches
@@ -582,9 +604,9 @@ in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 
 ### Scaling pitch
 
-TODO
+As we have seen intervals form a *vector space* and pitches an associated *affine space*. This implies we can define a form of scalar multiplication.
 
-TODO intervals are vectors and can be scaled. However pithes live in an affine space without a specific origin, so we have to pick one:
+However pithes live in an affine space without a specific origin, so we have to pick one:
 
 ```music+haskell
 m
@@ -661,18 +683,6 @@ TODO we've seen several examples of affine spaces with notions of *points* and *
 Another example is the notion of scales and chords. These are (conceptually) infinite collections of points, forming a subset of a larger pitch space. By forgetting the *root* or *fundamental* of a scale/chord we obtain what is known as a mode (for scales) or a chord type (for chords).
 
 
-```music+haskell
-inspectableToMusic @[Mode Pitch] $
-
-[ phrygian
-, majorScale
-, bluesMajor
-, bluesMinor
-, wholeTone
-, octatonic
-, thirdMode
-]
-```
 
 ```music+haskell
 inspectableToMusic @[Scale Pitch] $
@@ -708,15 +718,38 @@ inspectableToMusic @[Chord Pitch] $
 ```
 ### Triadic harmony
 
-Basic triads, seventh and ninth chords
+TODO Basic triads, seventh and ninth chords
 
 ### Non-octave repeating scales
 
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Pitch] $
+
+[ voiceIn 5 $ chord c quartal
+, voiceIn 4 $ chord c quintal
+]
+```
+
 TODO Quartal and quintal
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Pitch] $
+
+[ voiceIn 5 $ chord c chromaticCluster
+, voiceIn 7 $ chord c wholeToneCluster
+]
+```
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Pitch] $
+
+[ voiceIn 3 $ chord c $ repeating m7
+]
+```
 
 Non-repeating/self-repeating scales (e.g. the overtone series). TODO create by unfold?
 
-TODO chromatic scale
 
 ### Custom chords
 
@@ -1184,6 +1217,8 @@ Setting just the subpart:
 
 TODO subparts allow arbitrarily deep nestings "Violin I.1.II" etc.
 
+TODO understand subpart is a non-empty list, e.g. "Violin" is not a part, but "Violin I" is. When there's only one part per instrument, the subpart is hidden by default (TODO implement!).
+
 TODO Understand "overlapping" semantics, e.g. if notes overlap in "I" and "I.2" we have "overlapping events" (not OK in monophonic instruments, but see solo/altri below)
 
 TODO show how to set explicitly VI.1, VI.2, VII etc.
@@ -1192,19 +1227,19 @@ TODO show how to set explicitly VI.1, VI.2, VII etc.
 
 We have already seen how the `</>` operator can be used to compose music "partwise". Now that we know about subparts we can see this works:
 
-TODO
+When the given expressions have notes in some part, the subpart is incremented:
 
 ```music+haskell
 c </> c
 ```
 
-Because these instruments were in the same part (the default) TODO
+When this is not the case, `</>` behaves like `<>`:
 
 ```music+haskell
 set parts' violins c </> set parts' violas c
 ```
 
-These instruments were already in different parts. In this case `</>` is identical to `<>`.
+The subpart of the left side is never changed, and the right side is always assigned to the next available subpart:
 
 ```music+haskell
 set parts' p c </> set parts' p c
@@ -1212,16 +1247,19 @@ set parts' p c </> set parts' p c
     p = set subpart 2 $ violins
 ```
 
-TODO understand how `</>` is bracketed
+Note that as a consequence of this `</>` is not associative. Compare:
 
 ```music+haskell
 c </> (e </> g)
 ```
+
+versus
+
 ```music+haskell
 (c </> e) </> g
 ```
 
-The conclusion is that you should always associate `</>` to the left. This is what `rcat` does:
+This is normally not a problem, as `</>` associates to the left by default. Similarly with `rcat`:
 
 ```music+haskell
 rcat [c,e,g]
@@ -2395,11 +2433,6 @@ over t (up _P8) [d,d,d |* 2,d] |/ 4
   where
     t = notes . each . filtered (\x -> x^.duration < 2)
 ```
-
-TODO `backwards`?
-
-TODO other SQL-like constructs, e.g. LIMIT and ORDER BY.
-
 
 
 
