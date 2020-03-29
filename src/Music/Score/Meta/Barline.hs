@@ -42,9 +42,6 @@ module Music.Score.Meta.Barline
     -- ** Adding barlines to scores
     barline,
     barlineDuring,
-
-    -- ** Extracting barlines
-    withBarline,
   )
 where
 
@@ -82,7 +79,3 @@ barline c x = barlineDuring (_era x) c x
 -- | Add a barline to the given score.
 barlineDuring :: HasMeta a => Span -> Barline -> a -> a
 barlineDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
-
--- | Extract barlines in from the given score, using the given default barline.
-withBarline :: (Barline -> Score a -> Score a) -> Score a -> Score a
-withBarline f = withMeta (maybe id f . fmap getLast . getOption)

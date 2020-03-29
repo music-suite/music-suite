@@ -42,9 +42,6 @@ module Music.Score.Meta.Clef
     -- ** Adding clefs to scores
     clef,
     clefDuring,
-
-    -- ** Extracting clefs
-    withClef,
   )
 where
 
@@ -88,6 +85,3 @@ clef c x = clefDuring (_era x) c x
 clefDuring :: HasMeta a => Span -> Clef -> a -> a
 clefDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
 
--- | Extract the clef in from the given score, using the given default clef.
-withClef :: Clef -> (Clef -> Score a -> Score a) -> Score a -> Score a
-withClef def f = withMeta (f . fromMaybe def . fmap getLast . getOption)

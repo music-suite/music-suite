@@ -50,7 +50,7 @@ Consider switching to a decentralized issue tracker such as:
   - Remove Placed in favor of Aligned
   - Remove Track in place of Score and ([] . Aligned)
   - Get rid of DynamicsL
-  - Remove meta-data extraction (withTempo et al) from public API
+  - [X] Remove meta-data extraction (withTempo et al) from public API
   - Remove HasOctaves/HasQuality/HasNumber (retain interval instance)
   - Remove Augmentable/Alterable (?)
   - Remove triples/pairs in favor of explicit traversals (see example in Time.Score)

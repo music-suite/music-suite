@@ -48,9 +48,6 @@ module Music.Score.Meta.Title
     subtitleDuring,
     subsubtitle,
     subsubtitleDuring,
-
-    -- * Extracting titles
-    withTitle,
   )
 where
 
@@ -139,7 +136,3 @@ subsubtitle t x = subsubtitleDuring (_era x) t x
 -- | Set subsubtitle of the given part of a score.
 subsubtitleDuring :: HasMeta a => Span -> Title -> a -> a
 subsubtitleDuring s t = addMetaNote $ view event (s, denoteTitle (denoteTitle t))
-
--- | Extract the title in from the given score.
-withTitle :: (Title -> Score a -> Score a) -> Score a -> Score a
-withTitle = withMetaAtStart
