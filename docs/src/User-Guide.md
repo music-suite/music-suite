@@ -161,15 +161,10 @@ The `|*` and `|/` operators can be used as shorthands for `stretch` and `compres
 (c |> d |> e |> c |> d|*2 |> d|*2) |/ 16
 ```
 
-## Functions, let, where
+## Let and where
 
-TODO basic functions, let bindings first
+TODO let bindings first
 
-Here is a full example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
-
-```music+haskell
-(up _P8 . compress 2 . delay 3) c
-```
 
 ## Octave changes
 
@@ -292,9 +287,15 @@ Similarly, durations that do not fit into standard note durations are notated us
 compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
 ```
 
-## Type signatures
+## Functions and types
 
-TODO
+TODO basic functions
+
+Here is a full example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
+
+```music+haskell
+(up _P8 . compress 2 . delay 3) c
+```
 
 ## More examples
 
@@ -316,27 +317,21 @@ We have now seen how to write basic pieces, using melody, harmony and voices. In
 
 # Pitch
 
-## The Pitch  type
+## The Pitch type
 
-TODO the pitch type represents common/Western classical pitch. As we shall see later this is not the only way of representing pitch in Music Suite, but it is common enough to be the default.
+The @[Pitch] type represents common/Western classical pitch. As we shall see later this is not the only way of representing pitch in Music Suite, but it is common enough to be the default.
 
+### Pitch names
 
-<!--
-Pitch names in other languages work as well, for example `ut, do, re, mi, fa, so, la, ti, si`.
+The following pitch names are used:
 
-German names (using `h` and `b` instead of `b` and `bb`) can be approximated as follows:
-
-```haskell
-import Music.Preludes hiding (b)
-import qualified Music.Pitch.Literal as P
-
-h = P.b
-b = P.bb
+```music+haskell
+pseq [c, d, e, f, g, a, b]
 ```
--->
 
+### Octaves
 
-You can change octave using @[octavesUp] and @[octavesDown]:
+We can change octave using @[octavesUp] and @[octavesDown]:
 
 ```music+haskell
 octavesUp 4 c
@@ -346,11 +341,19 @@ octavesUp (-1) c
 octavesDown 2 c
 ```
 
-There is also a shorthand for other octaves:
+There are synonyms for the most common cases:
+
+```music+haskell
+_8va c <> c <> _8vb c
+```
+
+The following is also a shorthand for alternative octaves:
 
 ```music+haskell
 c__ |> c_ |> c |> c' |> c''
 ```
+
+### Sharps and flats
 
 Sharps and flats can be added using @[sharpen] and @[flatten].
 
@@ -358,9 +361,31 @@ Sharps and flats can be added using @[sharpen] and @[flatten].
 sharpen c
     </>
 (sharpen . sharpen) c
+    </>
+flatten c
+    </>
+(flatten . flatten) c
 ```
 
-There is also a shorthand for sharps and flats:
+The @[alter] function is an iterated version of @[sharpen]/@[flatten]:
+
+```music+haskell
+alter 1 $ pseq [c,d,e]
+```
+
+Double sharps/flats are supported:
+
+```music+haskell
+pseq $ fmap (`alter` c) [-2..2]
+```
+
+The pitch representation used in Music suite does in fact allow for an *arbitrary* number of sharps or flats. As there are no symbols for these in standard notation, they are automatically re-spelled in the output. Here is the note `c` written with up to 4 flats and sharps.
+
+```music+haskell
+pseq $ fmap (`alter` c) [-4..4]
+```
+
+There is of course also a shorthand for sharps and flats:
 
 ```music+haskell
 (cs |> ds |> es)    -- sharp
@@ -368,16 +393,20 @@ There is also a shorthand for sharps and flats:
 (cb |> db |> eb)    -- flat
 ```
 
-Double flats and sharps work too, so the following holds:
+> Note: Music Suite uses C major by default, so all altered pitches are rendered as accidentals. See [key signatures](TODO link) for how to change this.
 
-```haskell
-sharpen c             = cs
-flatten d             = db
-(sharpen . sharpen) c = css
-(flatten . flatten) d = dss
-```
+### Pitch equalituy and ordering
 
-Note that `cs == db` may or may not hold depending on the pitch representation to understand this, read about *overloading* in the next section.
+TODO
+
+### Spelling
+
+As we have already seen, Music Suite does not enforce enharmonic equivalence, so e.g. Db and C# are considered distinct (see [enharmonics](TODO) for how to treat them as equivalent).
+
+We can *respell* enharmonically equivalent pitches by using a *speller*.
+
+TODO spell, usingSharps, usingFlats, simplifyPitches
+
 
 
 ### Pitch overloading
@@ -386,11 +415,6 @@ To facilitate the use of non-standard pitch, the standard pitch names are provid
 
 To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type @[IsPitch] `a => a`.
 
-For Western-style pitch types, the standard pitch names can be used:
-
-```music+haskell
-pseq [c, d, e, f, g, a, b]
-```
 
 TODO explain overloading is not limited to pitch types but also to containers types (by lifting), so the following works:
 
@@ -428,7 +452,7 @@ let
 in pseq $ fmap (`up` c) intervals
 ```
 
-## Converting between intervals and pitches
+### Converting between intervals and pitches
 
 TODO AffineSpace
 
@@ -455,7 +479,7 @@ TODO simple vs compound
 TODO positive vs negative: a negative interval is a compound interval with a negative octave number
 
 
-## Number, quality, alteration, diatonic/chromatic
+### Number, quality, alteration, diatonic/chromatic
 
 TODO intervals seen as:
 - Pair of diatonic/chromatic steps (vector)
@@ -478,7 +502,7 @@ TODO forward reference to traversals chapter, @[HasPitch]
 
 
 
-## Transposing music
+## Transposing and inverting music
 
 @[Transposable]
 
@@ -567,19 +591,6 @@ m
 
 
 
-Double sharps/flats are supported:
-
-```music+haskell
-pseq $ fmap (`alter` c) [-2..2]
-```
-
-In fact we generalize the notion of double sharps/flats to an arbitrary number of alterations. As there are no symbols for these in standard notation, they are automatically re-spelled in exported music.
-
-```music+haskell
-pseq $ fmap (`alter` c) [-4..4]
-```
-
-TODO spell, usingSharps, usingFlats, simplifyPitches
 
 ## Adding pitches and intervals
 
@@ -592,19 +603,17 @@ Show how this the first example of an affine space (more to come!)
 
 THe standard pitch representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling.
 
-## Alternative pitch representations
 
-### Equal tempered scales
 
-TODO equal tempered scales of any size
+# Harmony
 
-## Basic harmony
+TODO Pitch containers
 
-TODO consonance/dissonance
+## Ambitus and range
 
-## TODO Ambitus
+TODO
 
-## Scales, modes, chords and chord types
+## Scales and chords
 
 TODO we've seen several examples of affine spaces with notions of *points* and *distances*: time points and durations, pitches and intervals, spans and transformations, and so on.
 
@@ -635,9 +644,6 @@ inspectableToMusic @[Scale Pitch] $
 , scale a thirdMode
 ]
 ```
-
-## Chords
-
 
 ```music+haskell
 inspectableToMusic @[ChordType Pitch] $
@@ -675,7 +681,9 @@ TODO chromatic scale
 
 TODO create from any interval sequence
 
-## Scales and Chords as countable sets
+## Infinite chords
+
+TODO scales/chords as infinite/countable sets
 
 Chords and scales are *countably infinite* sets. This means that we can map them directly to any other such sets, such as the set of integers. For example the chord "C major" is the set `{ Cn En Gn | n ∈ all octaves }`. Using C4 (or "middle C") as the starting point, 0 will map to C4, 1 to E4, 2 to G4, -1 to G3, -2 to E3, and so on.
 
@@ -699,7 +707,9 @@ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
-## Scales and Chords as finite sets
+## Chord generators
+
+TODO Scales and Chords as finite sets
 
 Alternatively, we can view a Scale/Chord as simply the pitches of its *generating pitch set* (e.g. the tonic and the pitches generated by applying the *generating intervals* to the tonic).
 
@@ -769,7 +779,7 @@ Whole tone is a superset of augmented, octatonic a superset of dimimished and so
 
 Consider "scale-chord texture"
 
-## Voicings
+## Voicing
 
 TODO rewrite the below, as in: Chord/Scale can be viewed as either infinite, or as having a default closed voicing. The Voiced type allow us to represent aribitrary voicings.
 
@@ -829,7 +839,7 @@ inspectableToMusic @[Voiced Chord Pitch] $
 ```
 
 
-### Should I used Chord or Voiced Chord?
+### Voiced vs unvoiced
 
 For dealing with chords in the normal sense (e.g. pitches), use `Voiced Chord`.
 
@@ -842,6 +852,20 @@ TODO relative dissonance of intervals, modes and chords
 TODO resolution and leading notes. "Solve" an n-part voicing problem
 
 Calculate dissonance of a chord (classical/"objective", by higest common fundamental)
+
+
+
+
+
+# Advanced Harmony
+
+## Alternative pitch representations
+
+### Equal tempered scales
+
+TODO equal tempered scales of any size
+
+TODO 24TET ("quarter tones")
 
 ## Beyond diatonic/chromatic
 
@@ -1731,7 +1755,7 @@ TODO Use more specicif wrappers to preserve `Transformable`, `Reversible` etc.
 
 
 
-# Time and structure
+# Time, rhythm and form
 
 ## Basic time types
 
