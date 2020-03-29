@@ -134,6 +134,9 @@ instance Inspectable [Chord Pitch] where
 instance Inspectable [Voiced Chord Pitch] where
   inspectableToMusic = pseq . fmap inspectableToMusic
 
+instance Inspectable [Interval] where
+  inspectableToMusic = rcat . fmap inspectableToMusic
+
 -- instance Inspectable [Hertz] where
 --   inspectableToMusic xs = ppar $ map fromPitch $ map (^.from pitchHertz) xs
 -- instance Inspectable [[Hertz]] where
@@ -147,7 +150,7 @@ instance Inspectable Pitch where
   inspectableToMusic = inspectableToMusic . (: [])
 
 instance Inspectable Interval where
-  inspectableToMusic v = stretch 8 $ inspectableToMusic [c :: Pitch, c .+^ v]
+  inspectableToMusic v = stretch 4 $ inspectableToMusic [c :: Pitch, c .+^ v]
 
 instance Inspectable Span where
   inspectableToMusic s = transform s c

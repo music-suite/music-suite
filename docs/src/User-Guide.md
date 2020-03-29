@@ -166,9 +166,19 @@ The `|*` and `|/` operators can be used as shorthands for `stretch` and `compres
 TODO let bindings first
 
 
-## Octave changes
+## Octaves and accidentals
 
-TODO
+We can change octaves and accidentals:
+
+```music+haskell
+_8va c
+```
+
+```music+haskell
+sharpen c
+```
+
+TODO see pitch chapter
 
 ## Basic dynamics and articulations
 
@@ -229,7 +239,7 @@ pseq [c,e..g] |* (1/4)
   TODO understanding tyes, types of the above operators and that `|>` and `</>` are based on `<>`. In other words `Semigroup` is used for all composition in Music Suite.
 
 
-## Chords
+## Chords and rests
 
   Notes with the same onset and offset are rendered as chords by default. If you want to prevent this you must put them in separate parts.
 
@@ -248,9 +258,7 @@ pseq [c,e..g] |* (1/4)
   @[simultaneous]
 
 
-## Rests
-
-  Similar to chords, there is usually no need to handle rests explicitly.
+  Similarly, there is no need to handle rests explicitly.
 
   TODO show with examples how rests are added from delay/transform etc.
 
@@ -287,6 +295,20 @@ c |* (9/8) |> d |* (7/8)
   compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
   ```
 
+## Comments
+
+Comments are the same as in regular Haskell.
+
+```haskell
+-- This is a single-line comment
+
+{-
+ This is
+ a multi-line
+ comment!
+-}
+```
+
 ## Functions and types
 
   TODO basic functions
@@ -299,13 +321,8 @@ c |* (9/8) |> d |* (7/8)
 
 ## More examples
 
-  TODO make very clear that stretch, `_8va` etc work on arbitrarily complex scores, not just single notes as in the first examples
+TODO make very clear that stretch, `_8va` etc work on arbitrarily complex scores, not just single notes as in the first examples
 
-### Time and Duration
-
-  TODO AffineSpace
-
-  Maybe forward reference to Span/HasPosition?
 
 ## Summary
 
@@ -420,13 +437,15 @@ return (c::Note) == (c::Score Note)
   As is common in music theory notation, *minor* and *diminished* intervals are written in lower-case, while *major*
   and *perfect* intervals are written in upper-case. Here are some examples:
 
-```haskell
-m3
-_M3
-_P5
-d5
-m9
-d12
+```music+haskell
+inspectableToMusic @[Interval] $
+[ m3
+, _M3
+, _P5
+, d5
+, m9
+, d12
+]
 ```
 
 Similar to @[sharpen] and @[flatten], the @[augment] and @[diminish] functions can be used
@@ -440,16 +459,33 @@ in pseq $ fmap (`up` c) intervals
 
 
 
-
 ### Simple and compound intervals
 
-@[invert]
-@[simple]
-@[octaves]
+A simple interval is an interval spanning less than one octave. Intervals spanning octave or more are called compound intervals, as they can be obtained by adding one or more octaves to a simple interval.
 
-TODO simple vs compound
+```haskell
+>>> simple _P11
+_P4
 
-TODO positive vs negative: a negative interval is a compound interval with a negative octave number
+>>> invert _P4
+_P5
+
+>>> invert _P11
+_P5
+
+>>> octaves @Interval _P4
+0
+
+>>> octaves @Interval _P11
+1
+```
+
+A *negative* interval is a compound interval with a negative octave number.
+
+```haskell
+>>> octaves @Interval (-_P5)
+-1
+```
 
 
 ### Number, quality, alteration, diatonic/chromatic
@@ -623,7 +659,7 @@ Note how the origin stays the same under scaling.
 
 ### Inverting pitch
 
-@[invertPitches]
+The @[invertPitches] function is a shorthand for the special case of scaling by `-1`:
 
 ```music+haskell
 m
@@ -935,7 +971,7 @@ Calculate dissonance of a chord (classical/"objective", by higest common fundame
 
 # Absolute pitch
 
-TODO in previous chapters we worked exclusivey with Pitch/Interval. These restrict
+In the previous chapters we worked exclusivey with Pitch/Interval. These restrict
 us to the Western/classical set of pitches and are relative (assuming, but not implying any particular tuning system). In this chapter we we will let go of these restrictions and look into working with both absolute pitch (arbitrary frequencies) and *alternative* pitch systems.
 
 We will also see how *tuning systems* relate structured pitch representations (such as `Pitch`) to unstructured ones (such as `Hertz`).
@@ -1179,8 +1215,6 @@ The most common parts and instruments are predefined. By convention names in sin
 flute  :: Instrument
 flutes :: Part
 ```
-
-It is also possible to create custom instruments and parts (TODO link).
 
 ## Basic use
 
