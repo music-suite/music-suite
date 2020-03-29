@@ -1409,7 +1409,6 @@ TODO extractPart extractPartNamed extractParts extractPartsWithInfo
 ```music+haskell
 extractPart violas fullScore
   where
-    fullScore :: Music
     fullScore =
       (parts' .~ solo violin $ pseq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16)
         <>
@@ -2635,14 +2634,9 @@ TODO very simple space representation (e.g. Angle), minimal example using Ambiso
 
 ## Prelude/Inspectable
 
-The @[Inspectable] class represents types that can be converted into a standard musical representation and exported via an *output backend*. The top-level music expression in a file needs to be an instance of `Inspectable`.
+The @[Inspectable] class represents types that can be converted into a standard musical representation and exported via an *output backend*. The top-level music expression in a file needs to be inspectable.
 
-TODO point here is to fix a "default" type for rendering/export purposes. This is used to monomorphize expressions written in the polymorphic combinators of the library. The default type is knonw as `Music`.
-
-Inspectable renders a type by converting it into an exportable type. See TODO.md re: defaulting.
-
-TODO how to export/pick format
-
+In some cases, the generality of the Music Suite library leads to ambiguity when selecting the type of the top-level expression. The `Music` type can be used as default.
 
 ## Overview of backends
 
@@ -2650,7 +2644,7 @@ TODO how to export/pick format
 
 The MIDI output backend generates type 1 (multi-track) Standard MIDI files Standard MIDI files.
 
-The MIDI format is suitable for generating sound using a software synthesizer such as [Timidity](TODO link) or [Fluidsynth](TODO link), or for exporting music to a Digital Audio Workstation (DAW) software. It is not suitable for exporting to score writing software (use MusicXML).
+The MIDI format is suitable for generating sound using a software synthesizer such as [TiMidity++](https://en.wikipedia.org/wiki/TiMidity%2B%2B) or [Fluidsynth](https://en.wikipedia.org/wiki/FluidSynth), or for exporting music to a Digital Audio Workstation (DAW) software. It is not suitable for exporting to score writing software (use MusicXML).
 
 ### Lilypond
 
