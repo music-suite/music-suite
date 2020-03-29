@@ -273,14 +273,6 @@ newtype Score' a = Score' {getScore' :: [Event a]}
 instance (Show a, Transformable a) => Show (Score a) where
   show x = show (x ^. events) ++ "^.score"
 
-instance Wrapped (Score' a) where
-
-  type Unwrapped (Score' a) = [Event a]
-
-  _Wrapped' = iso getScore' Score'
-
-instance Rewrapped (Score' a) (Score' b)
-
 deriving
   via (WriterT Span [] `As1` Score')
   instance Applicative Score'
@@ -318,8 +310,9 @@ instance Transformable (Score' a) where
 instance HasPosition (Score' a) where
   _era x = (f x, g x) ^. from onsetAndOffset
     where
-      f = safeMinimum . fmap ((^. onset) . normalizeSpan) . toListOf (_Wrapped . each . era)
-      g = safeMaximum . fmap ((^. offset) . normalizeSpan) . toListOf (_Wrapped . each . era)
+      f, g :: Score' a -> Time
+      f = safeMinimum . fmap ((^. onset) . normalizeSpan) . toListOf (each . era) . getScore'
+      g = safeMaximum . fmap ((^. offset) . normalizeSpan) . toListOf (each . era) . getScore'
       safeMinimum xs = if null xs then 0 else minimum xs
       safeMaximum xs = if null xs then 0 else maximum xs
 
@@ -333,7 +326,7 @@ score = from eventsIgnoringMeta
 
 -- | View a 'Score' as a list of 'Event' values.
 events :: Lens (Score a) (Score b) [Event a] [Event b]
-events = iso getScore Score . _2 . _Wrapped . sorted
+events = iso getScore Score . _2 . iso getScore' Score' . sorted
   where
     -- TODO should not have to sort...
     sorted = iso (List.sortBy (Ord.comparing (^. onset))) (List.sortBy (Ord.comparing (^. onset)))
@@ -378,7 +371,7 @@ eventToScore = view score . pure
 -- | A score is a list of events up to meta-data. To preserve meta-data, use the more
 -- restricted 'score' and 'events'.
 eventsIgnoringMeta :: Iso (Score a) (Score b) [Event a] [Event b]
-eventsIgnoringMeta = iso getScore Score . noMeta . _Wrapped . sorted
+eventsIgnoringMeta = iso getScore Score . noMeta . iso getScore' Score' . sorted
   where
     sorted = iso (List.sortBy (Ord.comparing (^. onset))) (List.sortBy (Ord.comparing (^. onset)))
     noMeta = iso extract return
@@ -404,10 +397,10 @@ triplesIgnoringMeta = iso _getScore _score
 mapScore :: (Event a -> b) -> Score a -> Score b
 mapScore f = over (iso getScore Score . _2) (mapScore' f)
   where
-    mapScore' f = over (_Wrapped . traverse) (extend f)
+    mapScore' f = over (iso getScore' Score' . traverse) (extend f)
 
 reifyScore :: Score a -> Score (Event a)
-reifyScore = over (iso getScore Score . _2 . _Wrapped) $ fmap duplicate
+reifyScore = over (iso getScore Score . _2 . iso getScore' Score') $ fmap duplicate
 
 -- | View a score as a list of time-duration-value triplets.
 --
