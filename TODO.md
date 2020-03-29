@@ -539,7 +539,7 @@ Consider switching to a decentralized issue tracker such as:
       - Melody inversion means (point-wise) negation
 
 
-- Get rid of asNote/asScore/asVoice/asTrack
+- [ ] Get rid of asNote/asScore/asVoice/asTrack
 
 - [X] Get rid of Prelude.StandardNote et al, use Asp1 (renamed!) instead
 
@@ -562,6 +562,8 @@ Consider switching to a decentralized issue tracker such as:
   - Closing this as actions are tracked under $playingTechniques
 
 - Purge lawless instances, do more property testing
+  - It is easy to forget to add tests for each instance. Could we automatically discover instances
+    and test them?
 
 - If possible, derive everything in Music.Score.Internal.Instances
 
