@@ -127,12 +127,13 @@ extractTimeSignatures score = zip (fmap realToFrac barTimeSignatures) (retainUpd
     timeSignatures :: [(TimeSignature, Duration)]
     timeSignatures =
       fmap swap
-        $ view pairs . {-fuse . -} reactiveToVoice' (0 <-> (score ^. offset))
+        $ view pairs . reactiveToVoice' (0 <-> (score ^. offset))
         $ getTimeSignatures defaultTimeSignature score
-    -- The time signature of each bar.
+    -- The time signature of each bar
+    barTimeSignatures :: [TimeSignature]
     barTimeSignatures =
-      prolongLastBarIfDifferent $
-        fmap fst $ tsPerBar $ fmap (, ()) timeSignatures
+      fmap fst $ prolongLastBarIfDifferent $
+        tsPerBar $ fmap (, ()) timeSignatures
 
 -- | Extract the time signature meta-track, using the given default.
 getTimeSignatures :: HasMeta a => TimeSignature -> a -> Reactive TimeSignature
@@ -151,14 +152,14 @@ defaultTimeSignature = time 4 4
 --
 -- Useful to scores this from having an unexpected time signature change
 -- in the last bar.
-prolongLastBarIfDifferent :: [TimeSignature] -> [TimeSignature]
+prolongLastBarIfDifferent :: [(TimeSignature, a)] -> [(TimeSignature, a)]
 prolongLastBarIfDifferent = reverse . go . reverse
   where
     go [] = []
     go [x] = [x]
-    go (last : penult : xs)
-      | last < penult = penult : penult : xs
-      | otherwise = last : penult : xs
+    go ((last, lastX) : (penult, penultX) : xs)
+      | last < penult = (penult, lastX) : (penult, penultX) : xs
+      | otherwise = (last, lastX) : (penult, penultX) : xs
 
 
 
