@@ -319,7 +319,7 @@ We have now seen how to write basic pieces, using melody, harmony and voices. In
 
 ## The Pitch type
 
-The @[Pitch] type represents common/Western classical pitch. As we shall see later this is not the only way of representing pitch in Music Suite, but it is common enough to be the default.
+The @[Pitc] representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling. As we shall see later this is not the only way of representing pitch in Music Suite, but it is common enough to be the default.
 
 ### Pitch names
 
@@ -596,6 +596,7 @@ m
 
 ## Adding pitches and intervals
 
+
 TODO AdditiveGroup, VectorSpace, AffineSpace for pitch/interval.
 
 Show how this the first example of an affine space (more to come!)
@@ -603,13 +604,17 @@ Show how this the first example of an affine space (more to come!)
 
 
 
-THe standard pitch representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling.
+The standard pitch representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling.
 
 
 
 # Harmony
 
-TODO Pitch containers
+While the `Pitch` and `Interval` types allow us to represent pitch (at least in the Western/classical framework), they do not tell us much about *harmony*. We need types to represent *collections* and *relationships* between pitches, including modes, chords and scales.
+
+The simplest (and most general) way of doing this is to work with *generic* container types provided by Haskell: these include sets, lists, maps and so on. However music theory defines some very specific structures that are not always captured by generic containers. In this chapter we will look at some structures that make particular sense from a musical point of view.
+
+TODO data/codata
 
 ## Ambitus and range
 
