@@ -78,7 +78,7 @@ module Music.Parts
     cello,
     doubleBass,
 
-    -- ** Ensembles
+    -- ** Parts
     piccoloFlutes,
     flutes,
     altoFlutes,
@@ -115,6 +115,9 @@ module Music.Parts
 
     claves,
     maracas,
+
+    -- ** Ensembles (TODO move to separate module)
+    stringOrchestra,
   )
 where
 
@@ -314,3 +317,5 @@ doubleBasses = tutti doubleBass
 harp' = fromMidiProgram 46
 
 harp = tutti harp'
+
+stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere

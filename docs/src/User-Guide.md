@@ -1381,9 +1381,6 @@ TODO updating and merging parts. Or should we write about this in cobination wit
 
 ```music+haskell
 arrangeFor stringOrchestra $ rcat [c',e,g_,c_]
-  where
-    stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
-
 ```
 
 ## Soloists
@@ -1396,8 +1393,6 @@ The solo/tutti component is useful when working with concertante scores.
 (parts' .~ solo violin $ pseq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16)
   <>
 arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
-  where
-    stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 ```
 
 TODO by default `Tutti` is used. In chamber music there is usually no need to override this with `Solo`, the difference only make sense when you need to distinguish the solist.
@@ -1419,8 +1414,14 @@ extractPart violas fullScore
       (parts' .~ solo violin $ pseq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16)
         <>
       arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
-        where
-          stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
+```
+
+## Ensembles
+
+TODO standard/custom
+
+```haskell
+someEnsemble = divide 2 violins ++ [trumpet, clarinet]
 ```
 
 ## Transposing instruments
