@@ -74,6 +74,7 @@ import Music.Score.Meta
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Time
+import Data.Bits ((.&.))
 
 -- |
 -- A time signature is a sequence of beat numbers and a note value (i.e. an expression on the
@@ -203,12 +204,18 @@ standardTimeSignature x = case unRatio (toRational x) of
   (7, 8) -> time 7 8
   -- TODO check divisible by 8 etc
   (m, n)
-    | isMultipleOfTwo n -> time m n
-    | error $ "Expected multiple of two, but got " ++ show n
+    | isPowerOfTwo n -> time m n
+    | otherwise -> error $ "Expected power of two, but got " ++ show n
 
--- _     -> error "standardTimeSignature: Stange value"
+isPowerOfTwo :: Integer -> Bool
+isPowerOfTwo 0 = True
+isPowerOfTwo 1 = False
+isPowerOfTwo n = (n .&. (n-1)) == 0
+{-# INLINE isPowerOfTwo #-}
+
 
 -- TODO consolidate
+optionLast :: a -> Option (Last a)
 optionLast = Option . Just . Last
 
 mapNums :: ([Integer] -> [Integer]) -> TimeSignature -> TimeSignature
@@ -223,5 +230,4 @@ liftRational :: (Fractional c, Real a) => (Rational -> Rational) -> a -> c
 
 liftRational2 :: (Fractional a, Real a1, Real a2) => (Rational -> Rational -> Rational) -> a1 -> a2 -> a
 
-optionLast :: a -> Option (Last a)
 
