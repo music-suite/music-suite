@@ -1187,23 +1187,62 @@ TODO subparts allow arbitrarily deep nestings "Violin I.1.II" etc.
 
 TODO Understand "overlapping" semantics, e.g. if notes overlap in "I" and "I.2" we have "overlapping events" (not OK in monophonic instruments, but see solo/altri below)
 
-## Multi-staff parts
+TODO show how to set explicitly VI.1, VI.2, VII etc.
 
-TODO proper multi-staff part support (see TODO.md).
+## Partwise composition
+
+We have already seen how the `</>` operator can be used to compose music "partwise". Now that we know about subparts we can see this works:
+
+TODO
+
+```music+haskell
+c </> c
+```
+
+Because these instruments were in the same part (the default) TODO
+
+```music+haskell
+set parts' violins c </> set parts' violas c
+```
+
+These instruments were already in different parts. In this case `</>` is identical to `<>`.
+
+```music+haskell
+set parts' p c </> set parts' p c
+  where
+    p = set subpart 2 $ violins
+```
+
+TODO understand how `</>` is bracketed
+
+```music+haskell
+c </> (e </> g)
+```
+```music+haskell
+(c </> e) </> g
+```
+
+The conclusion is that you should always associate `</>` to the left. This is what `rcat` does:
+
+```music+haskell
+rcat [c,e,g]
+```
+
+
+## Staves and parts
+
+TODO understand that staves and parts are distinct. By default each part is drawn on its own staff (or staves, depending on the instrument).
 
 The current state will gracefully handle overlapping notes in a single part, drawing them on separate staves, however it may not distribute things ideally across the staves. The final state should do better by default *and* allow customization.
 
 It isn't (and should never be) *necessary* to select staves manually.
 
-## Partwise composition
+TODO proper multi-staff part support (see TODO.md).
 
-TODO understand how `</>` and rcat works
 
 ## Updating several parts at once
 
 TODO updating and merging parts. Or should we write about this in cobination with pitch/dynamic etc (as they're all traversal-based).
-
-TODO `divide 2 violins` should yield `V1, V2`, not `VI.0, VI.1`
 
 ```music+haskell
 arrangeFor stringOrchestra $ rcat [c',e,g_,c_]
@@ -1232,6 +1271,8 @@ TODO soloists *from* the orchestra/altri
 
 
 ## Extracting parts
+
+TODO we can also *extract parts* from a score. Note that if you're working with MusicXML or Lilypond there is usually no need to do this explicitly.
 
 TODO extractPart extractPartNamed extractParts extractPartsWithInfo
 
