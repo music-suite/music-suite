@@ -211,89 +211,89 @@ c </> e </> g
 
 As a shorthand for `x |> y |> z ..`, we can write @[pseq] `[x, y, z, ...]`.
 
-  ```music+haskell
+```music+haskell
 pseq [c,e..g] |* (1/4)
-  ```
+```
 
-  For `x <> y <> z ...`, we can write @[ppar] `[x, y, z, ...]` .
+For `x <> y <> z ...`, we can write @[ppar] `[x, y, z, ...]` .
 
-  ```music+haskell
-  ppar [c,e..g] |/ 2
-  ```
+```music+haskell
+ppar [c,e..g] |/ 2
+```
 
-  For `x </> y </> ...` the syntax is @[rcat] `[x, y, z ...]`.
+For `x </> y </> ...` the syntax is @[rcat] `[x, y, z ...]`.
 
-  ```music+haskell
-  rcat [c,e..g] |/ 2
-  ```
+```music+haskell
+rcat [c,e..g] |/ 2
+```
 
-  Here is a more complex example using all forms of composition:
+Here is a more complex example using all forms of composition:
 
-  ```music+haskell
-  let
-  scale = pseq [c,d,e,f,g,a,g,f]|/8
-  triad a = a <> up _M3 a <> up _P5 a
-  in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2
-  ```
+```music+haskell
+let
+scale = pseq [c,d,e,f,g,a,g,f]|/8
+triad a = a <> up _M3 a <> up _P5 a
+in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2
+```
 
-  TODO understanding tyes, types of the above operators and that `|>` and `</>` are based on `<>`. In other words `Semigroup` is used for all composition in Music Suite.
+TODO understanding tyes, types of the above operators and that `|>` and `</>` are based on `<>`. In other words `Semigroup` is used for all composition in Music Suite.
 
 
 ## Chords and rests
 
-  Notes with the same onset and offset are rendered as chords by default. If you want to prevent this you must put them in separate parts.
+Notes with the same onset and offset are rendered as chords by default. If you want to prevent this you must put them in separate parts.
 
-  ```music+haskell
-  pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]
-  ```
+```music+haskell
+pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]
+```
 
-  Or, equivalently:
+Or, equivalently:
 
-  ```music+haskell
-  ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
-  ```
+```music+haskell
+ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
+```
 
-  TODO how part separation works w.r.t. division etc
+TODO how part separation works w.r.t. division etc
 
-  @[simultaneous]
-
-
-  Similarly, there is no need to handle rests explicitly.
-
-  TODO show with examples how rests are added from delay/transform etc.
-
-  It is possible to add rests explicitly as follows.
-
-  @[mcatMaybes]
-
-  ```TODO
-  times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
-  ```
-
-  We can also remove rests explicitly:
-
-  TODO explain how this works.
-
-  ```music+haskell
-  mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
-  ```
+@[simultaneous]
 
 
-  There is no need to explicitly enter tuplets or ties, these are added automatically as needed.
+Similarly, there is no need to handle rests explicitly.
 
-  Any note that crosses a barline will be notated using ties:
+TODO show with examples how rests are added from delay/transform etc.
 
-  ```music+haskell
+It is possible to add rests explicitly as follows.
+
+@[mcatMaybes]
+
+```TODO
+times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
+```
+
+We can also remove rests explicitly:
+
+TODO explain how this works.
+
+```music+haskell
+mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
+```
+
+
+There is no need to explicitly enter tuplets or ties, these are added automatically as needed.
+
+Any note that crosses a barline will be notated using ties:
+
+```music+haskell
 c |* (9/8) |> d |* (7/8)
-  ```
+```
 
-  See also [time signatures](#time-signatures).
+See also [time signatures](#time-signatures).
 
-  Similarly, durations that do not fit into standard note durations are notated using dots or tuplets:
+Similarly, durations that do not fit into standard note durations are notated using dots or tuplets:
 
-  ```music+haskell
-  compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
-  ```
+```music+haskell
+compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
+```
 
 ## Comments
 
@@ -315,9 +315,9 @@ Comments are the same as in regular Haskell.
 
   Here is a full example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
 
-  ```music+haskell
-  (up _P8 . compress 2 . delay 3) c
-  ```
+```music+haskell
+(up _P8 . compress 2 . delay 3) c
+```
 
 ## More examples
 
@@ -340,102 +340,103 @@ TODO make very clear that stretch, `_8va` etc work on arbitrarily complex scores
 
 ### Pitch names
 
-  The following pitch names are used:
+The following pitch names are used:
 
-  ```music+haskell
-  pseq [c, d, e, f, g, a, b]
-  ```
+```music+haskell
+pseq [c, d, e, f, g, a, b]
+```
 
 ### Octaves
 
-  We can change octave using @[octavesUp] and @[octavesDown]:
+We can change octave using @[octavesUp] and @[octavesDown]:
 
-  ```music+haskell
-  octavesUp 4 c
-  </>
-  octavesUp (-1) c
-  </>
-  octavesDown 2 c
-  ```
+```music+haskell
+octavesUp 4 c
+</>
+octavesUp (-1) c
+</>
+octavesDown 2 c
+```
 
-  There are synonyms for the most common cases:
+There are synonyms for the most common cases:
 
-  ```music+haskell
-  _8va c <> c <> _8vb c
-  ```
+```music+haskell
+_8va c <> c <> _8vb c
+```
 
-  The following is also a shorthand for alternative octaves:
+The following is also a shorthand for alternative octaves:
 
-  ```music+haskell
-  c__ |> c_ |> c |> c' |> c''
-  ```
+```music+haskell
+c__ |> c_ |> c |> c' |> c''
+```
 
 ### Sharps and flats
 
-  Sharps and flats can be added using @[sharpen] and @[flatten].
+Sharps and flats can be added using @[sharpen] and @[flatten].
 
-  ```music+haskell
-  sharpen c
-  </>
-  (sharpen . sharpen) c
-  </>
-  flatten c
-  </>
-  (flatten . flatten) c
-  ```
+```music+haskell
+sharpen c
+</>
+(sharpen . sharpen) c
+</>
+flatten c
+</>
+(flatten . flatten) c
+```
 
-  The @[alter] function is an iterated version of @[sharpen]/@[flatten]:
+The @[alter] function is an iterated version of @[sharpen]/@[flatten]:
 
-  ```music+haskell
-  alter 1 $ pseq [c,d,e]
-  ```
+```music+haskell
+alter 1 $ pseq [c,d,e]
+```
 
-  Double sharps/flats are supported:
+Double sharps/flats are supported:
 
-  ```music+haskell
-  pseq $ fmap (`alter` c) [-2..2]
-  ```
+```music+haskell
+pseq $ fmap (`alter` c) [-2..2]
+```
 
-  The pitch representation used in Music Suite does in fact allow for an *arbitrary* number of sharps or flats. As there are no symbols for these in standard notation, they are automatically re-spelled in the output. Here is the note `c` written with up to 4 flats and sharps.
+The pitch representation used in Music Suite does in fact allow for an *arbitrary* number of sharps or flats. As there are no symbols for these in standard notation, they are automatically re-spelled in the output. Here is the note `c` written with up to 4 flats and sharps.
 
-  ```music+haskell
-  pseq $ fmap (`alter` c) [-4..4]
-  ```
+```music+haskell
+pseq $ fmap (`alter` c) [-4..4]
+```
 
-  There is of course also a shorthand for sharps and flats:
+There is of course also a shorthand for sharps and flats:
 
-  ```music+haskell
-  (cs |> ds |> es)    -- sharp
-  </>
-  (cb |> db |> eb)    -- flat
-  ```
+```music+haskell
+(cs |> ds |> es)    -- sharp
+</>
+(cb |> db |> eb)    -- flat
+```
 
-  > Note: Music Suite uses C major by default, so all altered pitches are rendered as accidentals. See [key signatures](TODO link) for how to change this.
+> Note: Music Suite uses C major by default, so all altered pitches are rendered as accidentals. See [key signatures](TODO link) for how to change this.
 
 
 ## Pitch overloading
 
-  To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*.
+To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*.
 
-  To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type @[IsPitch] `a => a`.
-
-
-  TODO explain overloading is not limited to pitch types but also to containers types (by lifting), so the following works:
+To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type @[IsPitch] `a => a`.
 
 
-  ```haskell
+TODO explain overloading is not limited to pitch types but also to containers types (by lifting), so the following works:
+
+
+```haskell
 return (c::Note) == (c::Score Note)
-  ```
+```
 
   > Hint: Use [`-XTypeApplications`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-TypeApplications) to restrict the type of an pitch. For example: `id @Pitch c`
 
 
 ## Intervals
 
-  TODO the interval type represents common/Western classical *intervals*.
+The @[Interval] type represents common/Western classical *intervals*.
 
-  As is common in music theory notation, *minor* and *diminished* intervals are written in lower-case, while *major*
-  and *perfect* intervals are written in upper-case. Here are some examples:
+As is common in music theory notation, *minor* and *diminished* intervals are
+written in lower-case, while *major* and *perfect* intervals are written in
+upper-case. Here are some examples:
 
 ```music+haskell
 inspectableToMusic @[Interval] $
@@ -480,11 +481,20 @@ _P5
 1
 ```
 
+### Negative intervals
+
 A *negative* interval is a compound interval with a negative octave number.
 
 ```haskell
 >>> octaves @Interval (-_P5)
 -1
+```
+
+```music+haskell
+inspectableToMusic @[Interval] $
+[ m3
+, -m3
+]
 ```
 
 
