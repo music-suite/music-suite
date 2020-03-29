@@ -207,7 +207,7 @@ instance Transformable (Score a) where
 -- (x1, x2) = split t x
 
 instance HasPosition (Score a) where
-  _position = _position . snd . getScore
+  _era = _era . snd . getScore
 
 instance HasDuration (Score a) where
   _duration x = (^. offset) x .-. (^. onset) x

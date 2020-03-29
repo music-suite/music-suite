@@ -14,6 +14,7 @@ module Music.Time.Position
 
     -- * The HasPosition class
     HasPosition (..),
+    _position,
 
     -- * Position and Era
     position,
@@ -84,18 +85,16 @@ import Music.Time.Internal.Util
 -- @
 class HasDuration a => HasPosition a where
 
-  -- | Map a local time in value to global time.
-  _position :: a -> Duration -> Time
-  _position x = alerp a b where (a, b) = (_era x) ^. onsetAndOffset
-
   -- | Return the conventional bounds of a value (local time zero and one).
   _era :: HasPosition a => a -> Span
-  _era x = x `_position` 0 <-> x `_position` 1
-
-  {-# MINIMAL (_position | _era) #-}
 
 instance HasPosition Span where
   _era = id
+
+-- | Map a local time in value to global time.
+_position :: HasPosition a => a -> Duration -> Time
+_position x = alerp a b where (a, b) = (_era x) ^. onsetAndOffset
+
 
 -- |
 -- Position of the given value.
