@@ -79,7 +79,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - [ ] Docs: User-Guide
   - Title/Attribution not shown in examples (because the example uses the inline LY template?)
-  - Key sigs not shown
+  - [X] Key sigs not shown
   - Tempi not shown
   - Fermatas not shown
   - Caesura/Breathing mark not shown

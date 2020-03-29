@@ -1151,9 +1151,9 @@ addKeySignature ::
   [Lilypond.Music] ->
   [Lilypond.Music]
 
-addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just (_fifths, _isMajor))))
+addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just (tonic, isMajor))))
   -- TODO convert
-   = (Lilypond.Key Music.Pitch.Literal.fs Lilypond.Minor :)
+   = (Lilypond.Key (Music.Pitch.Literal.fromPitch tonic) (if isMajor then Lilypond.Major else Lilypond.Minor):)
 addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First Nothing)) = id
 
 addTimeSignature ::
@@ -2083,8 +2083,13 @@ fromAspects sc = do
     -- TODO also extract Barline, Key, RehearsalMark, Tempo here
     -- (all of these should force a new bar)
     systemStaff :: SystemStaff
-    systemStaff = fmap (\ts -> timeSignature .~ Option (fmap First ts) $ mempty) timeSignatureMarks
-    (barDurations, timeSignatureMarks, _keySignatureMarks) = unzip3 $ Music.Score.Internal.Export.extractBars normScore
+    systemStaff = fmap (\(_dur, ts, ks) ->
+      timeSignature .~ Option (fmap First ts) $
+      keySignature  .~ maybe mempty id ks $
+        mempty) barMeta
+
+    (barDurations, _timeSignatureMarks, _keySignatureMarks) = unzip3 barMeta
+    barMeta = Music.Score.Internal.Export.extractBars normScore
     -- Make this more prominent!
     -- This is being used for the actual score!
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
@@ -2767,7 +2772,7 @@ umts_13a =
         (\ks -> keySignature .~ ks $ mempty)
         keySigs
     keySigs :: [KeySignature]
-    keySigs = concatMap (\i -> fmap (\m -> Music.Score.Meta.Key.key i m) modesPerBar) fifthPerTwoBars
+    keySigs = concatMap (\i -> fmap (\m -> Music.Score.Meta.Key.key (error "TODO" i) m) modesPerBar) fifthPerTwoBars
     fifthPerTwoBars = [-11 .. 11] :: [Music.Score.Meta.Key.Fifths]
     modesPerBar = [True, False]
 

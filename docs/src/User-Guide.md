@@ -1350,6 +1350,12 @@ keySignature (key db major) $ pseq [db,eb,f]
 
 @[keySignatureDuring]
 
+```music+haskell
+let major = True -- TODO!
+in
+keySignatureDuring (1 <-> 2) (key db major) $ pseq [db,eb,f]
+```
+
 Key signature changes will always force a new bar.
 
 ## Time signatures
