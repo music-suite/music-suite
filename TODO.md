@@ -134,10 +134,17 @@ Consider switching to a decentralized issue tracker such as:
   - Remaining work:
     - Make sure output look like the official Lilypond output (produced through running musicxml2ly on the official XML files) for both
       our Lilypond and MusicXML exports (using Sibelius/MuseScore).
-  - Turn into golden/regression tests assuring the XML/Ly output of Haskell encoded UMTS cases does not affect visual appearance. If the
     output changes the goldens will flag and the developer has to manually ensure that the visuals are unaffected.
   - Later: Maybe use approximate image diffs (comparing the entire rendering pipeline to musicxml2ly on the original XML files) instead
   - Run as part of CI builds
+
+- Visual golden/regression tests
+  - Currently we often do "rm docs/build" and build the documentation as a form of regression test
+  - This is wasteful because it re-invokes Lilypond
+  - Better would be to extract all documentation snippets (+ the other examples?) and use them as *golden* tests
+    - By default, check output output hash of each example snippiet
+    - If this has changed, generate visual view comparing the old to the new version
+      - Requires storing (checked-in) the *old output* with its input and output has
 
 - Use modern type-level nats in Music.Pitch.Equal
 
