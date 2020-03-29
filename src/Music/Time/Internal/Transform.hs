@@ -108,7 +108,7 @@ import Music.Time.Types
 --
 -- In other words 'Transformable' values are monoid actions of 'Span'.
 --
--- Instances of 'Transformable' and HasDuration should satisfy:
+-- Instances of 'Transformable' and 'HasDuration should satisfy:
 --
 -- @
 -- _duration a = _duration (_era a)
