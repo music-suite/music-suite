@@ -8,7 +8,7 @@ TODO Docker or other "easy" install options
 
 ### Installing from source
 
-You'll need Git and Nix (2.3.2 or later).
+We'll need Git and Nix (2.3.2 or later).
 
 ```
 $ git clone https://github.com/hanshoglund/music-suite
@@ -47,7 +47,7 @@ The purpose of the `import` line is to allow you to use Music Suite, as Haskell 
 
     $ cabal exec runhaskell -- Test.hs
 
-You can copy-paste all examples from this file into the above template. Whatever value `music` is assigned to will be exported when you run the file.
+We can copy-paste all examples from this file into the above template. Whatever value `music` is assigned to will be exported when you run the file.
 
 
 ### Using an interactive environment
@@ -105,7 +105,7 @@ The first musical expression we write will be simple: it consists of a single le
 c
 ```
 
-This of course represents the note C. You will notice that there is more information in the score than what we entered. This is because most musical aspects have a *default value* in Music Suite. We will see how to override them later, but for now we can note:
+This of course represents the note C. Notice that there is more information in the score than what we entered. This is because most musical aspects have a *default value* in Music Suite. We will see how to override them later, but for now we can note:
 
 - The default *octave* is the octave containing "middle C", or *C4* in [scientific pitch notation](https://en.wikipedia.org/wiki/Scientific_pitch_notation).
 
@@ -262,7 +262,7 @@ It is possible to add rests explicitly as follows.
 times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
 
-You can also remove rests explicitly:
+We can also remove rests explicitly:
 
 TODO explain how this works.
 
@@ -456,7 +456,7 @@ in pseq $ fmap (`up` c) intervals
 
 TODO AffineSpace
 
-You can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
+We can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
 operators, think of pitches and points `.` and intervals as vectors `^`.
 
 
@@ -503,6 +503,8 @@ TODO forward reference to traversals chapter, @[HasPitch]
 
 
 ## Transposing and inverting music
+
+TODO basic "geometry" (affine transformations) of pitch: scaling and translating
 
 @[Transposable]
 
@@ -938,7 +940,7 @@ TODO should the phrase traversal version be the default? E.g. do we want `cresc 
 (over phrases' (dim fff ff) $ pseq [c..c'] |/8)
 ```
 
-You can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
+We can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
 
 ```TODOmusic+haskell
 (cresc pp mf $ pseq [c..c'] |/8)
@@ -999,7 +1001,7 @@ accent (pseq [c..g]|/8)
 marcato (pseq [c..g]|/8)
 ```
 
-By default, accents are only applied to the first note in each phrase. You can also explicitly specify the last note, or all the notes:
+By default, accents are only applied to the first note in each phrase. We can also explicitly specify the last note, or all the notes:
 
 @[accentLast]
 @[accentAll]
@@ -1010,7 +1012,7 @@ accentLast (pseq [c..g]|/8)
 accentAll (pseq [c..g]|/8)
 ```
 
-You can apply slurs and articulation marks to scores of arbitrary complexity. The library will traverse each phrase in the score and apply the articulations separately.
+We can apply slurs and articulation marks to scores of arbitrary complexity. The library will traverse each phrase in the score and apply the articulations separately.
 
 For example in this example we're building up a score consisting of three parts and then apply `accent . legato`:
 
@@ -1454,9 +1456,9 @@ TODO color
 
 TODO rename meta to "global"?. Meta-information is global, rather than attached to a specific part. It is *defined at every point in the score with explicit change points (per type)* and always has a sensible default value (e.g. one (Reactive m) per type). All meta types are monoidal. Examples: key signature, time signature.
 
-For the most part *logical/semantic/sounding* information is not meta (exceptin: tempo).
+For the most part *logical/semantic/sounding* information is not meta (exception: tempo).
 
-
+Meta-information is always *optional*. All meta-tracks are set to some sensible value by default. We can override this either globally or locally (during some specific time-span).
 
 <!--
 It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In Music Suite these are grouped together under the common label *meta-information*.
@@ -1477,6 +1479,8 @@ Title, subtitle etc is grouped together as a single type `Title`, thus an arbitr
 title "Frere Jaques" $ pseq [c,d,e,c]|/4
 ```
 
+Some backends may or may not render subtitles, depending on their configuration.
+
 ## Attribution
 
 Similar to titles, the attribution of the creators of music can be annotated according to description such as @[composer], @[lyricist], @[arranger] etc. More generally, @[attribution] or @[attributions] can be used to embed arbitrary `(profession, name)` mappings.
@@ -1489,7 +1493,11 @@ composer "Anonymous" $ pseq [c,d,e,c]
 composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ pseq [c,d,e,c]|/4
 ```
 
+Some backends may or may not render attribution information, depending on their configuration.
+
 ## Key signatures
+
+By default the key signature of C is used. We can override the *global* key signature using @[keySignature].
 
 ```music+haskell
 let major = True -- TODO!
@@ -1497,7 +1505,7 @@ in
 keySignature (key db major) $ pseq [db,eb,f]
 ```
 
-@[keySignatureDuring]
+We can also set the key signature for a specific time span using @[keySignatureDuring].
 
 ```music+haskell
 let major = True -- TODO!
@@ -1505,7 +1513,7 @@ in
 keySignatureDuring (1 <-> 2) (key db major) $ pseq [db,eb,f]
 ```
 
-Key signature changes will always force a new bar.
+A key signature change will always force a new bar.
 
 ```music+haskell
 let major = True -- TODO!
@@ -1515,15 +1523,19 @@ keySignatureDuring (1.5 <-> 2) (key db major) $ pseq [db,eb,f]
 
 ## Time signatures
 
+Time signatures are represented by the `TimeSignature` type. It is an instance of `Fractional`, meaning that you can use fractional literals to define it.
+
 ```haskell
 2/4 :: TimeSignature
 ```
+
+We also support compound time signatures:
 
 ```haskell
 (3+2)/8 :: TimeSignature
 ```
 
-Or equivalently:
+Equivalently, we can write:
 
 ```haskell
 time 4 4 :: TimeSignature
@@ -1533,15 +1545,17 @@ time 4 4 :: TimeSignature
 compoundTime [3,2] 8 :: TimeSignature
 ```
 
+The default time signature is `4/4` is used (written as *c*). We can override this globally using @[timeSignature].
+
 ```music+haskell
 timeSignature (3/8) $ pseq [db,eb,f]
 ```
 
-@[timeSignatureDuring]
+We can also set the time signature for a specific time span using  @[timeSignatureDuring]
 
 Time signature changes will always force a new bar.
 
-Part-specific time signatures (save for transposing instruments) are not supported.
+Part-specific key signatures (save for transposing instruments) are not supported.
 
 ### Converting from one time signature to another
 
@@ -2150,7 +2164,9 @@ TODO explain how this works within pure FP: no change, just creating new structu
 
 TODO traverals are a very powerful concept and we'll only
 
-> Note: In the functional programming commonity, traverals have a powerful generalization known as optics, which also includes concepts such as lenses, prisms, folds and isomorphisms. Music Suite defines lenses and traversals compatible with `lens` and `microlens`.
+A traversal that targets exactly one element is known as a *lens*. We've already seen examples of lenses and traversals in the chapters on [dynamics](TODO) and [articulation](TODO) in the form of `.~` (or `set`) operator.
+
+> Note: For those familiar with Haskell: Music Suite defines lenses and traversals compatible with `lens` (and `microlens`).
 
 Can be used to:
 
