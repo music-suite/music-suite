@@ -114,7 +114,9 @@ ppar = mconcat
 -- |
 -- Move a value so that its era is equal to the era of another value.
 during :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
-_y `during` _x = error "TODO" -- set era (view era x) y
+y `during` x = case _era x of
+  Nothing -> y
+  Just e -> setEra e y
 
 -- |
 -- Like '<>', but scaling the second agument to the duration of the first.

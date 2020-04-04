@@ -1690,7 +1690,7 @@ Note: for percussion we break the singular/plural naming convention and export a
 
 The solo/tutti component is set to `Tutti` by default even though there might only be one performer in the group (the distinction would still make sense e.g. in a percussion concerto).
 
-```music+haskell
+```TODOmusic+haskell
 parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
   where
     rh = stretchTo 1 . pseq -- TODO put this in the library?
@@ -2366,7 +2366,7 @@ TODO renderPatternsAbs
 
 TODO finish/move to examples:
 
-```music+haskell
+```TODOmusic+haskell
 inspectableToMusic bachCMajChords
   where
     bachCMajChords :: Score [Pitch]
@@ -2779,7 +2779,7 @@ TODO this is not documentation, move to some other location. Listing all "bad re
 
 ### Quantization
 
-```music+haskell
+```TODOmusic+haskell
 (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
   where
     rh = stretchTo 1 . pseq

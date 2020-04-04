@@ -36,8 +36,8 @@ module Music.Time.Position
     placeAt,
 
     -- * Transforming relative a position
-    -- stretchRelative,
-    -- stretchRelativeOnset,
+    stretchRelative,
+    stretchRelativeOnset,
     -- stretchRelativeMidpoint,
     -- stretchRelativeOffset,
     -- transformRelative,
@@ -200,7 +200,6 @@ setEra s x = case _era x of
 era :: (HasPosition1 a, Transformable a) => Lens' a Span
 era = lens _era1 $ flip setEra
 
-{-
 -- |
 -- Stretch a value relative to its local origin.
 --
@@ -209,17 +208,19 @@ era = lens _era1 $ flip setEra
 -- stretchRelativeMidpoint = stretchRelative 0.5
 -- stretchRelativeOffset   = stretchRelative 1
 -- @
-stretchRelative :: (HasPosition a, Transformable a) => Alignment -> Duration -> a -> a
+stretchRelative :: (HasPosition1 a, Transformable a) => Alignment -> Duration -> a -> a
 stretchRelative p n x = over (transformed $ undelaying (realToFrac $ x ^. position p)) (stretch n) x
+
 
 -- |
 -- Stretch a value relative to its onset.
 --
 -- >>> stretchRelativeOnset 2 (0 <-> 1)
 -- 0 <-> 2
-stretchRelativeOnset :: (HasPosition a, Transformable a) => Duration -> a -> a
+stretchRelativeOnset :: (HasPosition1 a, Transformable a) => Duration -> a -> a
 stretchRelativeOnset = stretchRelative 0
 
+{-
 -- |
 -- Stretch a value relative to its midpoint.
 --
