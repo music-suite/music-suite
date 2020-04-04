@@ -1642,15 +1642,14 @@ All instruments come with a variety of playing techniques, many of which produce
 
 A regular (measured) tremolo can be notated using the @[tremolo] function. Regular tremolo is is a shorthand for rapid iteration of a single note.
 
-TODO `tremolo` should take a duration, not an integer!
 
-```TODOmusic+haskell
+```music+haskell
 tremolo 2 $ times 2 $ (c |> d)|/2
 ```
 
 An unmeasured tremolo is notated using @[fastTremolo]. Unmeasured tremolo means "play individually, as fast as possible" and is a coloristic effet rather than a rhythmical shorthand.
 
-Note that in keeping with traditional notation, we notate unmeasured tremolo using three beans. TODO allow use of Z-beam or other custoization.
+Note that in keeping with traditional notation, we notate unmeasured tremolo using three beans.
 
 ```TODOmusic+haskell
 fastTremolo $ times 2 $ (c |> d)|/2
