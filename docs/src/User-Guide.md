@@ -248,19 +248,19 @@ c </> e </> g
 As a shorthand for `x |> y |> z ..`, we can write @[pseq] `[x, y, z, ...]`.
 
 ```music+haskell
-pseq [c,e..g] |* (1/4)
+pseq [c,e,g] |* (1/4)
 ```
 
 For `x <> y <> z ...`, we can write @[ppar] `[x, y, z, ...]` .
 
 ```music+haskell
-ppar [c,e..g] |/ 2
+ppar [c,e,g] |/ 2
 ```
 
 For `x </> y </> ...` the syntax is @[rcat] `[x, y, z ...]`.
 
 ```music+haskell
-rcat [c,e..g] |/ 2
+rcat [c,e,g] |/ 2
 ```
 
 ## Comments
@@ -744,7 +744,7 @@ m
 (scale 2 e m)
   where
     scale n p = pitches %~ relative p (n *^)
-    m = pseq (fmap fromPitch [c..g]) |*(2/5)
+    m = pseq (fmap fromPitch [c,d,e,f,g]) |*(2/5)
 ```
 
 Note how the origin stays the same under scaling.
@@ -762,7 +762,7 @@ m
     </>
 (invertPitches f m)
   where
-    m = pseq (fmap fromPitch [c..g]) |*(2/5)
+    m = pseq (fmap fromPitch [c,d,e,f,g]) |*(2/5)
 ```
 
 As with transposition we can define a *diatonic* form of inversion. The function is @[invertDiatonic].
@@ -776,7 +776,7 @@ m
     </>
 (invertDiatonic f m)
   where
-    m = pseq (fmap fromPitch [c..g]) |*(2/5)
+    m = pseq (fmap fromPitch [c,d,e,f,g]) |*(2/5)
 ```
 
 In this case, the origin is also used as the tonic of the implied diatonic scale.
@@ -1279,7 +1279,7 @@ level ppp c
 Here is an overview of the standard dynamic values:
 
 ```music+haskell
-over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
+over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] (fmap fromPitch [c..])
 ```
 
 TODO should the phrase traversal version be the default? E.g. do we want `cresc a b = over phrases' (crescV a b)`. Probably!
@@ -1288,15 +1288,15 @@ TODO should the phrase traversal version be the default? E.g. do we want `cresc 
 We can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
 
 ```music+haskell
-(over phrases' (cresc pp mf) $ pseq [c..c'] |/8)
+(over phrases' (cresc pp mf) $ pseq [c,d,e,f,g,a,b,c'] |/8)
   </>
-(over phrases' (dim fff ff) $ pseq [c..c'] |/8)
+(over phrases' (dim fff ff) $ pseq [c,d,e,f,g,a,b,c'] |/8)
 ```
 
 Long crescendos and diminuendos are supported as well.
 
 ```music+haskell
-(over phrases' (cresc pp mf) $ (times 8 $ pseq [c..g]) |/8)
+(over phrases' (cresc pp mf) $ (times 8 $ pseq [c,d,e,f,g]) |/8)
 ```
 
 ### How dynamics are represented
@@ -1326,15 +1326,15 @@ repeated if the last entry was a few bars ago.
 Standard articulations are supported:
 
 ```music+haskell
-legato (pseq [c..g]|/8)
+legato (pseq [c,d,e,f,g]|/8)
     </>
-staccato (pseq [c..g]|/8)
+staccato (pseq [c,d,e,f,g]|/8)
     </>
-portato (pseq [c..g]|/8)
+portato (pseq [c,d,e,f,g]|/8)
     </>
-tenuto (pseq [c..g]|/8)
+tenuto (pseq [c,d,e,f,g]|/8)
     </>
-staccatissimo (pseq [c..g]|/8)
+staccatissimo (pseq [c,d,e,f,g]|/8)
 ```
 
 ### Accents
@@ -1342,17 +1342,17 @@ staccatissimo (pseq [c..g]|/8)
 Adding accents is similar to regular articulations:
 
 ```music+haskell
-accent (pseq [c..g]|/8)
+accent (pseq [c,d,e,f,g]|/8)
     </>
-marcato (pseq [c..g]|/8)
+marcato (pseq [c,d,e,f,g]|/8)
 ```
 
 One difference is that by default, accents are only applied to the first note in each phrase. We can also explicitly specify the last note, or all the notes:
 
 ```music+haskell
-accentLast (pseq [c..g]|/8)
+accentLast (pseq [c,d,e,f,g]|/8)
     </>
-accentAll (pseq [c..g]|/8)
+accentAll (pseq [c,d,e,f,g]|/8)
 ```
 
 ### Articulations and phrases
@@ -1363,9 +1363,10 @@ For example in this example we're building up a score consisting of three parts 
 
 ```music+haskell
 let
-    p1 = pseq [c..c']|/4
-    p2 = delay (1/4) $ pseq [c..c']|/4
-    p3 = delay (3/4) $ pseq [c..c']|/4
+    ps = fmap fromPitch [c..c']
+    p1 = pseq ps |/4
+    p2 = delay (1/4) $ pseq ps |/4
+    p3 = delay (3/4) $ pseq ps |/4
 in (accent . legato) (p1 </> p2 </> p3)
 ```
 
@@ -2052,7 +2053,7 @@ tempo (metronome (1/4) 80) $ pseq [c,d,e,b,c] |/ (5*8) |> d |* (3/4)
 ```music+haskell
 (tempo adagio $ pseq [c,d,e,b,c] |/ (5*4) |> d |* (3/4))
   |>
-(tempo allegro $ pseq [c..g] |/ 4 )
+(tempo allegro $ pseq [c,d,e,f,g] |/ 4 )
 ```
 
 Tempo changes will always force a new bar.
@@ -2156,7 +2157,7 @@ Annotations are simply textual values attached to a specific section of the scor
 Annotations are *invisible by default*. To show annotations in the generated output, use
 @[showAnnotations].
 
-```music+haskell
+```TODOmusic+haskell
 showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 ```
 
@@ -2319,7 +2320,7 @@ stretch (1/4) $ do
 ```
 
 ```music+haskell
-stretch (1/2) $ pseq [c..e]|/3 |> f |> g|*2
+stretch (1/2) $ pseq [c,d,e]|/3 |> f |> g|*2
 ```
 
 TODO monad comprehensions:
@@ -2450,7 +2451,7 @@ TODO more ways of buildings patterns
 
 
 ```music+haskell
-renderPattern (a <> b) (0 <-> 4)
+fmap Just $ renderPattern (a <> b) (0 <-> 4)
   where
     a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
@@ -2458,7 +2459,7 @@ renderPattern (a <> b) (0 <-> 4)
 ```
 
 ```music+haskell
-renderPattern (a <> b) (0.5 <-> 1.5)
+fmap Just $ renderPattern (a <> b) (0.5 <-> 1.5)
   where
     a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
@@ -2467,7 +2468,7 @@ renderPattern (a <> b) (0.5 <-> 1.5)
 TODO Patterns are @[Transformable], @[Transposing], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns.
 
 ```music+haskell
-renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
+fmap Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
   where
     a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
@@ -2921,7 +2922,7 @@ pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 ```
 
 ```music+haskell
-stretch (1/2) $ pseq [c..e]|/3 |> f |> g|*2
+stretch (1/2) $ pseq [c,d,e]|/3 |> f |> g|*2
 ```
 
 Should render >1 tuplet:
