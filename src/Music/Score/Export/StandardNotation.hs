@@ -177,6 +177,8 @@ module Music.Score.Export.StandardNotation
     -- * MusicXML backend
     MusicXmlExportM,
     toXml,
+
+    -- * MIDI backend
     MidiExportM,
     toMidi,
   )
@@ -184,7 +186,6 @@ where
 
 import BasePrelude hiding ((<>), First (..), first, second)
 import qualified Codec.Midi as Midi
-import qualified Codec.Midi as M
 import Control.Lens
   ( Lens',
     _1,
@@ -1614,10 +1615,6 @@ movementToPartwiseXml movement = music
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
---   getMidiChannel :: a -> Midi.Channel
---   getMidiProgram :: a -> Midi.Preset
---   getMidiChannel _ = 0
-
 -- | The MIDI channel allocation is somewhat simplistic.
 --   We use a dedicated channel and program number for each instrument (there *will* be colissions).
 type MidiInstr = (Midi.Channel, Midi.Preset)
@@ -1631,7 +1628,7 @@ data MidiScore a = MidiScore [(MidiInstr, Score a)]
 
 type MidiExportM m = (MonadLog String m, MonadError String m)
 
-toMidi :: (MidiExportM m) => Asp -> m M.Midi
+toMidi :: (MidiExportM m) => Asp -> m Midi.Midi
 toMidi = pure . finalizeExport . fmap exportNote . exportScore . mcatMaybes
 
 exportScore :: Score Asp1a -> MidiScore Asp1a
@@ -1646,9 +1643,12 @@ exportScore xs =
     -- For the time being, we assume the whole score has the same tempo
     fixTempo :: Score Asp1a -> Score Asp1a
     fixTempo = stretch (Music.Score.Meta.Tempo.tempoToDuration (Music.Score.Meta.metaAtStart xs))
-    -- TODO
-    getMidiProgram = const 0
-    getMidiChannel = const 0
+
+getMidiProgram :: Music.Parts.Part -> Midi.Preset
+getMidiProgram = const 0
+
+getMidiChannel :: Music.Parts.Part -> Midi.Channel
+getMidiChannel = const 0
 
 finalizeExport :: MidiScore (Score Midi.Message) -> Midi.Midi
 finalizeExport (MidiScore trs) =
@@ -1665,13 +1665,14 @@ finalizeExport (MidiScore trs) =
     -- We place it a long time after last event just in case (necessary?)
     addTrackEnd :: [(Int, Midi.Message)] -> [(Int, Midi.Message)]
     addTrackEnd = (<> [(endDelta, Midi.TrackEnd)])
-    setProgramChannel :: Midi.Channel -> Midi.Preset -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
-    setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
     -- Hardcoded values for Midi export
     -- We always generate MultiTrack (type 1) files with division 1024
     fileType = Midi.MultiTrack
     divisions = 1024
     endDelta = 10000
+
+setProgramChannel :: Midi.Channel -> Midi.Preset -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
+setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
 
 scoreToMidiTrack :: Duration -> Score Midi.Message -> Midi.Track Midi.Ticks
 scoreToMidiTrack divisions = fmap (\(t, _, x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. triples)
