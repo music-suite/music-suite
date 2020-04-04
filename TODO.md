@@ -277,6 +277,10 @@ Consider switching to a decentralized issue tracker such as:
       similar to range etc.
     - The general problem of breaking up a score: $voiceSeparation
 
+- Orchestration checks
+  - Range checks
+  - Preventing a playing technique being used with the "wrong" instrument.
+
 - $voiceSeparation
   - Basic things work
   - [ ] Render (>1) voice per staff, e.g. for keyboard music
