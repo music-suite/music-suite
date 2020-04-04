@@ -264,6 +264,9 @@ instance Arbitrary a => Arbitrary (Score a) where
 instance Arbitrary a => Arbitrary (Track a) where
   arbitrary = fmap (view track) arbitrary
 
+instance Arbitrary a => Arbitrary (After a) where
+  arbitrary = fmap After arbitrary
+
 -- instance Arbitrary a => Arbitrary (Reactive a) where
   -- arbitrary = liftA2 zip arbitrary arbitrary
 
@@ -332,10 +335,9 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("Monoid Note ()", _Monoid, Note ()),
 
   I_TEST2("Monoid Voice Int", _Monoid, Voice Int),
-  -- I_TEST2("Monoid Chord Int", _Monoid, Chord Int),
   I_TEST2("Monoid Score Int", _Monoid, Score Int),
 
-
+  I_TEST2("Monoid (After (Score Int))", _Monoid, After (Score Int)),
 
   I_TEST2("Transformable Time", _Transformable, Time),
   I_TEST2("Transformable Duration", _Transformable, Duration),
@@ -393,7 +395,7 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("HasPosition Event Double", _HasPosition, Event Double),
   -- I_TEST2("HasPosition Placed Int", _HasPosition, Placed Int),
   -- I_TEST2("HasPosition Placed Double", _HasPosition, Placed Double),
-  -- I_TEST2("HasPosition Score Int", _HasPosition, Score Int),
+  I_TEST2("HasPosition Score Int", _HasPosition, Score Int),
   I_TEST2("HasPosition Event (Event Int)", _HasPosition, Event (Event Int)),
   I_TEST2("HasPosition Event (Score Int)", _HasPosition, Event (Score Int)),
   -- I_TEST2("HasPosition Score (Placed Int)", _HasPosition, Score (Placed Int)),

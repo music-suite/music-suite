@@ -6,6 +6,8 @@
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Music.Time.Juxtapose
   ( module Music.Time.Split,
@@ -33,6 +35,8 @@ module Music.Time.Juxtapose
     -- * Repetition
     times,
     group,
+
+    After(..),
   )
 where
 
@@ -44,6 +48,7 @@ import Data.Stream.Infinite hiding (group)
 import Data.VectorSpace
 import Music.Time.Reverse
 import Music.Time.Split
+import GHC.Generics (Generic)
 
 -- |
 -- @
@@ -142,3 +147,19 @@ group n x = times n x |/ fromIntegral n
 -- @
 snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]
 -}
+
+-- | Monoid under sequential composition.
+--
+-- /Warning/: This is only lawful if the underlying monoid means "parallel composition".
+-- E.g. this works for 'Score' and 'Pattern', but not for 'Span' and 'Voice'.
+newtype After a = After { getAfter :: a }
+  deriving newtype (Eq, Ord)
+  deriving stock (Show, Generic)
+
+instance (Semigroup a, HasPosition a, Transformable a) => Semigroup (After a) where
+  After a <> After b = After $ a |> b
+
+instance (Monoid a, HasPosition a, Transformable a) => Monoid (After a) where
+  mempty = After mempty
+
+
