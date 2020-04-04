@@ -34,7 +34,6 @@ Consider switching to a decentralized issue tracker such as:
 
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
 
-- Bifunctor instance for Scale/Chord
 
 - Rename meta-information to "global"?
 
@@ -66,8 +65,11 @@ Consider switching to a decentralized issue tracker such as:
   - Remove triples/pairs in favor of explicit traversals (see example in Time.Score)
   - Chord/Scale:
     - Use DataKinds/phantom type to distinguish chord vs scale (only difference is Inspectable instance)
-    - Pitch/Interval containers should be bifunctors (taking pitch and interval). i
-      Use AffinePair constraint on operations.
+    - Bifunctor instance for Scale/Chord
+      - Pitch/Interval containers should be bifunctors (taking pitch and interval).
+        Use AffinePair constraint on operations.
+    - Add union/intersection/set diff (of the "infinite set") for chords/scales
+      - Implement by finding all the points in the LCM(argDurations)
   - Make PVoice and MVoice newtype wrappers (hiding instances)
   - Remove Cons/Snoc instances for Voice
   - Hide FromField Ambitus instance (by using newtype wrappers)
@@ -83,6 +85,7 @@ Consider switching to a decentralized issue tracker such as:
     - https://en.wikipedia.org/wiki/Interval_vector
     - Time
     - RTM tree support?
+
 
 - Internal improvements:
   - Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
@@ -124,9 +127,20 @@ Consider switching to a decentralized issue tracker such as:
   - Harmonics should be recast using $playingTechniques
     - The current top-level combinators (in HasHarmonic) can stay, HarmonicT should go (use SomeTechnique)
   - Gliss should use $playingTechniques
-    - The current top-level combinators (in HasTremolo) can stay, HarmonicT should go (use SomeTechnique)
+    - Any consequtive pair of notes *in the same phrase* both marked with a gliss technique to be rendered
+      using a line + the text "gliss"
   - Tremolo should be a combination of playing techniques (TODO) and *chords*
-
+    - The current top-level combinators (in HasTremolo) can stay, HarmonicT should go (use SomeTechnique)
+    - For both chord/non-chord tremolo, support measured (with duration) and unmeasured "z" or "three beams"
+    - Non-chord trem: Easy, same as a "roll".
+    - Chord trem:
+      - All perfectly overlapping (e.g. having identical span) notes *in the same part* having a ChordTremolo
+      playing technique to be rendered as chord tremolo.
+        data ChordTremolo
+          = Simultaneous          -- ^ double stop + bow tremolo
+          | AlternatingHalfHarm   -- ^ left hand tremolo on one string
+          | AlternatingBariolage  -- ^ left hand tremolo pn two strings
+        - For e.g. piano Simultaneous chord trem makes no sense and there is only one form of alternating.
 
 - [X] Add more examples (e.g from Piece1, Piece2 etc)
   - [ ] Make them all compile (add to cabal file!)
@@ -512,7 +526,7 @@ Consider switching to a decentralized issue tracker such as:
 - [X] $timeSignatureInLastBar In `fromAspects`, never change time signature in the last bar
   - E.g. in the example `pseq [c,d,e,f,g] |/ 4`, this should render as two 4/4 bars, not as one 4/4 followed by 1/4
 
-- Better syntax for entering pitch/time, maybe using a quasi-quoter
+- [X] Better syntax for entering pitch/time, maybe using a quasi-quoter
   - See e.g. Mozart example
   - See syntax sketches, also compare Lilypond
   - OTOH the language "just basic Haskell" is maybe more important than simple syntax?
