@@ -63,6 +63,8 @@ deriving instance HasColor a => HasColor (Couple b a)
 
 instance HasColor a => HasColor [a]
 
+instance HasColor a => HasColor (Maybe a)
+
 instance HasColor a => HasColor (Score a)
 
 instance HasColor a => HasColor (Voice a)

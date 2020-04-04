@@ -35,6 +35,9 @@ module Music.Time.Position
     stopAt,
     placeAt,
 
+    -- * Transforming
+    stretchTo,
+
     -- * Transforming relative a position
     stretchRelative,
     stretchRelativeOnset,
@@ -180,6 +183,14 @@ placeAt :: (Transformable a, HasPosition a) => Alignment -> Time -> a -> a
 placeAt p t x = case x `_position` p of
   Nothing -> x
   Just xp -> (t .-. xp) `delay` x
+
+-- |
+-- Stretch a value to have the given duration.
+stretchTo :: (Transformable a, HasPosition a) => Duration -> a -> a
+stretchTo d x = case _era x of
+  Nothing -> x
+  Just e -> (d ^/ _duration e) `stretch` x
+{-# INLINE stretchTo #-}
 
 {-
 _onset, _offset :: (HasPosition a, Transformable a) => a -> Time

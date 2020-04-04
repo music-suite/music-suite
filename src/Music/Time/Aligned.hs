@@ -5,6 +5,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
+  -fno-warn-deprecations
   -fno-warn-redundant-constraints #-}
 
 module Music.Time.Aligned

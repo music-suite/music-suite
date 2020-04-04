@@ -157,7 +157,7 @@ testTrumpets = level ff $ rcat $ set parts' trumpets $ fmap (\n -> times n padBa
 -- Break something into notes of the given duration
 -- (x^duration)*n must be a whole number or you will get bad results
 breakInto :: (Monoid s, Transformable s, HasPosition s, Semigroup s) => Duration -> s -> s
-breakInto n x = stretchTo (x^.duration) $ times (floor $ n * x^.duration) x
+breakInto n x = undefined -- stretchTo (x^.duration) $ times (floor $ n * x^.duration) x
 
 
 {-

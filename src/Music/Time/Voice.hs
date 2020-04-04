@@ -8,6 +8,7 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
+  -fno-warn-deprecations
   -fno-warn-unused-matches #-}
 
 module Music.Time.Voice

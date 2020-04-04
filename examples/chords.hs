@@ -16,7 +16,7 @@ rh     = (tutti $ fromMidiProgram 0)
 -- Strum a chord
 -- TODO port this to Chord module
 strumUp :: [Score a] -> Score a
-strumUp = ppar . zipWith (\t x -> delay t . stretchTo (x^.duration ^-^ t) $ x) [0,kStrum..]
+strumUp = mconcat -- ppar . zipWith (\t x -> delay t . stretchTo (x^.duration ^-^ t) $ x) [0,kStrum..]
 
 strumDown = strumUp . reverse
 

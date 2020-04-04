@@ -9,6 +9,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
+  -fno-warn-redundant-constraints
   -fno-warn-unused-imports #-}
 
 -- | Provides functions for manipulating parts.
@@ -241,35 +242,36 @@ arrangeFor ps x = replaceParts (zip (allParts x) (cycle ps)) x
 
 -- |
 -- List all the parts
-extractPart :: (Eq (Part a), HasPart' a) => Part a -> Score a -> Score a
+extractPart :: (Eq (Part a), HasParts' a) => Part a -> Score a -> Score a
 extractPart = extractPartG
 
-extractPartG :: (Eq (Part a), MonadPlus f, HasPart' a) => Part a -> f a -> f a
+extractPartG :: (Eq (Part a), MonadPlus f, HasParts' a) => Part a -> f a -> f a
 extractPartG p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
 
 -- |
 -- List all the parts
-extractParts :: (Ord (Part a), HasPart' a) => Score a -> [Score a]
+extractParts :: (Ord (Part a), HasParts' a) => Score a -> [Score a]
 extractParts = extractPartsG
 
 extractPartsG ::
   ( MonadPlus f,
     HasParts' (f a),
-    HasPart' a,
+    HasParts' a,
     Part (f a) ~ Part a,
     Ord (Part a)
   ) =>
   f a ->
   [f a]
-extractPartsG x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
+extractPartsG x =
+  (\p s -> filterPart (== p) s) <$> allParts x <*> return x
 
-filterPart :: (MonadPlus f, HasPart a a) => (Part a -> Bool) -> f a -> f a
-filterPart p = mfilter (\x -> p (x ^. part))
+filterPart :: (MonadPlus f, HasParts' a) => (Part a -> Bool) -> f a -> f a
+filterPart p = mfilter (\x -> let ps = toListOf parts x in all p ps && not (null ps))
 
 extractPartsWithInfo :: (Ord (Part a), HasPart' a) => Score a -> [(Part a, Score a)]
 extractPartsWithInfo x = zip (allParts x) (extractParts x)
 
-extracted :: (Ord (Part a), HasPart' a {-, HasPart a b-}) => Iso (Score a) (Score b) [Score a] [Score b]
+extracted :: (Ord (Part a), HasParts' a {-, HasPart a b-}) => Iso (Score a) (Score b) [Score a] [Score b]
 extracted = iso extractParts mconcat
 
 extractedWithInfo :: (Ord (Part a), HasPart' a, HasPart' b) => Iso (Score a) (Score b) [(Part a, Score a)] [(Part b, Score b)]

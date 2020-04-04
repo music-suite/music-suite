@@ -167,6 +167,7 @@ module Music.Score.Export.StandardNotation
     -- * Asp
     StandardNotationExportM,
     Asp1,
+    Asp1a,
     Asp,
     fromAspects,
 
@@ -902,7 +903,7 @@ barLayersHaveEqualDuration (Bar _ layers) =
     allEqual [] = True
     allEqual (x : xs) = all (== x) xs
     durs = fmap layerDur layers
-    layerDur (PitchLayer rh) = rh ^. duration
+    layerDur (PitchLayer rh) = _duration rh
 
 -- |
 -- Pad all staves to the same number of bars.
@@ -1695,10 +1696,11 @@ data MidiScore a = MidiScore [(MidiInstr, Score a)]
 
 type MidiExportM m = (MonadLog String m, MonadError String m)
 
+
 toMidi :: (MidiExportM m) => Asp -> m M.Midi
-toMidi = pure . finalizeExport . fmap (exportNote) . exportScore
+toMidi = pure . finalizeExport . fmap exportNote . exportScore . mcatMaybes
   where
-    exportScore :: Score Asp1 -> MidiScore Asp1
+    exportScore :: Score Asp1a -> MidiScore Asp1a
     exportScore xs =
       MidiScore
         ( map (\(p, sc) -> ((getMidiChannel p, getMidiProgram p), sc))
@@ -1741,7 +1743,7 @@ toMidi = pure . finalizeExport . fmap (exportNote) . exportScore
         toRelative = snd . Data.List.mapAccumL g 0
           where
             g now (t, d, x) = (t, (0 .+^ (t .-. now), d, x))
-    exportNote :: Asp1 -> Score Midi.Message
+    exportNote :: Asp1a -> Score Midi.Message
     -- TODO make use of SlideT/HarmonicT/TextT/ColorT/TremoloT information
     -- For now we throw all of this away using 'snd'
     --
@@ -1810,7 +1812,9 @@ toMidi = pure . finalizeExport . fmap (exportNote) . exportScore
 -- -
 -- - This function also performs quantization, voice and part separation.
 
-type Asp1 =
+type Asp1 = Maybe Asp1a
+
+type Asp1a =
   ( PartT Part
       ( StaffNumberT
           ( TremoloT
@@ -1974,13 +1978,13 @@ mapToScore :: Map (Time, Time) a -> Score a
 mapToScore = view score . fmap (view event . first (view $ from onsetAndOffset)) . Data.Map.toList
 
 fromAspects :: (StandardNotationExportM m) => Asp -> m Work
-fromAspects sc = do
+fromAspects sc' = do
   say "Simplifying pitches"
   -- Simplify pitch spelling
   let postPitchSimplification = Music.Score.Pitch.simplifyPitches normScore
   -- Part extraction
   say "Extracting parts"
-  let postPartExtract :: [(Music.Parts.Part, Score Asp1)] = Music.Score.Part.extractPartsWithInfo postPitchSimplification
+  let postPartExtract :: [(Music.Parts.Part, Score Asp1a)] = Music.Score.Part.extractPartsWithInfo postPitchSimplification
   say $ "  Done, " ++ show (length postPartExtract) ++ " parts"
   -- postPartExtract :: [(Music.Parts.Part,Score Asp1)]
 
@@ -2093,8 +2097,11 @@ fromAspects sc = do
     -- Make this more prominent!
     -- This is being used for the actual score!
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
+    --
+    sc :: Score Asp1a
+    sc = mcatMaybes sc'
 
-asp1ToAsp2 :: Asp1 -> Asp2
+asp1ToAsp2 :: Asp1a -> Asp2
 asp1ToAsp2 = pure . (fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap . fmap) pure
 
 asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)

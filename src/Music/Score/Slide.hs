@@ -64,6 +64,8 @@ class HasSlide a where
 
 instance HasSlide a => HasSlide (b, a)
 
+instance HasSlide a => HasSlide (Maybe a)
+
 instance HasSlide a => HasSlide (Couple b a)
 
 instance HasSlide a => HasSlide [a]

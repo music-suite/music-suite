@@ -79,6 +79,8 @@ runHarmonicT (HarmonicT (Couple (hs, x))) = (,x) $ case hs of
 
 instance HasHarmonic a => HasHarmonic (b, a)
 
+instance HasHarmonic a => HasHarmonic (Maybe a)
+
 instance HasHarmonic a => HasHarmonic (Couple b a)
 
 instance HasHarmonic a => HasHarmonic [a]

@@ -15,7 +15,7 @@ module Music.Time.Duration
 
     -- * Absolute duration
     duration,
-    stretchTo,
+    stretchToD,
   )
 where
 
@@ -31,6 +31,7 @@ import Control.Lens hiding
     transform,
     (|>),
   )
+import Control.Lens (Getter)
 import Data.Functor.Contravariant (Op (..))
 import Data.NumInstances ()
 import Data.Semigroup hiding ()
@@ -110,12 +111,12 @@ instance (HasDuration a, HasDuration b) => HasDuration (Either a b) where
 
 -- |
 -- Stretch a value to have the given duration.
-stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
-stretchTo d x = (d ^/ _duration x) `stretch` x
-{-# INLINE stretchTo #-}
+stretchToD :: (Transformable a, HasDuration a) => Duration -> a -> a
+stretchToD d x = (d ^/ _duration x) `stretch` x
 
 -- |
 -- Access the duration.
-duration :: (Transformable a, HasDuration a) => Lens' a Duration
-duration = lens _duration (flip stretchTo)
+duration :: (Transformable a, HasDuration a) => Getter a Duration
+duration = to _duration
 {-# INLINE duration #-}
+{-# DEPRECATED duration "Use _duration" #-}

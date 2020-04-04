@@ -386,7 +386,7 @@ compressor = compressUp
 --
 
 cresc :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
-cresc a b x = stretchTo (x ^. duration) $ cresc' a b (stretchTo 1 x)
+cresc a b x = stretchToD (_duration x) $ cresc' a b (stretchToD 1 x)
 
 cresc' :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
 cresc' a b = setLevelWithAlignment (\t -> alerp a b (realToFrac t))

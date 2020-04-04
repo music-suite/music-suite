@@ -64,6 +64,8 @@ runTextT (TextT (Couple (ts, x))) = (ts, x)
 
 instance HasText a => HasText (b, a)
 
+instance HasText a => HasText (Maybe a)
+
 instance HasText a => HasText (Couple b a)
 
 instance HasText a => HasText [a]
