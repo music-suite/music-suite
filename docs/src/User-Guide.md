@@ -1385,9 +1385,7 @@ arrangeFor stringOrchestra $ rcat [c',e,g_,c_]
 
 ## Soloists
 
-The solo/tutti component is useful when working with concertante scores.
-
-@[Solo]
+Each part has a @[solo] component, which is either `Solo` or `Tutti`. This is useful when working with concertante scores.
 
 ```music+haskell
 (parts' .~ solo violin $ pseq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16)
@@ -1395,7 +1393,7 @@ The solo/tutti component is useful when working with concertante scores.
 arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
 ```
 
-TODO by default `Tutti` is used. In chamber music there is usually no need to override this with `Solo`, the difference only make sense when you need to distinguish the solist.
+The default value is `Tutti`. In chamber music there is usually no need to override this with `Solo`, as the difference only make sense when you *need* to distinguish the solist.
 
 TODO soloists *from* the orchestra/altri
 
@@ -1471,11 +1469,7 @@ The former is rare but happen e.g. when double-stopped strings play bow tremolo 
 
 TODO realising tremolo/trills
 
-### Slides and glissando
-
-@[slide]
-
-TODO
+### Slides
 
 @[glissando]
 
@@ -1495,9 +1489,11 @@ Use the @[harmonic] function:
 (harmonic 3 $ c|/2)
 ```
 
-TODO artificial harmonics
+TODO artificial harmonics @[artificial]
 
-@[artificial]
+```music+haskell
+artificial c |/ 2
+```
 
 ## Instrument-specific techniques
 
@@ -1624,12 +1620,13 @@ TODO render e.g. snare drum parts correctly
 
 TODO render "drum kit" staff
 
-<!--
 # Lyrics and Vocals
 
 TODO adding lyrics (including syllables/word boundaries/melismas)
 
 TODO soloists/character name
+
+<!--
 
 
 # Non-note Actions
@@ -1653,15 +1650,16 @@ TODO
 
 # Text and Color
 
-TODO warning: free form text is semantically questionable, but we provide it for cases where no other suitable representation exists.
+> Warning: A core idea in Music Suite is that music expressions have clear *semantics*, based on how the sound or action they represent. Free text runs counter to this, and should be viewed as an "escape hatch". Try to use a more structured representation when possible.
 
-TODO e.g. expressive marks ("dolce")
 
 @[text]
 
 ```music+haskell
 text "pizz." $ c|/2
 ```
+
+TODO e.g. expressive marks ("dolce")
 
 TODO color
 
@@ -2249,9 +2247,9 @@ TODO sequential composition of aligned voices "snap to next stressed beat":
 
 ## Patterns
 
-TODO a Pattern can be throught of as a generalization of a rhythm or beat. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself, though the repetition frequence may be very long.
+A @[Pattern] can be throught of as a generalization of a *rhythm* or *beat*. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself, though the repetition frequence may be very long.
 
-TODO more idiomatic ways of buildings patterns
+TODO more ways of buildings patterns
 
 
 
@@ -2636,7 +2634,9 @@ TODO very simple space representation (e.g. Angle), minimal example using Ambiso
 
 The @[Inspectable] class represents types that can be converted into a standard musical representation and exported via an *output backend*. The top-level music expression in a file needs to be inspectable.
 
-In some cases, the generality of the Music Suite library leads to ambiguity when selecting the type of the top-level expression. The `Music` type can be used as default.
+In some cases, the generality of the Music Suite library leads to ambiguity when selecting the type of the top-level expression. The `Music` type defined in `Music.Prelude` can be used as a default.
+
+TODO how to select backend on the CLI, or via the API
 
 ## Overview of backends
 

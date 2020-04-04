@@ -343,6 +343,7 @@ Consider switching to a decentralized issue tracker such as:
   - Restore hslinks functionality (commented out in source), maybe using hasktags
     - hslinks steals syntax from TypeApplications
       - E.g. `inspectableToMusic @[Pitch]`
+  - Make it work for the *code examples* too
 
 
 - [X] Improve rcat: do not use Enum
