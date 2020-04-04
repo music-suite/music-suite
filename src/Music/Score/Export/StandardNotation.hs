@@ -22,9 +22,7 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  #-}
-
+  -fno-warn-unused-imports #-}
 
 -- |
 -- This module defines a monomorphic representation of Western music notation.
@@ -229,7 +227,6 @@ import qualified Data.Music.MusicXml.Simple as X
 import Data.Semigroup
 import qualified Data.Set
 import Data.VectorSpace hiding (Sum)
-
 import Music.Articulation (Articulation)
 import Music.Dynamics (Dynamics)
 import Music.Dynamics.Literal (DynamicsL (..), fromDynamics)
@@ -866,7 +863,6 @@ movementAssureSameNumberOfBars (Movement i ss st) =
     n = maximum $ 0 : numBars
     -- numSystemBars :: Int = length ss
     numBars :: [Int] = fmap (length . _bars) $ toList st
-
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -1632,15 +1628,14 @@ exportScore :: Score Asp1a -> MidiScore Asp1a
 exportScore xs =
   MidiScore
     $ map (\(p, sc) -> ((getMidiChannel p, getMidiProgram p), sc))
-        $ Music.Score.Part.extractPartsWithInfo
-        $ fixTempo
-        $ normalizeScore xs
+    $ Music.Score.Part.extractPartsWithInfo
+    $ fixTempo
+    $ normalizeScore xs
   where
     -- TODO We actually want to extract *all* tempo changes and transform the score appropriately
     -- For the time being, we assume the whole score has the same tempo
     fixTempo :: Score Asp1a -> Score Asp1a
     fixTempo = stretch (Music.Score.Meta.Tempo.tempoToDuration (Music.Score.Meta.metaAtStart xs))
-
     -- TODO
     getMidiProgram = const 0
     getMidiChannel = const 0
@@ -1688,12 +1683,14 @@ exportNote (PartT (_, ((snd . runSlideT . snd . runHarmonicT . snd . runTextT . 
     exportNoteD (DynamicT (realToFrac -> d, x)) = setV (dynLevel d) <$> exportNoteP x
     exportNoteP pv = mkMidiNote (pitchToInt pv)
     pitchToInt p = fromIntegral $ Music.Pitch.semitones (p .-. P.c)
+
 dynLevel :: Double -> Midi.Velocity
 dynLevel x = round $ (\x -> x * 58.5 + 64) $ f $ inRange (-1, 1) (x / 3.5)
   where
     f = id
     -- f x = (x^3)
     inRange (m, n) x = (m `max` x) `min` n
+
 mkMidiNote :: Int -> Score Midi.Message
 mkMidiNote p =
   mempty
