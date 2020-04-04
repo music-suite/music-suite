@@ -69,7 +69,7 @@ import Music.Time
 import Music.Time.Reactive
 
 -- | Represents an explicitly added barline.
-data Barline = StandardBarline | DoubleBarline | FinalBarline
+data Barline = StandardBarline | DoubleBarline
   deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a barline over the whole score.

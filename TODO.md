@@ -34,12 +34,18 @@ Consider switching to a decentralized issue tracker such as:
 
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
 
+- Bifunctor instance for Scale/Chord
+
+- Rename meta-information to "global"?
+
 - Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
 
 - [X] Do not expose IntervalL (hide or remove completely)
 
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
+
+- [ ] Long cresc/dim should render as text by default.
 
 - API improvements:
   - Remove Alignable class (use Aligned the type)

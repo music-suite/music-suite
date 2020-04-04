@@ -344,7 +344,7 @@ let
 in up _P8 scale </> (triad c) |/2 |> (triad g_) |/2
 ```
 
-TODO understanding tyes, types of the above operators and that `|>` and `</>` are based on `<>`.
+TODO understanding types, types of the above operators and that `|>` and `</>` are based on `<>`.
 
 ```haskell
 (<>)  :: Semigroup a => a -> a -> a
@@ -391,9 +391,9 @@ We can change octave using @[octavesUp] and @[octavesDown]:
 
 ```music+haskell
 octavesUp 4 c
-</>
+  </>
 octavesUp (-1) c
-</>
+  </>
 octavesDown 2 c
 ```
 
@@ -415,11 +415,11 @@ Sharps and flats can be added using @[sharpen] and @[flatten].
 
 ```music+haskell
 sharpen c
-</>
+  </>
 (sharpen . sharpen) c
-</>
+  </>
 flatten c
-</>
+  </>
 (flatten . flatten) c
 ```
 
@@ -445,14 +445,14 @@ There is of course also a shorthand for sharps and flats:
 
 ```music+haskell
 (cs |> ds |> es)    -- sharp
-</>
+  </>
 (cb |> db |> eb)    -- flat
 ```
 
 > Note: Music Suite uses C major by default, so all altered pitches are rendered as accidentals. See [key signatures](#key-signatures) for how to change this.
 
 
-## Pitch overloading
+### Pitch overloading
 
 To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*.
 
@@ -468,7 +468,7 @@ return (c::Note) == (c::Score Note)
 
 > Hint: Use `fromPitch` to convert a concrete pitch to `IsPitch a => a`.
 
-## Intervals
+## The Interval type
 
 The @[Interval] type represents common/Western classical *intervals*.
 
@@ -506,12 +506,6 @@ A simple interval is an interval spanning less than one octave. Intervals spanni
 >>> simple _P11
 _P4
 
->>> invert _P4
-_P5
-
->>> invert _P11
-_P5
-
 >>> octaves @Interval _P4
 0
 
@@ -533,6 +527,19 @@ inspectableToMusic @[Interval] $
 [ m3
 , -m3
 ]
+```
+
+The *inversion* of an interval is defined as `simple . negate`:
+
+```haskell
+>>> invert _P4
+_P5
+
+>>> invert _P11
+_P5
+
+>>> invert m3
+_M6
 ```
 
 
@@ -568,7 +575,7 @@ TODO for pitches, extract name/accidental/octave:
 @[name]
 @[accidental]
 
-## Interval overloading
+### Interval overloading
 
 Interval names are overloaded in a manner similar to pitches, and are consequently referred to as *interval literals*. The corresponding class is called @[IsInterval].
 
@@ -663,7 +670,7 @@ x </> over pitches' (relative c $ spell modally) x
 
 The `VectorSpace` and `AffineSpace` allow us to apply *affine transformations* to pitches. Because pitch is (roughly) a one-dimensional space, this means scaling and transpotion. Let's look at some examples.
 
-> Warning: The musical term *transposition* is known as *translation* in maths (and *transposition* means something else entirely!).
+> Warning: The musical term *transposition* is known as *translation* in maths (where *transposition* means something else entirely!).
 
 
 
@@ -727,7 +734,7 @@ in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 
 As we have seen intervals form a *vector space* and pitches an associated *affine space*. This implies we can define a form of scalar multiplication.
 
-However pithes live in an affine space without a specific origin, so we have to pick one:
+However pitches live in an affine space without a specific origin, so we have to pick one:
 
 ```music+haskell
 m
@@ -774,6 +781,13 @@ m
 
 In this case, the origin is also used as the tonic of the implied diatonic scale.
 
+## Listing and traversing pitches
+
+TODO forward reference to traversals chapter, @[HasPitch]
+
+> Note: `pitches` is a example of a [traversal](#traversals). We'll learn more about these later on.
+
+
 ## The Transposable class
 
 The type of the previous operations mention @[Transposable]:
@@ -798,18 +812,12 @@ The type of the previous operations mention @[Transposable]:
 
 This may look complicated, but it simply means that:
 
-- `HasPitches' a` means that `a` is some type with an associated pitch and interval type
+- `HasPitches' a` means that `a` is some type supporting pitch traversals
 - `AffinePair (Interval a) (Pitch a)` means that the pitch type is an affine space and the interval its underlying vector space
 - `IsInterval` and `IsPitch` means that We can lift standard pitch/interval
   names into the pitch space, so expressions such as `cs` and `m3` makes sense
 - `Num (Scalar v)` means that we can scale the intervals
 
-
-## Listing and traversing pithes
-
-TODO forward reference to traversals chapter, @[HasPitch]
-
-> Note: `pitches` is a example of a [traversal](#traversals). We'll learn more about these later on.
 
 
 
@@ -906,7 +914,9 @@ inspectableToMusic @[Chord Pitch] $
 
 ### Scales versus Chords
 
-TODO there is little difference: convert back/forth
+As musicians we tend to think of scales and chords as distinct entities. From a structural point there is very little difference: both represent a subset of some larger pitch space. The main difference is in how they are *used*: scales provide pitch material for melodies and chords, while chords are played in parallel, after applying textures, voicings and so on.
+
+TODO convert back/forth
 
 TODO examples: Whole tone is a superset of augmented, octatonic a superset of dimimished and so on
 
@@ -917,12 +927,41 @@ Consider "scale-chord texture"
 ### Chords are infinite
 
 TODO understand that chords are infinite, but generated by repetition of a finite interval set
+TODO scales/chords as infinite/countable sets
 
-While scales and chords are conceptually infinite, they always have a finite *generating set*. TODO how to extract it.
+Chords and scales are *countably infinite* sets. This means that we can map them directly to any other such sets, such as the set of integers. For example the chord "C major" is the set `{ Cn En Gn | n ∈ all octaves }`. Using C4 (or "middle C") as the starting point, 0 will map to C4, 1 to E4, 2 to G4, -1 to G3, -2 to E3, and so on.
+
+While scales and chords are conceptually infinite, they always have a finite *generating set*.
+
+TODO how to extract it with `scaleMode`, `chordType` or `generator`
+
+```music+haskell
+inspectableToMusic @[ChordType Pitch] $
+
+[ (chord c majorTriad)^.chordType
+]
+```
+
+<!--
+Normal Haskell types correspond to sets as well. For example, our `Common.Pitch` type is the set of *all* pitches in the diatonic/chromatic system. Values such as `scale c major` of type `Scale p` correpond to some subset of `p`.
+-->
+
+### Looking up pitches
+
+We can look up pitches in any chord or scale using the `index` function. This converts any chord into a total function of `Integer`. The tonic is mapped to zero, the positive numbers to all notes *above* the tonic and negative numbers to all notes *below* the tonic. You can use
+
+```haskell
+>>> index (chord c majorTriad) 0
+c
+
+>>> fmap (index $ chord c majorTriad)) [-1,0,1,2]
+[g_,c,e,g]
+
+>>> fmap (index $ chord g majorMinorSeventhChord)) [-2,-1,0,1]
+[d,f,g,b]
+```
 
 ### Transforming chords
-
-TODO Bifunctor instance for Scale/Chord
 
 Naturally, @[Scale] and @[Chord] are instances of `Transposable`:
 
@@ -981,6 +1020,19 @@ compress 2 $ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
+### Custom scales/chods
+
+While Music Suite predefines all common practice modes, scales and chords, we can also create custom chords from any interval sequence.
+
+Here is a mode that repeat at the fourth:
+
+```music+haskell
+inspectableToMusic @[ChordType Pitch] $
+
+[ modeFromSteps [_M2,_M2,m3]
+]
+```
+
 ### Repeating scales/chords
 
 We can inspect the *repeating interval* of a scale like this:
@@ -1024,31 +1076,6 @@ inspectableToMusic @[Voiced Chord Pitch] $
 Non-repeating/self-repeating scales (e.g. the overtone series). TODO create by unfold?
 
 
-### Custom chords
-
-TODO create from any interval sequence
-
-## Infinite chords
-
-TODO scales/chords as infinite/countable sets
-
-Chords and scales are *countably infinite* sets. This means that we can map them directly to any other such sets, such as the set of integers. For example the chord "C major" is the set `{ Cn En Gn | n ∈ all octaves }`. Using C4 (or "middle C") as the starting point, 0 will map to C4, 1 to E4, 2 to G4, -1 to G3, -2 to E3, and so on.
-
-<!--
-Normal Haskell types correspond to sets as well. For example, our `Common.Pitch` type is the set of *all* pitches in the diatonic/chromatic system. Values such as `scale c major` of type `Scale p` correpond to some subset of `p`.
--->
-
-### Looking up pitches
-
-TODO looking up notes in a scale/chord (infinitely, Integer ->, 0 being the tonic)
-
-```haskell
->>> index (chord c majorTriad) 0
-c
-
->>> fmap (index (chord c majorTriad)) 0
-[g_,c,e,g]
-```
 
 ### Modal rotation/inversion
 
@@ -1117,6 +1144,8 @@ inspectableToMusic @(Voiced Chord Pitch) $
   Voiced (chord d minorTriad) [-2,0,2,4]
 ```
 
+TODO use voice, voiceIn
+
 TODO uneven voicing, e.g. [1,2,4,7] etc. and the reverse of that.
 
 
@@ -1138,7 +1167,18 @@ inspectableToMusic @[Voiced Chord Pitch] $
 ]
 ```
 
-TODO extract the pitches from a voiced chord/covert to a score (possibly multipart)
+We extract the pitches from a voiced chord like this:
+
+```music+haskell
+pseq $ fmap fromPitch ps
+  where
+    ps :: [Pitch]
+    ps = Data.List.NonEmpty.toList $ getVoiced v
+
+    v :: Voiced Chord Pitch
+    v = voiceIn 4 $ chord c majorTriad
+```
+
 
 
 <!--
@@ -1226,10 +1266,7 @@ There is of course more to music than time and pitch. Music Suite provides parti
 
 - Dynamics: relative loudness of a sound
 - Articulation: attack and relative length of a sound
-- Instruments/Parts
-- Playing techniques
-
-In this chapter we will focus on the first two.
+- Instruments, parts and playing techniques
 
 ## Adding dynamics
 
@@ -1256,7 +1293,7 @@ We can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms)
 (over phrases' (dim fff ff) $ pseq [c..c'] |/8)
 ```
 
-TODO for long crescendo/diminuendos, render as text by default.
+Long crescendos and diminuendos are supported as well.
 
 ```music+haskell
 (over phrases' (cresc pp mf) $ (times 8 $ pseq [c..g]) |/8)
@@ -1334,13 +1371,17 @@ in (accent . legato) (p1 </> p2 </> p3)
 
 These kind of traversals are not limited to articulation. See [Phrase traversals](#phrase-traversals) for a more general overview.
 
+<!--
 ## Overloading of articulation and dynamics
 
 Dynamic values are overloaded in the same way as pitches. The dynamic literals have type `IsDynamics a => a`.
 
 TODO explain overloading of articulation
+-->
 
 ## Updating
+
+TODO
 
 ```music+haskell
 c
@@ -1560,7 +1601,17 @@ We support all instruments in the MusicXML sound set. See [the full list here](h
 
 ### Transposing instruments
 
-TODO obtain transpotion infomation
+TODO obtain transposition infomation
+
+```music+haskell
+inspectableToMusic @[Interval] $
+
+[ transposition violin
+, transposition clarinet
+, transposition doubleBass
+]
+```
+
 
 > Note: instruments that appear in many sizes are different instruments in Music Suite. The most common type of trumpet is Bb, so `trumpet` refers to this. For other instruments use `trumpetInC`, etc.
 
@@ -1568,6 +1619,14 @@ TODO obtain transpotion infomation
 ### Range
 
 TODO obtaining range info for instruments
+
+```music+haskell
+inspectableToMusic @[Ambitus Interval Pitch] $
+
+[ playableRange violin
+, comfortableRange violin
+]
+```
 
 TODO automatica range checks
 
@@ -1602,8 +1661,6 @@ fastTremolo $ times 2 $ (c |> d)|/2
 ## Repeating vs. alternating tremolo
 
 The former is rare but happen e.g. when double-stopped strings play bow tremolo (without bariolage). The more common one is a rapid alteration among a set of notes. Logically we should treat both as an optional the property of a single chord. Alas in StandardNotation the latter is commonly written as two chords with half the duration (OR as a trill).
-
-TODO realising tremolo/trills
 
 ### Slides
 
@@ -1832,7 +1889,8 @@ TODO color
 
 # Meta-information
 
-TODO rename meta to "global"?. Meta-information is global, rather than attached to a specific part. It is *defined at every point in the score with explicit change points (per type)* and always has a sensible default value (e.g. one (Reactive m) per type). All meta types are monoidal. Examples: key signature, time signature.
+
+Meta-information is global, rather than attached to a specific part. It is *defined at every point in the score with explicit change points (per type)* and always has a sensible default value (e.g. one (Reactive m) per type). All meta types are monoidal. Examples: key signature, time signature.
 
 For the most part *logical/semantic/sounding* information is not meta (exception: tempo).
 
@@ -1899,6 +1957,8 @@ in
 keySignatureDuring (1.5 <-> 2) (key db major) $ pseq [db,eb,f]
 ```
 
+Part-specific key signatures are not supported, but transposing instruments will always use the correct relative key signature.
+
 ## Time signatures
 
 Time signatures are represented by the `TimeSignature` type. It is an instance of `Fractional`, meaning that you can use fractional literals to define it.
@@ -1929,11 +1989,8 @@ The default time signature is `4/4` is used (written as *c*). We can override th
 timeSignature (3/8) $ pseq [db,eb,f]
 ```
 
-We can also set the time signature for a specific time span using  @[timeSignatureDuring]
+We can also set the time signature for a specific time span using  @[timeSignatureDuring]. Time signature changes will always force a new bar.
 
-Time signature changes will always force a new bar.
-
-Part-specific key signatures (save for transposing instruments) are not supported.
 
 ### Converting from one time signature to another
 
@@ -2034,8 +2091,6 @@ A fermata usually implies a unison cutoff of the prolonged notes, followed by a 
 ```
 -->
 
-TODO apply at specific position
-
 ## Barlines and repeats
 
 There is generally no need to enter bars explicitly, as this information can be inferred from other meta-information. Generally, the following meta-events (in any part), will force a change of bar:
@@ -2045,23 +2100,18 @@ There is generally no need to enter bars explicitly, as this information can be 
 * Tempo changes
 * Rehearsal marks
 
-However, the user may also enter explicit bar lines using the following functions:
 
-@[barline]
-
-@[doubleBarline]
-
-@[finalBarline]
-
-Whenever a bar line is created as a result of a meta-event, an shorted time signature may need to be inserted as in:
+Whenever a bar line is created as a result of a meta-event, an shorted time signature may need to be inserted before the change. For example here the change of time signature to 3/4 forces the insertion of a 2/4 bar.
 
 ```music+haskell
 compress 4 $ timeSignature (4/4) (pseq [c,d,e,c,d,e,f,d,g,d]) |> timeSignature (3/4) (pseq [a,g,f,g,f,e])
 ```
 
-TODO repeats
+We can force a new bar lines using @[barline].
 
-Explicitly set barlines will or course force a new bar.
+```music+haskell
+compress 4 $ pseq [c,d,e] |> barline DoubleBarline (pseq [d,e,f])
+```
 
 ## Clefs
 
@@ -2069,22 +2119,32 @@ The standard for each instrument is used by default.
 
 TODO override the default
 
+<!--
 ## Multi-movement scores
 
 TODO
+-->
 
 ## Rehearsal marks
 
-@[rehearsalMark]
+Rehearsal marks are added to the beginning of the score by default:
 
 ```music+haskell
 rehearsalMark $ pseq [c,d,e,d,f,e,d,c] |/ 3
 ```
 
-@[rehearsalMarkAt]
+We can also add it to a specific position:
 
 ```music+haskell
 rehearsalMarkAt 2 $ pseq [c,d,e,d,f,e,d,c] |/3
+```
+
+A rehearsal mark carry no specific meaning. Composing two scores will interleave their rehearsal marks.
+
+```music+haskell
+rehearsalMarkAt 1 (up m3 m) </> rehearsalMarkAt 2 m
+  where
+    m = pseq [c,d,e,c,d,f] |/ 2
 ```
 
 Rehearsal marks will always force a new bar.
@@ -2850,7 +2910,7 @@ rcat
     theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
 ```
 
-TODO this should use nested tuplets:
+This should use nested tuplets:
 
 ```music+haskell
 pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
@@ -2957,6 +3017,6 @@ The temporal structures, their instances and more general design philosophy come
 
 ----
 
-*Copyright Hans Jacob Höglund 2012–2015*
+*Copyright Hans Jacob Hoeglund and others 2012–2020*
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This documentation is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
