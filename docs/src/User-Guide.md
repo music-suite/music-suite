@@ -925,9 +925,23 @@ TODO scales/chords as infinite/countable sets
 
 Chords and scales are *countably infinite* sets. This means that we can map them directly to any other such sets, such as the set of integers. For example the chord "C major" is the set `{ Cn En Gn | n ∈ all octaves }`. Using C4 (or "middle C") as the starting point, 0 will map to C4, 1 to E4, 2 to G4, -1 to G3, -2 to E3, and so on.
 
+<!--
 Normal Haskell types correspond to sets as well. For example, our `Common.Pitch` type is the set of *all* pitches in the diatonic/chromatic system. Values such as `scale c major` of type `Scale p` correpond to some subset of `p`.
+-->
 
-TODO inversion of basic chords like this is counter-intuitive:
+### Looking up pitches
+
+TODO looking up notes in a scale/chord (infinitely, Integer ->, 0 being the tonic)
+
+```haskell
+>>> index (chord c majorTriad) 0
+c
+
+>>> fmap (index (chord c majorTriad)) 0
+[g_,c,e,g]
+```
+
+### Inverting chords
 
 ```music+haskell
 inspectableToMusic @[Chord Pitch] $
@@ -937,6 +951,8 @@ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
+Note that the chord is invented *regardless of its fundamental*. In other words, the lowest note in the chord becomes the new fundamental:
+
 ```music+haskell
 inspectableToMusic @[Chord Pitch] $
 [ chord c $ majorTriad
@@ -944,6 +960,15 @@ inspectableToMusic @[Chord Pitch] $
 , chord c $ invertChord 2    majorTriad
 ]
 ```
+
+If this is not what you want, see @[invertVoicing] below.
+
+
+### Se toperations
+
+TODO set operations on chords/scales (e.g. union/difference/intersection/isSubset/isPowerset etc).
+
+
 
 ## Chord generators
 
@@ -999,15 +1024,6 @@ compress 2 $ inspectableToMusic @[Chord Pitch] $
 , over pitches (relative c negateV) $ chord c minorMajorSeventhChord
 ]
 ```
-
-
-
-TODO looking up notes in a scale/chord (infinitely, Integer ->, 0 being the tonic)
-
-
-
-TODO set operations on chords/scales (e.g. union/difference/intersection/isSubset/isPowerset etc).
-
 
 ### Scales versus Chords
 
@@ -1387,7 +1403,7 @@ TODO show how to set explicitly VI.1, VI.2, VII etc.
 
 We have already seen how the `</>` operator can be used to compose music "partwise". Now that we know about subparts we can see this works:
 
-When the given expressions have notes in some part, the subpart is incremented:
+When the given expressions have overlapping notes in some part, the subpart is incremented:
 
 ```music+haskell
 c </> c
