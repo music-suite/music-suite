@@ -1488,7 +1488,9 @@ Subparts are always non-empty lists. A consequence of this is that parts always 
 TODO Understand "overlapping" semantics, e.g. if notes overlap in "I" and "I.2" we have "overlapping events" (not OK in monophonic instruments, but see solo/altri below)
 -->
 
+<!--
 TODO show how to set explicitly VI.1, VI.2, VII etc.
+-->
 
 ## Partwise composition
 
@@ -1668,7 +1670,7 @@ glissando $ pseq [c,d]|/2
 
 ### Harmonics
 
-Use the @[harmonic] function:
+Use the @[harmonic] function. The argument is the harmonic number, with zero being the fundamental, one the first overtone, and so on. Use sounding pitch, Music Suite will automatically figure out the correct notation.
 
 ```music+haskell
 (harmonic 1 $ c|/2)
@@ -1678,7 +1680,7 @@ Use the @[harmonic] function:
 (harmonic 3 $ c|/2)
 ```
 
-TODO artificial harmonics @[artificial]
+For artificial harmonics, use @[artificial]:
 
 ```music+haskell
 artificial c |/ 2
@@ -1807,7 +1809,6 @@ For rolls see [the previous section](tremolo-trills-and-rolls).
 
 TODO render e.g. snare drum parts correctly
 
-TODO render "drum kit" staff
 
 # Lyrics and Vocals
 
@@ -2111,9 +2112,7 @@ compress 4 $ pseq [c,d,e] |> barline DoubleBarline (pseq [d,e,f])
 
 ## Clefs
 
-The standard for each instrument is used by default.
-
-TODO override the default
+The standard for each instrument is used by default. There is currently no way of overriding it.
 
 <!--
 ## Multi-movement scores
@@ -2397,6 +2396,10 @@ in trackToScore (1/8) y
 ```
 -->
 
+## Aligned
+
+TODO
+
 ## Scores
 
 A @[Score] represents a *parallel composition of values*, each tagged with *time span*.
@@ -2406,7 +2409,6 @@ TODO empty scores and rests (see (HasPosition Score) in TODO.md)
 
 TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
 
-TODO Aligned, "floaters"
 
 Natural way of modelling pickups/upbeats etc. Can be combined with "beat hierarchy" model
 

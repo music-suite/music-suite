@@ -359,6 +359,7 @@ Consider switching to a decentralized issue tracker such as:
   - Though note in Score.Meta, all types should be refactored to be monoids in
     themselves, rendering the wrapper obsolete.
 
+- [ ] "drum kit" staff support
 
 - [ ] Do not draw cresc/dim for voices like `[mf, f, p, mf]` (e.g. only a single note local max/min)
   - In other words, for a line to be drawn there must be a monotonic increase/decrease spanning >2 notes
@@ -655,6 +656,7 @@ Consider switching to a decentralized issue tracker such as:
         - Then try adding (Score StandardNote) and possibly other types in sequence. If they all fail, fail with the message from the original failure ("ambigous type").
         - Could this be done with TH or a compiler plugin?
 
+- Allow overriding the default clef
 
 - [X] For each instrument we want to know:
         - Classification:
