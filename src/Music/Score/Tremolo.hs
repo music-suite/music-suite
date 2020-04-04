@@ -57,6 +57,8 @@ class HasTremolo a where
   default setTrem :: forall f b. (a ~ f b, Functor f, HasTremolo b) => Int -> a -> a
   setTrem s = fmap (setTrem s)
 
+instance HasTremolo a => HasTremolo (Maybe a)
+
 instance HasTremolo a => HasTremolo (b, a)
 
 instance HasTremolo a => HasTremolo (Couple b a)
