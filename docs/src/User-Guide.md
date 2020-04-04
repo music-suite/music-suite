@@ -2235,6 +2235,8 @@ Inspecting the duration
 
 @[HasPosition]
 
+@[HasPosition1]
+
 Inspecting the position
 
 TODO instead of using Transformable, show how to set duration explicitly via lens
@@ -2398,18 +2400,11 @@ in trackToScore (1/8) y
 
 ## Aligned
 
-TODO
+TODO @[Aligned] type adds position to anything with a duration
 
-## Scores
+TODO pick a relative *origin* (e.g. 0 for the onset)
 
-A @[Score] represents a *parallel composition of values*, each tagged with *time span*.
-
-TODO empty scores and rests (see (HasPosition Score) in TODO.md)
-
-
-TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
-
-
+TODO using Aligned to represent upbeats
 Natural way of modelling pickups/upbeats etc. Can be combined with "beat hierarchy" model
 
 
@@ -2437,6 +2432,17 @@ delay 2 -- TODO get rid of this, see wall of shame
 
 TODO sequential composition of aligned voices "snap to next stressed beat":
 `snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]`
+
+
+## Scores
+
+A @[Score] represents a *parallel composition of values*, each tagged with *time span*.
+
+TODO empty scores and rests (see (HasPosition Score) in TODO.md)
+
+
+TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
+
 
 
 ## Patterns
