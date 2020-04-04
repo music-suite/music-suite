@@ -1672,7 +1672,7 @@ finalizeExport (MidiScore trs) =
     endDelta = 10000
 
 setProgramChannel :: Midi.Channel -> Midi.Preset -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
-setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
+setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setChannel ch)
 
 scoreToMidiTrack :: Duration -> Score Midi.Message -> Midi.Track Midi.Ticks
 scoreToMidiTrack divisions = fmap (\(t, _, x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. triples)
@@ -1691,7 +1691,7 @@ exportNote (PartT (_, ((snd . runSlideT . snd . runHarmonicT . snd . runTextT . 
   where
     exportNoteT (TechniqueT (Couple (_, x))) = exportNoteA x
     exportNoteA (ArticulationT (_, x)) = exportNoteD x
-    exportNoteD (DynamicT (realToFrac -> d, x)) = setV (dynLevel d) <$> exportNoteP x
+    exportNoteD (DynamicT (realToFrac -> d, x)) = setVelocity (dynLevel d) <$> exportNoteP x
     exportNoteP pv = mkMidiNote (pitchToInt pv)
     pitchToInt p = fromIntegral $ Music.Pitch.semitones (p .-. P.c)
 
@@ -1708,21 +1708,17 @@ mkMidiNote p =
     |> pure (Midi.NoteOn 0 (fromIntegral $ p + 60) 64)
     |> pure (Midi.NoteOff 0 (fromIntegral $ p + 60) 64)
 
-setV :: Midi.Velocity -> Midi.Message -> Midi.Message
-setV v = go
+setVelocity :: Midi.Velocity -> Midi.Message -> Midi.Message
+setVelocity v = go
   where
     go (Midi.NoteOff c k _) = Midi.NoteOff c k v
     go (Midi.NoteOn c k _) = Midi.NoteOn c k v
     go (Midi.KeyPressure c k _) = Midi.KeyPressure c k v
     go (Midi.ControlChange c n v) = Midi.ControlChange c n v
-    -- go (Midi.ProgramChange c p)   = Midi.ProgramChange c p
-    -- go (Midi.ChannelPressure c p) = Midi.ChannelPressure c p
-    -- go (Midi.PitchWheel c w)      = Midi.PitchWheel c w
-    -- go (Midi.ChannelPrefix c)     = Midi.ChannelPrefix c
     go x = x
 
-setC :: Midi.Channel -> Midi.Message -> Midi.Message
-setC c = go
+setChannel :: Midi.Channel -> Midi.Message -> Midi.Message
+setChannel c = go
   where
     go (Midi.NoteOff _ k v) = Midi.NoteOff c k v
     go (Midi.NoteOn _ k v) = Midi.NoteOn c k v
@@ -1731,7 +1727,6 @@ setC c = go
     go (Midi.ProgramChange _ p) = Midi.ProgramChange c p
     go (Midi.ChannelPressure _ p) = Midi.ChannelPressure c p
     go (Midi.PitchWheel _ w) = Midi.PitchWheel c w
-    go (Midi.ChannelPrefix _) = Midi.ChannelPrefix c
     go x = x
 
 ----------------------------------------------------------------------------------------------------
