@@ -1615,40 +1615,70 @@ movementToPartwiseXml movement = music
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
--- | The MIDI channel allocation is somewhat simplistic.
---   We use a dedicated channel and program number for each instrument (there *will* be colissions).
 type MidiInstr = (Midi.Channel, Midi.Preset)
 
--- | A Midi file consist of a number of tracks.
---   Channel and preset info is passed on from exportScore to finalizeExport using this type.
---
---   TODO also pass meta-info etc.
 data MidiScore a = MidiScore [(MidiInstr, Score a)]
   deriving (Functor)
 
 type MidiExportM m = (MonadLog String m, MonadError String m)
 
+-- | Convert the given music to a Standard MIDI File.
+--
+-- * A MIDI file is a number of tracks to be composed in parallel.
+--
+-- * Each track consists of timestamped messages. Most messages are one of the
+-- "normal" ones (on, off, pressure, control change, program change, pitch
+-- wheel), each assigned to a channel which is a number in [0..15]. While MIDI
+-- files are unlimited in the number of tracks, we are limited to 16 channels
+-- because that's how MIDI messages work (MIDI messages predate Standard MIDI
+-- Files).
+--
+-- * We do not emit any SysEx messages.
+--
+-- * We do not render many meta messages, only the ones required for correct
+-- play. E.g. no key signature changes etc (instead we transform the delta
+-- times before rendering to MIDI). The MIDI backend is meant to be used for
+-- sound rendering only, *not* as a logical/score-level export format.
+--
+-- * For now we do not support more than 16 sounds types. We only support one
+-- sound per instrument (the "standard" one, e.g. arco for violin). We perform
+-- no reallocation of channels, instead we check how many instruments there are in
+-- the given score and fail if there are more than 15 (we follow convention in
+-- reserving channel 10 for percussion, which we currently don't render). We
+-- then allocate a channel for each sound.
+--
+-- * TODO more than 15 sounds, non GM sounds, not just default instrument sound.
 toMidi :: (MidiExportM m) => Asp -> m Midi.Midi
 toMidi = pure . finalizeExport . fmap exportNote . exportScore . mcatMaybes
 
 exportScore :: Score Asp1a -> MidiScore Asp1a
 exportScore xs =
   MidiScore
-    $ map (\(p, sc) -> ((getMidiChannel p, getMidiProgram p), sc))
-    $ Music.Score.Part.extractPartsWithInfo
-    $ fixTempo
-    $ normalizeScore xs
+    $ map (\(p, sc) -> ((getMidiChannel pa p, getMidiProgram pa p), sc))
+    ys
   where
+    pa :: PartAllocation
+    pa = allocateParts $ fmap fst ys
+
+    ys :: [(Part, Score Asp1a)]
+    ys = Music.Score.Part.extractPartsWithInfo
+      $ fixTempo
+      $ normalizeScore xs
     -- TODO We actually want to extract *all* tempo changes and transform the score appropriately
     -- For the time being, we assume the whole score has the same tempo
     fixTempo :: Score Asp1a -> Score Asp1a
     fixTempo = stretch (Music.Score.Meta.Tempo.tempoToDuration (Music.Score.Meta.metaAtStart xs))
 
-getMidiProgram :: Music.Parts.Part -> Midi.Preset
-getMidiProgram = const 0
+type PartAllocation = Map Part (Midi.Preset, Midi.Channel)
 
-getMidiChannel :: Music.Parts.Part -> Midi.Channel
-getMidiChannel = const 0
+allocateParts :: [Part] -> PartAllocation
+allocateParts = undefined
+
+getMidiProgram :: PartAllocation -> Music.Parts.Part -> Midi.Preset
+getMidiProgram _ = const 60
+
+getMidiChannel :: PartAllocation -> Music.Parts.Part -> Midi.Channel
+getMidiChannel _ = const 0
 
 finalizeExport :: MidiScore (Score Midi.Message) -> Midi.Midi
 finalizeExport (MidiScore trs) =
@@ -1656,7 +1686,7 @@ finalizeExport (MidiScore trs) =
       mainTracks = fmap (uncurry translMidiTrack . fmap join) trs
    in Midi.Midi fileType (Midi.TicksPerBeat divisions) (controlTrack : mainTracks)
   where
-    translMidiTrack :: MidiInstr -> Score Midi.Message -> [(Int, Midi.Message)]
+    translMidiTrack :: MidiInstr -> Score Midi.Message -> Midi.Track Midi.Ticks
     translMidiTrack (ch, p) =
       addTrackEnd
         . setProgramChannel ch p
@@ -1671,7 +1701,13 @@ finalizeExport (MidiScore trs) =
     divisions = 1024
     endDelta = 10000
 
-setProgramChannel :: Midi.Channel -> Midi.Preset -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
+
+-- | Set MIDI channel and program/preset for a given track. This changes the channel
+-- of all given messages and inserts a single ProgramChange at the beginning.
+setProgramChannel :: Midi.Channel ->
+  Midi.Preset ->
+  Midi.Track Midi.Ticks ->
+  Midi.Track Midi.Ticks
 setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setChannel ch)
 
 scoreToMidiTrack :: Duration -> Score Midi.Message -> Midi.Track Midi.Ticks
@@ -1691,22 +1727,25 @@ exportNote (PartT (_, ((snd . runSlideT . snd . runHarmonicT . snd . runTextT . 
   where
     exportNoteT (TechniqueT (Couple (_, x))) = exportNoteA x
     exportNoteA (ArticulationT (_, x)) = exportNoteD x
-    exportNoteD (DynamicT (realToFrac -> d, x)) = setVelocity (dynLevel d) <$> exportNoteP x
-    exportNoteP pv = mkMidiNote (pitchToInt pv)
-    pitchToInt p = fromIntegral $ Music.Pitch.semitones (p .-. P.c)
+    exportNoteD (DynamicT (d, x)) = setVelocity (dynLevel d) <$> mkMidiNote x
 
-dynLevel :: Double -> Midi.Velocity
-dynLevel x = round $ (\x -> x * 58.5 + 64) $ f $ inRange (-1, 1) (x / 3.5)
+-- TODO move this to Music.Dynamics.Balance?
+dynLevel :: Music.Dynamics.Dynamics -> Midi.Velocity
+dynLevel x' = round $ (\x -> x * 58.5 + 64) $ f $ inRange (-1, 1) (x / 3.5)
   where
+    x = realToFrac x' :: Double
     f = id
     -- f x = (x^3)
     inRange (m, n) x = (m `max` x) `min` n
 
-mkMidiNote :: Int -> Score Midi.Message
-mkMidiNote p =
+mkMidiNote :: Pitch -> Score Midi.Message
+mkMidiNote p' =
   mempty
     |> pure (Midi.NoteOn 0 (fromIntegral $ p + 60) 64)
     |> pure (Midi.NoteOff 0 (fromIntegral $ p + 60) 64)
+  where
+    p = pitchToInt p'
+    pitchToInt p = Music.Pitch.semitones (p .-. P.c)
 
 setVelocity :: Midi.Velocity -> Midi.Message -> Midi.Message
 setVelocity v = go
@@ -1723,9 +1762,9 @@ setChannel c = go
     go (Midi.NoteOff _ k v) = Midi.NoteOff c k v
     go (Midi.NoteOn _ k v) = Midi.NoteOn c k v
     go (Midi.KeyPressure _ k v) = Midi.KeyPressure c k v
+    go (Midi.ChannelPressure _ p) = Midi.ChannelPressure c p
     go (Midi.ControlChange _ n v) = Midi.ControlChange c n v
     go (Midi.ProgramChange _ p) = Midi.ProgramChange c p
-    go (Midi.ChannelPressure _ p) = Midi.ChannelPressure c p
     go (Midi.PitchWheel _ w) = Midi.PitchWheel c w
     go x = x
 
