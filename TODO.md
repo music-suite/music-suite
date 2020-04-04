@@ -36,7 +36,8 @@ Consider switching to a decentralized issue tracker such as:
 
 - `tremolo` should take a duration, not an integer!
 
-- Rename meta-information to "global"?
+- [X] Won't fix!
+  - Rename meta-information to "global"?
 
 - Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
 
@@ -73,7 +74,7 @@ Consider switching to a decentralized issue tracker such as:
     - Compare Tidal instace for patterns
   - Remove Placed in favor of Aligned
   - Remove Track in place of Score and ([] . Aligned)
-  - Get rid of DynamicsL
+  - Get rid of DynamicsL (unify with standard type a la Pitch/Interval/String)
   - [X] Remove meta-data extraction (withTempo et al) from public API
   - Remove HasOctaves/HasQuality/HasNumber (retain interval instance)
   - Remove Augmentable/Alterable (?)
@@ -555,6 +556,7 @@ Consider switching to a decentralized issue tracker such as:
   - Move source tree into this repo
   - Bug: crashes on multi-page Lilypond output
   - Repeat works, should look at cache/output dir
+  - See $interactive
 
 - [X] Fix lawless (HasPosition (Score a))
   - Preference: Idea 1!!
@@ -599,7 +601,7 @@ Consider switching to a decentralized issue tracker such as:
         - Save the new origin
   - [X] Define reflection
 
-- TODO maths/music terminology!
+- [X] document maths vs. music terminology!
   - Constant source of problems
     - "Transposition" - Musical sense (maths: translation)
     - "Inversion"
@@ -609,7 +611,7 @@ Consider switching to a decentralized issue tracker such as:
       - Melody inversion means (point-wise) negation
 
 
-- [ ] Get rid of asNote/asScore/asVoice/asTrack
+- [X] Get rid of asNote/asScore/asVoice/asTrack
 
 - [X] Get rid of Prelude.StandardNote et al, use Asp1 (renamed!) instead
 
