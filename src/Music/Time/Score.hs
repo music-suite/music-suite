@@ -418,14 +418,13 @@ normalizeScore = reset . normalizeScoreDurations
   where
     normalizeScoreDurations = over (events . each . era) normalizeSpan
 
--- | Make a score start no later than time 0.
+-- | Delay a score so that it starts no later than time @0@.
 reset :: Score a -> Score a
 reset x = case _era x of
   Nothing -> x
   Just e -> let
     o = view onset e
     in if o < 0 then delay (0 .-. o) x else x
--- error "TODO" -- set onset (view onset x `max` 0) x
 
 -- | Remove all 'Nothing' values in the score.
 removeRests :: Score (Maybe a) -> Score a

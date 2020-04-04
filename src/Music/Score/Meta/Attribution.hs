@@ -117,7 +117,7 @@ getAttribution (Attribution a) k = join $ k `Map.lookup` (fmap (fmap getLast . g
 -- | Set the given attribution in the given score.
 attribute :: (HasMeta a, HasPosition a) => Attribution -> a -> a
 attribute a x = case _era x of
-  Nothing -> error "TODO"
+  Nothing -> x
   Just e -> attributeDuring e a x
 
 -- | Set the given attribution in the given part of a score.
@@ -127,7 +127,7 @@ attributeDuring s a = addMetaNote (view event (s, a))
 -- | Set composer of the given score.
 composer :: (HasMeta a, HasPosition a) => String -> a -> a
 composer t x = case _era x of
-  Nothing -> error "TODO"
+  Nothing -> x
   Just e -> composerDuring e t x
 
 -- | Set composer of the given part of a score.
@@ -137,7 +137,7 @@ composerDuring s x = attributeDuring s ("composer" `attribution` x)
 -- | Set lyricist of the given score.
 lyricist :: (HasMeta a, HasPosition a) => String -> a -> a
 lyricist t x = case _era x of
-  Nothing -> error "TODO"
+  Nothing -> x
   Just e -> lyricistDuring e t x
 
 -- | Set lyricist of the given part of a score.
@@ -147,7 +147,7 @@ lyricistDuring s x = attributeDuring s ("lyricist" `attribution` x)
 -- | Set arranger of the given score.
 arranger :: (HasMeta a, HasPosition a) => String -> a -> a
 arranger t x = case _era x of
-  Nothing -> error "TODO"
+  Nothing -> x
   Just e -> arrangerDuring e t x
 
 -- | Set arranger of the given part of a score.

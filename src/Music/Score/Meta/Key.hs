@@ -151,7 +151,7 @@ key tonic mode = KeySignature $ First $ Just (tonic, mode)
 -- | Set the key signature of the given score.
 keySignature :: (HasMeta a, HasPosition a) => KeySignature -> a -> a
 keySignature c x = case _era x of
-  Nothing -> error "TODO"
+  Nothing -> x
   Just e -> keySignatureDuring e c x
 
 -- | Set the key signature of the given part of a score.

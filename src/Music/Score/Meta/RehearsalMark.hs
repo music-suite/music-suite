@@ -93,7 +93,7 @@ instance Monoid RehearsalMark where
 
 rehearsalMark :: (HasMeta a, HasPosition a, Transformable a) => a -> a
 rehearsalMark x = case _era x of
-  Nothing -> error "TODO"
+  Nothing -> x
   Just e -> rehearsalMarkAt (view onset e) x
 
 rehearsalMarkAt :: HasMeta a => Time -> a -> a

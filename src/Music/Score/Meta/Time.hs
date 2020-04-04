@@ -165,7 +165,7 @@ toSimpleTime = fromRational . toRational
 -- | Set the time signature of the given score.
 timeSignature :: (HasMeta a, HasPosition a, Transformable a) => TimeSignature -> a -> a
 timeSignature c x = case _era x of
-  Nothing -> error "TODO"
+  Nothing -> x
   Just e -> timeSignatureDuring e c x
 
 -- use (x^.onset <-> x^.offset) instead of (0 <-> x^.offset)

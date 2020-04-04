@@ -80,7 +80,7 @@ instance IsPitch Clef where
 -- | Set clef of the given score.
 clef :: (HasMeta a, HasPosition a) => Clef -> a -> a
 clef c x = case _era x of
-  Nothing -> error "TODO"
+  Nothing -> x
   Just e -> clefDuring e c x
 
 -- | Set clef of the given part of a score.
