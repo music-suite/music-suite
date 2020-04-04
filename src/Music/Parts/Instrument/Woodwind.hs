@@ -15,7 +15,6 @@ module Music.Parts.Instrument.Woodwind
     Glissando,
     allowedGlissandi,
     effectiveGlissandi,
-    isAllowedGlissando,
   )
 where
 
@@ -50,6 +49,4 @@ allowedGlissandi = error "No allowedGlissandi"
 effectiveGlissandi :: Set GlissandoRange
 effectiveGlissandi = error "No effectiveGlissandi"
 
-isAllowedGlissando :: WoodwindInstrument -> Glissando -> Bool
-isAllowedGlissando = error "No isAllowedGlissandi"
 -- TODO correspondance of range/sound/dynamic

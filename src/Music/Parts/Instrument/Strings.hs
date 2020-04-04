@@ -14,9 +14,6 @@ module Music.Parts.Instrument.Strings
     StringTuning,
     standardTuning,
     allowedTunings,
-    isAllowedTuning,
-    isStandardTuning,
-    isNonStandardTuning,
     HarmonicPosition,
     naturalHarmonicPositions,
   )
@@ -50,15 +47,6 @@ standardTuning = error "No standardTuning"
 
 allowedTunings :: StringInstrument -> Set StringTuning
 allowedTunings = error "No allowedTunings"
-
-isAllowedTuning :: StringInstrument -> StringTuning -> Bool
-isAllowedTuning = error "No isAllowedTuning"
-
-isStandardTuning :: StringInstrument -> StringTuning -> Bool
-isStandardTuning = error "No isStandardTuning"
-
-isNonStandardTuning :: StringInstrument -> StringTuning -> Bool
-isNonStandardTuning = error "No isNonStandardTuning"
 
 type HarmonicPosition = Integer
 
