@@ -72,8 +72,7 @@ music = meta $ stretch (3/2) $ bell <> delay 6 strings
           . timeSignature (6/4)
           . tempo (metronome (1/4) 120)
 
--- openBook :: Score StandardNote -> IO ()
--- openBook = openLilypond' LyScoreFormat
---
+-- FIXME shell gets stuck in TypesettingMusic stage, likely because it doesn't handle
+-- multi-page output!
 main :: IO ()
 main = defaultMain music

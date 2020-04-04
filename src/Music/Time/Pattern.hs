@@ -12,8 +12,8 @@ import Data.AffineSpace
 import Data.VectorSpace
 import Music.Pitch (IsPitch (..))
 import Music.Pitch.Literal (c)
-import Music.Score.Pitch
 import Music.Score.Part
+import Music.Score.Pitch
 import Music.Time.Aligned
 import Music.Time.Event
 import Music.Time.Juxtapose
@@ -79,12 +79,12 @@ type instance Part (Lunga a) = Part a
 type instance SetPart b (Lunga a) = Lunga (SetPart b a)
 
 instance HasPitches a b => HasPitches (Lunga a) (Lunga b) where
-{-
-  pitches visit (Lunga (dur, back, front)) = do
-    back' <- pitches visit $ back
-    front' <- pitches visit $ front
-    pure $ Lunga (dur, front', back')
--}
+  {-
+    pitches visit (Lunga (dur, back, front)) = do
+      back' <- pitches visit $ back
+      front' <- pitches visit $ front
+      pure $ Lunga (dur, front', back')
+  -}
   pitches = traverse . pitches
 
 instance HasParts a b => HasParts (Lunga a) (Lunga b) where
@@ -135,7 +135,7 @@ Render the cycles 0<->3, 3<->6, an extra cycle of (takeM 1), finally drop 1
 Render the cycles -, an extra cycle of (takeM 2), finally drop 1
 
 -}
-renderLunga :: (Reversible a, Splittable a) => Span -> Lunga a -> Aligned (Voice a)
+renderLunga :: (HasDuration a, Reversible a, Splittable a) => Span -> Lunga a -> Aligned (Voice a)
 renderLunga s (Lunga (d, _, b))
   | d < 0 = error "renderLunga: Negative (nominal) duration"
   | otherwise =
@@ -190,18 +190,18 @@ newPattern :: Reversible a => Voice a -> Pattern a
 newPattern v = Pattern [pure $ newLunga v]
 
 rhythmPattern :: (IsPitch a, Reversible a) => [Duration] -> Pattern a
-rhythmPattern a = newPattern $ fmap (const c) $ a^.durationsAsVoice
+rhythmPattern a = newPattern $ fmap (const c) $ a ^. durationsAsVoice
 
 newPattern' :: Voice a -> Voice a -> Pattern a
 newPattern' vb vf = Pattern [pure $ newLunga' vb vf]
 
 -- TODO variant that returns [Aligned (Voice a)]
-renderPattern :: (Reversible a, Splittable a) => Pattern a -> Span -> Score a
+renderPattern :: (HasDuration a, Reversible a, Splittable a) => Pattern a -> Span -> Score a
 renderPattern (Pattern ((unzip . fmap (^. from placed)) -> (origos, lungas))) s =
   ppar $
     zipWith (renderLunga' s) origos lungas
 
-renderLunga' :: (Reversible a, Splittable a) => Span -> Time -> Lunga a -> Score a
+renderLunga' :: (HasDuration a, Reversible a, Splittable a) => Span -> Time -> Lunga a -> Score a
 renderLunga' s t = renderAlignedVoice . delay' t . renderLunga (delay' t s)
   where
     -- TODO terminology here is not super-nice
@@ -213,14 +213,14 @@ renderLunga' s t = renderAlignedVoice . delay' t . renderLunga (delay' t s)
 --
 -- Each note triggers exactly /one/ cycle of the pattern (frequency = 1), starting at the beginning of the pattern (phase =
 -- 0).
-renderPatternsRel :: (Reversible a, Splittable a) => Score (Pattern a) -> Score a
+renderPatternsRel :: (HasDuration a, Reversible a, Splittable a) => Score (Pattern a) -> Score a
 renderPatternsRel = join . fmap (flip renderPattern zeroV)
 
 -- | Renders each pattern in the span of its note.
 --
 -- This means that notes of different onset and duration may trigger a different number of cycles (frequency), with
 -- different starting point in the pattern (phase).
-renderPatternsAbs :: (Reversible a, Splittable a) => Score (Pattern a) -> Score a
+renderPatternsAbs :: (HasDuration a, Reversible a, Splittable a) => Score (Pattern a) -> Score a
 renderPatternsAbs = join . mapWithSpan (\s -> transform (negateV s) . flip renderPattern s)
 
 -- Note: We can not change the span of a note using mapWithSpan, so we transform the result to position (0<->1)

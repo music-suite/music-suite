@@ -232,6 +232,8 @@ deriving instance HasColor a => HasColor (StaffNumberT a)
 
 deriving instance HasTremolo a => HasTremolo (PartT n a)
 
+deriving instance HasTremolo a => HasTremolo (StaffNumberT a)
+
 deriving instance HasHarmonic a => HasHarmonic (PartT n a)
 
 deriving instance HasSlide a => HasSlide (PartT n a)

@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
@@ -28,7 +28,7 @@
 -- Portability : non-portable (TF,GNTD)
 module Music.Score.Internal.Export
   ( extractTimeSignatures,
-    extractBars
+    extractBars,
   )
 where
 
@@ -64,20 +64,20 @@ import Data.Traversable
 import Data.Typeable
 import Data.VectorSpace
 import Music.Dynamics.Literal
-import Music.Time.Meta (Meta, HasMeta(..))
-import Music.Score.Meta (fromMetaReactive)
 import Music.Pitch.Literal
 import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Internal.Quantize
 import Music.Score.Internal.Util
-import Music.Score.Meta.Time
+import Music.Score.Meta (fromMetaReactive)
 import Music.Score.Meta.Key
+import Music.Score.Meta.Time
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Time
 import Music.Time.Internal.Convert
+import Music.Time.Meta (HasMeta (..), Meta)
 import System.IO.Unsafe
 import qualified System.Info as Info
 import System.Process
@@ -100,15 +100,19 @@ import Prelude hiding
 -- Use Applicative instance to merge reactives pointwise then reactiveToVoice'
 -- for the era of the score.
 
-
-
 -- | Extract bar-related information from score meta-data.
 --
 -- Returns a list of bars with durations and possibly time signature, key signature
 -- etc. For no change, Nothing is returned.
-extractBars :: (HasMeta a, HasPosition a, Transformable a) => a ->
+extractBars ::
+  (HasMeta a, HasPosition a, Transformable a) =>
+  a ->
   [(Duration, Maybe TimeSignature, Maybe KeySignature {-, Maybe Barline, Key, Maybe RehearsalMark, Maybe Tempo-})]
-extractBars x = zip3 dss tss kss
+extractBars x = case _era x of
+  Nothing -> []
+  Just e -> extractBarsInEra e x
+
+extractBarsInEra era x = zip3 dss tss kss
   where
     dss :: [Duration]
     dss = fmap (realToFrac . fst) foo2
@@ -117,36 +121,46 @@ extractBars x = zip3 dss tss kss
     foo3 = retainUpdates2 foo2
     -- The time and key signature of each bar
     foo2 :: [(TimeSignature, KeySignature)]
-    foo2 = prolongLastBarIfDifferent $
-      tsPerBar $ fmap (view $ from note) $ view notes foo1
+    foo2 =
+      prolongLastBarIfDifferent
+        $ tsPerBar
+        $ fmap (view $ from note)
+        $ view notes foo1
     -- Each /combination/ of time signature from 0 througout the duration
     -- of the score
     foo1 :: Voice (TimeSignature, KeySignature)
-    foo1 = reactiveToVoice' (0 <-> x^.offset) foo
+    foo1 = reactiveToVoice' era foo
     -- Each /combination/ of time signature, key signature and so on
     foo :: Reactive (TimeSignature, KeySignature)
-    foo = (,) <$> getTimeSignatures defaultTimeSignature x
-      <*> getKeySignatures x
-
+    foo =
+      (,) <$> getTimeSignatures defaultTimeSignature x
+        <*> getKeySignatures x
 
 -- | Extract bar-related information from score meta-data.
 --
 -- Returns a list of bars with durations and possibly time signature, key signature
 -- etc. For no change, Nothing is returned.
-extractTimeSignatures :: (HasMeta a, HasPosition a, Transformable a) => a
-  -> [(Duration, Maybe TimeSignature)]
-extractTimeSignatures score = zip (fmap realToFrac barTimeSignatures) (retainUpdates barTimeSignatures)
+extractTimeSignatures ::
+  (HasMeta a, HasPosition a, Transformable a) =>
+  a ->
+  [(Duration, Maybe TimeSignature)]
+extractTimeSignatures x = case _era x of
+  Nothing -> []
+  Just e -> extractTimeSignaturesInEra e x
+
+extractTimeSignaturesInEra era score = zip (fmap realToFrac barTimeSignatures) (retainUpdates barTimeSignatures)
   where
     -- From position 0, the duration of each time signature and how long it lasts
     timeSignatures :: [(Duration, TimeSignature)]
     timeSignatures =
-        view pairs . reactiveToVoice' (0 <-> (score ^. offset))
-        $ getTimeSignatures defaultTimeSignature score
+      view pairs . reactiveToVoice' era $
+        getTimeSignatures defaultTimeSignature score
     -- The time signature of each bar
     barTimeSignatures :: [TimeSignature]
     barTimeSignatures =
-      fmap fst $ prolongLastBarIfDifferent $
-        tsPerBar $ undefined timeSignatures
+      fmap fst $ prolongLastBarIfDifferent
+        $ tsPerBar
+        $ undefined timeSignatures
 
 -- | Extract the time signature meta-track, using the given default.
 getTimeSignatures :: HasMeta a => TimeSignature -> a -> Reactive TimeSignature
@@ -174,31 +188,30 @@ prolongLastBarIfDifferent = reverse . go . reverse
       | last < penult = (penult, lastX) : (penult, penultX) : xs
       | otherwise = (last, lastX) : (penult, penultX) : xs
 
-
-
 -- | Given a list of time signatures and the duration between them return a
 -- list of appropriate time signatures for each bar.
 tsPerBar :: [(Duration, (TimeSignature, a))] -> [(TimeSignature, a)]
 tsPerBar = concatMap $ uncurry $ fmap uncurry go
--- (TODO use voice instead of list?),
   where
+    -- (TODO use voice instead of list?),
+
     go :: Duration -> TimeSignature -> a -> [(TimeSignature, a)]
-    go d ts a  =
+    go d ts a =
       let (n, r) = numWholeBars ts d
        in -- Repeat the chosen time signature as long as possible
           -- If there is a rest duration, add a bar of that duration choosing an appropriate time signature
-          replic n (ts, a) ++ if r > 0 then
-            case standardTimeSignature r of
-              Just x -> [(x, a)]
-              -- Remainder duration is not a power of two
-              --
-              -- TODO this should fail iff this is not the last "note" in the
-              -- voice given to tsPerBar. For the last note it's OK to chose
-              -- an arbitrary TS (FIXME as long as it's a power of 2 larger than r!)
-              Nothing -> [(time 4 4, a)]
-            else []
+          replic n (ts, a)
+            ++ if r > 0
+              then case standardTimeSignature r of
+                Just x -> [(x, a)]
+                -- Remainder duration is not a power of two
+                --
+                -- TODO this should fail iff this is not the last "note" in the
+                -- voice given to tsPerBar. For the last note it's OK to chose
+                -- an arbitrary TS (FIXME as long as it's a power of 2 larger than r!)
+                Nothing -> [(time 4 4, a)]
+              else []
 
 -- | Return the number of whole bars needed to notate the given duration, as well as the remainder duration.
 numWholeBars :: TimeSignature -> Duration -> (Integer, Duration)
 numWholeBars ts dur = second (* barDur) $ properFraction (dur / barDur) where barDur = realToFrac ts
-

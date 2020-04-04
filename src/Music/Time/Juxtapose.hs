@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -33,6 +35,7 @@ module Music.Time.Juxtapose
     -- * Repetition
     times,
     group,
+    After (..),
   )
 where
 
@@ -42,6 +45,7 @@ import Data.AffineSpace.Point
 import Data.Semigroup
 import Data.Stream.Infinite hiding (group)
 import Data.VectorSpace
+import GHC.Generics (Generic)
 import Music.Time.Reverse
 import Music.Time.Split
 
@@ -50,14 +54,18 @@ import Music.Time.Split
 -- (a `lead` b)^.'offset' = b^.'onset'
 -- @
 lead :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-a `lead` b = placeAt 1 (b `_position` 0) a
+a `lead` b = case b `_position` 0 of
+  Nothing -> a
+  Just p -> placeAt 1 p a
 
 -- |
 -- @
 -- a^.'offset' = (a `follow` b)^.'onset'
 -- @
 follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
-a `follow` b = placeAt 0 (a `_position` 1) b
+a `follow` b = case a `_position` 1 of
+  Nothing -> b
+  Just p -> placeAt 0 p b
 
 after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `after` b = a <> (a `follow` b)
@@ -105,7 +113,9 @@ ppar = mconcat
 -- |
 -- Move a value so that its era is equal to the era of another value.
 during :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
-y `during` x = set era (view era x) y
+y `during` x = case _era x of
+  Nothing -> y
+  Just e -> setEra e y
 
 -- |
 -- Like '<>', but scaling the second agument to the duration of the first.
@@ -129,6 +139,7 @@ times n = pseq . replicate n
 -- @
 group :: (Monoid a, Transformable a, HasPosition a) => Int -> a -> a
 group n x = times n x |/ fromIntegral n
+
 {-
 -- |
 -- Compose sequentially by aligning the nominal position of each value to the
@@ -142,3 +153,17 @@ group n x = times n x |/ fromIntegral n
 -- @
 snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]
 -}
+
+-- | Monoid under sequential composition.
+--
+-- /Warning/: This is only lawful if the underlying monoid means "parallel composition".
+-- E.g. this works for 'Score' and 'Pattern', but not for 'Span' and 'Voice'.
+newtype After a = After {getAfter :: a}
+  deriving newtype (Eq, Ord)
+  deriving stock (Show, Generic)
+
+instance (Semigroup a, HasPosition a, Transformable a) => Semigroup (After a) where
+  After a <> After b = After $ a |> b
+
+instance (Monoid a, HasPosition a, Transformable a) => Monoid (After a) where
+  mempty = After mempty

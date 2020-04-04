@@ -53,7 +53,7 @@ explicitly in each file using a `LANGUAGE` pragma.
 ### Development shell
 
 ```
-cabal build && cabal exec --package music-suite ghci
+cabal build music-suite && cabal exec --package music-suite ghci
 ```
 
 ### Generate documentation

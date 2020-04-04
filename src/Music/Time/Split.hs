@@ -32,6 +32,7 @@ import Control.Lens hiding
   )
 import Data.AffineSpace
 import Data.AffineSpace.Point
+import Data.Bifunctor
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Semigroup hiding ()
@@ -54,7 +55,7 @@ import Music.Time.Position
 --
 -- (Note that any of these three laws can be derived from the other two, so it is
 -- sufficient to prove two!).
-class HasDuration a => Splittable a where
+class Splittable a where
 
   -- |  Split a value at the given duration and return both parts.
   split :: Duration -> a -> (a, a)
@@ -90,6 +91,10 @@ instance Splittable Duration where
   split t x = (t' `min` x, x ^-^ (t' `min` x))
     where
       t' = t `max` 0
+
+instance Splittable a => Splittable (Maybe a) where
+  split d Nothing = (Nothing, Nothing)
+  split d (Just x) = bimap Just Just $ split d x
 
 chunks :: (Transformable a, Splittable a) => Duration -> a -> [a]
 chunks d xs = chunks' d xs

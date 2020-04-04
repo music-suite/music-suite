@@ -156,17 +156,25 @@ _HasDuration t = property cd
     -- cd n a  = n /= 0 ==> _duration (stretch (n) (a .: t)) === (n) * _duration a
     cd n a  = n >= 0 ==> _duration (stretch (n) (a .: t)) === (n) * _duration a
 
-_HasPosition :: (Checkable a, Transformable a, HasPosition a) => a -> Property
-_HasPosition t = eqd .&&. ond .&&. ofd .&&. sd .&&. ass
-  where
-    eqd a   = True   ==> _duration a                        === _offset a .-. _onset (a .: t)
-    ond n a = n /= 0 ==> _onset (delay n $ a .: t)          === _onset a  .+^ n
-    ofd n a = n /= 0 ==> _offset (delay n $ a .: t)         === _offset a .+^ n
-    sd n a  = n /= 0 ==> _duration (stretch n $ a .: t)     === n * _duration a
-    ass s a p = True ==> (s `transform` (a .: t)) `_position` p === s `transform` (a `_position` p)
-    -- TODO more general
+-- TODO FIXME replace use of (.:)/asTypeOf with TypeApplications!
 
-_onset, _offset :: (HasPosition a, Transformable a) => a -> Time
+-- TODO tests HasPosition/HasDuration/Transformable instances
+-- We should also test types that are not instances of all these classes at once
+_HasPosition :: (Checkable a, Transformable a, HasDuration a, HasPosition a) => a -> Property
+_HasPosition t = property sd -- .&&. ass
+  where
+    sd x =
+      True ==>
+        fmap _duration (_era $ x .: t) === Just (_duration x)
+
+_HasPositionTransformable:: (Checkable a, Transformable a, HasPosition a) => a -> Property
+_HasPositionTransformable t = property ass -- .&&. ass
+  where
+    ass s x =
+      isForwardSpan s  ==>
+        _era (transform s x) === fmap (transform s) (_era (x .: t))
+
+_onset, _offset :: (HasPosition1 a, Transformable a) => a -> Time
 _onset = view onset
 _offset = view offset
 
@@ -264,6 +272,9 @@ instance Arbitrary a => Arbitrary (Score a) where
 instance Arbitrary a => Arbitrary (Track a) where
   arbitrary = fmap (view track) arbitrary
 
+instance Arbitrary a => Arbitrary (After a) where
+  arbitrary = fmap After arbitrary
+
 -- instance Arbitrary a => Arbitrary (Reactive a) where
   -- arbitrary = liftA2 zip arbitrary arbitrary
 
@@ -320,7 +331,7 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("Monoid Sum Int", _Monoid, Sum Int),
   I_TEST2("Monoid [Int]", _Monoid, [Int]),
 
-  -- SLOW I_TEST(_Monoid, Average Rational)
+  I_TEST2("Monoid Average Rational", _Monoid, Average Rational),
   I_TEST2("Monoid Average Double", _Monoid, Average Double),
 
   I_TEST2("Monoid Time", _Monoid, Time),
@@ -332,10 +343,9 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("Monoid Note ()", _Monoid, Note ()),
 
   I_TEST2("Monoid Voice Int", _Monoid, Voice Int),
-  -- I_TEST2("Monoid Chord Int", _Monoid, Chord Int),
   I_TEST2("Monoid Score Int", _Monoid, Score Int),
 
-
+  -- I_TEST2("Monoid (After (Score Int))", _Monoid, After (Score Int)),
 
   I_TEST2("Transformable Time", _Transformable, Time),
   I_TEST2("Transformable Duration", _Transformable, Duration),
@@ -371,9 +381,7 @@ main = defaultMain $ testGroup "Instances" $ [
   -- I_TEST2("Transformable Chord Int", _Transformable, Chord Int),
   I_TEST2("Transformable Score Int", _Transformable, Score Int),
   I_TEST2("Transformable Track Int", _Transformable, Track Int),
-  -- SLOW I_TEST2("Transformable [Voice Int]", _Transformable, [Voice Int]),
-  -- SLOW I_TEST2("Transformable [Chord Int]", _Transformable, [Chord Int]),
-  -- SLOW I_TEST2("Transformable [Score Int]", _Transformable, [Score Int]),
+  I_TEST2("Transformable [Voice Int]", _Transformable, [Voice Int]),
 
   -- I_TEST2("HasDuration Time", _HasDuration, Time),
   I_TEST2("HasDuration Span", _HasDuration, Span),
@@ -382,7 +390,7 @@ main = defaultMain $ testGroup "Instances" $ [
   -- I_TEST2("HasDuration Placed Int", _HasDuration, Placed Int),
   -- I_TEST2("HasDuration Placed Double", _HasDuration, Placed Double),
 
-  I_TEST2("HasDuration Score Int", _HasDuration, Score Int),
+  -- I_TEST2("HasDuration Score Int", _HasDuration, Score Int),
   -- I_TEST2("HasDuration Chord Int", _HasDuration, Chord Int),
   -- TODO remove instance I_TEST2("HasDuration [Score Int]", _HasDuration, [Score Int]),
   -- TODO remove instance I_TEST2("HasDuration [Chord Int]", _HasDuration, [Chord Int]),
@@ -393,7 +401,7 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("HasPosition Event Double", _HasPosition, Event Double),
   -- I_TEST2("HasPosition Placed Int", _HasPosition, Placed Int),
   -- I_TEST2("HasPosition Placed Double", _HasPosition, Placed Double),
-  -- I_TEST2("HasPosition Score Int", _HasPosition, Score Int),
+  I_TEST2("HasPosition/Transformable Score Int", _HasPositionTransformable, Score Int),
   I_TEST2("HasPosition Event (Event Int)", _HasPosition, Event (Event Int)),
   I_TEST2("HasPosition Event (Score Int)", _HasPosition, Event (Score Int)),
   -- I_TEST2("HasPosition Score (Placed Int)", _HasPosition, Score (Placed Int)),

@@ -370,13 +370,11 @@ instance (HasPitch a b) => HasPitch (SlideT a) (SlideT b) where
 instance (HasPitches a b) => HasPitches (Ambitus v a) (Ambitus v b) where
   pitches = traverse . pitches
 
-
 -- |
 -- Associated interval type.
 type Interval a = Diff (Pitch a)
 
 type PitchPair v w = (Num (Scalar v), IsInterval v, IsPitch w)
-
 
 -- |
 -- Class of types that can be transposed, inverted and so on.

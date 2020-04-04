@@ -119,6 +119,7 @@ stanza1_bc = octavesDown 1 $ empty
     |> ll d  d     |> ll d d       |> ls cs  cs            |> ll d d
     |> ls a  a     |> s4 d d cs cs |> ls d             d   |> l4 a_
 
+-- FIXME tempo!
 main :: IO ()
 main =
   defaultMain score'

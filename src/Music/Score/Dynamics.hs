@@ -386,7 +386,7 @@ compressor = compressUp
 --
 
 cresc :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
-cresc a b x = stretchTo (x ^. duration) $ cresc' a b (stretchTo 1 x)
+cresc a b x = stretchToD (_duration x) $ cresc' a b (stretchToD 1 x)
 
 cresc' :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
 cresc' a b = setLevelWithAlignment (\t -> alerp a b (realToFrac t))
@@ -399,12 +399,12 @@ dim = cresc
 
 -- |
 -- Fade in.
-fadeIn :: (HasPosition a, Transformable a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeIn :: (HasPosition1 a, Transformable a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
 fadeIn d x = x & dynamics *~ ((x ^. onset >-> d) `transform` unit)
 
 -- |
 -- Fade in.
-fadeOut :: (HasPosition a, Transformable a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeOut :: (HasPosition1 a, Transformable a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
 fadeOut d x = x & dynamics *~ ((d <-< (x ^. offset)) `transform` rev unit)
 
 newtype DynamicT n a = DynamicT {getDynamicT :: (n, a)}

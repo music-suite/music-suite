@@ -112,7 +112,6 @@ module Music.Parts
     cellos,
     doubleBasses,
     harp,
-
     claves,
     maracas,
 

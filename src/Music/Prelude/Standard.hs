@@ -33,6 +33,7 @@ module Music.Prelude.Standard
     module Music.Score,
     Music,
     StandardNote,
+    Asp1a,
     defaultMain,
 
     -- * Lens re-exports
@@ -60,7 +61,7 @@ import Music.Dynamics
 import Music.Parts
 import Music.Pitch
 import Music.Score hiding (Articulation, Clef (..), Fifths, Interval, Part, Pitch, view)
-import Music.Score.Export.StandardNotation (Asp1, LilypondLayout (..), LilypondOptions (..), defaultLilypondOptions, fromAspects, runIOExportM, toLy, toMidi, toXml)
+import Music.Score.Export.StandardNotation (Asp1, Asp1a, LilypondLayout (..), LilypondOptions (..), defaultLilypondOptions, fromAspects, runIOExportM, toLy, toMidi, toXml)
 import qualified Music.Score.Part
 import qualified System.Environment
 import qualified Text.Pretty

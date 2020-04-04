@@ -67,8 +67,6 @@ music = (error "TODO")
 -- TODO FIXME add?
 -- See $splitSemantics in TODO.md
 instance HasDuration a => HasDuration (Maybe a)
--- TODO FIXME add?
-instance Splittable a => Splittable (Maybe a)
 
 {-
 All rather chaotic! Stitch is interesting, but not that intuitive!
@@ -345,7 +343,7 @@ addLeadingD i = over notes (>>= \n -> [0.75*|n,0.25*|downDiatonic c (fromIntegra
 -}
 
 -- Expand notes/adjacent notes to longer sequences
-expandInto :: (HasPitches' a, Transposable a, Splittable a, Transformable a) => Duration -> Voice a -> Voice a -> Voice a
+expandInto :: (HasPitches' a, HasDuration a, Transposable a, Splittable a, Transformable a) => Duration -> Voice a -> Voice a -> Voice a
 expandInto d v w = va `stitch` w `stitch` vb
   where
     (va,vb) = split d v

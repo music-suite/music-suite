@@ -5,6 +5,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-redundant-constraints #-}
+
 module Music.Time.Event
   ( -- * Event type
     Event,
@@ -71,10 +72,13 @@ instance Transformable (Event a) where
   transform t = over eventSpan (transform t)
 
 instance HasDuration (Event a) where
-  _duration = _duration . _era
+  _duration = _duration . view eventSpan
 
 instance HasPosition (Event a) where
-  _era = view eventSpan
+  _era = Just . view eventSpan
+
+instance HasPosition1 (Event a) where
+  _era1 = view eventSpan
 
 instance IsString a => IsString (Event a) where
   fromString = pure . fromString
@@ -118,4 +122,3 @@ eventee = from event `dependingOn` (transformed)
 -- | Event as a span with a trivial value.
 spanEvent :: Iso' Span (Event ())
 spanEvent = iso (\s -> (s, ()) ^. event) (^. era)
-

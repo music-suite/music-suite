@@ -279,6 +279,13 @@ executable "music-suite-examples-analysis_durations"
     hs-source-dirs:     examples
     main-is:            analysis_durations.hs
 
+executable "music-suite-examples-annotations"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            annotations.hs
+
 executable "music-suite-examples-bartok"
     build-depends:      base,
                         lens,
@@ -306,6 +313,13 @@ executable "music-suite-examples-chopin"
                         music-suite
     hs-source-dirs:     examples
     main-is:            chopin.hs
+
+executable "music-suite-examples-duo"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            duo.hs
 
 -- executable "music-suite-examples-dynamics"
 --     build-depends:      base,
@@ -373,6 +387,13 @@ executable "music-suite-examples-tuplet"
                         music-suite
     hs-source-dirs:     examples
     main-is:            tuplet.hs
+
+executable "music-suite-examples-klangfarben"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            klangfarben.hs
 
 executable "music-suite-examples-chorale"
     build-depends:      base,

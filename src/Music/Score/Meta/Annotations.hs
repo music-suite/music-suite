@@ -15,8 +15,7 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+  -fno-warn-unused-imports #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------
@@ -49,8 +48,6 @@ import qualified Data.List
 import Data.Semigroup
 import Data.String
 import Data.Typeable
--- import           Data.Void
-
 import Music.Score.Meta
 import Music.Score.Part
 import Music.Score.Text (HasText, text)
@@ -70,18 +67,20 @@ getAnnotation = Data.List.nub . getAnnotation_
 
 -- | Annotate the whole score.
 annotate :: String -> Score a -> Score a
-annotate str x = annotateSpan (0 >-> _duration x) str x
+annotate str x = case _era x of
+  Nothing -> x
+  Just e -> annotateSpan e str x
 
 -- | Annotate a part of the score.
 annotateSpan :: Span -> String -> Score a -> Score a
 annotateSpan span str x = addMetaNote (transform span $ return $ Annotation [str]) x
 
 -- | Show all annotations in the score.
-showAnnotations :: (HasPart' a, Ord (Part a), HasText a) => Score a -> Score a
+showAnnotations :: (HasParts' a, Ord (Part a), HasText a) => Score a -> Score a
 showAnnotations = showAnnotations' ":"
 
 -- | Show all annotations in the score using the given prefix.
-showAnnotations' :: (HasPart' a, Ord (Part a), HasText a) => String -> Score a -> Score a
+showAnnotations' :: (HasParts' a, Ord (Part a), HasText a) => String -> Score a -> Score a
 showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix ++)) s)
 
 -- | Handle the annotations in a score.

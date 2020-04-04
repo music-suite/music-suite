@@ -5,6 +5,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
+  -fno-warn-deprecations
   -fno-warn-redundant-constraints #-}
 
 module Music.Time.Note
@@ -143,10 +144,10 @@ instance HasDuration (Note a) where
             , (0.4,(3.5,mempty)^.note)^.note            -- db*xb
 
 -}
-instance (Splittable a, Transformable a) => Splittable (Note a) where
+instance (HasDuration a, Splittable a, Transformable a) => Splittable (Note a) where
   split t ((^. from note) -> (d, x)) = over both (^. note) $ split' t d x
 
-split' :: (Transformable a, Splittable a) => Duration -> Duration -> a -> ((Duration, a), (Duration, a))
+split' :: (Transformable a, HasDuration a, Splittable a) => Duration -> Duration -> a -> ((Duration, a), (Duration, a))
 split' t d x = ((da, compress p xa_p), (db, compress q xb_q))
   where
     -- We are really returning ((da, xa), (db, xb))

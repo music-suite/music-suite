@@ -68,8 +68,8 @@ instance InspectableNote a => Inspectable (Score a) where
 instance InspectableNote Pitch where
   inspectableToMusicNote = pure . fromPitch
 
-instance InspectableNote StandardNote where
-  inspectableToMusicNote = pure
+instance InspectableNote Asp1a where
+  inspectableToMusicNote = pure . pure
 
 instance InspectableNote a => InspectableNote (Maybe a) where
   inspectableToMusicNote = maybe mempty id . fmap inspectableToMusicNote
@@ -176,4 +176,3 @@ instance Inspectable [Voice Pitch] where
 
 instance Inspectable [Note Pitch] where
   inspectableToMusic = inspectableToMusic . fmap ((^. voice) . pure)
-

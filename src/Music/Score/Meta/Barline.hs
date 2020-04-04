@@ -69,12 +69,14 @@ import Music.Time
 import Music.Time.Reactive
 
 -- | Represents an explicitly added barline.
-data Barline = StandardBarline | DoubleBarline | FinalBarline
+data Barline = StandardBarline | DoubleBarline
   deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a barline over the whole score.
 barline :: (HasMeta a, HasPosition a) => Barline -> a -> a
-barline c x = barlineDuring (_era x) c x
+barline c x = case _era x of
+  Nothing -> x
+  Just e -> barlineDuring e c x
 
 -- | Add a barline to the given score.
 barlineDuring :: HasMeta a => Span -> Barline -> a -> a

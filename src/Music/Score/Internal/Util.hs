@@ -101,7 +101,7 @@ breakList n z = Data.Monoid.mconcat . Data.List.intersperse z . divideList n
 --  > category : List
 --  > depends : base
 mapIndexed :: (Int -> a -> b) -> [a] -> [b]
-mapIndexed f = zipWith f [0..]
+mapIndexed f = zipWith f [0 ..]
 
 -- test
 
@@ -290,10 +290,11 @@ retainUpdates = snd . Data.List.mapAccumL g Nothing
 retainUpdates2 :: (Eq a, Eq b) => [(a, b)] -> [(Maybe a, Maybe b)]
 retainUpdates2 = snd . Data.List.mapAccumL g Nothing
   where
-    g Nothing      (x,y) = (Just (x,y), (Just x, Just y))
-    g (Just (p,q)) (x,y) = (Just (x,y),
-        ( if p == x then Nothing else Just x
-        , if q == y then Nothing else Just y
+    g Nothing (x, y) = (Just (x, y), (Just x, Just y))
+    g (Just (p, q)) (x, y) =
+      ( Just (x, y),
+        ( if p == x then Nothing else Just x,
+          if q == y then Nothing else Just y
         )
       )
 

@@ -28,7 +28,15 @@ Consider switching to a decentralized issue tracker such as:
     - [ ] Try property-based testing (see doctest/README)
   - Run in CI
 
+- [ ] Assure a script to run *all* builds, tests and doc gens *from scratch*
+  - Should ideally be invoked in CI
+  - Because of overeager caching in doc gens ($transfCache), requires `rm -rf docs/build` to be reproducible
+
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
+
+- `tremolo` should take a duration, not an integer!
+
+- Rename meta-information to "global"?
 
 - Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
 
@@ -36,6 +44,8 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] Replace all uses of `data` directory with quasi-quoters (ideally: fail at compile-time if
   not existing/not parsing correctly)
+
+- [ ] Long cresc/dim should render as text by default.
 
 - API improvements:
   - Remove Alignable class (use Aligned the type)
@@ -56,8 +66,11 @@ Consider switching to a decentralized issue tracker such as:
   - Remove triples/pairs in favor of explicit traversals (see example in Time.Score)
   - Chord/Scale:
     - Use DataKinds/phantom type to distinguish chord vs scale (only difference is Inspectable instance)
-    - Pitch/Interval containers should be bifunctors (taking pitch and interval). i
-      Use AffinePair constraint on operations.
+    - Bifunctor instance for Scale/Chord
+      - Pitch/Interval containers should be bifunctors (taking pitch and interval).
+        Use AffinePair constraint on operations.
+    - Add union/intersection/set diff (of the "infinite set") for chords/scales
+      - Implement by finding all the points in the LCM(argDurations)
   - Make PVoice and MVoice newtype wrappers (hiding instances)
   - Remove Cons/Snoc instances for Voice
   - Hide FromField Ambitus instance (by using newtype wrappers)
@@ -73,6 +86,7 @@ Consider switching to a decentralized issue tracker such as:
     - https://en.wikipedia.org/wiki/Interval_vector
     - Time
     - RTM tree support?
+
 
 - Internal improvements:
   - Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
@@ -114,9 +128,20 @@ Consider switching to a decentralized issue tracker such as:
   - Harmonics should be recast using $playingTechniques
     - The current top-level combinators (in HasHarmonic) can stay, HarmonicT should go (use SomeTechnique)
   - Gliss should use $playingTechniques
-    - The current top-level combinators (in HasTremolo) can stay, HarmonicT should go (use SomeTechnique)
+    - Any consequtive pair of notes *in the same phrase* both marked with a gliss technique to be rendered
+      using a line + the text "gliss"
   - Tremolo should be a combination of playing techniques (TODO) and *chords*
-
+    - The current top-level combinators (in HasTremolo) can stay, HarmonicT should go (use SomeTechnique)
+    - For both chord/non-chord tremolo, support measured (with duration) and unmeasured "z" or "three beams"
+    - Non-chord trem: Easy, same as a "roll".
+    - Chord trem:
+      - All perfectly overlapping (e.g. having identical span) notes *in the same part* having a ChordTremolo
+      playing technique to be rendered as chord tremolo.
+        data ChordTremolo
+          = Simultaneous          -- ^ double stop + bow tremolo
+          | AlternatingHalfHarm   -- ^ left hand tremolo on one string
+          | AlternatingBariolage  -- ^ left hand tremolo pn two strings
+        - For e.g. piano Simultaneous chord trem makes no sense and there is only one form of alternating.
 
 - [X] Add more examples (e.g from Piece1, Piece2 etc)
   - [ ] Make them all compile (add to cabal file!)
@@ -253,6 +278,10 @@ Consider switching to a decentralized issue tracker such as:
       similar to range etc.
     - The general problem of breaking up a score: $voiceSeparation
 
+- Orchestration checks
+  - Range checks
+  - Preventing a playing technique being used with the "wrong" instrument.
+
 - $voiceSeparation
   - Basic things work
   - [ ] Render (>1) voice per staff, e.g. for keyboard music
@@ -269,7 +298,7 @@ Consider switching to a decentralized issue tracker such as:
 - In Parts: extracted/extractedWithInfo should be Traversals, not lenses to lists (the latter
   is generally law-breaking)
 
-- [ ] Cache in transf uses hash of expression only (should be expr + music-suite itself)
+- $transfCache [ ] Cache in transf uses hash of expression only (should be expr + music-suite itself)
 
 - New features:
   - Constraints
@@ -331,6 +360,7 @@ Consider switching to a decentralized issue tracker such as:
   - Though note in Score.Meta, all types should be refactored to be monoids in
     themselves, rendering the wrapper obsolete.
 
+- [ ] "drum kit" staff support
 
 - [ ] Do not draw cresc/dim for voices like `[mf, f, p, mf]` (e.g. only a single note local max/min)
   - In other words, for a line to be drawn there must be a monotonic increase/decrease spanning >2 notes
@@ -343,6 +373,7 @@ Consider switching to a decentralized issue tracker such as:
   - Restore hslinks functionality (commented out in source), maybe using hasktags
     - hslinks steals syntax from TypeApplications
       - E.g. `inspectableToMusic @[Pitch]`
+  - Make it work for the *code examples* too
 
 
 - [X] Improve rcat: do not use Enum
@@ -481,7 +512,7 @@ Consider switching to a decentralized issue tracker such as:
     - Percentage indicator for rendering time (formal streaming support in $entrypoint)?
 
 
-- Replace Aeson with typed serialization
+- Replace Aeson with typed serialization (or just GHC.Generic/Typeable instances)
 
 - Get rid of Option (can use plain Maybe/First/Last now)
 
@@ -492,7 +523,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] Reexport (set, over) from lens in default prelude? (see examples!)
 
-- Split up Music.Score
+- Split up `Music.Score.X`
   - This module hierarchy exists for historical reasons. Move as per:
     - Phrase traversals: move to Music.Time
     - Export/Import: move to Music.Export, Music.Import
@@ -501,14 +532,21 @@ Consider switching to a decentralized issue tracker such as:
 - [X] $timeSignatureInLastBar In `fromAspects`, never change time signature in the last bar
   - E.g. in the example `pseq [c,d,e,f,g] |/ 4`, this should render as two 4/4 bars, not as one 4/4 followed by 1/4
 
-- Better syntax for entering pitch/time, maybe using a quasi-quoter
+- [X] Better syntax for entering pitch/time, maybe using a quasi-quoter
   - See e.g. Mozart example
   - See syntax sketches, also compare Lilypond
   - OTOH the language "just basic Haskell" is maybe more important than simple syntax?
 
-- Fix lawless (HasPosition (Score a))
+- Interactive shell
+  - Move source tree into this repo
+  - Bug: crashes on multi-page Lilypond output
+  - Repeat works, should look at cache/output dir
+
+- [X] Fix lawless (HasPosition (Score a))
+  - Preference: Idea 1!!
   - Idea 1: by adding default/empty position to class (a HasEnvelope in Diagrams)
     - Pros: simple. Same operators (e.g. for juxtaposition) can be used for Scores, Notes, Spans, etc.
+      - **Allows makeing |> a monoid with mempty**!!
     - Cons: Disallows the onset/offset lenses Music.Time.Position
       - OTOH these lenses are probably not that necessary
       - Most other combinators (e.g. |>) can manage Nothing too
@@ -588,6 +626,7 @@ Consider switching to a decentralized issue tracker such as:
 - Replace Wrapped/Rewrapped with newtype/via where possible
 
 - Generic derivation of HasPitch etc. Case study: Time.Pattern.Lunga.
+  - Note: often `Traversable` is enough (for the plural form of each class)
 
 - Make doc generation work in CI (again)
 
@@ -623,6 +662,7 @@ Consider switching to a decentralized issue tracker such as:
         - Then try adding (Score StandardNote) and possibly other types in sequence. If they all fail, fail with the message from the original failure ("ambigous type").
         - Could this be done with TH or a compiler plugin?
 
+- Allow overriding the default clef
 
 - [X] For each instrument we want to know:
         - Classification:

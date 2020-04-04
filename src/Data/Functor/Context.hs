@@ -31,7 +31,6 @@ instance Wrapped (Ctxt a) where
 
 instance Rewrapped (Ctxt a) (Ctxt b)
 
-
 toCtxt :: (Maybe a, a, Maybe a) -> Ctxt a
 toCtxt = Ctxt
 

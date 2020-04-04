@@ -5,6 +5,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
+  -fno-warn-deprecations
   -fno-warn-redundant-constraints #-}
 
 module Music.Time.Aligned
@@ -99,12 +100,15 @@ instance Transformable v => Transformable (Aligned v) where
 instance (HasDuration v, Transformable v) => HasDuration (Aligned v) where
   _duration (Aligned (_, v)) = v ^. duration
 
-instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
+instance (HasDuration v, Transformable v) => HasPosition1 (Aligned v) where
   -- _position (Aligned (position, alignment, v)) = alerp (position .-^ (size * alignment)) (position .+^ (size * (1-alignment)))
-  _era (Aligned ((position, alignment), v)) =
-    (position .-^ (size * alignment)) <-> (position .+^ (size * (1 - alignment)))
+  _era1 (Aligned ((p, a), v)) =
+    (p .-^ (size * a)) <-> (p .+^ (size * (1 - a)))
     where
       size = v ^. duration
+
+instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
+  _era = Just . _era1
 
 -- |  Change the alignment of a value without moving it.
 --
@@ -116,12 +120,12 @@ realign l a@(Aligned ((_t, _), x)) = Aligned ((a ^. position l, l), x)
 
 -- | Render an aligned value. The given span represents the actual span of the aligned value.
 renderAligned :: (HasDuration a, Transformable a) => (Span -> a -> b) -> Aligned a -> b
-renderAligned f a@(Aligned (_, v)) = f (_era a) v
+renderAligned f a@(Aligned (_, v)) = f (_era1 a) v
 
 -- Somewhat suspect, see below for clarity...
 
 voiceToScoreInEra :: Span -> Voice a -> Score a
-voiceToScoreInEra e = set era e . pseq . map (uncurry stretch) . view pairs . fmap pure
+voiceToScoreInEra e = setEra e . pseq . map (uncurry stretch) . view pairs . fmap pure
 
 noteToEventInEra :: Span -> Note a -> Event a
 noteToEventInEra e = set era e . view notee . fmap pure
