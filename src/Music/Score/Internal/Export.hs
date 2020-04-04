@@ -122,7 +122,7 @@ extractBars x = zip3 dss tss kss
     -- Each /combination/ of time signature from 0 througout the duration
     -- of the score
     foo1 :: Voice (TimeSignature, KeySignature)
-    foo1 = reactiveToVoice' (0 <-> x^.offset) foo
+    foo1 = reactiveToVoice' (fromMaybe (error "empty score") $ _era x) foo
     -- Each /combination/ of time signature, key signature and so on
     foo :: Reactive (TimeSignature, KeySignature)
     foo = (,) <$> getTimeSignatures defaultTimeSignature x
@@ -140,7 +140,7 @@ extractTimeSignatures score = zip (fmap realToFrac barTimeSignatures) (retainUpd
     -- From position 0, the duration of each time signature and how long it lasts
     timeSignatures :: [(Duration, TimeSignature)]
     timeSignatures =
-        view pairs . reactiveToVoice' (0 <-> (score ^. offset))
+        view pairs . reactiveToVoice' (fromMaybe (error "empty score") $ _era score)
         $ getTimeSignatures defaultTimeSignature score
     -- The time signature of each bar
     barTimeSignatures :: [TimeSignature]

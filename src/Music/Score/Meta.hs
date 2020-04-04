@@ -5,8 +5,9 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
+  -fno-warn-unused-top-binds
   -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+  -fno-warn-unused-imports #-} -- FIXME unused-top-binds
 
 module Music.Score.Meta
   ( module Music.Time.Meta,
@@ -17,7 +18,7 @@ module Music.Score.Meta
     -- metaAt,
     metaAtStart,
     withMeta,
-    withMetaAtStart,
+    -- withMetaAtStart,
   )
 where
 
@@ -53,8 +54,10 @@ fromMetaReactive = fromMaybe mempty . unwrapMeta
 metaAt :: (HasMeta a, AttributeClass b) => Time -> a -> b
 metaAt x = (`atTime` x) . runScoreMeta
 
-metaAtStart :: (HasMeta a, HasPosition a, Transformable a) => AttributeClass b => a -> b
-metaAtStart x = (x ^. onset) `metaAt` x
+metaAtStart :: (HasMeta a, HasPosition a) => AttributeClass b => a -> b
+metaAtStart x = case _era x of
+  Nothing -> error "metaAtStart called on empty score"
+  Just e -> (e ^. onset) `metaAt` x
 
 withMeta :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
 withMeta f x =
@@ -69,10 +72,10 @@ withMeta f x =
             $ mapAfter u (f c)
             $ x
 
-withMetaAtStart :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
-withMetaAtStart f x =
-  let m = view meta x
-   in f (fromMetaReactive m `atTime` (x ^. onset)) x
+-- withMetaAtStart :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
+-- withMetaAtStart f x =
+--   let m = view meta x
+--    in f (fromMetaReactive m `atTime` (x ^. onset)) x
 
 -- withSpan :: Score a -> Score (Span, a)
 -- withSpan = mapWithSpan (,)

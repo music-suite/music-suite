@@ -79,7 +79,9 @@ instance IsPitch Clef where
 
 -- | Set clef of the given score.
 clef :: (HasMeta a, HasPosition a) => Clef -> a -> a
-clef c x = clefDuring (_era x) c x
+clef c x = case _era x of
+  Nothing -> error "TODO"
+  Just e -> clefDuring e c x
 
 -- | Set clef of the given part of a score.
 clefDuring :: HasMeta a => Span -> Clef -> a -> a

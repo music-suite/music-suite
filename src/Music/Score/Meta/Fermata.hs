@@ -72,7 +72,9 @@ data Fermata = StandardFermata | LongFermata | VeryLongFermata
 
 -- | Add a fermata over the whole score.
 fermata :: (HasMeta a, HasPosition a, Transformable a) => Fermata -> a -> a
-fermata c x = fermataAt (view onset x) c x
+fermata c x = case _era x of
+  Nothing -> error "TODO"
+  Just e -> fermataAt (view onset e) c x
 
 -- | Add a fermata to the given score.
 fermataAt :: HasMeta a => Time -> Fermata -> a -> a

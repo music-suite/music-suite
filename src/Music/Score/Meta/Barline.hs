@@ -74,7 +74,9 @@ data Barline = StandardBarline | DoubleBarline | FinalBarline
 
 -- | Add a barline over the whole score.
 barline :: (HasMeta a, HasPosition a) => Barline -> a -> a
-barline c x = barlineDuring (_era x) c x
+barline c x = case _era x of
+  Nothing -> error "TODO"
+  Just e -> barlineDuring e c x
 
 -- | Add a barline to the given score.
 barlineDuring :: HasMeta a => Span -> Barline -> a -> a

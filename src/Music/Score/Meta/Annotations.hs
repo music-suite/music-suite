@@ -70,7 +70,9 @@ getAnnotation = Data.List.nub . getAnnotation_
 
 -- | Annotate the whole score.
 annotate :: String -> Score a -> Score a
-annotate str x = annotateSpan (0 >-> _duration x) str x
+annotate str x = case _era x of
+  Nothing -> error "TODO"
+  Just e -> annotateSpan e str x
 
 -- | Annotate a part of the score.
 annotateSpan :: Span -> String -> Score a -> Score a

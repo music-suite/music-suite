@@ -50,6 +50,7 @@ module Music.Time.Types
 
     -- ** Combine
     hull,
+    TimeInterval(..),
 
     -- ** Points in spans
     inside,
@@ -591,9 +592,24 @@ a `properlyEncloses` b = a `encloses` b && a /= b
 
 
 -- | Return the convex hull of two spans.
+--
+-- This is associative. Its identity would be the empty span, but this
+-- 'Span' represents non-empty time spans only.
 hull :: Span -> Span -> Span
 hull (view onsetAndOffset -> (s, e)) (view onsetAndOffset -> (s', e')) = view (from onsetAndOffset) (min s s', max e e')
 
+
+data TimeInterval = EmptyInterval | NonEmptyInterval Span
+
+-- | Semigroup with 'hull' and 'EmptyInterval'.
+instance Semigroup TimeInterval where
+  NonEmptyInterval x <> NonEmptyInterval y = NonEmptyInterval $ hull x y
+  EmptyInterval      <> y                  = y
+  x                  <> EmptyInterval      = x
+
+-- | Monoid with 'hull' and 'EmptyInterval'.
+instance Monoid TimeInterval where
+  mempty = EmptyInterval
 
 -- TODO more intuitive param order
 

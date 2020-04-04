@@ -55,14 +55,18 @@ import GHC.Generics (Generic)
 -- (a `lead` b)^.'offset' = b^.'onset'
 -- @
 lead :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-a `lead` b = placeAt 1 (b `_position` 0) a
+a `lead` b = case b `_position` 0 of
+  Nothing -> a
+  Just p -> placeAt 1 p a
 
 -- |
 -- @
 -- a^.'offset' = (a `follow` b)^.'onset'
 -- @
 follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
-a `follow` b = placeAt 0 (a `_position` 1) b
+a `follow` b = case a `_position` 1 of
+  Nothing -> b
+  Just p -> placeAt 0 p b
 
 after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `after` b = a <> (a `follow` b)
@@ -110,7 +114,7 @@ ppar = mconcat
 -- |
 -- Move a value so that its era is equal to the era of another value.
 during :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
-y `during` x = set era (view era x) y
+_y `during` _x = error "TODO" -- set era (view era x) y
 
 -- |
 -- Like '<>', but scaling the second agument to the duration of the first.

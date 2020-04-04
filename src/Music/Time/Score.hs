@@ -209,9 +209,6 @@ instance Transformable (Score a) where
 instance HasPosition (Score a) where
   _era = _era . snd . getScore
 
-instance HasDuration (Score a) where
-  _duration x = (^. offset) x .-. (^. onset) x
-
 instance IsString a => IsString (Score a) where
   fromString = pure . fromString
 
@@ -286,19 +283,19 @@ instance Transformable (Score' a) where
 
 -- instance Reversible a => Reversible (Score' a) where
 --   rev (Score' xs) = Score' (fmap rev xs)
-
--- FIXME lawless
 instance HasPosition (Score' a) where
-  _era x = (f x, g x) ^. from onsetAndOffset
+  _era x = case foldMap (NonEmptyInterval . _era1) $ getScore' x of
+    EmptyInterval -> Nothing
+    NonEmptyInterval x -> Just x
+{-
+  (f x, g x) ^. from onsetAndOffset
     where
       f, g :: Score' a -> Time
       f = safeMinimum . fmap ((^. onset) . normalizeSpan) . toListOf (each . era) . getScore'
       g = safeMaximum . fmap ((^. offset) . normalizeSpan) . toListOf (each . era) . getScore'
       safeMinimum xs = if null xs then 0 else minimum xs
       safeMaximum xs = if null xs then 0 else maximum xs
-
-instance HasDuration (Score' a) where
-  _duration x = (^. offset) x .-. (^. onset) x
+-}
 
 -- | Create a score from a list of events.
 score :: Getter [Event a] (Score a)
@@ -419,8 +416,16 @@ mapFilterWithTime f = mcatMaybes . mapWithTime f
 normalizeScore :: Score a -> Score a
 normalizeScore = reset . normalizeScoreDurations
   where
-    reset x = set onset (view onset x `max` 0) x
     normalizeScoreDurations = over (events . each . era) normalizeSpan
+
+-- | Make a score start no later than time 0.
+reset :: Score a -> Score a
+reset x = case _era x of
+  Nothing -> x
+  Just e -> let
+    o = view onset e
+    in if o < 0 then delay (0 .-. o) x else x
+-- error "TODO" -- set onset (view onset x `max` 0) x
 
 -- | Remove all 'Nothing' values in the score.
 removeRests :: Score (Maybe a) -> Score a

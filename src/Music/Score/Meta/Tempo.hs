@@ -187,7 +187,9 @@ tempoToDuration (Tempo _ _ x) = x
 
 -- | Set the tempo of the given score.
 tempo :: (HasMeta a, HasPosition a) => Tempo -> a -> a
-tempo c x = tempoDuring (_era x) c x
+tempo c x = case _era x of
+  Nothing -> error "TODO"
+  Just e -> tempoDuring e c x
 
 -- | Set the tempo of the given part of a score.
 tempoDuring :: HasMeta a => Span -> Tempo -> a -> a
