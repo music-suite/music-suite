@@ -48,6 +48,19 @@ Consider switching to a decentralized issue tracker such as:
 - [ ] Long cresc/dim should render as text by default.
 
 - API improvements:
+  - Move varticulation, addArticulation out of public API
+  - Put combinators (not classes) on top of the following modules
+    - Music.Score.Articulation
+    - Music.Score.Dynamics
+    - Music.Score.Technique
+    - Music.Score.Part
+    - Music.Score.Color
+    - Music.Score.Harmonics
+    - Music.Score.Slide
+    - Music.Score.StaffNumber
+    - Music.Score.Text
+    - Music.Score.Ties
+    - Music.Score.Tremolo
   - Remove Alignable class (use Aligned the type)
   - Remove Time parameter from aligned/alignTo (use delay)
   - Rename eventee/notee to transformed or similar (could be a class)
