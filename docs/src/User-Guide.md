@@ -294,23 +294,17 @@ ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
 
 Similarly, there is no need to handle rests explicitly.
 
-TODO show with examples how rests are added from delay/transform etc.
-
 It is possible to add rests explicitly as follows.
 
 @[mcatMaybes]
 
-```TODO
-times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
+```music+haskell
+mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
 
 We can also remove rests explicitly:
 
-TODO explain how this works.
-
-```music+haskell
-mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
-```
+TODO add Maybe to note stack, so that mcatMaybes is not needed!
 
 There is no need to explicitly enter tuplets or ties, these are added automatically as needed.
 
@@ -319,8 +313,6 @@ Any note that crosses a barline will be notated using ties:
 ```music+haskell
 c |* (9/8) |> d |* (7/8)
 ```
-
-See also [time signatures](#time-signatures).
 
 Similarly, durations that do not fit into standard note durations are notated using dots or tuplets:
 
@@ -457,7 +449,7 @@ There is of course also a shorthand for sharps and flats:
 (cb |> db |> eb)    -- flat
 ```
 
-> Note: Music Suite uses C major by default, so all altered pitches are rendered as accidentals. See [key signatures](TODO link) for how to change this.
+> Note: Music Suite uses C major by default, so all altered pitches are rendered as accidentals. See [key signatures](#key-signatures) for how to change this.
 
 
 ## Pitch overloading
@@ -466,9 +458,7 @@ To facilitate the use of non-standard pitch, the standard pitch names are provid
 
 To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type @[IsPitch] `a => a`.
 
-
-TODO explain overloading is not limited to pitch types but also to containers types (by lifting), so the following works:
-
+The overloading is not limited to pitch types but also to containers types such as [scores](#scores) and [voices](#voices).
 
 ```haskell
 return (c::Note) == (c::Score Note)
@@ -556,8 +546,7 @@ Intervals be understood as:
 
 Not all combinations of number and quality makes sense.
 
-@[number]
-@[quality]
+TODO @[number] @[quality]
 
 For numbers, we follow traditional music theory conventions in counting from one. In other words, a second consists of one diatonic step, a third of two diatonic steps, and so on. We can convert between these using @[diatonicSteps]:
 
@@ -572,12 +561,7 @@ For numbers, we follow traditional music theory conventions in counting from one
 4 :: Number
 ```
 
-Beware of `0 :: Number`, which is undefined:
-
-```haskell
->>> 0^.diatonicSteps
-*** Exception: Number can not be 0
-```
+> Warning: The number `0` is undefined.
 
 TODO for pitches, extract name/accidental/octave:
 
@@ -593,16 +577,26 @@ Interval names are overloaded in a manner similar to pitches, and are consequent
 
 ## Converting between intervals and pitches
 
-We can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
-operators, think of pitches and points `.` and intervals as vectors `^`.
+We can add pitches and intervals using the @[.-.] and @[.+^] operators. This is because pitches form an @[AffineSpace], with interval as the underlying @[VectorSpace]. Later on we will see that many types in Music Suite conform to this pattern.
 
-> Note: Pitches form an @[AffineSpace], which interval as the underlying @[VectorSpace]. Later on we will see that many types in Music Suite conform to this pattern.
+```haskell
+>>> m3 ^+^ m3
+d5 :: Interval
 
+>>> c .+^ m3
+eb :: Pitch
 
-TODO AdditiveGroup, VectorSpace, AffineSpace operations for pitch/interval.
+>>> eb .-. c
+m3 :: Interval
+```
 
-TODO affine space, relative, vector-space-points, using over/relative:
+> Hint: The `.` points towards the pitches in the `AffineSpace` (pitches) while the caret `^` points towards the intervals in the `VectorSpace`.
 
+The @[relative] function lifts an interval function into pitch *relative* a given origin (hence the name).
+
+```haskell
+relative (c :: Pitch) (^* 2) :: Pitch -> Pitch
+```
 
 ## Enharmonics
 
@@ -622,7 +616,7 @@ True
 
 The `Pitch` type has instances for the `Eq` and `Ord` type classes, representing equality and ordering respectively.
 
-Equality of pitches takes spelling into account, so e.g. `cs /= db` holds. There are many ways of defining orderings on pitches: the default ordering compares diatonic steps first, alteration second.
+As we have already seen, equality of pitches takes spelling into account, so e.g. `cs /= db` holds. There are many ways of defining orderings on pitches: the default ordering compares diatonic steps first, alteration second.
 
 ```haskell
 >>> sort [(cs :: Pitch), db, dbb]
@@ -667,11 +661,10 @@ x </> over pitches' (relative c $ spell modally) x
 
 ## Transposing and inverting music
 
-TODO basic "geometry" (affine transformations) of pitch: scaling and translating
+The `VectorSpace` and `AffineSpace` allow us to apply *affine transformations* to pitches. Because pitch is (roughly) a one-dimensional space, this means scaling and transpotion. Let's look at some examples.
 
-@[Transposable]
+> Warning: The musical term *transposition* is known as *translation* in maths (and *transposition* means something else entirely!).
 
-> Note: Transposable is a synonym for the type expression `(HasPitches' a, AffinePair (Interval a) (Pitch a), PitchPair (Interval a) (Pitch a))`.
 
 
 ### Basic transposition
@@ -781,6 +774,37 @@ m
 
 In this case, the origin is also used as the tonic of the implied diatonic scale.
 
+## The Transposable class
+
+The type of the previous operations mention @[Transposable]:
+
+```haskell
+    up :: Transposable a => Interval a -> a -> a
+
+    octavesDown :: (AffinePair v p, Transposable p) => Scalar (Interval a) -> a -> a
+
+    invertPitches :: Transposable a => Pitch a -> a -> a
+```
+
+@[Transposable] is in fact a synonym for the following set of constraints:
+
+```haskell
+    HasPitches a
+    AffinePair (Interval a) (Pitch a)
+    IsInterval (Interval a)
+    IsPitch (Pitch a)
+    Num (Scalar v)
+```
+
+This may look complicated, but it simply means that:
+
+- `HasPitches' a` means that `a` is some type with an associated pitch and interval type
+- `AffinePair (Interval a) (Pitch a)` means that the pitch type is an affine space and the interval its underlying vector space
+- `IsInterval` and `IsPitch` means that We can lift standard pitch/interval
+  names into the pitch space, so expressions such as `cs` and `m3` makes sense
+- `Num (Scalar v)` means that we can scale the intervals
+
+
 ## Listing and traversing pithes
 
 TODO forward reference to traversals chapter, @[HasPitch]
@@ -814,6 +838,16 @@ Note that the `Ambitus` type constructor is parameterized on both the pitch and 
 ```music+haskell
 inspectableToMusic @[Ambitus Interval Pitch] $
 
+[                  Ambitus c g
+, fmap (const c) $ Ambitus @Interval @Pitch c g
+]
+```
+
+It is also an instance of `Transposable`, so all the pitch operations from the previous section work for @[Ambitus] as well:
+
+```music+haskell
+inspectableToMusic @[Ambitus Interval Pitch] $
+
 [          Ambitus c g
 , up _P5 $ Ambitus c g
 ]
@@ -833,11 +867,9 @@ pitchRange @Music $ pseq [c,d,fs,g,db,c,b_,c,g,c,e] |/ 8
 
 ## Scales and chords
 
-TODO we've seen several examples of affine spaces with notions of *points* and *distances*: time points and durations, pitches and intervals, spans and transformations, and so on.
+The @[Scale] and @[Chord] types represent infinite collections of pitches, anchored at some tonic. They form a subset of the pitch space as a whole. By forgetting the tonic we obtain what is known as a @[Mode].
 
-Another example is the notion of scales and chords. These are (conceptually) infinite collections of points, forming a subset of a larger pitch space. By forgetting the *root* or *fundamental* of a scale/chord we obtain what is known as a mode (for scales) or a chord type (for chords).
-
-
+TODO make Mode vs Scale/Chord very clear.
 
 ```music+haskell
 inspectableToMusic @[Scale Pitch] $
@@ -872,7 +904,84 @@ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
-### Non-octave repeating scales/chords
+### Scales versus Chords
+
+TODO there is little difference: convert back/forth
+
+TODO examples: Whole tone is a superset of augmented, octatonic a superset of dimimished and so on
+
+TODO example: generate a "scale" by the union of two "chords"
+
+Consider "scale-chord texture"
+
+### Chords are infinite
+
+TODO understand that chords are infinite, but generated by repetition of a finite interval set
+
+While scales and chords are conceptually infinite, they always have a finite *generating set*. TODO how to extract it.
+
+### Transforming chords
+
+TODO Bifunctor instance for Scale/Chord
+
+Naturally, @[Scale] and @[Chord] are instances of `Transposable`:
+
+```music+haskell
+inspectableToMusic @[Scale Pitch] $
+
+[         scale c phrygian
+, up m3 $ scale c phrygian
+]
+```
+
+```music+haskell
+inspectableToMusic @[Chord Pitch] $
+
+[                     chord c majorTriad
+, invertDiatonic c  $ chord c majorTriad
+, invertDiatonic gb $ chord c halfDiminishedChord
+]
+```
+
+This is useful for building chord sequences:
+
+```music+haskell
+inspectableToMusic @[Chord Pitch] $
+mconcat [s1, up _M6 s1, _8vb $ up (_M6 ^* 2) s1]
+  where
+    s1 :: [Chord Pitch]
+    s1 = [maj, dim, up _M2 hdim, up _P5 dom]
+
+    maj = chord c majorTriad
+    dim = chord c diminishedChord
+    hdim = chord c halfDiminishedChord
+    dom = chord c majorMinorSeventhChord
+```
+
+
+
+This example shows the inversion of various chords. The inversion of a major triad is a minor triad, the inversion of a dominant 7th chord is half-diminished chord, and a minor seventh chord is its own inversion.
+
+```music+haskell
+compress 2 $ inspectableToMusic @[Chord Pitch] $
+[                       chord c majorTriad
+, over pitches (relative c negateV) $ chord c majorTriad
+
+,                       chord c majorMinorSeventhChord
+, over pitches (relative c negateV) $ chord c majorMinorSeventhChord
+
+,                       chord c majorMajorSeventhChord
+, over pitches (relative c negateV) $ chord c majorMajorSeventhChord
+
+,                       chord c minorMinorSeventhChord
+, over pitches (relative c negateV) $ chord c minorMinorSeventhChord
+
+,                       chord c minorMajorSeventhChord
+, over pitches (relative c negateV) $ chord c minorMajorSeventhChord
+]
+```
+
+### Repeating scales/chords
 
 We can inspect the *repeating interval* of a scale like this:
 
@@ -941,7 +1050,9 @@ c
 [g_,c,e,g]
 ```
 
-### Inverting chords
+### Modal rotation/inversion
+
+The @[chord] function converts a mode into a scale/chord in root position.
 
 ```music+haskell
 inspectableToMusic @[Chord Pitch] $
@@ -951,7 +1062,10 @@ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
-Note that the chord is invented *regardless of its fundamental*. In other words, the lowest note in the chord becomes the new fundamental:
+
+TODO `chord` gives you the root position, define a version of `chord` that gives you 1st, 2nd, 3rd inversion etc. For example 4th inversion of a ninth chord
+
+TODO this is a rotation, what does it mean:
 
 ```music+haskell
 inspectableToMusic @[Chord Pitch] $
@@ -961,87 +1075,21 @@ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
-If this is not what you want, see @[invertVoicing] below.
+To work with alternative voicings, see below.
 
 
-### Se toperations
+### Set operations
 
 TODO set operations on chords/scales (e.g. union/difference/intersection/isSubset/isPowerset etc).
 
 
 
-## Chord generators
-
-TODO Scales and Chords as finite sets
-
-Alternatively, we can view a Scale/Chord as simply the pitches of its *generating pitch set* (e.g. the tonic and the pitches generated by applying the *generating intervals* to the tonic).
-
-
-Chord and Scale are instances of `HasPitch`. Using a suitable pitch type such as `Common.Pitch`, they are also instance of `Transposing`
-
-```music+haskell
-inspectableToMusic @[Chord Pitch] $
-[          chord c majorTriad
-, up _M2 $ chord c majorTriad
-, up _M2 $ over pitches (relative c negateV) $ chord c majorTriad
-]
-```
-
-This is useful for building chord sequences:
-
-```music+haskell
-inspectableToMusic @[Chord Pitch] $
-mconcat [s1, up _M6 s1, _8vb $ up (_M6 ^* 2) s1]
-  where
-    s1 :: [Chord Pitch]
-    s1 = [maj, dim, up _M2 hdim, up _P5 dom]
-
-    maj = chord c majorTriad
-    dim = chord c diminishedChord
-    hdim = chord c halfDiminishedChord
-    dom = chord c majorMinorSeventhChord
-```
-
-
-
-TODO reflection:
-
-```music+haskell
-compress 2 $ inspectableToMusic @[Chord Pitch] $
-[                       chord c majorTriad
-, over pitches (relative c negateV) $ chord c majorTriad
-
-,                       chord c majorMinorSeventhChord
-, over pitches (relative c negateV) $ chord c majorMinorSeventhChord
-
-,                       chord c majorMajorSeventhChord
-, over pitches (relative c negateV) $ chord c majorMajorSeventhChord
-
-,                       chord c minorMinorSeventhChord
-, over pitches (relative c negateV) $ chord c minorMinorSeventhChord
-
-,                       chord c minorMajorSeventhChord
-, over pitches (relative c negateV) $ chord c minorMajorSeventhChord
-]
-```
-
-### Scales versus Chords
-
-TODO there is little difference: convert back/forth
-
-TODO examples: Whole tone is a superset of augmented, octatonic a superset of dimimished and so on
-
-TODO example: generate a "scale" by the union of two "chords"
-
-Consider "scale-chord texture"
 
 ## Voicing
 
-TODO rewrite the below, as in: Chord/Scale can be viewed as either infinite, or as having a default closed voicing. The Voiced type allow us to represent aribitrary voicings.
+Recall that chords are infinite sets. A @[Voicing] is a finite subset of that set. For a normal (octave-repeating) chord, it defines what pitches appear and in what octave.
 
-While working with infinite sets for scales and chords is convenient, this is not helpful when dealing with problems of *voicing*. To represent this, we will need to consider finite subsets of the infinite pitch sets we use for scales and chords.
-
-
+### Close voicing
 
 The `voiced` function voices a chord as closely as possible above the tonic. Formally the pitches of the generating interval sequence, originating at the tonic. For example:
 
@@ -1055,6 +1103,7 @@ inspectableToMusic @(Voiced Scale Pitch) $
   voiced (scale d majorScale)
 ```
 
+### Other voicings
 
 We can also create custom voicings, using any combination of integers. Recall that `0` stands for the origin, `1` for the first note above the origin, `2` for the next and so on. Negative numbers repeat the pattern below the origin.
 
@@ -1095,12 +1144,7 @@ inspectableToMusic @[Voiced Chord Pitch] $
 ```
 
 
-### Voiced vs unvoiced
-
-For dealing with chords in the normal sense (e.g. pitches), use `Voiced Chord`.
-
-For dealing with infinitely repeating fields of pitches, use `ChordType` and `Chord`.
-
+<!--
 ## Consonance and dissonance
 
 TODO relative dissonance of intervals, modes and chords
@@ -1108,7 +1152,7 @@ TODO relative dissonance of intervals, modes and chords
 TODO resolution and leading notes. "Solve" an n-part voicing problem
 
 Calculate dissonance of a chord (classical/"objective", by higest common fundamental)
-
+-->
 
 
 
@@ -1944,32 +1988,31 @@ tempo (metronome (1/4) 80) $ pseq [c,d,e,b,c] |/ (5*8) |> d |* (3/4)
 (tempo allegro $ pseq [c..g] |/ 4 )
 ```
 
-TODO rendering tempo?
-
 Tempo changes will always force a new bar.
 
 ### Fermatas, caesuras and breathing marks
 
 Fermatas indicate a certain time point (usually a strong beat) should be prolonged.
 
+<!--
 TODO representation should be: meta-mark at the first strong beat *after* the fermata-signed notes (e.g. the one to break *before*). This means we can render fermata signs on all notes where whose span overlaps the break point (including offset, not including onset).
-
-
-@[fermata]
+-->
 
 ```music+haskell
 fermata StandardFermata (ppar [c,e,g])
 ```
 
-TODO overlapping events:
-```TODOmusic+haskell
+Note that a fermata attaches to a specific point known as the *sustain point* (the beginning of the given score is used by default). All notes overlapping the sustain point have a fermata drawn on them.
+
+```music+haskell
 fermata StandardFermata (ppar [pseq[c,d] |/ 2,e,g]) |/ 4
 ```
 
-TODO add fermata at specific position
+<!--
+A fermata usually implies a unison cutoff of the prolonged notes, followed by a short break before continouing to the next beat. This can be made explicit by addng caesuras or breathing marks (commas).
+-->
 
-A fermata usually implies a unison cutoff of the prolonged notes, followed by a short break before continouing to the next beat. This can be made explicit by addng caesuras or breathing marks (commas). TODO
-
+<!--
 ### Ritardando and accellerando
 
 ```TODOmusic+haskell
@@ -1979,6 +2022,7 @@ A fermata usually implies a unison cutoff of the prolonged notes, followed by a 
 ```TODOmusic+haskell
 (acc (pseq [c,d] |> e |* 2) |/ 4)
 ```
+-->
 
 TODO apply at specific position
 
