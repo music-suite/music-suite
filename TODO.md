@@ -28,6 +28,10 @@ Consider switching to a decentralized issue tracker such as:
     - [ ] Try property-based testing (see doctest/README)
   - Run in CI
 
+- [ ] Assure a script to run *all* builds, tests and doc gens *from scratch*
+  - Should ideally be invoked in CI
+  - Because of overeager caching in doc gens ($transfCache), requires `rm -rf docs/build` to be reproducible
+
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
 
 - Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
@@ -269,7 +273,7 @@ Consider switching to a decentralized issue tracker such as:
 - In Parts: extracted/extractedWithInfo should be Traversals, not lenses to lists (the latter
   is generally law-breaking)
 
-- [ ] Cache in transf uses hash of expression only (should be expr + music-suite itself)
+- $transfCache [ ] Cache in transf uses hash of expression only (should be expr + music-suite itself)
 
 - New features:
   - Constraints
@@ -482,7 +486,7 @@ Consider switching to a decentralized issue tracker such as:
     - Percentage indicator for rendering time (formal streaming support in $entrypoint)?
 
 
-- Replace Aeson with typed serialization
+- Replace Aeson with typed serialization (or just GHC.Generic/Typeable instances)
 
 - Get rid of Option (can use plain Maybe/First/Last now)
 
@@ -493,7 +497,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - [X] Reexport (set, over) from lens in default prelude? (see examples!)
 
-- Split up Music.Score
+- Split up `Music.Score.X`
   - This module hierarchy exists for historical reasons. Move as per:
     - Phrase traversals: move to Music.Time
     - Export/Import: move to Music.Export, Music.Import
@@ -591,6 +595,7 @@ Consider switching to a decentralized issue tracker such as:
 - Replace Wrapped/Rewrapped with newtype/via where possible
 
 - Generic derivation of HasPitch etc. Case study: Time.Pattern.Lunga.
+  - Note: often `Traversable` is enough (for the plural form of each class)
 
 - Make doc generation work in CI (again)
 
