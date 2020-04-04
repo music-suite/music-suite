@@ -23,14 +23,8 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  -fno-warn-unused-local-binds #-}
+  #-}
 
--- TODO reenable local-binds after removing tests
-
--- For MonadLog
-
--- For MonadLog String:
 
 -- |
 -- This module defines a monomorphic representation of Western music notation.
@@ -233,14 +227,10 @@ import qualified Data.Music.Lilypond as L
 import qualified Data.Music.MusicXml.Simple as MusicXml
 import qualified Data.Music.MusicXml.Simple as X
 import Data.Semigroup
-import Data.Set (Set)
 import qualified Data.Set
 import Data.VectorSpace hiding (Sum)
---DEBUG
 
-import qualified Music.Articulation
 import Music.Articulation (Articulation)
-import qualified Music.Dynamics
 import Music.Dynamics (Dynamics)
 import Music.Dynamics.Literal (DynamicsL (..), fromDynamics)
 import qualified Music.Dynamics.Literal as D
@@ -298,9 +288,6 @@ import Music.Score.Ties (TieT (..))
 import Music.Score.Tremolo (TremoloT, runTremoloT)
 import Music.Time
 import Music.Time.Meta (meta)
-import qualified System.Directory
-import qualified System.Process
-import qualified Text.Pretty
 
 -- Annotated tree
 data LabelTree b a = Branch b [LabelTree b a] | Leaf a
@@ -877,19 +864,9 @@ movementAssureSameNumberOfBars (Movement i ss st) =
     addBars n = take n . (++ repeat emptyBar)
     addSystemBars n = take n . (++ repeat emptySystemBar)
     n = maximum $ 0 : numBars
-    numSystemBars :: Int = length ss
+    -- numSystemBars :: Int = length ss
     numBars :: [Int] = fmap (length . _bars) $ toList st
 
-{-
-movementAssureSameNumberOfBars (Movement i ss st) = case Just minBars of
-  Nothing -> Movement i ss st
-  Just n -> Movement i (systemStaffTakeBars n ss) (fmap (staffTakeBars n) st)
-  where
-    -- TODO take all staves into account (and don't use Prelude.head)
-    minBars = shortestListLength ss (_bars $ head $ toList st)
-    shortestListLength :: [a] -> [b] -> Int
-    shortestListLength xs ys = length (zip xs ys)
--}
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -985,8 +962,6 @@ expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
     expander vs k = replace ("$(" ++ k ++ ")") (Data.Maybe.fromJust $ Data.Map.lookup k vs)
     composed = foldr (.) id
     replace old new = Data.List.intercalate new . Data.List.Split.splitOn old
-    toCamel [] = toCamel []
-    toCamel (x : xs) = Data.Char.toUpper x : xs
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -1236,13 +1211,13 @@ toLyChord d chord =
       | otherwise = error "Lilypond backend: Unkown color"
     -- TODO not used for now
     -- We need to rescale the music according to the returned duration
-    notateTremolo ::
+    _notateTremolo ::
       Maybe Int ->
       Duration ->
       (Lilypond.Music -> Lilypond.Music, Duration)
-    notateTremolo Nothing d = (id, d)
-    notateTremolo (Just 0) d = (id, d)
-    notateTremolo (Just n) d =
+    _notateTremolo Nothing d = (id, d)
+    _notateTremolo (Just 0) d = (id, d)
+    _notateTremolo (Just n) d =
       let scale = 2 ^ n
           newDur = (d `min` (1 / 4)) / scale
           repeats = d / newDur
@@ -1652,97 +1627,104 @@ type MidiExportM m = (MonadLog String m, MonadError String m)
 
 toMidi :: (MidiExportM m) => Asp -> m M.Midi
 toMidi = pure . finalizeExport . fmap exportNote . exportScore . mcatMaybes
+
+exportScore :: Score Asp1a -> MidiScore Asp1a
+exportScore xs =
+  MidiScore
+    $ map (\(p, sc) -> ((getMidiChannel p, getMidiProgram p), sc))
+        $ Music.Score.Part.extractPartsWithInfo
+        $ fixTempo
+        $ normalizeScore xs
   where
-    exportScore :: Score Asp1a -> MidiScore Asp1a
-    exportScore xs =
-      MidiScore
-        ( map (\(p, sc) -> ((getMidiChannel p, getMidiProgram p), sc))
-            $ Music.Score.Part.extractPartsWithInfo
-            $ fixTempo
-            $ normalizeScore xs
-        )
-      where
-        -- We actually want to extract *all* tempo changes and transform the score appropriately
-        -- For the time being, we assume the whole score has the same tempo
-        fixTempo = stretch (Music.Score.Meta.Tempo.tempoToDuration (Music.Score.Meta.metaAtStart xs))
-        -- TODO
-        getMidiProgram = const 0
-        getMidiChannel = const 0
-    finalizeExport :: MidiScore (Score Midi.Message) -> Midi.Midi
-    finalizeExport (MidiScore trs) =
-      let controlTrack = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
-          mainTracks = fmap (uncurry translMidiTrack . fmap join) trs
-       in Midi.Midi fileType (Midi.TicksPerBeat divisions) (controlTrack : mainTracks)
-      where
-        translMidiTrack :: MidiInstr -> Score Midi.Message -> [(Int, Midi.Message)]
-        translMidiTrack (ch, p) =
-          addTrackEnd
-            . setProgramChannel ch p
-            . scoreToMidiTrack
-        -- Each track needs TrackEnd
-        -- We place it a long time after last event just in case (necessary?)
-        addTrackEnd :: [(Int, Midi.Message)] -> [(Int, Midi.Message)]
-        addTrackEnd = (<> [(endDelta, Midi.TrackEnd)])
-        setProgramChannel :: Midi.Channel -> Midi.Preset -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
-        setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
-        scoreToMidiTrack :: Score Midi.Message -> Midi.Track Midi.Ticks
-        scoreToMidiTrack = fmap (\(t, _, x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. triples)
-        -- Hardcoded values for Midi export
-        -- We always generate MultiTrack (type 1) files with division 1024
-        fileType = Midi.MultiTrack
-        divisions = 1024
-        endDelta = 10000
-        toRelative :: [(Time, Duration, b)] -> [(Time, Duration, b)]
-        toRelative = snd . Data.List.mapAccumL g 0
-          where
-            g now (t, d, x) = (t, (0 .+^ (t .-. now), d, x))
-    exportNote :: Asp1a -> Score Midi.Message
-    -- TODO make use of SlideT/HarmonicT/TextT/ColorT/TremoloT information
-    -- For now we throw all of this away using 'snd'
-    --
-    -- Arguably these should be retought, see $minorAspect in TODO.md
-    exportNote (PartT (_, ((snd . runSlideT . snd . runHarmonicT . snd . runTextT . snd . runColorT . snd . runTremoloT . snd . runStaffNumberT) -> x))) = exportNoteT x
-      where
-        exportNoteT (TechniqueT (Couple (_, x))) = exportNoteA x
-        exportNoteA (ArticulationT (_, x)) = exportNoteD x
-        exportNoteD (DynamicT (realToFrac -> d, x)) = setV (dynLevel d) <$> exportNoteP x
-        exportNoteP pv = mkMidiNote (pitchToInt pv)
-        pitchToInt p = fromIntegral $ Music.Pitch.semitones (p .-. P.c)
-    dynLevel :: Double -> Midi.Velocity
-    dynLevel x = round $ (\x -> x * 58.5 + 64) $ f $ inRange (-1, 1) (x / 3.5)
-      where
-        f = id
-        -- f x = (x^3)
-        inRange (m, n) x = (m `max` x) `min` n
-    mkMidiNote :: Int -> Score Midi.Message
-    mkMidiNote p =
-      mempty
-        |> pure (Midi.NoteOn 0 (fromIntegral $ p + 60) 64)
-        |> pure (Midi.NoteOff 0 (fromIntegral $ p + 60) 64)
-    setV :: Midi.Velocity -> Midi.Message -> Midi.Message
-    setV v = go
-      where
-        go (Midi.NoteOff c k _) = Midi.NoteOff c k v
-        go (Midi.NoteOn c k _) = Midi.NoteOn c k v
-        go (Midi.KeyPressure c k _) = Midi.KeyPressure c k v
-        go (Midi.ControlChange c n v) = Midi.ControlChange c n v
-        -- go (Midi.ProgramChange c p)   = Midi.ProgramChange c p
-        -- go (Midi.ChannelPressure c p) = Midi.ChannelPressure c p
-        -- go (Midi.PitchWheel c w)      = Midi.PitchWheel c w
-        -- go (Midi.ChannelPrefix c)     = Midi.ChannelPrefix c
-        go x = x
-    setC :: Midi.Channel -> Midi.Message -> Midi.Message
-    setC c = go
-      where
-        go (Midi.NoteOff _ k v) = Midi.NoteOff c k v
-        go (Midi.NoteOn _ k v) = Midi.NoteOn c k v
-        go (Midi.KeyPressure _ k v) = Midi.KeyPressure c k v
-        go (Midi.ControlChange _ n v) = Midi.ControlChange c n v
-        go (Midi.ProgramChange _ p) = Midi.ProgramChange c p
-        go (Midi.ChannelPressure _ p) = Midi.ChannelPressure c p
-        go (Midi.PitchWheel _ w) = Midi.PitchWheel c w
-        go (Midi.ChannelPrefix _) = Midi.ChannelPrefix c
-        go x = x
+    -- TODO We actually want to extract *all* tempo changes and transform the score appropriately
+    -- For the time being, we assume the whole score has the same tempo
+    fixTempo :: Score Asp1a -> Score Asp1a
+    fixTempo = stretch (Music.Score.Meta.Tempo.tempoToDuration (Music.Score.Meta.metaAtStart xs))
+
+    -- TODO
+    getMidiProgram = const 0
+    getMidiChannel = const 0
+
+finalizeExport :: MidiScore (Score Midi.Message) -> Midi.Midi
+finalizeExport (MidiScore trs) =
+  let controlTrack = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
+      mainTracks = fmap (uncurry translMidiTrack . fmap join) trs
+   in Midi.Midi fileType (Midi.TicksPerBeat divisions) (controlTrack : mainTracks)
+  where
+    translMidiTrack :: MidiInstr -> Score Midi.Message -> [(Int, Midi.Message)]
+    translMidiTrack (ch, p) =
+      addTrackEnd
+        . setProgramChannel ch p
+        . scoreToMidiTrack divisions
+    -- Each track needs TrackEnd
+    -- We place it a long time after last event just in case (necessary?)
+    addTrackEnd :: [(Int, Midi.Message)] -> [(Int, Midi.Message)]
+    addTrackEnd = (<> [(endDelta, Midi.TrackEnd)])
+    setProgramChannel :: Midi.Channel -> Midi.Preset -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
+    setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
+    -- Hardcoded values for Midi export
+    -- We always generate MultiTrack (type 1) files with division 1024
+    fileType = Midi.MultiTrack
+    divisions = 1024
+    endDelta = 10000
+
+scoreToMidiTrack :: Duration -> Score Midi.Message -> Midi.Track Midi.Ticks
+scoreToMidiTrack divisions = fmap (\(t, _, x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. triples)
+
+toRelative :: [(Time, Duration, b)] -> [(Time, Duration, b)]
+toRelative = snd . Data.List.mapAccumL g 0
+  where
+    g now (t, d, x) = (t, (0 .+^ (t .-. now), d, x))
+
+exportNote :: Asp1a -> Score Midi.Message
+-- TODO make use of SlideT/HarmonicT/TextT/ColorT/TremoloT information
+-- For now we throw all of this away using 'snd'
+--
+-- Arguably these should be retought, see $minorAspect in TODO.md
+exportNote (PartT (_, ((snd . runSlideT . snd . runHarmonicT . snd . runTextT . snd . runColorT . snd . runTremoloT . snd . runStaffNumberT) -> x))) = exportNoteT x
+  where
+    exportNoteT (TechniqueT (Couple (_, x))) = exportNoteA x
+    exportNoteA (ArticulationT (_, x)) = exportNoteD x
+    exportNoteD (DynamicT (realToFrac -> d, x)) = setV (dynLevel d) <$> exportNoteP x
+    exportNoteP pv = mkMidiNote (pitchToInt pv)
+    pitchToInt p = fromIntegral $ Music.Pitch.semitones (p .-. P.c)
+dynLevel :: Double -> Midi.Velocity
+dynLevel x = round $ (\x -> x * 58.5 + 64) $ f $ inRange (-1, 1) (x / 3.5)
+  where
+    f = id
+    -- f x = (x^3)
+    inRange (m, n) x = (m `max` x) `min` n
+mkMidiNote :: Int -> Score Midi.Message
+mkMidiNote p =
+  mempty
+    |> pure (Midi.NoteOn 0 (fromIntegral $ p + 60) 64)
+    |> pure (Midi.NoteOff 0 (fromIntegral $ p + 60) 64)
+
+setV :: Midi.Velocity -> Midi.Message -> Midi.Message
+setV v = go
+  where
+    go (Midi.NoteOff c k _) = Midi.NoteOff c k v
+    go (Midi.NoteOn c k _) = Midi.NoteOn c k v
+    go (Midi.KeyPressure c k _) = Midi.KeyPressure c k v
+    go (Midi.ControlChange c n v) = Midi.ControlChange c n v
+    -- go (Midi.ProgramChange c p)   = Midi.ProgramChange c p
+    -- go (Midi.ChannelPressure c p) = Midi.ChannelPressure c p
+    -- go (Midi.PitchWheel c w)      = Midi.PitchWheel c w
+    -- go (Midi.ChannelPrefix c)     = Midi.ChannelPrefix c
+    go x = x
+
+setC :: Midi.Channel -> Midi.Message -> Midi.Message
+setC c = go
+  where
+    go (Midi.NoteOff _ k v) = Midi.NoteOff c k v
+    go (Midi.NoteOn _ k v) = Midi.NoteOn c k v
+    go (Midi.KeyPressure _ k v) = Midi.KeyPressure c k v
+    go (Midi.ControlChange _ n v) = Midi.ControlChange c n v
+    go (Midi.ProgramChange _ p) = Midi.ProgramChange c p
+    go (Midi.ChannelPressure _ p) = Midi.ChannelPressure c p
+    go (Midi.PitchWheel _ w) = Midi.PitchWheel c w
+    go (Midi.ChannelPrefix _) = Midi.ChannelPrefix c
+    go x = x
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
