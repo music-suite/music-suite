@@ -880,13 +880,6 @@ class Monad m => MonadLog w m | m -> w where
   say :: w -> m ()
   say w = logger ((), w)
 
--- alter :: (w -> w) -> m a -> m a
-
--- instance MonadLog String IO where
---   logger (a, w) = do
---     putStrLn w
---     return a
--- alter f =
 
 -- |
 -- Basic monad for exporting music.
@@ -1121,129 +1114,131 @@ toLyChord d chord =
     <$> notateDynamicLy (chord ^. dynamicNotation)
     <$> notateArticulationLy (chord ^. articulationNotation)
     <$> notatePitches d (chord ^. pitches)
-  where
-    notatePitches :: (LilypondExportM m) => Duration -> [Pitch] -> m Lilypond.Music
-    notatePitches d pitches = case pitches of
-      [] -> return $ Lilypond.Rest (Just (realToFrac d)) []
-      [x] -> return $ Lilypond.Note (toLyNote x) (Just (realToFrac d)) []
-      xs -> return $ Lilypond.Chord (fmap ((,[]) . toLyNote) xs) (Just (realToFrac d)) []
-    toLyNote :: Pitch -> Lilypond.Note
-    toLyNote p =
-      (`Lilypond.NotePitch` Nothing) $
-        Lilypond.Pitch
-          ( toEnum (fromEnum $ Music.Pitch.name p),
-            -- FIXME catch if (abs accidental)>2 (or simply normalize)
-            fromIntegral (Music.Pitch.accidental p),
-            -- Lilypond expects SPN, so middle c is octave 4
-            fromIntegral $
-              Music.Pitch.octaves
-                (p .-. Music.Score.Pitch.octavesDown (4 + 1) Music.Pitch.Literal.c)
+notatePitches :: (LilypondExportM m) => Duration -> [Pitch] -> m Lilypond.Music
+notatePitches d pitches = case pitches of
+  [] -> return $ Lilypond.Rest (Just (realToFrac d)) []
+  [x] -> return $ Lilypond.Note (toLyNote x) (Just (realToFrac d)) []
+  xs -> return $ Lilypond.Chord (fmap ((,[]) . toLyNote) xs) (Just (realToFrac d)) []
+toLyNote :: Pitch -> Lilypond.Note
+toLyNote p =
+  (`Lilypond.NotePitch` Nothing) $
+    Lilypond.Pitch
+      ( toEnum (fromEnum $ Music.Pitch.name p),
+        -- FIXME catch if (abs accidental)>2 (or simply normalize)
+        fromIntegral (Music.Pitch.accidental p),
+        -- Lilypond expects SPN, so middle c is octave 4
+        fromIntegral $
+          Music.Pitch.octaves
+            (p .-. Music.Score.Pitch.octavesDown (4 + 1) Music.Pitch.Literal.c)
+      )
+notateDynamicLy :: DynamicNotation -> Lilypond.Music -> Lilypond.Music
+notateDynamicLy (DN.DynamicNotation (crescDims, level)) =
+  rcomposed (fmap notateCrescDim crescDims)
+    . notateLevel level
+notateCrescDim :: DN.CrescDim -> Lilypond.Music -> Lilypond.Music
+notateCrescDim crescDims = case crescDims of
+  DN.NoCrescDim -> id
+  DN.BeginCresc -> Lilypond.beginCresc
+  DN.EndCresc -> Lilypond.endCresc
+  DN.BeginDim -> Lilypond.beginDim
+  DN.EndDim -> Lilypond.endDim
+notateLevel :: Maybe Double -> Lilypond.Music -> Lilypond.Music
+notateLevel showLevel = case showLevel of
+  Nothing -> id
+  Just lvl ->
+    Lilypond.addDynamics
+      ( fromDynamics
+          ( DynamicsL
+              (Just (fixLevel . realToFrac $ lvl), Nothing)
           )
-    notateDynamicLy :: DynamicNotation -> Lilypond.Music -> Lilypond.Music
-    notateDynamicLy (DN.DynamicNotation (crescDims, level)) =
-      rcomposed (fmap notateCrescDim crescDims)
-        . notateLevel level
-      where
-        notateCrescDim :: DN.CrescDim -> Lilypond.Music -> Lilypond.Music
-        notateCrescDim crescDims = case crescDims of
-          DN.NoCrescDim -> id
-          DN.BeginCresc -> Lilypond.beginCresc
-          DN.EndCresc -> Lilypond.endCresc
-          DN.BeginDim -> Lilypond.beginDim
-          DN.EndDim -> Lilypond.endDim
-        -- TODO these literals are not so nice...
-        notateLevel :: Maybe Double -> Lilypond.Music -> Lilypond.Music
-        notateLevel showLevel = case showLevel of
-          Nothing -> id
-          Just lvl ->
-            Lilypond.addDynamics
-              ( fromDynamics
-                  ( DynamicsL
-                      (Just (fixLevel . realToFrac $ lvl), Nothing)
-                  )
-              )
-        fixLevel :: Double -> Double
-        fixLevel x = fromInteger (round (x - 0.5)) + 0.5
-    notateArticulationLy ::
-      ArticulationNotation ->
-      Lilypond.Music ->
-      Lilypond.Music
-    notateArticulationLy (AN.ArticulationNotation (slurs, marks)) =
-      rcomposed (fmap notateMark marks)
-        . rcomposed (fmap notateSlur slurs)
-      where
-        notateMark ::
-          AN.Mark ->
-          Lilypond.Music ->
-          Lilypond.Music
-        notateMark mark = case mark of
-          AN.NoMark -> id
-          AN.Staccato -> Lilypond.addStaccato
-          AN.MoltoStaccato -> Lilypond.addStaccatissimo
-          AN.Marcato -> Lilypond.addMarcato
-          AN.Accent -> Lilypond.addAccent
-          AN.Tenuto -> Lilypond.addTenuto
-          -- TODO proper exception
-          _ -> error "Lilypond export: Unknown articulation mark"
-        notateSlur :: AN.Slur -> Lilypond.Music -> Lilypond.Music
-        notateSlur slurs = case slurs of
-          AN.NoSlur -> id
-          AN.BeginSlur -> Lilypond.beginSlur
-          AN.EndSlur -> Lilypond.endSlur
-    -- TODO This syntax might change in future Lilypond versions
-    -- TODO handle any color
-    notateColor :: Option (First (Colour Double)) -> Lilypond.Music -> Lilypond.Music
-    notateColor (Option Nothing) = id
-    notateColor (Option (Just (First color))) = \x ->
-      Lilypond.Sequential
-        [ Lilypond.Override
-            "NoteHead#' color"
-            (Lilypond.toLiteralValue $ "#" ++ colorName color),
-          x,
-          Lilypond.Revert "NoteHead#' color"
-        ]
-    colorName c
-      | c == Data.Colour.Names.black = "black"
-      | c == Data.Colour.Names.red = "red"
-      | c == Data.Colour.Names.blue = "blue"
-      | otherwise = error "Lilypond backend: Unkown color"
-    -- TODO not used for now
-    -- We need to rescale the music according to the returned duration
-    _notateTremolo ::
-      Maybe Int ->
-      Duration ->
-      (Lilypond.Music -> Lilypond.Music, Duration)
-    _notateTremolo Nothing d = (id, d)
-    _notateTremolo (Just 0) d = (id, d)
-    _notateTremolo (Just n) d =
-      let scale = 2 ^ n
-          newDur = (d `min` (1 / 4)) / scale
-          repeats = d / newDur
-       in (Lilypond.Tremolo (round repeats), newDur)
-    notateText :: [String] -> Lilypond.Music -> Lilypond.Music
-    notateText texts = composed (fmap (Lilypond.addText' Lilypond.Above) texts)
-    notateHarmonic :: HarmonicNotation -> Lilypond.Music -> Lilypond.Music
-    notateHarmonic (Any isNat, Sum n) = case (isNat, n) of
-      (_, 0) -> id
-      (True, n) -> notateNatural n
-      (False, n) -> notateArtificial n
-      where
-        notateNatural _n = Lilypond.addFlageolet -- addOpen?
-        notateArtificial _n = id -- TODO
-    notateGliss :: SlideNotation -> Lilypond.Music -> Lilypond.Music
-    notateGliss ((Any _eg, Any _es), (Any bg, Any bs))
-      | bg = Lilypond.beginGlissando
-      | bs = Lilypond.beginGlissando
-      | otherwise = id
-    notateTies :: Ties -> Lilypond.Music -> Lilypond.Music
-    notateTies (Any ta, Any tb)
-      | ta && tb = Lilypond.beginTie
-      | tb = Lilypond.beginTie
-      | ta = id
-      | otherwise = id
-    -- Use rcomposed as notateDynamic returns "mark" order, not application order
-    composed = Music.Score.Internal.Util.composed
-    rcomposed = Music.Score.Internal.Util.composed . reverse
+      )
+fixLevel :: Double -> Double
+fixLevel x = fromInteger (round (x - 0.5)) + 0.5
+notateArticulationLy ::
+  ArticulationNotation ->
+  Lilypond.Music ->
+  Lilypond.Music
+notateArticulationLy (AN.ArticulationNotation (slurs, marks)) =
+  rcomposed (fmap notateMark marks)
+    . rcomposed (fmap notateSlur slurs)
+notateMark ::
+  AN.Mark ->
+  Lilypond.Music ->
+  Lilypond.Music
+notateMark mark = case mark of
+  AN.NoMark -> id
+  AN.Staccato -> Lilypond.addStaccato
+  AN.MoltoStaccato -> Lilypond.addStaccatissimo
+  AN.Marcato -> Lilypond.addMarcato
+  AN.Accent -> Lilypond.addAccent
+  AN.Tenuto -> Lilypond.addTenuto
+  -- TODO proper exception
+  _ -> error "Lilypond export: Unknown articulation mark"
+notateSlur :: AN.Slur -> Lilypond.Music -> Lilypond.Music
+notateSlur slurs = case slurs of
+  AN.NoSlur -> id
+  AN.BeginSlur -> Lilypond.beginSlur
+  AN.EndSlur -> Lilypond.endSlur
+
+-- TODO This syntax might change in future Lilypond versions
+-- TODO handle any color
+notateColor :: Option (First (Colour Double)) -> Lilypond.Music -> Lilypond.Music
+notateColor (Option Nothing) = id
+notateColor (Option (Just (First color))) = \x ->
+  Lilypond.Sequential
+    [ Lilypond.Override
+        "NoteHead#' color"
+        (Lilypond.toLiteralValue $ "#" ++ colorName color),
+      x,
+      Lilypond.Revert "NoteHead#' color"
+    ]
+colorName :: Colour Double -> String
+colorName c
+  | c == Data.Colour.Names.black = "black"
+  | c == Data.Colour.Names.red = "red"
+  | c == Data.Colour.Names.blue = "blue"
+  | otherwise = error "Lilypond backend: Unkown color"
+-- TODO not used for now
+-- We need to rescale the music according to the returned duration
+_notateTremolo ::
+  Maybe Int ->
+  Duration ->
+  (Lilypond.Music -> Lilypond.Music, Duration)
+_notateTremolo Nothing d = (id, d)
+_notateTremolo (Just 0) d = (id, d)
+_notateTremolo (Just n) d =
+  let scale = 2 ^ n
+      newDur = (d `min` (1 / 4)) / scale
+      repeats = d / newDur
+   in (Lilypond.Tremolo (round repeats), newDur)
+notateText :: [String] -> Lilypond.Music -> Lilypond.Music
+notateText texts = composed (fmap (Lilypond.addText' Lilypond.Above) texts)
+notateHarmonic :: HarmonicNotation -> Lilypond.Music -> Lilypond.Music
+notateHarmonic (Any isNat, Sum n) = case (isNat, n) of
+  (_, 0) -> id
+  (True, n) -> notateNatural n
+  (False, n) -> notateArtificial n
+  where
+    notateNatural _n = Lilypond.addFlageolet -- addOpen?
+    notateArtificial _n = id -- TODO
+notateGliss :: SlideNotation -> Lilypond.Music -> Lilypond.Music
+notateGliss ((Any _eg, Any _es), (Any bg, Any bs))
+  | bg = Lilypond.beginGlissando
+  | bs = Lilypond.beginGlissando
+  | otherwise = id
+
+notateTies :: Ties -> Lilypond.Music -> Lilypond.Music
+notateTies (Any ta, Any tb)
+  | ta && tb = Lilypond.beginTie
+  | tb = Lilypond.beginTie
+  | ta = id
+  | otherwise = id
+
+composed :: [a -> a] -> a -> a
+composed = Music.Score.Internal.Util.composed
+
+rcomposed :: [a -> a] -> a -> a
+rcomposed = Music.Score.Internal.Util.composed . reverse
 
 toLyStaffGroup ::
   (LilypondExportM m) =>
