@@ -537,7 +537,12 @@ Consider switching to a decentralized issue tracker such as:
   - See syntax sketches, also compare Lilypond
   - OTOH the language "just basic Haskell" is maybe more important than simple syntax?
 
-- Fix lawless (HasPosition (Score a))
+- Interactive shell
+  - Move source tree into this repo
+  - Bug: crashes on multi-page Lilypond output
+  - Repeat works, should look at cache/output dir
+
+- [X] Fix lawless (HasPosition (Score a))
   - Preference: Idea 1!!
   - Idea 1: by adding default/empty position to class (a HasEnvelope in Diagrams)
     - Pros: simple. Same operators (e.g. for juxtaposition) can be used for Scores, Notes, Spans, etc.
