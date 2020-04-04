@@ -203,13 +203,13 @@ instance HasDuration (Voice a) where
 instance Reversible a => Reversible (Voice a) where
   rev = over notes reverse . fmap rev
 
-instance (Transformable a, Splittable a) => Splittable (Voice a) where
+instance (Transformable a, HasDuration a, Splittable a) => Splittable (Voice a) where
   -- TODO meta
   split d v = case splitNotes d (v ^. notes) of
     (as, Nothing, cs) -> (as ^. voice, cs ^. voice)
     (as, Just (b1, b2), cs) -> (as ^. voice `snoc` b1, b2 `cons` cs ^. voice)
 
-splitNotes :: (Transformable a, Splittable a) => Duration -> [a] -> ([a], Maybe (a, a), [a])
+splitNotes :: (Transformable a, HasDuration a, Splittable a) => Duration -> [a] -> ([a], Maybe (a, a), [a])
 splitNotes d xs = case (durAndNumNotesToFirst, needSplit) of
   (Just (_, 0), _) -> ([], Nothing, xs)
   (Nothing, False) -> (xs, Nothing, [])

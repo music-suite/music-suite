@@ -33,6 +33,7 @@ module Music.Prelude.Standard
     module Music.Score,
     Music,
     StandardNote,
+    Asp1a,
     defaultMain,
 
     -- * Lens re-exports

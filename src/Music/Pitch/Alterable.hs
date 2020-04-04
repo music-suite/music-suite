@@ -53,6 +53,11 @@ instance Alterable a => Alterable (b -> a) where
 
   flatten = fmap flatten
 
+instance Alterable a => Alterable (Maybe a) where
+  sharpen = fmap sharpen
+  flatten = fmap flatten
+
+
 instance Alterable Double where
 
   sharpen = (+ 1)
