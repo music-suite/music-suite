@@ -280,7 +280,10 @@ Comments are the same as in regular Haskell.
 
 ## Chords and rests
 
-Notes with the same onset and offset are rendered as chords by default. If you want to prevent this you must put them in separate parts.
+There is never any need to explicitly create rests, chords, tuplets or ties in Music Suite.
+
+Notes with the same onset and offset are rendered as chords by default.
+
 
 ```music+haskell
 pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]
@@ -292,21 +295,14 @@ Or, equivalently:
 ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
 ```
 
-Similarly, there is no need to handle rests explicitly.
+> Note: To prevents notes from being merged into chords we must *explicitly* put them in separate parts. The `</>` and `rcat` combinators is a simple way of doing this.
 
-It is possible to add rests explicitly as follows.
-
-@[mcatMaybes]
+Instead of using `delay` we can use `rest`. Rests are empty placeholders which take up space when using sequential composition but do not show up in the final score:
 
 ```music+haskell
-mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
+times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
 
-We can also remove rests explicitly:
-
-TODO add Maybe to note stack, so that mcatMaybes is not needed!
-
-There is no need to explicitly enter tuplets or ties, these are added automatically as needed.
 
 Any note that crosses a barline will be notated using ties:
 
@@ -314,11 +310,14 @@ Any note that crosses a barline will be notated using ties:
 c |* (9/8) |> d |* (7/8)
 ```
 
+> Note: To change the position of a barline, see [time signatures](#time-signatures).
+
 Similarly, durations that do not fit into standard note durations are notated using dots or tuplets:
 
 ```music+haskell
 compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
 ```
+
 
 
 ## Functions and types
@@ -1227,15 +1226,14 @@ Logarithmic scales:
 @[Cents]
 
 
-## Tuning systems
-
+<!--
 ## Spectral music
 
 TODO Working "backwards" from absolute to relative pitch
 
 TODO spectral dissonance using HCF
 (https://harmonicratio.blogspot.com/2018/10/pursuing-clarity-through-openness-part_80.html)
-
+--?
 
 
 
@@ -1602,7 +1600,7 @@ We support all instruments in the MusicXML sound set. See [the full list here](h
 
 ### Transposing instruments
 
-TODO obtain transposition infomation
+We can obtain transposition infomation from instruments:
 
 ```music+haskell
 inspectableToMusic @[Interval] $
@@ -1619,7 +1617,7 @@ inspectableToMusic @[Interval] $
 
 ### Range
 
-TODO obtaining range info for instruments
+We can obtainin range information from instruments:
 
 ```music+haskell
 inspectableToMusic @[Ambitus Interval Pitch] $
@@ -1629,15 +1627,12 @@ inspectableToMusic @[Ambitus Interval Pitch] $
 ]
 ```
 
-TODO automatica range checks
-
 
 
 # Playing techniques
 
 All instruments come with a variety of playing techniques, many of which produce fundamentally different sound types. We treat playing technique as a separate aspect from part and pitch.
 
-TODO currently there is no way of preventing the a playing technique being used with the "wrong" instrument.
 
 ## Non-instrument specific techniques
 
