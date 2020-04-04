@@ -508,8 +508,10 @@ Consider switching to a decentralized issue tracker such as:
   - OTOH the language "just basic Haskell" is maybe more important than simple syntax?
 
 - Fix lawless (HasPosition (Score a))
+  - Preference: Idea 1!!
   - Idea 1: by adding default/empty position to class (a HasEnvelope in Diagrams)
     - Pros: simple. Same operators (e.g. for juxtaposition) can be used for Scores, Notes, Spans, etc.
+      - **Allows makeing |> a monoid with mempty**!!
     - Cons: Disallows the onset/offset lenses Music.Time.Position
       - OTOH these lenses are probably not that necessary
       - Most other combinators (e.g. |>) can manage Nothing too
