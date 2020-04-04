@@ -25,7 +25,8 @@
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints
   -fno-warn-unused-local-binds
-  -fno-warn-noncanonical-monoid-instances #-}
+  -fno-warn-noncanonical-monoid-instances
+  #-}
 
 -- TODO fix noncanonical-monoid
 -- TODO reenable local-binds after removing tests
@@ -252,10 +253,6 @@ import qualified Music.Pitch
 import Music.Pitch (IsPitch (..), Pitch, fromPitch)
 import qualified Music.Pitch.Literal
 import qualified Music.Pitch.Literal as P
-{-
-TODO we need some instances from here, figure out which and purge this import
--}
-import Music.Score ()
 import qualified Music.Score.Articulation
 import Music.Score.Articulation (ArticulationT (..))
 import Music.Score.Color (ColorT, runColorT)
@@ -306,6 +303,7 @@ import Music.Time.Meta (meta)
 import qualified System.Directory
 import qualified System.Process
 import qualified Text.Pretty
+import Music.Score.Internal.Instances ()
 
 -- Annotated tree
 data LabelTree b a = Branch b [LabelTree b a] | Leaf a
