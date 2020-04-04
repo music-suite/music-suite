@@ -48,5 +48,4 @@ allowedGlissandi = error "No allowedGlissandi"
 
 effectiveGlissandi :: Set GlissandoRange
 effectiveGlissandi = error "No effectiveGlissandi"
-
 -- TODO correspondance of range/sound/dynamic

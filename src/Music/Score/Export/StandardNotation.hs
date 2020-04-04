@@ -24,8 +24,7 @@
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints
-  -fno-warn-unused-local-binds
-  #-}
+  -fno-warn-unused-local-binds #-}
 
 -- TODO reenable local-binds after removing tests
 
@@ -128,10 +127,10 @@ module Music.Score.Export.StandardNotation
     slideNotation,
     ties,
     PitchLayer (..),
-    Bar(..),
+    Bar (..),
     clefChanges,
     pitchLayers,
-    Staff(..),
+    Staff (..),
     staffInfo,
     bars,
     staffLength,
@@ -139,11 +138,11 @@ module Music.Score.Export.StandardNotation
     Title,
     Annotations,
     Attribution,
-    MovementInfo(..),
+    MovementInfo (..),
     movementTitle,
     movementAnnotations,
     movementAttribution,
-    Movement(..),
+    Movement (..),
     movementInfo,
     systemStaff,
     staves,
@@ -152,7 +151,7 @@ module Music.Score.Export.StandardNotation
     title,
     annotations,
     attribution,
-    Work(..),
+    Work (..),
     workInfo,
     movements,
 
@@ -265,6 +264,7 @@ import qualified Music.Score.Export.DynamicNotation as DN
 import qualified Music.Score.Export.TechniqueNotation as TN
 import Music.Score.Harmonics (HarmonicT, runHarmonicT)
 import qualified Music.Score.Internal.Export
+import Music.Score.Internal.Instances ()
 import Music.Score.Internal.Quantize
   ( Rhythm (..),
     dotMod,
@@ -301,7 +301,6 @@ import Music.Time.Meta (meta)
 import qualified System.Directory
 import qualified System.Process
 import qualified Text.Pretty
-import Music.Score.Internal.Instances ()
 
 -- Annotated tree
 data LabelTree b a = Branch b [LabelTree b a] | Leaf a
@@ -727,77 +726,63 @@ instance Semigroup BracketType where
   x <> y
     | x == mempty = y
     | otherwise = x
+
 instance Monoid BracketType where
-
   mempty = NoBracket
-
-
 
 instance Semigroup SystemBar where
   (SystemBar a1 a2 a3 a4 a5) <> (SystemBar b1 b2 b3 b4 b5) =
     SystemBar (a1 <> b1) (a2 <> b2) (a3 <> b3) (a4 <> b4) (a5 <> b5)
 
 instance Monoid SystemBar where
-
   mempty = SystemBar mempty mempty mempty mempty mempty
 
-
 instance Semigroup StaffInfo where
-    x <> y
-      | x == mempty = y
-      | otherwise = x
+  x <> y
+    | x == mempty = y
+    | otherwise = x
 
 instance Monoid StaffInfo where
-
   mempty = StaffInfo mempty mempty mempty Music.Pitch.trebleClef mempty mempty mempty
 
-
 instance Semigroup ArpeggioNotation where
-    x <> y
-      | x == mempty = y
-      | otherwise = x
-instance Monoid ArpeggioNotation where
+  x <> y
+    | x == mempty = y
+    | otherwise = x
 
+instance Monoid ArpeggioNotation where
   mempty = NoArpeggio
 
-
-
 instance Semigroup TremoloNotation where
-    x <> y
-      | x == mempty = y
-      | otherwise = x
-instance Monoid TremoloNotation where
+  x <> y
+    | x == mempty = y
+    | otherwise = x
 
+instance Monoid TremoloNotation where
   mempty = NoTremolo
 
-
-
 instance Semigroup BreathNotation where
-    x <> y
-      | x == mempty = y
-      | otherwise = x
-instance Monoid BreathNotation where
+  x <> y
+    | x == mempty = y
+    | otherwise = x
 
+instance Monoid BreathNotation where
   mempty = NoBreath
 
-
-
 instance Semigroup Fermata where
-    x <> y
-      | x == mempty = y
-      | otherwise = x
+  x <> y
+    | x == mempty = y
+    | otherwise = x
 
 instance Monoid Fermata where
-
   mempty = NoFermata
 
-
 instance Semigroup Chord where
-    x <> y
-      | x == mempty = y
-      | otherwise = x
-instance Monoid Chord where
+  x <> y
+    | x == mempty = y
+    | otherwise = x
 
+instance Monoid Chord where
   mempty =
     Chord
       mempty
@@ -813,41 +798,31 @@ instance Monoid Chord where
       mempty
       mempty
 
-
-
 instance Semigroup Bar where
-    (Bar a1 a2) <> (Bar b1 b2) = Bar (a1 <> b1) (a2 <> b2)
+  (Bar a1 a2) <> (Bar b1 b2) = Bar (a1 <> b1) (a2 <> b2)
 
 instance Monoid Bar where
-
   mempty = Bar mempty mempty
 
-
-
 instance Semigroup Staff where
-     (Staff a1 a2) <> (Staff b1 b2) = Staff (a1 <> b1) (a2 <> b2)
+  (Staff a1 a2) <> (Staff b1 b2) = Staff (a1 <> b1) (a2 <> b2)
+
 instance Monoid Staff where
-
   mempty = Staff mempty mempty
-
-
 
 instance Semigroup MovementInfo where
   x <> y
     | x == mempty = y
     | otherwise = x
-instance Monoid MovementInfo where
 
+instance Monoid MovementInfo where
   mempty = MovementInfo mempty mempty mempty
 
 instance Semigroup Work where
-    (Work a1 a2) <> (Work b1 b2) = Work (a1 <> b1) (a2 <> b2)
+  (Work a1 a2) <> (Work b1 b2) = Work (a1 <> b1) (a2 <> b2)
 
 instance Monoid Work where
-
   mempty = Work mempty mempty
-
-
 
 instance Semigroup WorkInfo where
   x <> y
@@ -855,9 +830,7 @@ instance Semigroup WorkInfo where
     | otherwise = x
 
 instance Monoid WorkInfo where
-
   mempty = WorkInfo mempty mempty mempty
-
 
 instance IsPitch Chord where
   fromPitch p = pitches .~ [p] $ mempty
@@ -2181,4 +2154,3 @@ aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
 aspectsToBar rh = Bar mempty [PitchLayer layer1]
   where
     layer1 = fmap aspectsToChord rh
-
