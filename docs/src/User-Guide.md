@@ -1098,11 +1098,6 @@ inspectableToMusic @(Voiced Chord Pitch) $
   voiced (chord d majorTriad)
 ```
 
-```music+haskell
-inspectableToMusic @(Voiced Scale Pitch) $
-  voiced (scale d majorScale)
-```
-
 ### Other voicings
 
 We can also create custom voicings, using any combination of integers. Recall that `0` stands for the origin, `1` for the first note above the origin, `2` for the next and so on. Negative numbers repeat the pattern below the origin.
@@ -1142,6 +1137,8 @@ inspectableToMusic @[Voiced Chord Pitch] $
 , voiceIn 4 $ chord c majorTriad
 ]
 ```
+
+TODO extract the pitches from a voiced chord/covert to a score (possibly multipart)
 
 
 <!--
@@ -1223,34 +1220,40 @@ TODO spectral dissonance using HCF
 
 
 
-# Dynamics and Articulation
+# Articulation and dynamics
 
-@[level]
+There is of course more to music than time and pitch. Music Suite provides particular support fot the following other dimensions (or *aspects*) of music:
 
-An overview of the dynamic values:
+- Dynamics: relative loudness of a sound
+- Articulation: attack and relative length of a sound
+- Instruments/Parts
+- Playing techniques
+
+In this chapter we will focus on the first two.
+
+## Adding dynamics
+
+Dynamics can me applied using @[level]:
+
+```music+haskell
+level ppp c
+```
+
+Here is an overview of the standard dynamic values:
 
 ```music+haskell
 over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
 ```
 
-TODO other ways of applying level
+TODO should the phrase traversal version be the default? E.g. do we want `cresc a b = over phrases' (crescV a b)`. Probably!
 
-TODO should the phrase traversal version be the default? E.g. do we want `cresc a b = over phrases' (crescV a b)`.
+
+We can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
 
 ```music+haskell
 (over phrases' (cresc pp mf) $ pseq [c..c'] |/8)
   </>
 (over phrases' (dim fff ff) $ pseq [c..c'] |/8)
-```
-
-We can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
-
-```TODOmusic+haskell
-(cresc pp mf $ pseq [c..c'] |/8)
-  </>
-(cresc ff pp $ pseq [c..c'] |/8)
-  </>
-(cresc mp mp $ pseq [c..c'] |/8)
 ```
 
 TODO for long crescendo/diminuendos, render as text by default.
@@ -1259,7 +1262,7 @@ TODO for long crescendo/diminuendos, render as text by default.
 (over phrases' (cresc pp mf) $ (times 8 $ pseq [c..g]) |/8)
 ```
 
-### Understanding how dynamics are represented
+### How dynamics are represented
 
 TODO value at each note. No need to explicitly draw indications or cresc./dim. lines.
 This means you can freely split/merge without having to worry about dynamics.
@@ -1279,9 +1282,11 @@ repeated if the last entry was a few bars ago.
 [(0<->1, c)^.event, (3<->4, d)^.event]^.score
 ```
 
-## Working with articulations
+## Adding articulations
 
-Some basic articulation functions are @[legato], @[staccato], @[portato], @[tenuto], @[staccatissimo]:
+### Staccato and legato
+
+Standard articulations are supported:
 
 ```music+haskell
 legato (pseq [c..g]|/8)
@@ -1295,8 +1300,9 @@ tenuto (pseq [c..g]|/8)
 staccatissimo (pseq [c..g]|/8)
 ```
 
-@[accent]
-@[marcato]
+### Accents
+
+Adding accents is similar to regular articulations:
 
 ```music+haskell
 accent (pseq [c..g]|/8)
@@ -1304,16 +1310,15 @@ accent (pseq [c..g]|/8)
 marcato (pseq [c..g]|/8)
 ```
 
-By default, accents are only applied to the first note in each phrase. We can also explicitly specify the last note, or all the notes:
-
-@[accentLast]
-@[accentAll]
+One difference is that by default, accents are only applied to the first note in each phrase. We can also explicitly specify the last note, or all the notes:
 
 ```music+haskell
 accentLast (pseq [c..g]|/8)
     </>
 accentAll (pseq [c..g]|/8)
 ```
+
+### Articulations and phrases
 
 We can apply slurs and articulation marks to scores of arbitrary complexity. The library will traverse each phrase in the score and apply the articulations separately.
 
@@ -1329,13 +1334,13 @@ in (accent . legato) (p1 </> p2 </> p3)
 
 These kind of traversals are not limited to articulation. See [Phrase traversals](#phrase-traversals) for a more general overview.
 
-## Overloading of dynamics and artiulation
+## Overloading of articulation and dynamics
 
 Dynamic values are overloaded in the same way as pitches. The dynamic literals are defined in `Music.Dynamics.Literal` and have type `IsDynamics a => a`.
 
-We've already seen how the expression `c` is overloaded to mean many things: the pitch C4, an event containing the pitch `c` with the default onset and offset, a score containing a single event, and so on. (TODO make sure we have)
+TODO explain overloading of articulation
 
-Dynamics and articulations are overloaded too. The default articulation means "no particular separation or accentuation", and renders as a note without any markings Similarly the default dynamic renders as *mf* (mezzo-forte).
+## Updating
 
 ```music+haskell
 c
@@ -1435,11 +1440,13 @@ Setting just the subpart:
 
 ## Subdivision
 
-TODO subparts allow arbitrarily deep nestings "Violin I.1.II" etc.
+A @[Subpart] is a list of *divisions*. For example in the subpart *Violin I.1.II* the instrument is *violin* and the *subpart* is *I.1.II*.
 
-TODO understand subpart is a non-empty list, e.g. "Violin" is not a part, but "Violin I" is. When there's only one part per instrument, the subpart is hidden by default (TODO implement!).
+Subparts are always non-empty lists. A consequence of this is that parts always have at least one subdivision: "Violin" is not a part, but "Violin I" is. When there's only one part per instrument, the subpart is hidden by default.
 
+<!--
 TODO Understand "overlapping" semantics, e.g. if notes overlap in "I" and "I.2" we have "overlapping events" (not OK in monophonic instruments, but see solo/altri below)
+-->
 
 TODO show how to set explicitly VI.1, VI.2, VII etc.
 
