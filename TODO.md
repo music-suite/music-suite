@@ -34,6 +34,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
 
+- `tremolo` should take a duration, not an integer!
 
 - Rename meta-information to "global"?
 
