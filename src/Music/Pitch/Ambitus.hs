@@ -21,9 +21,9 @@ where
 
 import Control.Lens
 import Data.AffineSpace
+import Data.AffineSpace.Point.Offsets (AffinePair)
 import Data.Interval hiding (Interval, interval)
 import Data.VectorSpace
-import Data.AffineSpace.Point.Offsets (AffinePair)
 import Music.Pitch.Common.Semitones
 
 -- | A set of pitches between two extremes.
@@ -34,7 +34,8 @@ data Ambitus v p = Ambitus !p !p
 
 -- TODO replace with accessors a la Span
 -- In fact this type could be unified with Span
-ambitus :: (AffinePair v p, AffinePair v' p') =>
+ambitus ::
+  (AffinePair v p, AffinePair v' p') =>
   Iso (p, p) (p', p') (Ambitus v p) (Ambitus v' p')
 ambitus = iso f g
   where

@@ -153,4 +153,3 @@ arranger t x = case _era x of
 -- | Set arranger of the given part of a score.
 arrangerDuring :: HasMeta a => Span -> String -> a -> a
 arrangerDuring s x = attributeDuring s ("arranger" `attribution` x)
-

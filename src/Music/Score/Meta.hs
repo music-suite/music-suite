@@ -7,7 +7,9 @@
   -fno-warn-name-shadowing
   -fno-warn-unused-top-binds
   -fno-warn-unused-matches
-  -fno-warn-unused-imports #-} -- FIXME unused-top-binds
+  -fno-warn-unused-imports #-}
+
+-- FIXME unused-top-binds
 
 module Music.Score.Meta
   ( module Music.Time.Meta,
@@ -18,9 +20,10 @@ module Music.Score.Meta
     -- metaAt,
     metaAtStart,
     withMeta,
-    -- withMetaAtStart,
   )
 where
+
+-- withMetaAtStart,
 
 import Control.Applicative
 import Control.Lens hiding (parts)

@@ -41,14 +41,15 @@ module Music.Time.Position
     -- * Transforming relative a position
     stretchRelative,
     stretchRelativeOnset,
-    -- stretchRelativeMidpoint,
-    -- stretchRelativeOffset,
-    -- transformRelative,
-    -- transformRelativeOnset,
-    -- transformRelativeMidpoint,
-    -- transformRelativeOffset,
   )
 where
+
+-- stretchRelativeMidpoint,
+-- stretchRelativeOffset,
+-- transformRelative,
+-- transformRelativeOnset,
+-- transformRelativeMidpoint,
+-- transformRelativeOffset,
 
 import Control.Lens hiding
   ( (<|),
@@ -96,7 +97,6 @@ import Music.Time.Internal.Util
 -- _era (transform s x) = fmap (transform s) (_era x)
 -- @
 class HasPosition a where
-
   -- | Return the conventional bounds of a value (local time zero and one).
   _era :: a -> Maybe Span
 
@@ -113,16 +113,15 @@ instance HasPosition1 Span where
 _position :: HasPosition a => a -> Duration -> Maybe Time
 _position x d = do
   e <- _era x
-  let (a, b) = e^.onsetAndOffset
+  let (a, b) = e ^. onsetAndOffset
   pure $ alerp a b d
 
 -- | Map a local time in value to global time.
 _position1 :: HasPosition1 a => a -> Duration -> Time
 _position1 x d =
-  let
-    e = _era1 x
-    (a, b) = e^.onsetAndOffset
-  in alerp a b d
+  let e = _era1 x
+      (a, b) = e ^. onsetAndOffset
+   in alerp a b d
 
 -- |
 -- Position of the given value.
@@ -198,6 +197,7 @@ _onset = (`_position` 0)
 _offset = (`_position` 1.0)
 
 -}
+
 -- |
 -- Place a value over the given span.
 --
@@ -222,7 +222,6 @@ era = lens _era1 $ flip setEra
 stretchRelative :: (HasPosition1 a, Transformable a) => Alignment -> Duration -> a -> a
 stretchRelative p n x = over (transformed $ undelaying (realToFrac $ x ^. position p)) (stretch n) x
 
-
 -- |
 -- Stretch a value relative to its onset.
 --
@@ -230,7 +229,6 @@ stretchRelative p n x = over (transformed $ undelaying (realToFrac $ x ^. positi
 -- 0 <-> 2
 stretchRelativeOnset :: (HasPosition1 a, Transformable a) => Duration -> a -> a
 stretchRelativeOnset = stretchRelative 0
-
 {-
 -- |
 -- Stretch a value relative to its midpoint.

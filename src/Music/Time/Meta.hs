@@ -288,9 +288,7 @@ instance Splittable a => Splittable (AddMeta a) where
       unzipR x = (fmap fst x, fmap snd x)
 
 instance HasPosition a => HasPosition (AddMeta a) where
-
   _era = _era . extract
-
 
 instance HasDuration a => HasDuration (AddMeta a) where
   _duration = _duration . extract

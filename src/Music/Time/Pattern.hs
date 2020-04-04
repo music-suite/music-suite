@@ -12,8 +12,8 @@ import Data.AffineSpace
 import Data.VectorSpace
 import Music.Pitch (IsPitch (..))
 import Music.Pitch.Literal (c)
-import Music.Score.Pitch
 import Music.Score.Part
+import Music.Score.Pitch
 import Music.Time.Aligned
 import Music.Time.Event
 import Music.Time.Juxtapose
@@ -79,12 +79,12 @@ type instance Part (Lunga a) = Part a
 type instance SetPart b (Lunga a) = Lunga (SetPart b a)
 
 instance HasPitches a b => HasPitches (Lunga a) (Lunga b) where
-{-
-  pitches visit (Lunga (dur, back, front)) = do
-    back' <- pitches visit $ back
-    front' <- pitches visit $ front
-    pure $ Lunga (dur, front', back')
--}
+  {-
+    pitches visit (Lunga (dur, back, front)) = do
+      back' <- pitches visit $ back
+      front' <- pitches visit $ front
+      pure $ Lunga (dur, front', back')
+  -}
   pitches = traverse . pitches
 
 instance HasParts a b => HasParts (Lunga a) (Lunga b) where
@@ -190,7 +190,7 @@ newPattern :: Reversible a => Voice a -> Pattern a
 newPattern v = Pattern [pure $ newLunga v]
 
 rhythmPattern :: (IsPitch a, Reversible a) => [Duration] -> Pattern a
-rhythmPattern a = newPattern $ fmap (const c) $ a^.durationsAsVoice
+rhythmPattern a = newPattern $ fmap (const c) $ a ^. durationsAsVoice
 
 newPattern' :: Voice a -> Voice a -> Pattern a
 newPattern' vb vf = Pattern [pure $ newLunga' vb vf]

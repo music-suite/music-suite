@@ -15,8 +15,7 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  #-}
+  -fno-warn-unused-imports #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------
@@ -49,7 +48,6 @@ import qualified Data.List
 import Data.Semigroup
 import Data.String
 import Data.Typeable
-
 import Music.Score.Meta
 import Music.Score.Part
 import Music.Score.Text (HasText, text)

@@ -86,4 +86,3 @@ clef c x = case _era x of
 -- | Set clef of the given part of a score.
 clefDuring :: HasMeta a => Span -> Clef -> a -> a
 clefDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
-

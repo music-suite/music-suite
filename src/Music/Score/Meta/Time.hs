@@ -35,7 +35,7 @@
 -- Provides time signatures and related meta-data.
 module Music.Score.Meta.Time
   ( -- * Time signature type
-    TimeSignature(..),
+    TimeSignature (..),
     time,
     compoundTime,
     isSimpleTime,
@@ -54,6 +54,7 @@ where
 import Control.Lens ((^.), view)
 import Control.Monad.Plus
 import Data.Bifunctor
+import Data.Bits ((.&.))
 import Data.Foldable (Foldable)
 import qualified Data.Foldable as F
 import qualified Data.List as List
@@ -74,7 +75,6 @@ import Music.Score.Meta
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Time
-import Data.Bits ((.&.))
 
 -- |
 -- A time signature is a sequence of beat numbers and a note value (i.e. an expression on the
@@ -86,7 +86,7 @@ import Data.Bits ((.&.))
 -- > timeSignature (4/4)
 -- > timeSignature (6/8)
 -- > timeSignature ((3+2)/4)
-newtype TimeSignature = TimeSignature { getTimeSignature :: ([Integer], Integer) }
+newtype TimeSignature = TimeSignature {getTimeSignature :: ([Integer], Integer)}
   deriving (Eq, Ord, Typeable)
 
 mapNums f (TimeSignature (m, n)) = TimeSignature (f m, n)
@@ -175,7 +175,6 @@ timeSignature c x = case _era x of
 timeSignatureDuring :: HasMeta a => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addMetaNote $ view event (s, optionLast c)
 
-
 -- | Time signature typically used for the given duration.
 --
 -- Returns Nothing if the denominator of the canonical form of given duration is not a power of two.
@@ -212,9 +211,8 @@ standardTimeSignature x = case unRatio (toRational x) of
 isPowerOfTwo :: Integer -> Bool
 isPowerOfTwo 0 = True
 isPowerOfTwo 1 = False
-isPowerOfTwo n = (n .&. (n-1)) == 0
+isPowerOfTwo n = (n .&. (n -1)) == 0
 {-# INLINE isPowerOfTwo #-}
-
 
 -- TODO consolidate
 optionLast :: a -> Option (Last a)
@@ -231,5 +229,3 @@ getSimple :: TimeSignature -> Integer
 liftRational :: (Fractional c, Real a) => (Rational -> Rational) -> a -> c
 
 liftRational2 :: (Fractional a, Real a1, Real a2) => (Rational -> Rational -> Rational) -> a1 -> a2 -> a
-
-

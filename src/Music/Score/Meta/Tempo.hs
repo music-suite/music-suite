@@ -195,7 +195,6 @@ tempo c x = case _era x of
 tempoDuring :: HasMeta a => Span -> Tempo -> a -> a
 tempoDuring s c = addMetaNote $ view event (s, c)
 
-
 {-
 inSpan' (view onsetAndOffset -> (t,u)) x = t <= x && x < u
 mkNote s x = view note (s, x)

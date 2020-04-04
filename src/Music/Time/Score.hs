@@ -1,11 +1,11 @@
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE QuantifiedConstraints #-}
-{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -142,7 +142,6 @@ newtype Score a = Score {getScore :: (Meta, Score' a)}
 -- well as 'singleNote', 'singleVoice', and 'singlePhrase'
 --
 
-
 -- | Up to meta-data.
 instance Applicative Score where
 
@@ -152,7 +151,6 @@ instance Applicative Score where
 
 -- | Up to meta-data.
 instance Monad Score where
-
   Score (meta, xs) >>= f = Score (meta, xs >>= snd . getScore . f)
 
 instance Alternative Score where
@@ -240,10 +238,10 @@ instance HasMeta (Score a) where
 
 -- | This instance exists only for the @enumFrom...@ methods.
 instance Enum a => Enum (Score a) where
+
   toEnum = return . toEnum
+
   fromEnum = list 0 (fromEnum . head) . Foldable.toList
-
-
 
 newtype Score' a = Score' {getScore' :: [Event a]}
   deriving ({-Eq, -} {-Ord, -} {-Show, -} Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
@@ -251,17 +249,22 @@ newtype Score' a = Score' {getScore' :: [Event a]}
 instance (Show a, Transformable a) => Show (Score a) where
   show x = show (x ^. events) ++ "^.score"
 
-deriving
-  via (WriterT Span [] `As1` Score')
-  instance Applicative Score'
-deriving
-  via (WriterT Span [] `As1` Score')
-  instance Monad Score'
+deriving via
+  (WriterT Span [] `As1` Score')
+  instance
+    Applicative Score'
+
+deriving via
+  (WriterT Span [] `As1` Score')
+  instance
+    Monad Score'
 
 instance Isomorphic (WriterT Span [] x) (Score' x) where
+
   -- TODO zero-cost version
   inj (WriterT xs) = Score' (fmap (view event . swap) xs)
-  prj (Score' xs)  = WriterT (fmap (swap . view (from event)) xs)
+
+  prj (Score' xs) = WriterT (fmap (swap . view (from event)) xs)
 
 swap :: (a, b) -> (b, a)
 swap (x, y) = (y, x)
@@ -287,6 +290,7 @@ instance HasPosition (Score' a) where
   _era x = case foldMap (NonEmptyInterval . _era1) $ getScore' x of
     EmptyInterval -> Nothing
     NonEmptyInterval x -> Just x
+
 {-
   (f x, g x) ^. from onsetAndOffset
     where
@@ -422,9 +426,9 @@ normalizeScore = reset . normalizeScoreDurations
 reset :: Score a -> Score a
 reset x = case _era x of
   Nothing -> x
-  Just e -> let
-    o = view onset e
-    in if o < 0 then delay (0 .-. o) x else x
+  Just e ->
+    let o = view onset e
+     in if o < 0 then delay (0 .-. o) x else x
 
 -- | Remove all 'Nothing' values in the score.
 removeRests :: Score (Maybe a) -> Score a
@@ -484,12 +488,9 @@ anyDistinctOverlaps xs = hasDuplicates xs || anyOverlaps xs
 combined :: Eq a => (a -> a -> b) -> [a] -> [b]
 combined f as = mcatMaybes [if x == y then Nothing else Just (x `f` y) | x <- as, y <- as]
 
-
-
 -- TODO move:
 -- type As1 :: k1 -> (k2 -> Type) -> k2 -> Type
-newtype As1 f g a   = As1 { getAs1 :: g a }
-
+newtype As1 f g a = As1 {getAs1 :: g a}
 
 -- |
 -- Laws: isom is an isomorphism, that is:
@@ -497,7 +498,8 @@ newtype As1 f g a   = As1 { getAs1 :: g a }
 -- @
 -- view isom . view (from isom) = id = view (from isom) . view isom
 -- @
-class Isomorphic a b  where
+class Isomorphic a b where
+
   isom :: Iso' a b
   isom = iso inj prj
 
@@ -507,23 +509,27 @@ class Isomorphic a b  where
   prj :: Isomorphic a b => b -> a
   prj = view $ from isom
 
-instance (forall x . Isomorphic (f x) (g x), Functor f) => Functor (As1 f g) where
+instance (forall x. Isomorphic (f x) (g x), Functor f) => Functor (As1 f g) where
   fmap h (As1 x) = As1 $ inj $ fmap h $ prj @(f _) @(g _) x
 
-instance (forall x . Isomorphic (f x) (g x), Applicative f) => Applicative (As1 f g) where
-  pure x = As1 $ inj @(f _) @(g _) $ pure x
-  (<*>) :: forall a b . As1 f g (a -> b) -> As1 f g a -> As1 f g b
-  As1 h <*> As1 x = As1 $ inj @(f b) @(g b) $ (prj @(f (a -> b)) @(g (a -> b)) h) <*> (prj @(f a) @(g a) x)
-  -- TODO use liftA2 instead of <*>, requires recent base library!
-  -- liftA2 h (As1 x) (As1 y) = As1 $ inj $ liftA2 h (prj x) (prj y)
+instance (forall x. Isomorphic (f x) (g x), Applicative f) => Applicative (As1 f g) where
 
-instance (forall x . Isomorphic (f x) (g x), Alternative f) => Alternative (As1 f g) where
-  empty :: forall a . As1 f g a
+  pure x = As1 $ inj @(f _) @(g _) $ pure x
+
+  (<*>) :: forall a b. As1 f g (a -> b) -> As1 f g a -> As1 f g b
+  As1 h <*> As1 x = As1 $ inj @(f b) @(g b) $ (prj @(f (a -> b)) @(g (a -> b)) h) <*> (prj @(f a) @(g a) x)
+
+-- TODO use liftA2 instead of <*>, requires recent base library!
+-- liftA2 h (As1 x) (As1 y) = As1 $ inj $ liftA2 h (prj x) (prj y)
+
+instance (forall x. Isomorphic (f x) (g x), Alternative f) => Alternative (As1 f g) where
+
+  empty :: forall a. As1 f g a
   empty = As1 $ inj @(f a) @(g a) $ empty
 
-  (<|>) :: forall a . As1 f g a -> As1 f g a -> As1 f g a
+  (<|>) :: forall a. As1 f g a -> As1 f g a -> As1 f g a
   As1 h <|> As1 x = As1 $ inj @(f a) @(g a) $ (prj @(f a) @(g a) h) <|> (prj @(f a) @(g a) x)
 
-instance (forall x . Isomorphic (f x) (g x), Monad f) => Monad (As1 f g) where
-  (>>=) :: forall a b . As1 f g a -> (a -> As1 f g b) -> As1 f g b
+instance (forall x. Isomorphic (f x) (g x), Monad f) => Monad (As1 f g) where
+  (>>=) :: forall a b. As1 f g a -> (a -> As1 f g b) -> As1 f g b
   As1 k >>= f = As1 $ inj @(f b) @(g b) $ (prj @(f a) @(g a) k) >>= prj . getAs1 . f

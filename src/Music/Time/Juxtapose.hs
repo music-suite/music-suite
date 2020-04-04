@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -6,8 +8,6 @@
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Music.Time.Juxtapose
   ( module Music.Time.Split,
@@ -35,8 +35,7 @@ module Music.Time.Juxtapose
     -- * Repetition
     times,
     group,
-
-    After(..),
+    After (..),
   )
 where
 
@@ -46,9 +45,9 @@ import Data.AffineSpace.Point
 import Data.Semigroup
 import Data.Stream.Infinite hiding (group)
 import Data.VectorSpace
+import GHC.Generics (Generic)
 import Music.Time.Reverse
 import Music.Time.Split
-import GHC.Generics (Generic)
 
 -- |
 -- @
@@ -140,6 +139,7 @@ times n = pseq . replicate n
 -- @
 group :: (Monoid a, Transformable a, HasPosition a) => Int -> a -> a
 group n x = times n x |/ fromIntegral n
+
 {-
 -- |
 -- Compose sequentially by aligning the nominal position of each value to the
@@ -158,7 +158,7 @@ snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]
 --
 -- /Warning/: This is only lawful if the underlying monoid means "parallel composition".
 -- E.g. this works for 'Score' and 'Pattern', but not for 'Span' and 'Voice'.
-newtype After a = After { getAfter :: a }
+newtype After a = After {getAfter :: a}
   deriving newtype (Eq, Ord)
   deriving stock (Show, Generic)
 
@@ -167,5 +167,3 @@ instance (Semigroup a, HasPosition a, Transformable a) => Semigroup (After a) wh
 
 instance (Monoid a, HasPosition a, Transformable a) => Monoid (After a) where
   mempty = After mempty
-
-

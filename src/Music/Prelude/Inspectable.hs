@@ -176,4 +176,3 @@ instance Inspectable [Voice Pitch] where
 
 instance Inspectable [Note Pitch] where
   inspectableToMusic = inspectableToMusic . fmap ((^. voice) . pure)
-

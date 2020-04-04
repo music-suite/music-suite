@@ -63,10 +63,10 @@ import Data.String
 import Data.Traversable (Traversable)
 import qualified Data.Traversable as T
 import Data.Typeable
-import Music.Pitch hiding (Fifths, Pitch, First, Last)
+import Music.Pitch hiding (Fifths, First, Last, Pitch)
 import qualified Music.Pitch as P
-import Music.Pitch.Literal
 import Music.Pitch.Common (Pitch)
+import Music.Pitch.Literal
 import Music.Score.Internal.Util
 import Music.Score.Meta
 import Music.Score.Part
@@ -157,4 +157,3 @@ keySignature c x = case _era x of
 -- | Set the key signature of the given part of a score.
 keySignatureDuring :: HasMeta a => Span -> KeySignature -> a -> a
 keySignatureDuring s c = addMetaNote $ view event (s, c)
-

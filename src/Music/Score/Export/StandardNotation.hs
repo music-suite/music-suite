@@ -213,7 +213,6 @@ import Control.Monad.Plus
 import Control.Monad.State
 import Control.Monad.Writer hiding ((<>), First (..))
 import Data.AffineSpace
-import qualified Data.Monoid
 import Data.Bifunctor (bimap, first, second)
 import qualified Data.ByteString.Char8
 import qualified Data.Char
@@ -229,6 +228,7 @@ import qualified Data.List.Split
 import Data.Map (Map)
 import qualified Data.Map
 import qualified Data.Maybe
+import qualified Data.Monoid
 import qualified Data.Music.Lilypond as Lilypond
 import qualified Data.Music.Lilypond as L
 import qualified Data.Music.MusicXml.Simple as MusicXml
@@ -359,19 +359,19 @@ data SystemBar
   = SystemBar
       {-
       We treat all the following information as global.
-
+      
       This is more restrictive than most classical notations, but greatly
       simplifies representation. In this view, a score is a matrix of bars
       (each belonging to a single staff). Each bar must have a single
       time sig/key sig/rehearsal mark/tempo mark.
-
+      
       ----
       Note: Option First ~ Maybe
-
+      
       Alternatively we could just make these things into Monoids such that
       mempty means "no notation at this point", and remove the "Option First"
       part here.
-
+      
       Actually I'm pretty sure this is the right approach. See also #242
       -}
       { _barNumbers :: Option (First BarNumber),
@@ -414,11 +414,11 @@ data StaffInfo
         _sibeliusFriendlyName :: SibeliusFriendlyName,
         {-
         See also clefChanges
-
+        
         TODO change name of _instrumentDefaultClef
         More accurately, it represents the first clef to be used on the staff
         (and the only one if there are no changes.)
-
+        
         OTOH having clef in the staff at all is redundant, specifying clef
         is optional (along with everything else) in this representation anyway.
         This is arguably wrong, as stanard notation generally requires a clef.
@@ -426,7 +426,7 @@ data StaffInfo
         _instrumentDefaultClef :: Music.Pitch.Clef,
         {-
         I.e. -P5 for horn
-
+        
         Note that this representation indicates *written pitch*, not sounding (as does MusicXML),
         so this value is redundant when rendering a graphical score. OTOH if this representation
         is used to render *sound*, pitches need to be transposed acconrdingly.
@@ -1136,14 +1136,13 @@ toLyBar sysBar bar = do
     -- actually a problem? Is the empty case correct?
     sysStuff [] = []
     sysStuff (x : xs) =
-      (
-        ( lySeq
-        $ addTimeSignature (sysBar ^. timeSignature)
-        $ addKeySignature (sysBar ^. keySignature)
-        $ pure x
+      ( ( lySeq
+            $ addTimeSignature (sysBar ^. timeSignature)
+            $ addKeySignature (sysBar ^. keySignature)
+            $ pure x
         )
-      : xs)
-
+          : xs
+      )
     sim [x] = x
     sim xs = Lilypond.Simultaneous False xs
 
@@ -1151,23 +1150,22 @@ addKeySignature ::
   KeySignature ->
   [Lilypond.Music] ->
   [Lilypond.Music]
-
-addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just (tonic, isMajor))))
+addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just (tonic, isMajor)))) =
   -- TODO convert
-   = (Lilypond.Key (Music.Pitch.Literal.fromPitch tonic) (if isMajor then Lilypond.Major else Lilypond.Minor):)
+  (Lilypond.Key (Music.Pitch.Literal.fromPitch tonic) (if isMajor then Lilypond.Major else Lilypond.Minor) :)
 addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First Nothing)) = id
 
 addTimeSignature ::
   Option (First TimeSignature) ->
   [Lilypond.Music] ->
   [Lilypond.Music]
-addTimeSignature (Option (Just (First (Music.Score.Meta.Time.getTimeSignature -> (ms, n)))))
-   = (Lilypond.Time (sum ms) n :)
+addTimeSignature (Option (Just (First (Music.Score.Meta.Time.getTimeSignature -> (ms, n))))) =
+  (Lilypond.Time (sum ms) n :)
 addTimeSignature (Option Nothing) = id
 
 lySeq :: [Lilypond.Music] -> Lilypond.Music
 lySeq [x] = x
-lySeq xs  = Lilypond.Sequential xs
+lySeq xs = Lilypond.Sequential xs
 
 toLyLayer :: (LilypondExportM m) => Rhythm Chord -> m Lilypond.Music
 toLyLayer (Beat d x) = toLyChord d x
@@ -1414,7 +1412,7 @@ movementToPartwiseXml movement = music
             We could also prepend it to other staves, but that is reduntant and makes the
             generated XML file much larger.
       Trying a new approach here by including this in all parts.
-
+    
       ---
       Again, this definition is a sequnce of elements to be prepended to each bar
       (typically divisions and attributes).
@@ -1434,7 +1432,6 @@ movementToPartwiseXml movement = music
 
         divisions_ :: [MusicXml.Music]
         divisions_ = MusicXml.defaultDivisions : repeat mempty
-
         keySignatures_ :: [MusicXml.Music]
         keySignatures_ = undefined
         -- keySignatures_ = fmap (expTS . unOF) $ fmap (^. keySignature) (movement ^. systemStaff)
@@ -1459,7 +1456,7 @@ movementToPartwiseXml movement = music
     {-
       A matrix similar to the one returned from movementToPartwiseXml, but
       not including information from the system staff.
-
+    
       TODO we use movementAssureSameNumberOfBars
       We should do a sumilar check on the transpose of the bar/staff matrix
       to assure that all /bars/ have the same duration.
@@ -1508,12 +1505,12 @@ movementToPartwiseXml movement = music
            about this, are we always emitting the voice?)
             YES, see setDefaultVoice below?
             How about staff, are we always emitting that?
-
+        
           - TODO how does this interact with the staff-crossing feature?
             (are we always emitting staff?)
           - TODO how does it interact with clefs/other in-measure elements not
             connected to chords?
-
+        
             Lots of meta-stuff here about how a bar is represented, would be nice to write up music-score
             eloquently!
         -}
@@ -1550,7 +1547,7 @@ movementToPartwiseXml movement = music
         renderPitchLayer = renderBarMusic . fmap renderChord . getPitchLayer
         {-
         Render a rest/note/chord.
-
+        
         This returns a series of <note> elements, with appropriate <chord> tags.
         -}
         renderChord :: Chord -> Duration -> MusicXml.Music
@@ -1695,7 +1692,6 @@ data MidiScore a = MidiScore [(MidiInstr, Score a)]
   deriving (Functor)
 
 type MidiExportM m = (MonadLog String m, MonadError String m)
-
 
 toMidi :: (MidiExportM m) => Asp -> m M.Midi
 toMidi = pure . finalizeExport . fmap exportNote . exportScore . mcatMaybes
@@ -1939,8 +1935,8 @@ partitionIntervals xs = fmap (Data.Map.fromList . toList) $ snd $ (`runState` []
     Just n ->
       modify (update n $ (Data.List.NonEmpty.cons ev))
   where
-  sorted :: [((a, a), b)]
-  sorted = Data.Map.toAscList xs
+    sorted :: [((a, a), b)]
+    sorted = Data.Map.toAscList xs
 
 update :: Int -> (a -> a) -> [a] -> [a]
 update n f xs = take n xs ++ rest
@@ -2020,12 +2016,12 @@ fromAspects sc' = do
           support multi-voice staves as a starting point.
       - Bar splitting (adding ties)
       - Quantization
-
-
-
+  
+  
+  
     TODO layer sepration (which, again, does not actually happen in current code)
     should happen after bars have been split.
-
+  
   -}
   say "Separating voices"
   postVoiceSeparation :: [(Part, List0To4 (MVoice Asp2))] <-
@@ -2087,17 +2083,20 @@ fromAspects sc' = do
     -- TODO also extract Barline, Key, RehearsalMark, Tempo here
     -- (all of these should force a new bar)
     systemStaff :: SystemStaff
-    systemStaff = fmap (\(_dur, ts, ks) ->
-      timeSignature .~ Option (fmap First ts) $
-      keySignature  .~ maybe mempty id ks $
-        mempty) barMeta
-
+    systemStaff =
+      fmap
+        ( \(_dur, ts, ks) ->
+            timeSignature .~ Option (fmap First ts)
+              $ keySignature .~ maybe mempty id ks
+              $ mempty
+        )
+        barMeta
     (barDurations, _timeSignatureMarks, _keySignatureMarks) = unzip3 barMeta
     barMeta = Music.Score.Internal.Export.extractBars normScore
     -- Make this more prominent!
     -- This is being used for the actual score!
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
-    --
+        --
     sc :: Score Asp1a
     sc = mcatMaybes sc'
 

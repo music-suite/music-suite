@@ -5,6 +5,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-redundant-constraints #-}
+
 module Music.Time.Event
   ( -- * Event type
     Event,
@@ -121,4 +122,3 @@ eventee = from event `dependingOn` (transformed)
 -- | Event as a span with a trivial value.
 spanEvent :: Iso' Span (Event ())
 spanEvent = iso (\s -> (s, ()) ^. event) (^. era)
-
