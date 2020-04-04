@@ -108,7 +108,11 @@ import Prelude hiding
 -- etc. For no change, Nothing is returned.
 extractBars :: (HasMeta a, HasPosition a, Transformable a) => a ->
   [(Duration, Maybe TimeSignature, Maybe KeySignature {-, Maybe Barline, Key, Maybe RehearsalMark, Maybe Tempo-})]
-extractBars x = zip3 dss tss kss
+extractBars x = case _era x of
+  Nothing -> []
+  Just e -> extractBarsInEra e x
+
+extractBarsInEra era x = zip3 dss tss kss
   where
     dss :: [Duration]
     dss = fmap (realToFrac . fst) foo2
@@ -122,7 +126,7 @@ extractBars x = zip3 dss tss kss
     -- Each /combination/ of time signature from 0 througout the duration
     -- of the score
     foo1 :: Voice (TimeSignature, KeySignature)
-    foo1 = reactiveToVoice' (fromMaybe (error "empty score") $ _era x) foo
+    foo1 = reactiveToVoice' era foo
     -- Each /combination/ of time signature, key signature and so on
     foo :: Reactive (TimeSignature, KeySignature)
     foo = (,) <$> getTimeSignatures defaultTimeSignature x
@@ -135,12 +139,18 @@ extractBars x = zip3 dss tss kss
 -- etc. For no change, Nothing is returned.
 extractTimeSignatures :: (HasMeta a, HasPosition a, Transformable a) => a
   -> [(Duration, Maybe TimeSignature)]
-extractTimeSignatures score = zip (fmap realToFrac barTimeSignatures) (retainUpdates barTimeSignatures)
+extractTimeSignatures x = case _era x of
+  Nothing -> []
+  Just e -> extractTimeSignaturesInEra e x
+
+
+
+extractTimeSignaturesInEra era score = zip (fmap realToFrac barTimeSignatures) (retainUpdates barTimeSignatures)
   where
     -- From position 0, the duration of each time signature and how long it lasts
     timeSignatures :: [(Duration, TimeSignature)]
     timeSignatures =
-        view pairs . reactiveToVoice' (fromMaybe (error "empty score") $ _era score)
+        view pairs . reactiveToVoice' era
         $ getTimeSignatures defaultTimeSignature score
     -- The time signature of each bar
     barTimeSignatures :: [TimeSignature]

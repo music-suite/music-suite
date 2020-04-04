@@ -56,7 +56,7 @@ metaAt x = (`atTime` x) . runScoreMeta
 
 metaAtStart :: (HasMeta a, HasPosition a) => AttributeClass b => a -> b
 metaAtStart x = case _era x of
-  Nothing -> error "metaAtStart called on empty score"
+  Nothing -> mempty
   Just e -> (e ^. onset) `metaAt` x
 
 withMeta :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
