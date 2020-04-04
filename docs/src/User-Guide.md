@@ -2226,7 +2226,7 @@ inspectableToMusic @(Event Pitch) $
 
 ## Voices
 
-A @[Voice] represents a sequence of values, each tagged with duration.
+A @[Voice] represents a *sequential composition of values*, each tagged with *duration*.
 
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
@@ -2343,7 +2343,7 @@ in trackToScore (1/8) y
 
 ## Scores
 
-@[Score]
+A @[Score] represents a *parallel composition of values*, each tagged with *time span*.
 
 TODO empty scores and rests (see (HasPosition Score) in TODO.md)
 
