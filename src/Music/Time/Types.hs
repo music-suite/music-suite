@@ -42,7 +42,7 @@ module Music.Time.Types
     reflectSpan,
 
     -- ** Properties
-    isEmptySpan,
+    isDegenerateSpan,
     isForwardSpan,
     isBackwardSpan,
     -- delayComponent,
@@ -458,8 +458,8 @@ fixedOnsetSpan = prism' (\d -> view (from onsetAndDuration) (0, d)) $ \x -> case
 --
 -- A span is either /forward/, /backward/ or /empty/.
 --
--- @any id [isForwardSpan x, isBackwardSpan x, isEmptySpan x] == True@
--- @all not [isForwardSpan x, isBackwardSpan x, isEmptySpan x] == False@
+-- @any id [isForwardSpan x, isBackwardSpan x, isDegenerateSpan x] == True@
+-- @all not [isForwardSpan x, isBackwardSpan x, isDegenerateSpan x] == False@
 
 -- |
 -- Whether the given span has a positive duration, i.e. whether its 'onset' is before its 'offset'.
@@ -473,8 +473,8 @@ isBackwardSpan = (< 0) . signum . _durationS
 
 -- |
 -- Whether the given span is empty, i.e. whether its 'onset' and 'offset' are equivalent.
-isEmptySpan :: Span -> Bool
-isEmptySpan = (== 0) . signum . _durationS
+isDegenerateSpan :: Span -> Bool
+isDegenerateSpan = (== 0) . signum . _durationS
 
 -- |
 -- Reflect a span through its midpoint.
@@ -518,6 +518,9 @@ infixl 5 `overlaps`
 -- True
 --
 -- >>> 1 `inside` 1 <-> 2
+-- True
+--
+-- >>> 2 `inside` 1 <-> 2
 -- True
 inside :: Time -> Span -> Bool
 inside x (view onsetAndOffset -> (t, u)) = t <= x && x <= u
