@@ -1649,17 +1649,15 @@ type MidiExportM m = (MonadLog String m, MonadError String m)
 --
 -- * TODO more than 15 sounds, non GM sounds, not just default instrument sound.
 toMidi :: (MidiExportM m) => Asp -> m Midi.Midi
-toMidi = pure . finalizeExport . fmap exportNote . exportScore . mcatMaybes
+toMidi = fmap (finalizeExport . fmap exportNote) . exportScore . mcatMaybes
 
-exportScore :: Score Asp1a -> MidiScore Asp1a
-exportScore xs =
-  MidiScore
+exportScore :: MidiExportM m => Score Asp1a -> m (MidiScore Asp1a)
+exportScore xs = do
+  pa :: PartAllocation <- allocateParts $ fmap fst ys
+  pure $ MidiScore
     $ map (\(p, sc) -> ((getMidiChannel pa p, getMidiProgram pa p), sc))
     ys
   where
-    pa :: PartAllocation
-    pa = allocateParts $ fmap fst ys
-
     ys :: [(Part, Score Asp1a)]
     ys = Music.Score.Part.extractPartsWithInfo
       $ fixTempo
@@ -1671,13 +1669,13 @@ exportScore xs =
 
 type PartAllocation = Map Part (Midi.Preset, Midi.Channel)
 
-allocateParts :: [Part] -> PartAllocation
+allocateParts :: {- MidiExportM m =>-} [Part] -> m PartAllocation
 allocateParts = undefined
 
-getMidiProgram :: PartAllocation -> Music.Parts.Part -> Midi.Preset
+getMidiProgram :: PartAllocation -> Part -> Midi.Preset
 getMidiProgram _ = const 60
 
-getMidiChannel :: PartAllocation -> Music.Parts.Part -> Midi.Channel
+getMidiChannel :: PartAllocation -> Part -> Midi.Channel
 getMidiChannel _ = const 0
 
 finalizeExport :: MidiScore (Score Midi.Message) -> Midi.Midi
