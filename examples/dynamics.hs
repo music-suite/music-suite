@@ -21,4 +21,5 @@ music = id
   $ 
     rcat $ map (\phase -> level (stretch phase sine*fff) $ subj) [5.0,5.2..6.0]
 
+-- FIXME does not compile
 main = defaultMain music

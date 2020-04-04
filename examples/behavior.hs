@@ -37,6 +37,7 @@ sines =
 at :: IsPitch a => Behavior Pitch -> a
 at = fromPitch . ($ 0) . view sampled
 
+-- FIXME this gives value at 0 only!
 main :: IO ()
 main = defaultMain $ rcat $ fmap (fmap at) $
   fmap (\(p, x) -> set pitches (fmap toPitch p) x) sines

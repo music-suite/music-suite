@@ -51,6 +51,7 @@ mainCanon = timeSignature (time 6 8) $
 music :: Music
 music = tremCanon <> mainCanon2
 
+-- FIXME gets stuck, multi-page output?
 main :: IO ()
 main = defaultMain $ filterWithTime (\t _d _x -> 0 <= t && t < 32) music
 
