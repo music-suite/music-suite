@@ -161,10 +161,29 @@ The `|*` and `|/` operators can be used as shorthands for `stretch` and `compres
 (c |> d |> e |> c |> d|*2 |> d|*2) |/ 16
 ```
 
+> Note: The `|>` operator means "sequential composition". We will introduce this [properly](#composition-operators) later on.
+
 ## Let and where
 
-TODO let bindings first
+The `let ... in` construct introduces a temporary name for an expression.
 
+
+```music+haskell
+let
+  x = c |> d
+  r = 1/3
+in
+x </> delay r x
+```
+
+The `where` construct is similar, but takes the bindings *after* the expression.
+
+```music+haskell
+x </> delay r x
+  where
+    x = c |> d
+    r = 1/3
+```
 
 ## Octaves and accidentals
 
@@ -178,11 +197,28 @@ _8va c
 sharpen c
 ```
 
-TODO see pitch chapter
+> Note: We will lean many more ways of entering pitch in the [next chapter](#pitch).
 
 ## Basic dynamics and articulations
 
-TODO example and forward reference
+We can add articulations and change dynamics:
+
+```music+haskell
+accent c
+```
+
+```music+haskell
+level ppp c
+```
+
+
+We will see more examples of this later on as well.
+
+The `$` operator is pronounced "apply". `f $ g x` is the same as `f (g x)`, so the apply operator is an alternative to writing parentheses:
+
+```music+haskell
+staccato $ stretch (1/8) c
+```
 
 ## Composition operators
 
@@ -227,16 +263,19 @@ For `x </> y </> ...` the syntax is @[rcat] `[x, y, z ...]`.
 rcat [c,e..g] |/ 2
 ```
 
-Here is a more complex example using all forms of composition:
+## Comments
 
-```music+haskell
-let
-scale = pseq [c,d,e,f,g,a,g,f]|/8
-triad a = a <> up _M3 a <> up _P5 a
-in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2
+Comments are the same as in regular Haskell.
+
+```haskell
+-- This is a single-line comment
+
+{-
+ This is
+ a multi-line
+ comment!
+-}
 ```
-
-TODO understanding tyes, types of the above operators and that `|>` and `</>` are based on `<>`. In other words `Semigroup` is used for all composition in Music Suite.
 
 
 ## Chords and rests
@@ -289,25 +328,12 @@ Similarly, durations that do not fit into standard note durations are notated us
 compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
 ```
 
-## Comments
-
-Comments are the same as in regular Haskell.
-
-```haskell
--- This is a single-line comment
-
-{-
- This is
- a multi-line
- comment!
--}
-```
 
 ## Functions and types
 
-  TODO basic functions
+TODO basic functions
 
-  Here is a full example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
+Here is an example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
 
 ```music+haskell
 (up _P8 . compress 2 . delay 3) c
@@ -317,10 +343,37 @@ Comments are the same as in regular Haskell.
 
 TODO make very clear that stretch, `_8va` etc work on arbitrarily complex scores, not just single notes as in the first examples
 
+Here is a more complex example using all forms of composition:
 
-## Summary
+```music+haskell
+let
+  scale = pseq [c, d, e, f, g, a, g, f] |/ 8
+  triad a = a <> up _M3 a <> up _P5 a
+in up _P8 scale </> (triad c) |/2 |> (triad g_) |/2
+```
 
-  We have now seen how to write basic pieces, using melody, harmony and voices. In the following chapters we will be looking at musical aspects such as pitch, dynamics and orchestration in more detail: these chapters can generally be read in any order.
+TODO understanding tyes, types of the above operators and that `|>` and `</>` are based on `<>`.
+
+```haskell
+(<>)  :: Semigroup a => a -> a -> a
+```
+
+```haskell
+(|>)  :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
+```
+
+```haskell
+(</>) :: (Semigroup a, HasParts a, HasSubpart p, p ~ Part a) => a -> a -> a
+```
+
+In other words `Semigroup` is used for all composition in Music Suite.
+
+
+## Conclusion
+
+This concludes the first chapter of the manual. We have seen how to write simple pieces, using melody, harmony and voices. You should now know enough to start working on your own music. You will find many more examples of pieces in the [examples directory](https://github.com/hanshoglund/music-suite/tree/master/examples).
+
+The rest of this manual can be read as a *reference*. We will be looking at musical aspects such as pitch, dynamics, rhythm, form and orchestration in detail. In general these chapters can generally be read in any order.
 
 
 
@@ -330,7 +383,7 @@ TODO make very clear that stretch, `_8va` etc work on arbitrarily complex scores
 
 ## The Pitch type
 
-  The @[Pitc] representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling. As we shall see later this is not the only way of representing pitch in Music Suite, but it is common enough to be the default.
+The @[Pitch] representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling. As we shall see later this is not the only way of representing pitch in Music Suite, but it is common enough to be the default.
 
 ### Pitch names
 
@@ -819,8 +872,16 @@ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
-### Non-octave repeating scales
+### Non-octave repeating scales/chords
 
+We can inspect the *repeating interval* of a scale like this:
+
+```haskell
+>>> repeatingInterval majorScale
+_P8
+```
+
+All scales and chords we have seen so far repeat at the octave, but this is not a hard requirement. For example @[quartal] and @[quintal] chords can be seen as one-note scales repeating at the eponymous interval:
 
 ```music+haskell
 inspectableToMusic @[Voiced Chord Pitch] $
@@ -830,7 +891,7 @@ inspectableToMusic @[Voiced Chord Pitch] $
 ]
 ```
 
-TODO Quartal and quintal
+Similarly *clusters* are one-note scales repeating at the second:
 
 ```music+haskell
 inspectableToMusic @[Voiced Chord Pitch] $
@@ -840,12 +901,16 @@ inspectableToMusic @[Voiced Chord Pitch] $
 ]
 ```
 
+And we can repeat at arbitrary intervals:
+
 ```music+haskell
 inspectableToMusic @[Voiced Chord Pitch] $
 
 [ voiceIn 3 $ chord c $ repeating m7
 ]
 ```
+
+### Non-repeating scales/chords
 
 Non-repeating/self-repeating scales (e.g. the overtone series). TODO create by unfold?
 
@@ -1377,7 +1442,13 @@ set parts' (tutti celesta) c
 
 ## Updating several parts at once
 
-TODO updating and merging parts. Or should we write about this in cobination with pitch/dynamic etc (as they're all traversal-based).
+An *ensemble type* can be represented as a list of parts. We provide a few pre-defined ones such as string quartet, chamber orchestra, etc. We  can also define a custom ensemble type:
+
+```haskell
+someEnsemble = divide 2 violins ++ [trumpet, clarinet]
+```
+
+We can update several parts at once using the @[arrangeFor] function. This is useful in combination with @[rcat]:
 
 ```music+haskell
 arrangeFor stringOrchestra $ rcat [c',e,g_,c_]
@@ -1395,8 +1466,9 @@ arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
 
 The default value is `Tutti`. In chamber music there is usually no need to override this with `Solo`, as the difference only make sense when you *need* to distinguish the solist.
 
+<!--
 TODO soloists *from* the orchestra/altri
-
+-->
 
 ## Extracting parts
 
@@ -1413,13 +1485,7 @@ extractPart violas fullScore
       arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
 ```
 
-## Ensembles
 
-TODO standard/custom
-
-```haskell
-someEnsemble = divide 2 violins ++ [trumpet, clarinet]
-```
 
 ## Transposing instruments
 
