@@ -25,10 +25,8 @@
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints
   -fno-warn-unused-local-binds
-  -fno-warn-noncanonical-monoid-instances
   #-}
 
--- TODO fix noncanonical-monoid
 -- TODO reenable local-binds after removing tests
 
 -- For MonadLog
@@ -725,82 +723,79 @@ makeLenses ''WorkInfo
 
 makeLenses ''Work
 
+instance Semigroup BracketType where
+  x <> y
+    | x == mempty = y
+    | otherwise = x
 instance Monoid BracketType where
 
   mempty = NoBracket
 
-  mappend x y
-    | x == mempty = y
-    | otherwise = x
 
-instance Semigroup BracketType where
-  (<>) = mappend
 
 instance Semigroup SystemBar where
-  (<>) = mappend
+  (SystemBar a1 a2 a3 a4 a5) <> (SystemBar b1 b2 b3 b4 b5) =
+    SystemBar (a1 <> b1) (a2 <> b2) (a3 <> b3) (a4 <> b4) (a5 <> b5)
 
 instance Monoid SystemBar where
 
   mempty = SystemBar mempty mempty mempty mempty mempty
 
-  (SystemBar a1 a2 a3 a4 a5) `mappend` (SystemBar b1 b2 b3 b4 b5) =
-    SystemBar (a1 <> b1) (a2 <> b2) (a3 <> b3) (a4 <> b4) (a5 <> b5)
 
 instance Semigroup StaffInfo where
-  (<>) = mempty
+    x <> y
+      | x == mempty = y
+      | otherwise = x
 
 instance Monoid StaffInfo where
 
   mempty = StaffInfo mempty mempty mempty Music.Pitch.trebleClef mempty mempty mempty
 
-  mappend x y
-    | x == mempty = y
-    | otherwise = x
 
+instance Semigroup ArpeggioNotation where
+    x <> y
+      | x == mempty = y
+      | otherwise = x
 instance Monoid ArpeggioNotation where
 
   mempty = NoArpeggio
 
-  mappend x y
-    | x == mempty = y
-    | otherwise = x
 
-instance Semigroup ArpeggioNotation where
-  (<>) = mappend
 
+instance Semigroup TremoloNotation where
+    x <> y
+      | x == mempty = y
+      | otherwise = x
 instance Monoid TremoloNotation where
 
   mempty = NoTremolo
 
-  mappend x y
-    | x == mempty = y
-    | otherwise = x
 
-instance Semigroup TremoloNotation where
-  (<>) = mappend
 
+instance Semigroup BreathNotation where
+    x <> y
+      | x == mempty = y
+      | otherwise = x
 instance Monoid BreathNotation where
 
   mempty = NoBreath
 
-  mappend x y
-    | x == mempty = y
-    | otherwise = x
 
-instance Semigroup BreathNotation where
-  (<>) = mappend
 
 instance Semigroup Fermata where
-  (<>) = mappend
+    x <> y
+      | x == mempty = y
+      | otherwise = x
 
 instance Monoid Fermata where
 
   mempty = NoFermata
 
-  mappend x y
-    | x == mempty = y
-    | otherwise = x
 
+instance Semigroup Chord where
+    x <> y
+      | x == mempty = y
+      | otherwise = x
 instance Monoid Chord where
 
   mempty =
@@ -818,64 +813,54 @@ instance Monoid Chord where
       mempty
       mempty
 
-  mappend x y
-    | x == mempty = y
-    | otherwise = x
 
-instance Semigroup Chord where
-  (<>) = mappend
 
-instance IsPitch Chord where
-  fromPitch p = pitches .~ [p] $ mempty
+instance Semigroup Bar where
+    (Bar a1 a2) <> (Bar b1 b2) = Bar (a1 <> b1) (a2 <> b2)
 
 instance Monoid Bar where
 
   mempty = Bar mempty mempty
 
-  mappend (Bar a1 a2) (Bar b1 b2) = Bar (a1 <> b1) (a2 <> b2)
 
-instance Semigroup Bar where
-  (<>) = mempty
 
+instance Semigroup Staff where
+     (Staff a1 a2) <> (Staff b1 b2) = Staff (a1 <> b1) (a2 <> b2)
 instance Monoid Staff where
 
   mempty = Staff mempty mempty
 
-  mappend (Staff a1 a2) (Staff b1 b2) = Staff (a1 <> b1) (a2 <> b2)
 
-instance Semigroup Staff where
-  (<>) = mappend
 
+instance Semigroup MovementInfo where
+  x <> y
+    | x == mempty = y
+    | otherwise = x
 instance Monoid MovementInfo where
 
   mempty = MovementInfo mempty mempty mempty
 
-  mappend x y
-    | x == mempty = y
-    | otherwise = x
+instance Semigroup Work where
+    (Work a1 a2) <> (Work b1 b2) = Work (a1 <> b1) (a2 <> b2)
 
 instance Monoid Work where
 
   mempty = Work mempty mempty
 
-  mappend (Work a1 a2) (Work b1 b2) = Work (a1 <> b1) (a2 <> b2)
 
-instance Semigroup Work where
-  (<>) = mempty
 
 instance Semigroup WorkInfo where
-  (<>) = mappend
+  x <> y
+    | x == mempty = y
+    | otherwise = x
 
 instance Monoid WorkInfo where
 
   mempty = WorkInfo mempty mempty mempty
 
-  mappend x y
-    | x == mempty = y
-    | otherwise = x
 
-instance Semigroup MovementInfo where
-  (<>) = mappend
+instance IsPitch Chord where
+  fromPitch p = pitches .~ [p] $ mempty
 
 systemStaffTakeBars :: Int -> SystemStaff -> SystemStaff
 systemStaffTakeBars = take
