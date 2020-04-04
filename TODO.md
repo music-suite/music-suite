@@ -49,6 +49,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - API improvements:
   - Move varticulation, addArticulation out of public API
+  - Move vdynamic, addDynCon out of public API
   - Put combinators (not classes) on top of the following modules
     - Music.Score.Articulation
     - Music.Score.Dynamics
