@@ -159,20 +159,22 @@ module Music.Score.Export.StandardNotation
     IOExportM,
     runIOExportM,
 
-    -- * Asp
-    StandardNotationExportM,
+    -- * Standard notation
     Asp1,
     Asp1a,
     Asp,
-    fromAspects,
+    StandardNotationExportM,
+    toStandardNotation,
 
-    -- * Backends
+    -- * Lilypond backend
     LilypondLayout (..),
     LilypondOptions (..),
     defaultLilypondLayout,
     defaultLilypondOptions,
     LilypondExportM,
     toLy,
+
+    -- * MusicXML backend
     MusicXmlExportM,
     toXml,
     MidiExportM,
@@ -1909,8 +1911,8 @@ scoreToMap = Data.Map.fromList . fmap (first (view onsetAndOffset) . (view (from
 mapToScore :: Map (Time, Time) a -> Score a
 mapToScore = view score . fmap (view event . first (view $ from onsetAndOffset)) . Data.Map.toList
 
-fromAspects :: (StandardNotationExportM m) => Asp -> m Work
-fromAspects sc' = do
+toStandardNotation :: (StandardNotationExportM m) => Asp -> m Work
+toStandardNotation sc' = do
   say "Simplifying pitches"
   -- Simplify pitch spelling
   let postPitchSimplification = Music.Score.Pitch.simplifyPitches normScore

@@ -61,7 +61,7 @@ import Music.Dynamics
 import Music.Parts
 import Music.Pitch
 import Music.Score hiding (Articulation, Clef (..), Fifths, Interval, Part, Pitch, view)
-import Music.Score.Export.StandardNotation (Asp1, Asp1a, LilypondLayout (..), LilypondOptions (..), defaultLilypondOptions, fromAspects, runIOExportM, toLy, toMidi, toXml)
+import Music.Score.Export.StandardNotation (Asp1, Asp1a, LilypondLayout (..), LilypondOptions (..), defaultLilypondOptions, toStandardNotation, runIOExportM, toLy, toMidi, toXml)
 import qualified Music.Score.Part
 import qualified System.Environment
 import qualified Text.Pretty
@@ -108,13 +108,13 @@ defaultMain music = do
         midi <- runIOExportM $ toMidi music
         Codec.Midi.exportFile path midi
       ToLy opts path -> do
-        work <- runIOExportM $ fromAspects music
+        work <- runIOExportM $ toStandardNotation music
         (h, ly) <- runIOExportM $ toLy opts work
         let ly' = h ++ show (Text.Pretty.pretty ly)
         -- TODO use ByteString/builders, not String?
         writeFile path ly'
       ToXml path -> do
-        work <- runIOExportM $ fromAspects music
+        work <- runIOExportM $ toStandardNotation music
         work' <- runIOExportM $ toXml work
         -- TODO use ByteString/builders, not String?
         writeFile path $ Data.Music.MusicXml.showXml work'
