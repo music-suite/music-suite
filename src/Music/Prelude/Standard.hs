@@ -61,7 +61,7 @@ import Music.Dynamics
 import Music.Parts
 import Music.Pitch
 import Music.Score hiding (Articulation, Clef (..), Fifths, Interval, Part, Pitch, view)
-import Music.Score.Export.StandardNotation (Asp1, Asp1a, LilypondLayout (..), LilypondOptions (..), defaultLilypondOptions, toStandardNotation, runIOExportM, toLy, toMidi, toXml)
+import Music.Score.Export.StandardNotation (Asp1, Asp1a, LilypondLayout (..), LilypondOptions (..), defaultLilypondOptions, runIOExportM, toLy, toMidi, toStandardNotation, toXml)
 import qualified Music.Score.Part
 import qualified System.Environment
 import qualified Text.Pretty
