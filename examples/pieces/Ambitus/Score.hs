@@ -23,7 +23,7 @@ texture1, texture2, texture3 :: Music
 {-|
 A 'PitchSpace' is a possibly infinite, ordered set of pitches.
 -}
-newtype PitchSpace = PitchSpace { getPitchSpace :: Ambitus Pitch -> [Pitch] }
+newtype PitchSpace = PitchSpace { getPitchSpace :: Ambitus Interval Pitch -> [Pitch] }
   deriving ()
 
 
@@ -53,13 +53,13 @@ harmonicSpace downw origin upw = PitchSpace $ go
         -- Filter to original ambitus
         res = mfilter (inAmbitus amb) (d<>[origin]<>u)
 
-lookupSpace :: Ambitus Pitch -> PitchSpace -> [Pitch]
+lookupSpace :: Ambitus Interval Pitch -> PitchSpace -> [Pitch]
 lookupSpace = flip getPitchSpace
 
 inSpace :: Pitch -> PitchSpace -> Bool
 inSpace p s = not $ null $ lookupSpace ((p,p)^.ambitus) s
 
-widenAmbitus :: (Ord a) => a -> Ambitus a -> Ambitus a
+widenAmbitus :: Pitch -> Ambitus Interval Pitch -> Ambitus Interval Pitch
 widenAmbitus p = under ambitus (\(m,n) -> (m `min` p, n `max` p))
 
 {-
@@ -124,7 +124,7 @@ space2 = symmetricPitchSpace d [m3,_M2,m3,_M3]
 For each ambitus, look up up a harmonic pattern, and get the current pitches.
 Always return 12 pitches, repeating if necessary.
 -}
-fillAmbitusFromSpace :: Reactive (Ambitus Pitch) -> Behavior PitchSpace -> Reactive [Pitch]
+fillAmbitusFromSpace :: Reactive (Ambitus Interval Pitch) -> Behavior PitchSpace -> Reactive [Pitch]
 fillAmbitusFromSpace ambitusR spaceB = applyB ambitusR [] (fmap getPitchSpace spaceB)
 
 {-
