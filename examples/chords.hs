@@ -2,8 +2,8 @@
 import Music.Prelude
 import Control.Lens (set)
 
--- kStrum = 0.005
-kStrum = 0
+kStrum = 0.05
+-- kStrum = 0
 
 main = defaultMain music
 
@@ -63,25 +63,32 @@ melody :: Music
 melody = octavesDown 1 $ set parts' (tutti horn) $
   (pseq [c',g'|*2,e',d',c'|*2,b,c'|*2,d'|*2,e',d',c'|*2]|/4)
   |>
-  (pseq [c',a'|*2,e',d',c'|*2,b,c'|*2,d'|*2,eb',d',c']|/4)
+  (pseq [c',a'|*2,e',d',c'|*2,b,c'|*2,d'|*2,eb',d',c'|*2]|/4)
+  |>
+  (pseq [c',g'|*2,e',d',c'|*2,b,c'|*2,d'|*2,e'|*2,f'|*2]|/4)
+  |>
+  (pseq [d'|*2,g'|*2,c''|*2,f'|*2,d',g'|*7]|/4)
 
 
 music :: Music
-music = pseq [music1, music2]
+music = pseq [music2]
 
-music1 = mempty
-  -- <> (level mf $ set parts' guitar $ melody)
-  <> level _p strings
-  <> level mp counterRh
-  <> gtr
+-- music1 = mempty
+--   -- <> (level mf $ set parts' guitar $ melody)
+--   <> level _p strings
+--   <> level mp counterRh
+--   -- <> gtr
 music2 = mempty
   <> (level mf $ melody)
   <> level _p strings
-  <> level _p counterRh
+  <> times 2 (level _p counterRh)
   <> gtr
 
+[_,piano2] = divide 2 $ tutti piano
+
+-- FIXME doesn't show up in Lilypond if the instrument is "guitar"
 gtr :: Music
-gtr = set parts' guitar $
+gtr = set parts' piano2{-guitar-} $
   (ppar $ take 4 $ zipWith delay [0,1..10] $ repeat $ strum [c_,e_,g_,c,e,g])
   |>
   (ppar $ take 4 $ zipWith delay [0,1..10] $ repeat $ strum [c_,fs_,a_,c,fs,a])
