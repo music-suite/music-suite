@@ -1678,7 +1678,7 @@ allocateParts ks' = do
       pure mempty
     else pure $ Data.Map.fromList (zipWith
       (\p ch -> (p, (fromMaybe 0 $ Music.Parts.toMidiProgram $ view Music.Parts.instrument p, ch)))
-        ks ([0..9] ++ [11..15]))
+        ks ([0..8] ++ [10..15]))
 
 getMidiProgram :: PartAllocation -> Part -> Midi.Preset
 getMidiProgram x p = case Data.Map.lookup p x of
