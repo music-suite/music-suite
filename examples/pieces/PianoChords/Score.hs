@@ -28,8 +28,12 @@ TODO
     Ambitus
 
 -}
+
 music =
-  title "Study 1" $ composer "Hans Hoeglund 2014" $ _8vb rh </> set parts' cellos (c|/8)
+  title "Study 1" $ composer "Hans Hoeglund 2014" $ _8vb (set parts'
+    -- harp
+    mempty
+    rh)
   where
     rh = pseqPaused (fmap (\x -> fromInteger $ floor $ x*7) rands) $ compress 4 $ map (\(a,b,c) -> realize a b c) material
 
@@ -109,7 +113,7 @@ pitchClassMaterial = [
   pitchClassSet [c,e,gs,fs,gs]
   ]
 
-registerMaterial :: [Ambitus Pitch]
+registerMaterial :: [Ambitus Interval Pitch]
 registerMaterial = [
   (c,c')^.ambitus,
   (c,c')^.ambitus,
@@ -310,7 +314,7 @@ permMaterial = [
   Perm4 (-1)
   ]
 
-material :: [(PitchClassSet, Ambitus Pitch, Permutation)]
+material :: [(PitchClassSet, Ambitus Interval Pitch, Permutation)]
 material = zip3 pitchClassMaterial registerMaterial permMaterial
 
 {-
@@ -322,7 +326,7 @@ showMaterial m = pcm' </> rm' </> pm'
     pm'  = pseq $ fmap showPermutation pm
 -}
 
-realize :: PitchClassSet -> Ambitus Pitch -> Permutation -> Score StandardNote
+realize :: PitchClassSet -> Ambitus Interval Pitch -> Permutation -> Score StandardNote
 realize pcs reg perm = music
   where
     pitches = Set.toList $ Set.map pitchClassToPitch pcs :: [Pitch]
@@ -344,12 +348,12 @@ realize pcs reg perm = music
 --    * If given to many pitches, put extremes in the middle
 --    * If given to few pitches, skip the extra octaves
 
-spreadPitchesIntoAmbitus :: Ambitus Pitch -> [Pitch] -> [Pitch]
+spreadPitchesIntoAmbitus :: Ambitus Interval Pitch -> [Pitch] -> [Pitch]
 spreadPitchesIntoAmbitus amb pitches = zipWith {-octavesUp-}fifthsUp
   (ambitusOctaveList amb (fromIntegral $ length pitches))
   pitches
   where
-    ambitusOctaveList :: Ambitus Pitch -> Integer -> [Integer] -- 0 for same, -1 for one down etc
+    ambitusOctaveList :: Ambitus Interval Pitch -> Integer -> [Integer] -- 0 for same, -1 for one down etc
     -- ambitusOctaveList amb n = fmap fromIntegral $ (repeat lowestOctave) -- TODO
     ambitusOctaveList amb n = fmap (+ lowestOctave) $ fromNumPitchesAndOctaves n numOctaves
       where
