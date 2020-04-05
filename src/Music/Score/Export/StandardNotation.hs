@@ -1653,7 +1653,7 @@ toMidi = fmap (finalizeExport . fmap exportNote) . exportScore . mcatMaybes
 
 exportScore :: MidiExportM m => Score Asp1a -> m (MidiScore Asp1a)
 exportScore xs = do
-  pa :: PartAllocation <- allocateParts $ Data.Set.fromList $ fmap fst ys
+  pa :: PartAllocation <- allocateParts $ Data.Set.fromList $ fmap (view Music.Parts.instrument . fst) ys
   pure $ MidiScore
     $ map (\(p, sc) -> ((getMidiChannel pa p, getMidiProgram pa p), sc))
     ys
@@ -1667,26 +1667,26 @@ exportScore xs = do
     fixTempo :: Score Asp1a -> Score Asp1a
     fixTempo = stretch (Music.Score.Meta.Tempo.tempoToDuration (Music.Score.Meta.metaAtStart xs))
 
-type PartAllocation = Map Part (Midi.Preset, Midi.Channel)
+type PartAllocation = Map Instrument (Midi.Preset, Midi.Channel)
 
 -- TODO if >15 sounds, allocate, otherwise set everything to piano and log error
-allocateParts :: MidiExportM m => Data.Set.Set Part -> m PartAllocation
+allocateParts :: MidiExportM m => Data.Set.Set Instrument -> m PartAllocation
 allocateParts ks' = do
   let ks = toList ks'
   if length ks > 15 then do
       say "Warning: Too many sounds: could not allocate more than 15 MIDI channels"
       pure mempty
     else pure $ Data.Map.fromList (zipWith
-      (\p ch -> (p, (fromMaybe 0 $ Music.Parts.toMidiProgram $ view Music.Parts.instrument p, ch)))
+      (\p ch -> (p, (fromMaybe 0 $ Music.Parts.toMidiProgram p, ch)))
         ks ([0..8] ++ [10..15]))
 
 getMidiProgram :: PartAllocation -> Part -> Midi.Preset
-getMidiProgram x p = case Data.Map.lookup p x of
+getMidiProgram x p = case Data.Map.lookup (view Music.Parts.instrument p) x of
   Nothing -> 0
   Just (pr, _ch) -> pr
 
 getMidiChannel :: PartAllocation -> Part -> Midi.Channel
-getMidiChannel x p = case Data.Map.lookup p x of
+getMidiChannel x p = case Data.Map.lookup (view Music.Parts.instrument p) x of
   Nothing -> 0
   Just (_pr, ch) -> ch
 
