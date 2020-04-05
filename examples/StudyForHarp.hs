@@ -31,7 +31,7 @@ TODO
 
 music =
   title "Study 1" $ composer "Hans Hoeglund 2014" $ _8vb (set parts'
-    -- harp
+    -- harp FIXME does't render in Lilypond if 'harp' is set (MIDI works)
     mempty
     rh)
   where
