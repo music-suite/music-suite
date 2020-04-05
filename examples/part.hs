@@ -64,11 +64,11 @@ strings = ppar [
 
 -- music :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
 music :: Music
-music = meta $ stretch (3/2) $ bell <> delay 6 strings
+music = filterWithTime (\t _ _ -> t < 50) $ meta $ stretch (3/2) $ bell <> delay 6 strings
     where
         meta = id
           . title "Cantus in Memoriam Benjamin Britten"
-          . composer "Arvo" -- TODO why does Unicode break? Pärt"
+          . composer "Arvo Part"
           . timeSignature (6/4)
           . tempo (metronome (1/4) 120)
 
