@@ -58,7 +58,7 @@ addLeadingD :: Int -> Melody -> Melody
 addLeadingD i = over notes (>>= \n -> [0.5*|n,0.5*|downDiatonic c (fromIntegral i) n])
 
 music :: Music
-music = set parts' bassoons $ fmap fromPitch $
+music = set parts' clarinets $ fmap fromPitch $
   renderAlignedVoice $ aligned 0 0 $
     mconcat
       [ v
@@ -72,6 +72,9 @@ music = set parts' bassoons $ fmap fromPitch $
       -- , addLeadingD 5 v
       , addLeadingD 1 (rev $ addLeadingD (-1) v)
       , addLeadingD 1 (addLeadingD 2 (rev $ addLeadingD (-1) v))
+      , addLeadingD (-2) (addLeadingD (-1) (addLeadingD 1 (rev $ addLeadingD (-3) v)))
+      , addLeadingD (-2) (rev $ addLeadingD (-1) (addLeadingD 1 (addLeadingD (-3) v)))
+      , addLeadingD (-2) (addLeadingD (-1) (addLeadingD 1 (addLeadingD (-3) $ rev v)))
       ]
   -- (\x -> x <> upDiatonic c 2 x) $ downDiatonic c 2 $ renderAlignedVoice $ aligned 0 0 $transposeSingleNote 1 m3 $ addLeadingD (-1) v
   where
