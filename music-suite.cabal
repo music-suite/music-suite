@@ -307,12 +307,12 @@ executable "music-suite-examples-analysis"
     hs-source-dirs:     examples
     main-is:            analysis.hs
 
-executable "music-suite-examples-analysis_durations"
+executable "music-suite-examples-analysis-durations"
     build-depends:      base,
                         lens,
                         music-suite
     hs-source-dirs:     examples
-    main-is:            analysis_durations.hs
+    main-is:            AnalysisDurations.hs
 
 executable "music-suite-examples-annotations"
     build-depends:      base,
