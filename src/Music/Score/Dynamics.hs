@@ -50,6 +50,7 @@ module Music.Score.Dynamics
   )
 where
 
+import Data.Kind
 import BasePrelude hiding ((<>), Dynamic, first, second)
 import Control.Comonad
 import Control.Lens hiding ((&), Level, transform)
@@ -74,11 +75,11 @@ import Music.Time.Internal.Transform
 
 -- |
 -- Dynamics type.
-type family Dynamic (s :: *) :: *
+type family Dynamic (s :: Type) :: Type
 
 -- |
 -- Dynamic type.
-type family SetDynamic (b :: *) (s :: *) :: *
+type family SetDynamic (b :: Type) (s :: Type) :: Type
 
 -- |
 -- Class of types that provide a single dynamic.

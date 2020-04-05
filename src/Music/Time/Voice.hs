@@ -92,13 +92,11 @@ import qualified Data.Aeson as JSON
 import Data.AffineSpace
 import Data.Coerce (coerce)
 import qualified Data.Either
-import Data.Foldable (Foldable)
 import qualified Data.Foldable
 import Data.Functor.Context
 import qualified Data.List
 import Data.Maybe
 import Data.String
-import Data.Traversable (Traversable)
 import Data.Typeable (Typeable)
 import GHC.Exts (IsList (..))
 import Music.Dynamics.Literal

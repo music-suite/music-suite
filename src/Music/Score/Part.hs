@@ -49,6 +49,7 @@ module Music.Score.Part
   )
 where
 
+import Data.Kind
 import BasePrelude hiding ((<>), Dynamic, first, second)
 import Control.Comonad
 import Control.Lens hiding ((&), parts, transform)
@@ -72,11 +73,11 @@ import Music.Time.Voice
 
 -- |
 -- Parts type.
-type family Part (s :: *) :: * -- Part s   = a
+type family Part (s :: Type) :: Type -- Part s   = a
 
 -- |
 -- Part type.
-type family SetPart (b :: *) (s :: *) :: * -- Part b s = t
+type family SetPart (b :: Type) (s :: Type) :: Type -- Part b s = t
 
 -- |
 -- Class of types that provide a single part.

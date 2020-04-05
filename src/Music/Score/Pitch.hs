@@ -81,6 +81,7 @@ module Music.Score.Pitch
   )
 where
 
+import Data.Kind
 import BasePrelude hiding ((<>))
 import Control.Lens hiding (below, transform)
 import Data.AffineSpace
@@ -127,7 +128,7 @@ import Music.Time.Voice
 -- For containers this is a morhism
 --
 -- > PitchOf (Voice Pitch) = PitchOf Pitch = Pitch
-type family Pitch (s :: *) :: *
+type family Pitch (s :: Type) :: Type
 
 -- |
 -- A type function to change the pitch type associate with a given type, where the first argument is the new pitch type,
@@ -140,7 +141,7 @@ type family Pitch (s :: *) :: *
 -- For containers this is a morhism
 --
 -- > SetPitch Hertz (Voice Pitch) = Voice Hertz
-type family SetPitch (b :: *) (s :: *) :: *
+type family SetPitch (b :: Type) (s :: Type) :: Type
 
 -- | Types which has a single pitch (i.e notes, events, the pitches themselves).
 class HasPitches s t => HasPitch s t where

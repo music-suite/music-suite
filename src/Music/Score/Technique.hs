@@ -64,6 +64,7 @@ module Music.Score.Technique
   )
 where
 
+import Data.Kind
 import BasePrelude
 import Control.Comonad
 import Control.Lens hiding ((&), Level, transform)
@@ -91,11 +92,11 @@ import Music.Time.Internal.Transform
 
 -- |
 -- Techniques type.
-type family Technique (s :: *) :: *
+type family Technique (s :: Type) :: Type
 
 -- |
 -- Technique type.
-type family SetTechnique (b :: *) (s :: *) :: *
+type family SetTechnique (b :: Type) (s :: Type) :: Type
 
 -- |
 -- Class of types that provide a single technique.

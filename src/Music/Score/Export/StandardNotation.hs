@@ -918,7 +918,7 @@ runPureExportMNoLog = fmap fst . runExcept . runWriterT . runE
 --
 -- Logs to standard output.
 newtype IOExportM a = IOExportM {runIOExportM_ :: IO a}
-  deriving (Functor, Applicative, Monad, Alternative, MonadPlus, MonadIO)
+  deriving (Functor, Applicative, Monad, MonadFail, Alternative, MonadPlus, MonadIO)
 
 -- TODO add reader for indentation level etc
 
@@ -995,6 +995,7 @@ toLy opts work = do
             )
           ]
   let headerData = case layout opts of
+        -- FIXME add to cabal extra-files
         LilypondBigScore -> $(embedFile "data/ly_big_score.ly")
         LilypondScore -> $(embedFile "data/ly_score.ly")
         LilypondInline -> $(embedFile "data/ly_inline.ly")

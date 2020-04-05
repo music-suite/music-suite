@@ -57,6 +57,7 @@ module Music.Score.Articulation
   )
 where
 
+import Data.Kind
 import BasePrelude hiding ((<>), Dynamic, first, second)
 import Control.Comonad
 import Control.Lens hiding ((&), below, transform)
@@ -79,11 +80,11 @@ import Music.Time.Internal.Transform
 
 -- |
 -- Articulations type.
-type family Articulation (s :: *) :: *
+type family Articulation (s :: Type) :: Type
 
 -- |
 -- Articulation type.
-type family SetArticulation (b :: *) (s :: *) :: *
+type family SetArticulation (b :: Type) (s :: Type) :: Type
 
 type ArticulationLensLaws' s t a b =
   ( Articulation (SetArticulation a s) ~ a,
@@ -263,9 +264,9 @@ instance (HasArticulations a b) => HasArticulations (SlideT a) (SlideT b) where
 instance (HasArticulation a b) => HasArticulation (SlideT a) (SlideT b) where
   articulation = _Wrapped . articulation
 
-type family Accentuation (a :: *) :: *
+type family Accentuation (a :: Type) :: Type
 
-type family Separation (a :: *) :: *
+type family Separation (a :: Type) :: Type
 
 type instance Accentuation () = ()
 

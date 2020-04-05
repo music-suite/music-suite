@@ -79,7 +79,7 @@ type AttributeClass a = (Typeable a, Monoid a, Semigroup a)
 type TAttributeClass a = (Transformable a, AttributeClass a)
 
 -- | An existential wrapper type to hold attributes.
-data Attribute :: * where
+data Attribute where
   Attribute :: AttributeClass a => a -> Attribute
   TAttribute :: TAttributeClass a => a -> Attribute
 
