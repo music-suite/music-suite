@@ -62,8 +62,15 @@ fs9  = expandInto (2+1/4) fiskeskar (between (2/4) (5/4) fiskeskar)
 fs10 = expandInto (5+1/4) fiskeskar (between (0/4) (3/4) fiskeskar)
 
 music :: Music
-music = -- (error "TODO")
-  rcat $ fmap (fmap $ fmap fromPitch) $ fmap (renderAlignedVoice . aligned 0 0) [ fs1, fs2, fs3, fs7, fs8, fs9, fs10 ]
+music =
+  (silentNight |* (4/3)) |> fiskeskarChorale
+  where
+  silentNight = fmap (fmap fromPitch) $
+    renderAlignedVoice (aligned 0 0 silent)
+    <>
+    renderAlignedVoice (aligned 0 0 silentBass)
+  fiskeskarChorale = rcat $ fmap (fmap $ fmap fromPitch)
+    $ fmap (renderAlignedVoice . aligned 0 0) [ fs1, fs2, fs3, fs4, fs5, fs6, fs7, fs8, fs9, fs10 ]
 
 -- TODO FIXME add?
 -- See $splitSemantics in TODO.md
