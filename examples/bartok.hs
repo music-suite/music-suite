@@ -36,6 +36,4 @@ music = let
 crescX :: Dynamics -> Dynamics -> Music -> Music
 crescX a b = over phrases' (cresc a b)
 
--- TODO this makes Lilypond segfault, see TODO.md
-
 main = defaultMain music

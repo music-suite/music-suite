@@ -338,7 +338,8 @@ Consider switching to a decentralized issue tracker such as:
 - fromMidiProgram/fromMusicXmlSoundId are unsafe, rename accordingly. Only use these internally (users can use Music.Parts.<instrumentName> instead).
   - Could potentially use a quasiquoter for compile-time checked arbitrary instrument IDs
 
-- [ ] Large scores makes Lilypond segfault
+- [X] Large scores makes Lilypond segfault
+  - Solved by upgrading to Lilypond 2.20
 
 - [ ] Examples should not be Cabal executables
   - Saves the slow linking step when doing Cabal build

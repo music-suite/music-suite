@@ -21,6 +21,5 @@ part2 = pres1 |> pres2
 
 music = level pp $ compress 2 $ part1 |> toLydian part2
 
--- FIXME Lilypond segfault
 main :: IO ()
 main = defaultMain music

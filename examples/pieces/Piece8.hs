@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Werror #-}
 {-# LANGUAGE TypeFamilies, ScopedTypeVariables, ConstraintKinds, FlexibleContexts, FlexibleInstances, TypeFamilies, DeriveFunctor,
   GeneralizedNewtypeDeriving, ViewPatterns, MultiParamTypeClasses, RankNTypes, ConstraintKinds, StandaloneDeriving,
   DeriveTraversable, DeriveDataTypeable, TupleSections #-}
@@ -61,12 +62,16 @@ fs9  = expandInto (2+1/4) fiskeskar (between (2/4) (5/4) fiskeskar)
 fs10 = expandInto (5+1/4) fiskeskar (between (0/4) (3/4) fiskeskar)
 
 music :: Music
-music = (error "TODO")
-  [ fs1, fs2, fs3, fs7, fs8, fs9, fs10 ]
+music = -- (error "TODO")
+  rcat $ fmap (fmap $ fmap fromPitch) $ fmap (renderAlignedVoice . aligned 0 0) [ fs1, fs2, fs3, fs7, fs8, fs9, fs10 ]
 
 -- TODO FIXME add?
 -- See $splitSemantics in TODO.md
-instance HasDuration a => HasDuration (Maybe a)
+
+-- TODO bad?
+instance HasDuration a => HasDuration (Maybe a) where
+  _duration Nothing = error "No duration"
+  _duration (Just x) = _duration x
 
 {-
 All rather chaotic! Stitch is interesting, but not that intuitive!
@@ -221,11 +226,11 @@ llPitches3 = [c',db',c',db',c',db']
 -- Repeat twice
 ll :: Melody
 ll =  mconcat $ fmap (\(a,b,c) -> mel a b c) [
-  (llRh1, llPat1, llPitches1), --  I smell women / Smell 'em in the air
-  (llRh2, llPat2, llPitches1), --  Think I'll drop my anchor / In that harbor over there
-  (llRh1, llPat1, llPitches2), --  Lovely ladies / Smell 'em through the smoke
-  (llRh2, llPat2, llPitches2), --  Seven months at sea / And now I'm hungry for a poke
-  (llRh1, llPat1, llPitches3)  --  Even stokers need a little stoke!
+  (llRh1, llPat1, llPitches1),
+  (llRh2, llPat2, llPitches1),
+  (llRh1, llPat1, llPitches2),
+  (llRh2, llPat2, llPitches2),
+  (llRh1, llPat1, llPitches3)
   ]
 
 

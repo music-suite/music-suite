@@ -143,7 +143,7 @@ applyRh n ps = zipWith (\p d -> stretch d p) ps (nthRhSeries n)
 -- How to do time?
 -- Just a (bad) sketch
 testTrumpets :: Music
-testTrumpets = filterWithTime (\t _ _ -> 0 <= t && t < 30) $
+testTrumpets = filterWithTime (\t _ _ -> 0 <= t && t < 50) $
   level ff $ rcat $ set parts' trumpets $ fmap (\n -> times n padBar |> fullTrumpetFall n) [1..8]
   where
     padBar :: Music
