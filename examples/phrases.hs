@@ -20,6 +20,8 @@ music = id
   -- Change time signature at bar 15
   $ timeSignatureDuring ((14*3/8) <-> 200) (4/8)
   $ timeSignature (3/8)
+  $ set (parts' . instrument) marimba
+  $ level mp
   -- Use phrase traversal to fuse equal consecutive pitches
   $ over phrases fuse
   $ rcat

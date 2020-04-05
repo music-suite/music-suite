@@ -14,10 +14,10 @@ tremCanon = compress 4 $
     (delay 124 $ set parts' violins1 $ subjs|*1)
         <>
     (delay 120 $ set parts' violins2 $ subjs|*1)
-        <>
-    (delay 4 $ set parts' violas $ subjs|*2)
-        <>
-    (delay 0 $ set parts' cellos  $ subjs|*2)
+    --     <>
+    -- (delay 4 $ set parts' violas $ subjs|*2)
+    --     <>
+    -- (delay 0 $ set parts' cellos  $ subjs|*2)
     where
         subjs = pseq $ map (\n -> palindrome $ rev $ subj n) [1..40::Int]
         subj n
@@ -53,5 +53,5 @@ music = tremCanon <> mainCanon2
 
 -- FIXME gets stuck, multi-page output?
 main :: IO ()
-main = defaultMain $ filterWithTime (\t _d _x -> 0 <= t && t < 32) music
+main = defaultMain $ filterWithTime (\t _d _x -> 35 <= t && t < 65) music
 
