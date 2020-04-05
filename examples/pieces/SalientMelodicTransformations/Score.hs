@@ -78,6 +78,6 @@ music = set parts' clarinets $ fmap fromPitch $
       ]
   -- (\x -> x <> upDiatonic c 2 x) $ downDiatonic c 2 $ renderAlignedVoice $ aligned 0 0 $transposeSingleNote 1 m3 $ addLeadingD (-1) v
   where
-    v = [c,d,g]^.voice
+    v = [c,d,g|*2]^.voice
 
 main = defaultMain music
