@@ -143,7 +143,8 @@ applyRh n ps = zipWith (\p d -> stretch d p) ps (nthRhSeries n)
 -- How to do time?
 -- Just a (bad) sketch
 testTrumpets :: Music
-testTrumpets = level ff $ rcat $ set parts' trumpets $ fmap (\n -> times n padBar |> fullTrumpetFall n) [1..8]
+testTrumpets = filterWithTime (\t _ _ -> 0 <= t && t < 30) $
+  level ff $ rcat $ set parts' trumpets $ fmap (\n -> times n padBar |> fullTrumpetFall n) [1..8]
   where
     padBar :: Music
     padBar          = colorBlue $ c'
@@ -157,7 +158,9 @@ testTrumpets = level ff $ rcat $ set parts' trumpets $ fmap (\n -> times n padBa
 -- Break something into notes of the given duration
 -- (x^duration)*n must be a whole number or you will get bad results
 breakInto :: (Monoid s, Transformable s, HasPosition s, Semigroup s) => Duration -> s -> s
-breakInto n x = undefined -- stretchTo (x^.duration) $ times (floor $ n * x^.duration) x
+breakInto n x = case _era x of
+  Nothing -> x
+  Just e -> stretchTo (_duration e) $ times (floor $ n * _duration e) x
 
 
 {-
