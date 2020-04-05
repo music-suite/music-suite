@@ -405,6 +405,7 @@ executable "music-suite-examples-hello"
 executable "music-suite-examples-study-for-harp"
     build-depends:      base,
                         lens,
+                        containers,
                         music-suite
     hs-source-dirs:     examples
     main-is:            StudyForHarp.hs
