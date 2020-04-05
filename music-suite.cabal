@@ -484,13 +484,6 @@ executable "music-suite-examples-piece8"
     hs-source-dirs:     examples/pieces
     main-is:            Piece8.hs
 
--- executable "music-suite-examples-ambitus"
---     build-depends:      base,
---                         lens,
---                         music-suite
---     hs-source-dirs:     examples/pieces/Ambitus
---     main-is:            Score.hs
-
 executable "music-suite-examples-brass-large-ensemble"
     build-depends:      base,
                         lens,
