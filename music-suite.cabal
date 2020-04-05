@@ -402,12 +402,19 @@ executable "music-suite-examples-hello"
     hs-source-dirs:     examples
     main-is:            hello.hs
 
-executable "music-suite-examples-time_signatures"
+executable "music-suite-examples-study-for-harp"
     build-depends:      base,
                         lens,
                         music-suite
     hs-source-dirs:     examples
-    main-is:            time_signatures.hs
+    main-is:            StudyForHarp.hs
+
+executable "music-suite-examples-time-signatures"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            TimeSignatures.hs
 
 executable "music-suite-examples-trio"
     build-depends:      base,
