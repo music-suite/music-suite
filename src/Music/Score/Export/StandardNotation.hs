@@ -961,8 +961,12 @@ type LilypondExportM m = (MonadLog String m, MonadError String m)
 
 data LilypondLayout
   = LilypondInline
+    -- ^ Render all music on a single page, without titles (e.g. for inline examples
+    -- in the documentation).
   | LilypondScore
+    -- ^ Render normally.
   | LilypondBigScore
+    -- ^ Render all music on a single page, with titles.
   deriving (Eq, Show)
 
 defaultLilypondLayout :: LilypondLayout
