@@ -51,15 +51,18 @@ b1 =
 
 
 -- sudden drama, quick rise
+--
 -- TODO make chord fall on downbeat (use Aligned)
+--
+-- TODO instead of chromatic rising scale use some (still dissonant/non-diatonic) subset
 c1 :: Music
 c1
-  = (compress 24 $
+  = (legato $ accentLast $ compress 24 $
     set parts' flutes $ pseq $ fmap fromPitch $
     enumChromaticFromTo c' g'')
     |>
     (level ff $
       -- TODO orchestrate with brass/pno/strings?
       -- add repetition patterns (just restating chord notes, a la "Varseblivning")
-      ppar [gs'',cs'',b,a]
+      (accent $ ppar [gs'',cs'',b,a])
       )
