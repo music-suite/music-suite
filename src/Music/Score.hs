@@ -40,7 +40,7 @@ where
 
 import Control.Applicative
 import Control.Lens (from, toListOf, view)
-import Control.Lens.Operators hiding ((<.>), (<|), (|>))
+import Control.Lens.Operators ((.~), (%~), (^.), (^?), (^?!))
 import Control.Monad hiding (mapM)
 import Control.Monad.Plus
 import Data.AffineSpace

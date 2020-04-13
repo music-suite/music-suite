@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Text.Transf
   ( -- * Basic types

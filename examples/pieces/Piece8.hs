@@ -207,7 +207,7 @@ I.e. it becomes possible to cut out notes.
 melodicAmbitus :: (HasPitch' a, Music.Score.Pitch.Pitch a ~ Pitch) => Voice a -> Ambitus Interval Pitch
 melodicAmbitus ys =
   let xs = fmap (^.pitch) ys in case (headV xs, lastV xs) of
-  (Just a, Just b) -> (a `min` b, a `max` b)^.ambitus
+  (Just a, Just b) -> Ambitus (a `min` b) (a `max` b)
   _                -> error "melodicAmbitus: Empty voice"
 
 
@@ -266,36 +266,7 @@ stitchItself v = stitch v (stitchItself v)
 
 
 
-{-
-  Note: stitch should really have the constraint (HasPitch' a, Transposable a) and be implemented using ^.pitch instead of ^?!pitches
-  Not practical as long as [] is in StandardNote!
--}
--- Join two voices together so that one note overlaps. The second voice is transposed to achieve this.
--- Duration is taken from the first voice.
-stitch :: (HasPitches' a, Transposable a) => Voice a -> Voice a -> Voice a
-stitch = stitchWith (\a b -> [a]^.voice)
-
--- Join two voices together so that one note overlaps. The second voice is transposed to achieve this.
--- Duration is taken from the second voice.
-stitchLast :: (HasPitches' a, Transposable a) => Voice a -> Voice a -> Voice a
-stitchLast = stitchWith (\a b -> [b]^.voice)
-
 main = defaultMain music
-
-stitchWith :: forall a . (HasPitches' a, Transposable a) => (Note a -> Note a -> Voice a) -> Voice a -> Voice a -> Voice a
-stitchWith f a b
-  | nullOf notes a = b
-  | nullOf notes b = a
-  -- | otherwise      = a <> up diff b
-  | otherwise      = initV a <> f (lastV a) (headV (up diff b)) <> tailV (up diff b)
-  where
-    headV = (^?!notes._head)
-    lastV = (^?!notes._last)
-    initV = over notes init
-    tailV = over notes tail
-    lastPitch a = lastV a^?!pitches
-    headPitch b = headV b^?!pitches
-    diff = (lastPitch a .-. headPitch b)
 
 
 type VS a = [Placed (Voice a)]

@@ -161,13 +161,13 @@ postOffset = position 1.5
 
 -- |
 -- Move a value forward in time.
-startAt :: (Transformable a, HasPosition1 a) => Time -> a -> a
-startAt t x = (t .-. x ^. onset) `delay` x
+startAt :: (Transformable a, HasPosition a) => Time -> a -> a
+startAt = placeAt 0
 
 -- |
 -- Move a value forward in time.
-stopAt :: (Transformable a, HasPosition1 a) => Time -> a -> a
-stopAt t x = (t .-. x ^. offset) `delay` x
+stopAt :: (Transformable a, HasPosition a) => Time -> a -> a
+stopAt = placeAt 1
 
 -- |
 -- Align a value to a given position.

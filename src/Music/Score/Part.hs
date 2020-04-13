@@ -49,11 +49,11 @@ module Music.Score.Part
   )
 where
 
-import Data.Kind
 import BasePrelude hiding ((<>), Dynamic, first, second)
 import Control.Comonad
 import Control.Lens hiding ((&), parts, transform)
 import Data.Functor.Couple
+import Data.Kind
 import qualified Data.List as List
 import qualified Data.Maybe
 import Data.Ord (comparing)

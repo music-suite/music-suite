@@ -57,10 +57,18 @@ lookupSpace :: Ambitus Interval Pitch -> PitchSpace -> [Pitch]
 lookupSpace = flip getPitchSpace
 
 inSpace :: Pitch -> PitchSpace -> Bool
-inSpace p s = not $ null $ lookupSpace ((p,p)^.ambitus) s
+inSpace p s = not $ null $ lookupSpace (Ambitus p p) s
 
 widenAmbitus :: Pitch -> Ambitus Interval Pitch -> Ambitus Interval Pitch
 widenAmbitus p = under ambitus (\(m,n) -> (m `min` p, n `max` p))
+
+ambitus ::
+  (AffinePair v p, AffinePair v' p') =>
+  Iso (p, p) (p', p') (Ambitus v p) (Ambitus v' p')
+ambitus = iso f g
+  where
+    f (x, y) = Ambitus x y
+    g (Ambitus x y) = (x, y)
 
 {-
 inAmbitus :: (Ord a, Num a) => Ambitus a -> a -> Bool

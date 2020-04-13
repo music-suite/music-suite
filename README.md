@@ -71,3 +71,17 @@ The output appears in `docs/build`. You can point a HTTP server to this director
 ```
 cabal haddock
 ```
+
+
+# How to upgrade the compiled/Nixpkgs
+
+- Update the commit/URL and hash in `default.nix`
+  - Use `$ nix-prefetch-url --unpack <url>` to obtain the hash (and verify)
+- Enter new Nix shell (may take a while)
+- Comment out `reject-unconstrained-dependencies` in Cabal config
+- Update `index-state` in Cabal config to a recent time
+- Run `cabal freeze`
+- Run `cabal test` to check that compiling/testing works (and fix errors)
+- Restore `reject-unconstrained-dependencies`
+- Commit changes to Nix and Cabal files
+

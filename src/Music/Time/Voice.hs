@@ -33,19 +33,25 @@ module Music.Time.Voice
     midpointsRelative,
     erasRelative,
 
-    -- * Rotation
+    -- * Transformations
+    -- ** Rotation
     rotateDurations,
     rotateValues,
 
-    -- * Fusion
+    -- ** Fusion
     fuse,
     fuseBy,
 
-    -- ** Fuse rests
+    -- *** Fuse rests
     fuseRests,
     coverRests,
 
-    -- * Homophonic/Polyphonic texture
+    {- TODO: Move here from Music.Score.Pitch when we can refer to HasPitches from here
+    -- * Combining voices
+    stitch,
+    stitchLast,
+    stitchWith,
+    -}
 
     -- ** Zips and unzip
     zipVoiceScale,
@@ -56,7 +62,7 @@ module Music.Time.Voice
     zipVoiceWith',
     unzipVoice,
 
-    -- ** Merge
+    -- ** Merging
     sameDurations,
     mergeIfSameDuration,
     mergeIfSameDurationWith,
@@ -730,6 +736,7 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy me
     merge Nothing (Just x) = True
     merge (Just x) (Just y) = False
     hasOnlyRests = all isNothing $ toListOf traverse x -- norm
+
 
 -- | Decorate all notes in a voice with their context, i.e. previous and following value
 -- if present.

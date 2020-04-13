@@ -342,19 +342,19 @@ data SystemBar
   = SystemBar
       {-
       We treat all the following information as global.
-
+      
       This is more restrictive than most classical notations, but greatly
       simplifies representation. In this view, a score is a matrix of bars
       (each belonging to a single staff). Each bar must have a single
       time sig/key sig/rehearsal mark/tempo mark.
-
+      
       ----
       Note: Option First ~ Maybe
-
+      
       Alternatively we could just make these things into Monoids such that
       mempty means "no notation at this point", and remove the "Option First"
       part here.
-
+      
       Actually I'm pretty sure this is the right approach. See also #242
       -}
       { _barNumbers :: Option (First BarNumber),
@@ -397,11 +397,11 @@ data StaffInfo
         _sibeliusFriendlyName :: SibeliusFriendlyName,
         {-
         See also clefChanges
-
+        
         TODO change name of _instrumentDefaultClef
         More accurately, it represents the first clef to be used on the staff
         (and the only one if there are no changes.)
-
+        
         OTOH having clef in the staff at all is redundant, specifying clef
         is optional (along with everything else) in this representation anyway.
         This is arguably wrong, as stanard notation generally requires a clef.
@@ -409,7 +409,7 @@ data StaffInfo
         _instrumentDefaultClef :: Music.Pitch.Clef,
         {-
         I.e. -P5 for horn
-
+        
         Note that this representation indicates *written pitch*, not sounding (as does MusicXML),
         so this value is redundant when rendering a graphical score. OTOH if this representation
         is used to render *sound*, pitches need to be transposed acconrdingly.
@@ -960,13 +960,13 @@ expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
 type LilypondExportM m = (MonadLog String m, MonadError String m)
 
 data LilypondLayout
-  = LilypondInline
-    -- ^ Render all music on a single page, without titles (e.g. for inline examples
+  = -- | Render all music on a single page, without titles (e.g. for inline examples
     -- in the documentation).
-  | LilypondScore
-    -- ^ Render normally.
-  | LilypondBigScore
-    -- ^ Render all music on a single page, with titles.
+    LilypondInline
+  | -- | Render normally.
+    LilypondScore
+  | -- | Render all music on a single page, with titles.
+    LilypondBigScore
   deriving (Eq, Show)
 
 defaultLilypondLayout :: LilypondLayout
@@ -1356,7 +1356,7 @@ movementToPartwiseXml movement = music
             We could also prepend it to other staves, but that is reduntant and makes the
             generated XML file much larger.
       Trying a new approach here by including this in all parts.
-
+    
       ---
       Again, this definition is a sequnce of elements to be prepended to each bar
       (typically divisions and attributes).
@@ -1400,7 +1400,7 @@ movementToPartwiseXml movement = music
     {-
       A matrix similar to the one returned from movementToPartwiseXml, but
       not including information from the system staff.
-
+    
       TODO we use movementAssureSameNumberOfBars
       We should do a sumilar check on the transpose of the bar/staff matrix
       to assure that all /bars/ have the same duration.
@@ -1449,12 +1449,12 @@ movementToPartwiseXml movement = music
            about this, are we always emitting the voice?)
             YES, see setDefaultVoice below?
             How about staff, are we always emitting that?
-
+        
           - TODO how does this interact with the staff-crossing feature?
             (are we always emitting staff?)
           - TODO how does it interact with clefs/other in-measure elements not
             connected to chords?
-
+        
             Lots of meta-stuff here about how a bar is represented, would be nice to write up music-score
             eloquently!
         -}
@@ -1491,7 +1491,7 @@ movementToPartwiseXml movement = music
         renderPitchLayer = renderBarMusic . fmap renderChord . getPitchLayer
         {-
         Render a rest/note/chord.
-
+        
         This returns a series of <note> elements, with appropriate <chord> tags.
         -}
         renderChord :: Chord -> Duration -> MusicXml.Music
@@ -1659,14 +1659,16 @@ toMidi = fmap (finalizeExport . fmap exportNote) . exportScore . mcatMaybes
 exportScore :: MidiExportM m => Score Asp1a -> m (MidiScore Asp1a)
 exportScore xs = do
   pa :: PartAllocation <- allocateParts $ Data.Set.fromList $ fmap (view Music.Parts.instrument . fst) ys
-  pure $ MidiScore
-    $ map (\(p, sc) -> ((getMidiChannel pa p, getMidiProgram pa p), sc))
-    ys
+  pure $ MidiScore $
+    map
+      (\(p, sc) -> ((getMidiChannel pa p, getMidiProgram pa p), sc))
+      ys
   where
     ys :: [(Part, Score Asp1a)]
-    ys = Music.Score.Part.extractPartsWithInfo
-      $ fixTempo
-      $ normalizeScore xs
+    ys =
+      Music.Score.Part.extractPartsWithInfo
+        $ fixTempo
+        $ normalizeScore xs
     -- TODO We actually want to extract *all* tempo changes and transform the score appropriately
     -- For the time being, we assume the whole score has the same tempo
     fixTempo :: Score Asp1a -> Score Asp1a
@@ -1678,12 +1680,18 @@ type PartAllocation = Map Instrument (Midi.Preset, Midi.Channel)
 allocateParts :: MidiExportM m => Data.Set.Set Instrument -> m PartAllocation
 allocateParts ks' = do
   let ks = toList ks'
-  if length ks > 15 then do
+  if length ks > 15
+    then do
       say "Warning: Too many sounds: could not allocate more than 15 MIDI channels"
       pure mempty
-    else pure $ Data.Map.fromList (zipWith
-      (\p ch -> (p, (fromMaybe 0 $ Music.Parts.toMidiProgram p, ch)))
-        ks ([0..8] ++ [10..15]))
+    else
+      pure $
+        Data.Map.fromList
+          ( zipWith
+              (\p ch -> (p, (fromMaybe 0 $ Music.Parts.toMidiProgram p, ch)))
+              ks
+              ([0 .. 8] ++ [10 .. 15])
+          )
 
 getMidiProgram :: PartAllocation -> Part -> Midi.Preset
 getMidiProgram x p = case Data.Map.lookup (view Music.Parts.instrument p) x of
@@ -1716,10 +1724,10 @@ finalizeExport (MidiScore trs) =
     divisions = 1024
     endDelta = 10000
 
-
 -- | Set MIDI channel and program/preset for a given track. This changes the channel
 -- of all given messages and inserts a single ProgramChange at the beginning.
-setProgramChannel :: Midi.Channel ->
+setProgramChannel ::
+  Midi.Channel ->
   Midi.Preset ->
   Midi.Track Midi.Ticks ->
   Midi.Track Midi.Ticks
@@ -2012,12 +2020,12 @@ toStandardNotation sc' = do
           support multi-voice staves as a starting point.
       - Bar splitting (adding ties)
       - Quantization
-
-
-
+  
+  
+  
     TODO layer sepration (which, again, does not actually happen in current code)
     should happen after bars have been split.
-
+  
   -}
   say "Separating voices"
   postVoiceSeparation :: [(Part, List0To4 (MVoice Asp2))] <-

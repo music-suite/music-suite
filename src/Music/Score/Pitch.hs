@@ -2,11 +2,16 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wall
+{-# OPTIONS_GHC -Weverything
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
+  -fno-warn-missing-local-signatures
+  -fno-warn-unsafe
+  -fno-warn-unused-type-patterns
+  -fno-warn-identities
+  -fno-warn-missing-import-lists
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
@@ -31,8 +36,6 @@ module Music.Score.Pitch
     _15vb,
     upDiatonic,
     downDiatonic,
-    upChromatic,
-    downChromatic,
 
     -- ** Inversion
     invertPitches,
@@ -48,6 +51,11 @@ module Music.Score.Pitch
     ambitusLowestOctave,
     interpolateAmbitus,
     interpolateAmbitus',
+
+    -- ** Voices
+    stitch,
+    stitchLast,
+    stitchWith,
 
     -- ** Spelling
     simplifyPitches,
@@ -81,13 +89,13 @@ module Music.Score.Pitch
   )
 where
 
-import Data.Kind
 import BasePrelude hiding ((<>))
 import Control.Lens hiding (below, transform)
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.AffineSpace.Point.Offsets (AffinePair)
 import Data.Functor.Couple
+import Data.Kind
 import qualified Data.List
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -508,13 +516,14 @@ ambitusOctaves = fromIntegral . octaves . ambitusInterval
 
 -- | The lowest octave (relative middle C) in present a given ambitus.
 ambitusLowestOctave :: Ambitus Common.Interval Common.Pitch -> Int
-ambitusLowestOctave = fromIntegral . octaves . (.-. c) . ambitusLowest
+ambitusLowestOctave = fromIntegral . octaves . (.-. c) . Music.Pitch.Ambitus.low
 
 -- |  Interpolate between the highest and lowest points in an ambitus.
 --
 --  Can be used as a primitive contour-based melody generator.
 interpolateAmbitus :: AffinePair v p => Ambitus v p -> Scalar v -> p
-interpolateAmbitus a = let (m, n) = a ^. from ambitus in alerp m n
+interpolateAmbitus a = let Ambitus m n = a in alerp m n
+-- TODO move to Pitch.Ambitus!
 
 -- |
 -- Same as @interpolateAmbitus@ but allow continous interpolation of standard pitch
@@ -680,6 +689,48 @@ simplifyPitches = over pitches' simplifyPitch
       | accidental p < doubleFlat = relative c (spell usingFlats) p
       | accidental p > doubleSharp = relative c (spell usingSharps) p
       | otherwise = p
+
+-- |
+-- Join two voices together so that one note overlaps. The second voice is
+-- transposed to achieve this.
+--
+-- At the join point the note from the first voice is used. If @a ~ Pitch@,
+-- then 'stitch' and 'stitchLast' are equivalent.
+--
+-- >>> stitch ([c :: Note Pitch,d,e]^.voice) ([c,g]^.voice)
+-- [(1,c)^.note,(1,d)^.note,(1,e)^.note,(1,b)^.note]^.voice
+stitch :: (Transposable a) => Voice a -> Voice a -> Voice a
+stitch = stitchWith (\a b -> [a] ^. voice)
+
+-- Join two voices together so that one note overlaps. The second voice is
+-- transposed to achieve this.
+--
+-- At the join point the note from the first voice is used. If @a ~ Pitch@,
+-- then 'stitch' and 'stitchLast' are equivalent.
+--
+-- At the join point the note from the second voice is used.
+stitchLast :: (Transposable a) => Voice a -> Voice a -> Voice a
+stitchLast = stitchWith (\a b -> [b] ^. voice)
+
+stitchWith ::
+  forall a.
+  (Transposable a) =>
+  (Note a -> Note a -> Voice a) ->
+  Voice a ->
+  Voice a ->
+  Voice a
+stitchWith f a b
+  | nullOf notes a = b
+  | nullOf notes b = a
+  | otherwise = initV a <> f (lastV a) (headV (up diff b)) <> tailV (up diff b)
+  where
+    headV = (^?! notes . _head)
+    lastV = (^?! notes . _last)
+    initV = over notes init
+    tailV = over notes tail
+    lastPitch a = lastV a ^?! pitches
+    headPitch b = headV b ^?! pitches
+    diff = (lastPitch a .-. headPitch b)
 
 type instance Pitch Common.Pitch = Common.Pitch
 

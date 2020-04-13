@@ -10,8 +10,11 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
-- [X] BUG: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
+- [X] Bug: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
   Intervals not displayed properly
+
+- [ ] Bug: since GHC 8.8.3 upgrade, doctester does not compile
+  - Try cabal-doctest instead https://github.com/phadej/cabal-doctest
 
 - $doctests
   - [X] Run locally (README)
@@ -32,6 +35,9 @@ Consider switching to a decentralized issue tracker such as:
   - Should ideally be invoked in CI
   - Because of overeager caching in doc gens ($transfCache), requires `rm -rf docs/build` to be reproducible
 
+- Rename Music.Score.Pitch -> GetPitch
+  - Also rename SomeTechnique -> Music.Technique.Technique or similar (a la pitch et al)
+
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
 
 - `tremolo` should take a duration, not an integer!
@@ -51,6 +57,7 @@ Consider switching to a decentralized issue tracker such as:
 - API improvements:
   - Move varticulation, addArticulation out of public API
   - Move vdynamic, addDynCon out of public API
+  - Move vtechnique, etc out of public API
   - Put combinators (not classes) on top of the following modules
     - Music.Score.Articulation
     - Music.Score.Dynamics
@@ -63,8 +70,12 @@ Consider switching to a decentralized issue tracker such as:
     - Music.Score.Text
     - Music.Score.Ties
     - Music.Score.Tremolo
-  - Remove Alignable class (use Aligned the type)
-  - Remove Time parameter from aligned/alignTo (use delay)
+  - Music.Articulation.Articulation and Music.Dynamics.Common should be "record types"
+    with proper field names.
+  - [X] Remove Alignable class (use Aligned the type)
+  - [X] Remove upChromatic/downChromatic (use up/down instead!)
+  - [X] Remove Time parameter from aligned/alignTo (use delay)
+    - Won't fix
   - Rename eventee/notee to transformed or similar (could be a class)
   - withContext/addCtxt can be generalized to any Traversable
   - Lunga is a Monad (though maybe a confusing one)
@@ -79,9 +90,14 @@ Consider switching to a decentralized issue tracker such as:
   - Remove HasOctaves/HasQuality/HasNumber (retain interval instance)
   - Remove Augmentable/Alterable (?)
   - Remove triples/pairs in favor of explicit traversals (see example in Time.Score)
+  - Pattern does not need Reversible! (Just use forward version: think modulo arithmetic.)
   - Chord/Scale:
-    - Use DataKinds/phantom type to distinguish chord vs scale (only difference is Inspectable instance)
-    - Bifunctor instance for Scale/Chord
+    - [X] Use DataKinds/phantom type to distinguish chord vs scale (only difference is Inspectable instance)
+      - Single GADT ScaleChord with "3 dimensions"
+        - Orientation: seq vs par (scale vs. chord)
+        - Voiced vs unvoiced (the latter has "only" the default close voicing and the "full" voicing)
+        - Rooted vs not (scale vs. mode)
+    - [X] Bifunctor instance for Scale/Chord
       - Pitch/Interval containers should be bifunctors (taking pitch and interval).
         Use AffinePair constraint on operations.
     - Add union/intersection/set diff (of the "infinite set") for chords/scales
@@ -102,6 +118,9 @@ Consider switching to a decentralized issue tracker such as:
     - Time
     - RTM tree support?
 
+- Scale/Chord and Pattern are isomorphic.
+  Common implementation?
+  Share operations in both directions?
 
 - Internal improvements:
   - Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
@@ -419,6 +438,8 @@ Consider switching to a decentralized issue tracker such as:
 
 - Check `examples` dir for code that can be moved upstream to the main library
 
+- Finalize and test laws for Splittable/Reversible
+
 - $splitSemantics
   - [ ] Check split semantics for Voice/Note. Should be possble to write a simple instance for both not and voice,
     not requiring a Splittable instance for the contained note.
@@ -466,6 +487,10 @@ Consider switching to a decentralized issue tracker such as:
     - TidalCycles
   - Graphical backends
     - Piano roll
+
+- [X] Bug: TimeSignatures and similar only show up if providing span
+  E.g. timeSignatureDuring works, timeSignature does not
+  - Can not reproduce on cb0cdd1a5adb6d9e7f23659beda603450f66ddc0
 
 - Save example data from https://github.com/hanshoglund/.stash
 
@@ -530,7 +555,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - Replace Aeson with typed serialization (or just GHC.Generic/Typeable instances)
 
-- Get rid of Option (can use plain Maybe/First/Last now)
+- Get rid of Data.Semigroup.Option (can use Maybe/First/Last from Data.Monoid now)
 
 - Piano/multi-stave/automatic voice separation support.
   Test cases:
@@ -555,9 +580,14 @@ Consider switching to a decentralized issue tracker such as:
 
 - Interactive shell
   - Move source tree into this repo
-  - Bug: crashes on multi-page Lilypond output
+  - [X] Bug: crashes on multi-page Lilypond output
   - Repeat works, should look at cache/output dir
   - See $interactive
+  - Make feedback loop faster:
+    - Optimize "Compiling" (Haskell) phase
+    - Run Typesetting/RenderingAudio in parallel
+    - "Interpret at selection" a la most Lisp interpreters
+
 
 - [X] Fix lawless (HasPosition (Score a))
   - Preference: Idea 1!!
@@ -662,6 +692,10 @@ Consider switching to a decentralized issue tracker such as:
     strict generalization of Placed)
 
 - [X] Time.Voice API: Do not mention Meta (it's not used and there's no HasMeta instance).
+
+- Import data from various corpuses
+  - musescore.com
+  - https://web.mit.edu/music21/doc/about/referenceCorpus.html
 
 - [X] $reactiveSemantics
   - Briefly: Simultaneous events should not be allowed with Reactive. Semantically:

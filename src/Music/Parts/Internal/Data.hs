@@ -147,7 +147,7 @@ instance FromField Pitch where
 instance {-# OVERLAPPING #-} FromField (Maybe (Ambitus Interval Pitch)) where
   parseField v = fmap (listToAmbitus . mcatMaybes . map pitchFromScientificPitchNotation) $ fmap (splitBy '-') $ parseField v
     where
-      listToAmbitus [a, b] = Just $ (a, b) ^. ambitus
+      listToAmbitus [a, b] = Just $ Ambitus a b
       listToAmbitus _ = Nothing
 
 instance FromField Clef where

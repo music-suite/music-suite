@@ -13,10 +13,6 @@ module Music.Pitch.Intonation
   ( Intonation (..),
     Tuning (..),
     intone,
-    -- makeBasis,
-    synTune,
-    -- tetTune,
-    pureOctaveWith,
 
     -- * Specific tunings
     pythagorean,
@@ -28,11 +24,10 @@ module Music.Pitch.Intonation
     nineteenToneEqual,
     thirtyOneToneEqual,
     fiftyThreeToneEqual,
+    just,
 
     -- * Specific intonations
-    -- standardTuning,
     standardIntonation,
-    just,
   )
 where
 
@@ -47,6 +42,7 @@ import Data.Maybe
 import Data.Ratio
 import Data.Semigroup
 import Data.VectorSpace
+import Data.AffineSpace.Point.Offsets (AffinePair)
 import Music.Pitch.Absolute
 import Music.Pitch.Common.Internal
 import Music.Pitch.Common.Spell
@@ -74,9 +70,9 @@ makeBasis i (i1, r1) (i2, r2) = case (convertBasisFloat i i1 i2) of
   Just (x, y) -> (r1 ** x) * (r2 ** y)
   Nothing -> error ("Cannot use intervals " ++ (show i1) ++ " and " ++ (show i2) ++ " as basis pair to represent " ++ (show i))
 
--- | Turn a tuning into an intonation.
-intone :: (Pitch, Hertz) -> Tuning Interval -> Intonation Pitch
-intone (b, f) (Tuning t) = Intonation $ int
+-- | Turn a tuning into an intonation by picking a reference pitch and frequency.
+intone :: AffinePair v p => Hertz -> p -> Tuning v -> Intonation p
+intone f b (Tuning t) = Intonation $ int
   where
     int p = f .+^ (t i) where i = p .-. b
 
@@ -88,12 +84,15 @@ intone (b, f) (Tuning t) = Intonation $ int
 pureOctaveWith :: (Interval, Double) -> Tuning Interval
 pureOctaveWith = Tuning . synTune (_P8, 2)
 
+-- | Pythagorean tuning.
 pythagorean :: Tuning Interval
 pythagorean = pureOctaveWith (_P5, 3 / 2)
 
+-- | Quarter-comma meantone.
 quarterCommaMeantone :: Tuning Interval
 quarterCommaMeantone = pureOctaveWith (_M3, 5 / 4)
 
+-- | Schismatic meantone.
 schismaticMeantone :: Tuning Interval
 schismaticMeantone = pureOctaveWith (8 *^ _P4, 10)
 
@@ -102,29 +101,35 @@ schismaticMeantone = pureOctaveWith (8 *^ _P4, 10)
 tetTune :: Interval -> Tuning Interval
 tetTune i = pureOctaveWith (i, 1)
 
+-- | 5-tone equal temperament.
 fiveToneEqual :: Tuning Interval
 fiveToneEqual = tetTune m2
 
+-- | 7-tone equal temperament.
 sevenToneEqual :: Tuning Interval
 sevenToneEqual = tetTune _A1
 
+-- | 7-tone equal temperament.
 twelveToneEqual :: Tuning Interval
 twelveToneEqual = tetTune d2
 
+-- | 19-tone equal temperament.
 nineteenToneEqual :: Tuning Interval
 nineteenToneEqual = tetTune dd2 where dd2 = d2 ^-^ _A1
 
+-- | 31-tone equal temperament.
 thirtyOneToneEqual :: Tuning Interval
 thirtyOneToneEqual = tetTune dddd3 where dddd3 = m3 ^-^ (4 *^ _A1)
 
+-- | 53-tone equal temperament.
 fiftyThreeToneEqual :: Tuning Interval
 fiftyThreeToneEqual = tetTune ddddddd6 where ddddddd6 = 31 *^ _P8 ^-^ 53 *^ _P5 -- (!)
 
--- |  Modern standard intonation, i.e. 12-TET with @a = 440 Hz@.
+-- | Modern standard intonation, i.e. 12-tone equal temperament with @a = 440 Hz@.
 standardIntonation :: Intonation Pitch
-standardIntonation = intone (a, 440) twelveToneEqual
+standardIntonation = intone 440 a twelveToneEqual
 
--- TODO partial
+-- | Just intonation.
 just :: Tuning Interval
 just = Tuning justT'
 

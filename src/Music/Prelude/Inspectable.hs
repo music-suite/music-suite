@@ -100,41 +100,38 @@ instance InspectableNote a => Inspectable (Event a) where
 -- instance Inspectable (Voice ()) where
 -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
 instance Inspectable (Ambitus Interval Pitch) where
-  inspectableToMusic x = stretch 0.5 $ let (m, n) = x ^. from ambitus in glissando $ fromPitch m |> fromPitch n
+  inspectableToMusic x = stretch 0.5 $ let Ambitus m n = x in glissando $ fromPitch m |> fromPitch n
 
--- instance Inspectable (Mode Pitch) where
+-- instance Inspectable (Mode Interval Pitch) where
 --  inspectableToMusic = inspectableToMusic . scale c
 
-instance Inspectable (ChordType Pitch) where
+instance Inspectable (ChordType Interval Pitch) where
   inspectableToMusic = inspectableToMusic . chord c
 
-instance Inspectable (Scale Pitch) where
+instance Inspectable (Scale Interval Pitch) where
+  inspectableToMusic = inspectableToMusic . voiced . scaleToChord
+
+instance Inspectable (Chord Interval Pitch) where
   inspectableToMusic = inspectableToMusic . voiced
 
-instance Inspectable (Chord Pitch) where
-  inspectableToMusic = inspectableToMusic . voiced
-
-instance Inspectable (Voiced Scale Pitch) where
-  inspectableToMusic = fmap fromPitch . pseq . map (\x -> pure x :: Score Pitch) . toList . getVoiced
-
-instance Inspectable (Voiced Chord Pitch) where
+instance Inspectable (Voiced Chord Interval Pitch) where
   inspectableToMusic = fmap fromPitch . ppar . map (\x -> pure x :: Score Pitch) . toList . getVoiced
 
 -- TODO should be on separate staves, but without left binding (implying simultanuety)
--- instance Inspectable [Mode Pitch] where
+-- instance Inspectable [Mode Interval Pitch] where
 --   inspectableToMusic = rcat . fmap inspectableToMusic
 
 -- TODO should be on separate staves, but without left binding (implying simultanuety)
-instance Inspectable [Scale Pitch] where
+instance Inspectable [Scale Interval Pitch] where
   inspectableToMusic = rcat . fmap inspectableToMusic
 
-instance Inspectable [ChordType Pitch] where
+instance Inspectable [ChordType Interval Pitch] where
   inspectableToMusic = pseq . fmap inspectableToMusic
 
-instance Inspectable [Chord Pitch] where
+instance Inspectable [Chord Interval Pitch] where
   inspectableToMusic = pseq . fmap inspectableToMusic
 
-instance Inspectable [Voiced Chord Pitch] where
+instance Inspectable [Voiced Chord Interval Pitch] where
   inspectableToMusic = pseq . fmap inspectableToMusic
 
 instance Inspectable [Interval] where

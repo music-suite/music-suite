@@ -195,7 +195,6 @@ library
                         Music.Score.Internal.Util
                         Music.Score.Internal.Export
                         Music.Time.Internal.Preliminaries
-                        Music.Pitch.Tokawa
                         Data.Music.Sibelius
                         Data.AffineSpace.Point
                         Music.Score.Import.Sibelius
@@ -275,7 +274,7 @@ test-suite "music-suite-test-umts"
                         type-unary,
                         unordered-containers,
                         vector-space,
-                        vector-space-points,
+                        -- vector-space-points,
                         xml,
                         music-suite
     main-is:            UMTS.hs
@@ -412,6 +411,13 @@ executable "music-suite-examples-time-signatures"
     hs-source-dirs:     examples
     main-is:            TimeSignatures.hs
 
+executable "music-suite-examples-dynamics"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            dynamics.hs
+
 executable "music-suite-examples-trio"
     build-depends:      base,
                         lens,
@@ -502,6 +508,7 @@ executable "music-suite-examples-salient-melodic-transformations"
     hs-source-dirs:     examples/pieces/SalientMelodicTransformations
     main-is:            Score.hs
 
+
 -- TODO CrawfordSeeger
 -- TODO Floaters
 -- TODO HarmonyToTexture
@@ -509,5 +516,3 @@ executable "music-suite-examples-salient-melodic-transformations"
 -- TODO HarmPhasing
 -- TODO PianoChords
 -- TODO PopRhythms
--- TODO SalientMelodicTransformations
--- TODO SustainPunctuated

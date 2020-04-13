@@ -8,7 +8,7 @@ music = id
   $ title "Time signatures"
 
   -- Try commenting out some of these lines
-  $ timeSignature (6/8)
+  -- $ timeSignature (6/8)
   $ timeSignature (3/4)
   $ timeSignature (2/4)
   $ timeSignature ((4+3)/8)
