@@ -49,6 +49,11 @@ module Music.Score.Pitch
     interpolateAmbitus,
     interpolateAmbitus',
 
+    -- ** Voices
+    stitch,
+    stitchLast,
+    stitchWith,
+
     -- ** Spelling
     simplifyPitches,
 
@@ -680,6 +685,48 @@ simplifyPitches = over pitches' simplifyPitch
       | accidental p < doubleFlat = relative c (spell usingFlats) p
       | accidental p > doubleSharp = relative c (spell usingSharps) p
       | otherwise = p
+
+-- |
+-- Join two voices together so that one note overlaps. The second voice is
+-- transposed to achieve this.
+--
+-- At the join point the note from the first voice is used. If @a ~ Pitch@,
+-- then 'stitch' and 'stitchLast' are equivalent.
+--
+-- >>> stitch ([c :: Note Pitch,d,e]^.voice) ([c,g]^.voice)
+-- [(1,c)^.note,(1,d)^.note,(1,e)^.note,(1,b)^.note]^.voice
+stitch :: (Transposable a) => Voice a -> Voice a -> Voice a
+stitch = stitchWith (\a b -> [a] ^. voice)
+
+-- Join two voices together so that one note overlaps. The second voice is
+-- transposed to achieve this.
+--
+-- At the join point the note from the first voice is used. If @a ~ Pitch@,
+-- then 'stitch' and 'stitchLast' are equivalent.
+--
+-- At the join point the note from the second voice is used.
+stitchLast :: (Transposable a) => Voice a -> Voice a -> Voice a
+stitchLast = stitchWith (\a b -> [b] ^. voice)
+
+stitchWith ::
+  forall a.
+  (Transposable a) =>
+  (Note a -> Note a -> Voice a) ->
+  Voice a ->
+  Voice a ->
+  Voice a
+stitchWith f a b
+  | nullOf notes a = b
+  | nullOf notes b = a
+  | otherwise = initV a <> f (lastV a) (headV (up diff b)) <> tailV (up diff b)
+  where
+    headV = (^?! notes . _head)
+    lastV = (^?! notes . _last)
+    initV = over notes init
+    tailV = over notes tail
+    lastPitch a = lastV a ^?! pitches
+    headPitch b = headV b ^?! pitches
+    diff = (lastPitch a .-. headPitch b)
 
 type instance Pitch Common.Pitch = Common.Pitch
 

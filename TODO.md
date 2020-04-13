@@ -64,6 +64,7 @@ Consider switching to a decentralized issue tracker such as:
     - Music.Score.Ties
     - Music.Score.Tremolo
   - Remove Alignable class (use Aligned the type)
+  - Remove upChromatic/downChromatic (use up/down instead!)
   - Remove Time parameter from aligned/alignTo (use delay)
   - Rename eventee/notee to transformed or similar (could be a class)
   - withContext/addCtxt can be generalized to any Traversable
