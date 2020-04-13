@@ -4,12 +4,12 @@ import Data.List (intersperse)
 
 main = defaultMain music
 
-music = timeSignatureDuring (0 <-> 10000) (3/2) $
+music = -- timeSignatureDuring (0 <-> 10000) (3/2) $
   pseq $ intersperse rest
     [ mempty
-    -- , x1
-    -- , x2
-    -- , b1
+    , x1
+    , x2
+    , b1
     , c1
     ]
 
@@ -33,7 +33,12 @@ x2 =
     ]
 
 -- Basic motive with different conclusions
+--
+-- TODO echo/dying figure (the stacc notes): should fade out and lead to a rest
+-- before the main BEBA motive is repeated
+--
 -- TODO abstract out more below
+--
 -- TODO introduce more rests
 b1 :: Music
 b1 =
