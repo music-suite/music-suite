@@ -91,12 +91,12 @@ Consider switching to a decentralized issue tracker such as:
   - Remove Augmentable/Alterable (?)
   - Remove triples/pairs in favor of explicit traversals (see example in Time.Score)
   - Chord/Scale:
-    - Use DataKinds/phantom type to distinguish chord vs scale (only difference is Inspectable instance)
+    - [X] Use DataKinds/phantom type to distinguish chord vs scale (only difference is Inspectable instance)
       - Single GADT ScaleChord with "3 dimensions"
         - Orientation: seq vs par (scale vs. chord)
         - Voiced vs unvoiced (the latter has "only" the default close voicing and the "full" voicing)
         - Rooted vs not (scale vs. mode)
-    - Bifunctor instance for Scale/Chord
+    - [X] Bifunctor instance for Scale/Chord
       - Pitch/Interval containers should be bifunctors (taking pitch and interval).
         Use AffinePair constraint on operations.
     - Add union/intersection/set diff (of the "infinite set") for chords/scales
