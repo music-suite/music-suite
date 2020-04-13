@@ -195,7 +195,6 @@ library
                         Music.Score.Internal.Util
                         Music.Score.Internal.Export
                         Music.Time.Internal.Preliminaries
-                        Music.Pitch.Tokawa
                         Data.Music.Sibelius
                         Data.AffineSpace.Point
                         Music.Score.Import.Sibelius

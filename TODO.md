@@ -74,7 +74,8 @@ Consider switching to a decentralized issue tracker such as:
     with proper field names.
   - [X] Remove Alignable class (use Aligned the type)
   - [X] Remove upChromatic/downChromatic (use up/down instead!)
-  - Remove Time parameter from aligned/alignTo (use delay)
+  - [X] Remove Time parameter from aligned/alignTo (use delay)
+    - Won't fix
   - Rename eventee/notee to transformed or similar (could be a class)
   - withContext/addCtxt can be generalized to any Traversable
   - Lunga is a Monad (though maybe a confusing one)
@@ -91,6 +92,10 @@ Consider switching to a decentralized issue tracker such as:
   - Remove triples/pairs in favor of explicit traversals (see example in Time.Score)
   - Chord/Scale:
     - Use DataKinds/phantom type to distinguish chord vs scale (only difference is Inspectable instance)
+      - Single GADT ScaleChord with "3 dimensions"
+        - Orientation: seq vs par (scale vs. chord)
+        - Voiced vs unvoiced (the latter has "only" the default close voicing and the "full" voicing)
+        - Rooted vs not (scale vs. mode)
     - Bifunctor instance for Scale/Chord
       - Pitch/Interval containers should be bifunctors (taking pitch and interval).
         Use AffinePair constraint on operations.
@@ -112,6 +117,9 @@ Consider switching to a decentralized issue tracker such as:
     - Time
     - RTM tree support?
 
+- Scale/Chord and Pattern are isomorphic.
+  Common implementation?
+  Share operations in both directions?
 
 - Internal improvements:
   - Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
