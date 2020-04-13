@@ -473,8 +473,9 @@ Consider switching to a decentralized issue tracker such as:
   - Graphical backends
     - Piano roll
 
-- Bug: TimeSignatures and similar only show up if providing span
+- [X] Bug: TimeSignatures and similar only show up if providing span
   E.g. timeSignatureDuring works, timeSignature does not
+  - Can not reproduce on cb0cdd1a5adb6d9e7f23659beda603450f66ddc0
 
 - Save example data from https://github.com/hanshoglund/.stash
 
