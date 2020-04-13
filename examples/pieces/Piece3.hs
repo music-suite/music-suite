@@ -66,7 +66,7 @@ motive = compress 16 $ voiceFromDurs [2,1,1,2] motive'
     II [5,4..1] followed by I [1..5] (R to L pan)
     Several expositions following one another in I, II doing something else
     Several expositions following one another in II, I doing something else
-    I moving out or in while II being stationary (i.e. at front)
+    I moving ouinstrumentRanget or in while II being stationary (i.e. at front)
 
     Version of the above with soloists (a) instead of tutti, gli altri (b) playing something else (i.e. sustaining)
 
@@ -120,7 +120,7 @@ renderMotive = renderAlignedVoice . fmap2 fromPitch
 main = defaultMain anExp
 
 anExp :: Music
-anExp = timeSignature (3/8) $ pseq $ Data.List.intersperse (c |* (15/8)) $ take 20 $
+anExp = timeSignature (3/8) $ pseq $ Data.List.intersperse (rest |* (15/8)) $ take 20 $
   fmap (rcat . set parts' violins) $ splitInto 20 $ getZipList $ fmap renderMotive combinedVs
 
 

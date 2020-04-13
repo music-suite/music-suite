@@ -502,6 +502,7 @@ executable "music-suite-examples-salient-melodic-transformations"
     hs-source-dirs:     examples/pieces/SalientMelodicTransformations
     main-is:            Score.hs
 
+
 -- TODO CrawfordSeeger
 -- TODO Floaters
 -- TODO HarmonyToTexture
@@ -509,5 +510,3 @@ executable "music-suite-examples-salient-melodic-transformations"
 -- TODO HarmPhasing
 -- TODO PianoChords
 -- TODO PopRhythms
--- TODO SalientMelodicTransformations
--- TODO SustainPunctuated
