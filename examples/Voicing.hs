@@ -29,13 +29,21 @@ messiaenProg =
 -- But in open voicings they sound great.
 messiaenProg1 :: [Voiced Chord Interval Pitch]
 messiaenProg1 =
-  [ openVoicing1 (chord d $ modeToChordType firstMode)
-  , openVoicing1 (chord d $ modeToChordType secondMode)
-  , openVoicing1 (chord d $ modeToChordType thirdMode)
-  , openVoicing1 (chord d $ modeToChordType fourthMode)
-  , openVoicing1 (chord d $ modeToChordType fifthMode)
-  , openVoicing1 (chord d $ modeToChordType sixthMode)
-  , openVoicing1 (chord d $ modeToChordType seventhMode)
+  -- [ openVoicing1 (chord d $ modeToChordType firstMode)
+  -- , openVoicing1 (chord d $ modeToChordType secondMode)
+  -- , openVoicing1 (chord d $ modeToChordType thirdMode)
+  -- , openVoicing1 (chord d $ modeToChordType fourthMode)
+  -- , openVoicing1 (chord d $ modeToChordType fifthMode)
+  -- , openVoicing1 (chord d $ modeToChordType sixthMode)
+  -- , openVoicing1 (chord d $ modeToChordType seventhMode)
+
+  [ openVoicing1a (chord d $ modeToChordType firstMode)
+  , openVoicing1a (chord d $ modeToChordType secondMode)
+  , openVoicing1a (chord d $ modeToChordType thirdMode)
+  , openVoicing1a (chord d $ modeToChordType fourthMode)
+  , openVoicing1a (chord d $ modeToChordType fifthMode)
+  , openVoicing1a (chord d $ modeToChordType sixthMode)
+  , openVoicing1a (chord d $ modeToChordType seventhMode)
 
   , openVoicing2 (chord d_ $ modeToChordType firstMode)
   , openVoicing2 (chord d_ $ modeToChordType secondMode)
@@ -62,10 +70,11 @@ messiaenProg1 =
   , openVoicing4 (chord d_ $ modeToChordType seventhMode)
   ]
 
-openVoicing1 = (`Voiced` [0,2,4,5,7])
-openVoicing2 = (`Voiced` [0,3,6,8,11,12,15,20,21,22])
-openVoicing3 = (`Voiced` [0,4..25])
-openVoicing4 = (`Voiced` [0,6,11,15,18,20,21,22,23])
+openVoicing1  = (`Voiced` [0,2,4,5,7])
+openVoicing1a = (`Voiced` [0,2,4,8,10,11,13,15,17,19])
+openVoicing2  = (`Voiced` [0,3,6,8,11,12,15,20,21,22])
+openVoicing3  = (`Voiced` [0,4..25])
+openVoicing4  = (`Voiced` [0,6,11,15,18,20,21,22,23])
 
 -- Closed voicing
 fsProgression :: [Voiced Chord Interval Pitch]
@@ -116,3 +125,4 @@ dmProgression1 = _8vb $
 -- * Leading tone resolves upwards
 
 -- TODO "drop" voicings
+

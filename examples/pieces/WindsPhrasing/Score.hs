@@ -35,7 +35,12 @@ music =
     <>
   delay 18 (bsns `sustain` set parts' cellos (level pp b'))
     <>
-  mempty
+  br
+
+br =
+  arrangeFor (divide 3 horns ++ divide 3 trumpets ++ divide 3 trombones ++ [tubas]) $
+    (level ppp $ times 4 $ stretch (14/5) $ pseq [rest |/2, rcat
+      [cs',b,g,cs,ds,fs,g_,f_,e_,g__], rest])
 
 
 
