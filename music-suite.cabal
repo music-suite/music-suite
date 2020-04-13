@@ -275,7 +275,7 @@ test-suite "music-suite-test-umts"
                         type-unary,
                         unordered-containers,
                         vector-space,
-                        vector-space-points,
+                        -- vector-space-points,
                         xml,
                         music-suite
     main-is:            UMTS.hs
