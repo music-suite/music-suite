@@ -11,7 +11,7 @@ e7b5 = chord e halfDiminishedChord
 eFS  = chord e frenchSixthChord
 
 music = set parts' violins $ inspectableToMusic @[Voiced Chord Interval Pitch]
-  messiaenProg1
+  fsProgression
 
 -- Treat Messiaen's modes as chords.
 -- Does not sound too pleasant in close voicing.
@@ -69,7 +69,7 @@ openVoicing4 = (`Voiced` [0,6,11,15,18,20,21,22,23])
 
 fsProgression :: [Voiced Chord Interval Pitch]
 fsProgression =
-  [ voiceIn 4 dm
+  [ octavesDown 1 $ voiceIn 4 dm
   , voiceIn 4 eFS
   , voiceIn 4 a7
   , voiceIn 4 dM

@@ -540,6 +540,29 @@ deriving instance (Eq (f v p)) => Eq (Voiced f v p)
 deriving instance (Ord (f v p)) => Ord (Voiced f v p)
 deriving instance (Show (f v p)) => Show (Voiced f v p)
 
+deriving instance Functor (f v) => Functor (Voiced f v)
+deriving instance Foldable (f v) => Foldable (Voiced f v)
+deriving instance Traversable (f v) => Traversable (Voiced f v)
+
+-- TODO relax to Bifunctor
+instance Bitraversable f => Bifunctor (Voiced f) where
+  bimap = bimapDefault
+
+-- TODO relax to Bifoldable
+instance Bitraversable f => Bifoldable (Voiced f) where
+  bifoldMap = bifoldMapDefault
+
+instance Bitraversable f => Bitraversable (Voiced f) where
+  bitraverse f g (Voiced xs ns) = Voiced <$> bitraverse f g xs <*> pure ns
+
+type instance S.Pitch (Voiced f v p) = S.Pitch p
+
+type instance S.SetPitch p (Voiced f v p') = Voiced f v (S.SetPitch p p')
+
+instance (Traversable (f v), HasPitches p p')
+  => HasPitches (Voiced f v p) (Voiced f v p') where
+  pitches = traverse . pitches
+
 -- | Extract the pitches of a voiced chord.
 getVoiced :: (AffinePair v p) => Voiced Chord v p -> NonEmpty p
 getVoiced x = index (getChordScale x) <$> getSteps x
