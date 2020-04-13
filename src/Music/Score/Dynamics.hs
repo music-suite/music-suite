@@ -50,7 +50,6 @@ module Music.Score.Dynamics
   )
 where
 
-import Data.Kind
 import BasePrelude hiding ((<>), Dynamic, first, second)
 import Control.Comonad
 import Control.Lens hiding ((&), Level, transform)
@@ -58,6 +57,7 @@ import Data.AffineSpace
 import Data.AffineSpace.Point (relative)
 import Data.Functor.Context
 import Data.Functor.Couple
+import Data.Kind
 import qualified Data.List as List
 import Data.Semigroup
 import Data.VectorSpace hiding (Sum)

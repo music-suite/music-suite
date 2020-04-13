@@ -81,13 +81,13 @@ module Music.Score.Pitch
   )
 where
 
-import Data.Kind
 import BasePrelude hiding ((<>))
 import Control.Lens hiding (below, transform)
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.AffineSpace.Point.Offsets (AffinePair)
 import Data.Functor.Couple
+import Data.Kind
 import qualified Data.List
 import Data.Map (Map)
 import qualified Data.Map as Map

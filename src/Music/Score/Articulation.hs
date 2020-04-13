@@ -57,13 +57,13 @@ module Music.Score.Articulation
   )
 where
 
-import Data.Kind
 import BasePrelude hiding ((<>), Dynamic, first, second)
 import Control.Comonad
 import Control.Lens hiding ((&), below, transform)
 import Data.AffineSpace
 import Data.Functor.Context
 import Data.Functor.Couple
+import Data.Kind
 import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Music.Dynamics.Literal
