@@ -73,7 +73,7 @@ cabal haddock
 ```
 
 
-# How to upgrade the compiled/Nixpkgs
+# How to upgrade the compiler/Nixpkgs
 
 - Update the commit/URL and hash in `default.nix`
   - Use `$ nix-prefetch-url --unpack <url>` to obtain the hash (and verify)
