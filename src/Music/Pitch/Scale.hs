@@ -36,6 +36,7 @@
 --
 -- A 'Mode' (or 'ChordType) is like a Chord/Scale that has forgotten its origin.
 module Music.Pitch.Scale
+{-
   ( -- * TODO NEW
     Orientation(..),
     Rooting(..),
@@ -138,6 +139,7 @@ module Music.Pitch.Scale
     voiceIn,
     invertVoicing,
   )
+-}
 where
 
 import Control.Lens (Lens, Lens', coerced)
@@ -168,16 +170,16 @@ data Orientation = Seq | Par
 data Rooting     = NoRoot | Root
 
 data ScaleChord :: Orientation -> Rooting -> Type -> Type -> Type where
-  Mode_ :: NonEmpty v -> ScaleChord a 'NoRoot v p
+  Mode :: NonEmpty v -> ScaleChord a 'NoRoot v p
   ScaleChord ::
     p
     -> ScaleChord o 'NoRoot v p
     -> ScaleChord o 'Root   v p
 
-type MODE       = ScaleChord 'Seq 'NoRoot
-type SCALE      = ScaleChord 'Seq 'Root
-type CHORDTYPE  = ScaleChord 'Par 'NoRoot
-type CHORD      = ScaleChord 'Par 'Root
+type Mode       = ScaleChord 'Seq 'NoRoot
+type Scale      = ScaleChord 'Seq 'Root
+type ChordType  = ScaleChord 'Par 'NoRoot
+type Chord      = ScaleChord 'Par 'Root
 
 deriving instance (Eq v, Eq p) => Eq (ScaleChord o r v p)
 deriving instance (Ord v, Ord p) => Ord (ScaleChord o r v p)
@@ -193,7 +195,7 @@ instance Bifoldable (ScaleChord o r) where
   bifoldMap = bifoldMapDefault
 
 instance Bitraversable (ScaleChord o r) where
-  bitraverse f _ (Mode_ xs) = Mode_ <$> traverse f xs
+  bitraverse f _ (Mode xs) = Mode <$> traverse f xs
   bitraverse f g (ScaleChord p xs) = ScaleChord <$> g p <*> bitraverse f g xs
 
 
@@ -204,78 +206,38 @@ type instance S.SetPitch p (ScaleChord o r v _p) = ScaleChord o r v (S.SetPitch 
 instance HasPitches p1 p2 => HasPitches (ScaleChord o r v p1) (ScaleChord o r v p2) where
   pitches = traverse . pitches
 
--- |  A mode is a list of intervals and a characteristic repeating interval.
-data Mode a = Mode {getMode :: NonEmpty (Diff a)}
-
-deriving instance Eq (Diff a) => Eq (Mode a)
-
-deriving instance Ord (Diff a) => Ord (Mode a)
-
-deriving instance Show (Diff a) => Show (Mode a)
-
 -- |
 -- @
 -- majorScale = modeFromSteps [M2,M2,m3,M2,M2,M2,m3]
 --
 -- > [Interval] -> Mode Pitch
-modeFromSteps :: NonEmpty (Diff a) -> Mode a
+modeFromSteps :: NonEmpty v -> Mode v p
 modeFromSteps = Mode
 
 -- |
 -- > Lens' (Mode Pitch) [Interval]
-modeIntervals :: Lens' (Mode a) (NonEmpty (Diff a))
+modeIntervals :: Lens' (Mode v p) (NonEmpty v)
 modeIntervals f (Mode is) = fmap (\is -> Mode is) $ f is
 
--- |  A scale is a mode with a specified tonic.
-data Scale a = Scale a (Mode a) -- root, mode
 
-deriving instance (Eq a, Eq (Diff a)) => Eq (Scale a)
-
-deriving instance (Ord a, Ord (Diff a)) => Ord (Scale a)
-
-deriving instance (Show a, Show (Diff a)) => Show (Scale a)
-
-type instance S.Pitch (Scale a) = S.Pitch a
-
-type instance S.SetPitch b (Scale a) = Scale (S.SetPitch b a)
-
-instance forall a b. (HasPitches a b, AffineSpace a, AffineSpace b) => HasPitches (Scale a) (Scale b) where
-  pitches :: forall g. Applicative g => (S.Pitch a -> g (S.Pitch b)) -> Scale a -> g (Scale b)
-  pitches f s = do
-    let ps :: NonEmpty a = getVoiced $ voicedLong s
-    ps2 :: NonEmpty b <- pitches f ps
-    pure $ fromPitches ps2
-    where
-      fromPitches :: forall a. AffineSpace a => NonEmpty a -> Scale a
-      fromPitches (tonic :| vs) = Scale tonic (Mode $ maybe err id $ NonEmpty.nonEmpty $ distanceVs tonic vs)
-        where
-          err = error "HasPitches for Scale/Chord changed number of elements"
-
-type instance S.Pitch (Chord a) = S.Pitch a
-
-type instance S.SetPitch b (Chord a) = Chord (S.SetPitch b a)
-
-instance forall a b. (HasPitches a b, AffineSpace a, AffineSpace b) => HasPitches (Chord a) (Chord b) where
-  pitches f (Chord s) = Chord <$> pitches f s
-
-scale :: AffineSpace a => a -> Mode a -> Scale a
-scale = Scale
+scale :: AffinePair v p => p -> Mode v p -> Scale v p
+scale = ScaleChord
 
 -- |
 -- > Lens' (Scale Pitch) Pitch
-scaleTonic :: Lens' (Scale a) a
-scaleTonic f (Scale t xs) = fmap (\t -> Scale t xs) $ f t
+scaleTonic :: Lens' (Scale v p) p
+scaleTonic f (ScaleChord t xs) = fmap (\t -> ScaleChord t xs) $ f t
 
 -- |
 -- > Lens' (Scale Pitch) (Mode Pitch)
-scaleMode :: Lens' (Scale a) (Mode a)
-scaleMode f (Scale t xs) = fmap (\xs -> Scale t xs) $ f xs
+scaleMode :: Lens' (Scale v p) (Mode v p)
+scaleMode f (ScaleChord t xs) = fmap (\xs -> ScaleChord t xs) $ f xs
 
 -- |
 --
 -- >>> repeatingInterval majorScale
 -- _P8
-repeatingInterval :: AffineSpace a => Mode a -> Diff a
+repeatingInterval :: AffinePair v p => Mode v p -> v
 repeatingInterval (Mode xs) = sumV xs
 
 -- |
@@ -286,7 +248,7 @@ repeatingInterval (Mode xs) = sumV xs
 -- m2
 -- >>> leadingInterval pureMinorScale
 -- _M2
-leadingInterval :: AffineSpace a => Mode a -> Diff a
+leadingInterval :: AffinePair v p => Mode v p -> v
 leadingInterval (Mode xs) = NonEmpty.last xs
 
 isHeadOf :: Eq a => a -> Stream a -> Bool
@@ -296,8 +258,9 @@ isHeadOf a (b Stream.:> _) = a == b
 -- @
 -- length (generator x) == n -> invertMode n x = x
 -- @
-invertMode :: AffineSpace a => Integer -> Mode a -> Mode a
+invertMode :: AffinePair v p => Integer -> Mode v p -> Mode v p
 invertMode n (Mode xs) = Mode (rotate n xs)
+
 
 -- TODO move
 
@@ -332,25 +295,22 @@ instance FiniteSequence NonEmpty where
       left (x :| y : rs) = y :| (rs ++ [x])
       right = NonEmpty.reverse . left . NonEmpty.reverse
 
+
 -- TODO semantically suspect!
-scaleToList :: AffineSpace a => Scale a -> [a]
-scaleToList (Scale tonic (Mode leaps)) = init $ offsetPoints tonic $ toList leaps
+scaleToList :: AffinePair v p => Scale v p -> [p]
+scaleToList (ScaleChord tonic (Mode leaps)) = init $ offsetPoints tonic $ toList leaps
 
--- TODO lawless class. Also add rotate and other Mode/ChordType ops to here?
-class Generated f where
-  -- |
-  -- Returns the interval sequenc that generates the given mode.
-  --
-  -- The length of this sequence gives the number of notes in the scale,
-  -- e.g. for a pentatonic (5-note) scale @s@, @length (generator s) == 5@,
-  -- for a heptatonic (7-note) scale it is 7, and so on.
-  generator :: f a -> NonEmpty (Diff a)
 
-instance Generated Chord where
-  generator (Chord (Scale _ (Mode x))) = x
+-- |
+-- Returns the interval sequenc that generates the given mode.
+--
+-- The length of this sequence gives the number of notes in the scale,
+-- e.g. for a pentatonic (5-note) scale @s@, @length (generator s) == 5@,
+-- for a heptatonic (7-note) scale it is 7, and so on.
+generator :: ScaleChord a 'Root v p -> NonEmpty v
+generator (ScaleChord _ (Mode x)) = x
 
-instance Generated Scale where
-  generator (Scale _ (Mode x)) = x
+{-
 
 class Countable f where
 
@@ -442,9 +402,6 @@ complementInterval = leadingInterval
 invertChord :: AffineSpace a => Integer -> ChordType a -> ChordType a
 invertChord = invertMode
 
-{-# DEPRECATED chordToList "Use (getVoiced . voiced) instead" #-}
-
-{-# DEPRECATED scaleToList "Use (getVoiced . voiced) instead" #-}
 
 -- | Returns a single inversion of the given chord (no repeats!).
 chordToList :: AffineSpace a => Chord a -> [a]
@@ -622,3 +579,4 @@ voiceIn n x = Voiced x [0 .. n - 1]
 
 invertVoicing :: Integer -> Voiced f a -> Voiced f a
 invertVoicing n (Voiced f xs) = Voiced f (fmap (+ n) xs)
+-}
