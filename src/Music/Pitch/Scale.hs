@@ -43,18 +43,16 @@ module Music.Pitch.Scale
 
     -- * Modes and Chord types
     Mode,
-    modeFromSteps,
-    modeIntervals,
     ChordType,
-    functionFromSteps,
-    functionIntervals,
+    modeIntervals,
+    chordTypeIntervals,
+    invertMode,
 
     -- * Scales
     Scale,
     scaleTonic,
     scaleMode,
     leadingInterval,
-    invertMode,
     scale,
     scaleToList,
 
@@ -196,16 +194,9 @@ type instance S.SetPitch p (ScaleChord o r v _p) = ScaleChord o r v (S.SetPitch 
 instance HasPitches p1 p2 => HasPitches (ScaleChord o r v p1) (ScaleChord o r v p2) where
   pitches = traverse . pitches
 
--- |
--- @
--- majorScale = modeFromSteps [M2,M2,m3,M2,M2,M2,m3]
---
--- > [Interval] -> Mode Interval Pitch
-modeFromSteps :: NonEmpty v -> Mode v p
-modeFromSteps = Mode
+mode :: NonEmpty v -> Mode v p
+mode = Mode
 
--- |
--- > Lens' (Mode Interval Pitch) [Interval]
 modeIntervals :: Lens' (Mode v p) (NonEmpty v)
 modeIntervals f (Mode is) = fmap (\is -> Mode is) $ f is
 
@@ -213,13 +204,9 @@ modeIntervals f (Mode is) = fmap (\is -> Mode is) $ f is
 scale :: AffinePair v p => p -> Mode v p -> Scale v p
 scale = ScaleChord
 
--- |
--- > Lens' (Scale Pitch) Pitch
 scaleTonic :: Lens' (Scale v p) p
 scaleTonic f (ScaleChord t xs) = fmap (\t -> ScaleChord t xs) $ f t
 
--- |
--- > Lens' (Scale Pitch) (Mode Interval Pitch)
 scaleMode :: Lens' (Scale v p) (Mode v p)
 scaleMode f (ScaleChord t xs) = fmap (\xs -> ScaleChord t xs) $ f xs
 
@@ -330,26 +317,16 @@ scaleToSet (ScaleChord tonic (Mode leaps)) =
     Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
   )
 
--- |
--- > [Interval] -> Interval -> ChordType Interval Pitch
-functionFromSteps :: NonEmpty v -> ChordType v p
-functionFromSteps = Mode
 
 chord :: AffinePair v p => p -> ChordType v p -> Chord v p
 chord = ScaleChord
 
--- |
--- > Lens' (ChordType Interval Pitch) [Interval]
-functionIntervals :: Lens' (ChordType v p) (NonEmpty v)
-functionIntervals f (Mode is) = fmap (\is -> Mode is) $ f is
+chordTypeIntervals :: Lens' (ChordType v p) (NonEmpty v)
+chordTypeIntervals f (Mode is) = fmap (\is -> Mode is) $ f is
 
--- |
--- > Lens' (Chord Pitch) Pitch
 chordTonic :: Lens' (Chord v p) p
 chordTonic f (ScaleChord t xs) = fmap (\t -> ScaleChord t xs) $ f t
 
--- |
--- > Lens' (Chord Pitch) (ChordType Interval Pitch)
 chordType :: Lens' (Chord v p) (ChordType v p)
 chordType f (ScaleChord t xs) = fmap (\xs -> ScaleChord t xs) $ f xs
 
@@ -363,7 +340,6 @@ chordType f (ScaleChord t xs) = fmap (\xs -> ScaleChord t xs) $ f xs
 -- >>> complementInterval majorMinorSeventhChord
 -- _M2
 --
--- > Lens' (ChordType Interval Pitch) Interval
 complementInterval :: AffinePair v p => ChordType v p -> v
 complementInterval (Mode xs) = NonEmpty.last xs
 
