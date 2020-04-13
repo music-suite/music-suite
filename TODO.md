@@ -467,6 +467,9 @@ Consider switching to a decentralized issue tracker such as:
   - Graphical backends
     - Piano roll
 
+- Bug: TimeSignatures and similar only show up if providing span
+  E.g. timeSignatureDuring works, timeSignature does not
+
 - Save example data from https://github.com/hanshoglund/.stash
 
 - [X]  $entrypoint Decide on top-level interface
@@ -558,7 +561,10 @@ Consider switching to a decentralized issue tracker such as:
   - [X] Bug: crashes on multi-page Lilypond output
   - Repeat works, should look at cache/output dir
   - See $interactive
-  - Make feedback loop faster: Optimize "Compiling" (Haskell) phase, run Typesetting/RenderingAudio in parallel
+  - Make feedback loop faster:
+    - Optimize "Compiling" (Haskell) phase
+    - Run Typesetting/RenderingAudio in parallel
+    - "Interpret at selection" a la most Lisp interpreters
 
 
 - [X] Fix lawless (HasPosition (Score a))
@@ -664,6 +670,10 @@ Consider switching to a decentralized issue tracker such as:
     strict generalization of Placed)
 
 - [X] Time.Voice API: Do not mention Meta (it's not used and there's no HasMeta instance).
+
+- Import data from various corpuses
+  - musescore.com
+  - https://web.mit.edu/music21/doc/about/referenceCorpus.html
 
 - [X] $reactiveSemantics
   - Briefly: Simultaneous events should not be allowed with Reactive. Semantically:
