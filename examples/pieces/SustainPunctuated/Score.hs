@@ -8,8 +8,8 @@ module Main where
 
 import Control.Lens (_head, _last, each, nullOf)
 import qualified Data.List
-import qualified Data.Monoid
 import Data.Maybe
+import qualified Data.Monoid
 import Music.Prelude
 import qualified Music.Score.Pitch
 import qualified Music.Score.Pitch as S
@@ -25,37 +25,52 @@ and so on.
 
 The fast notes (subj, subj2) are generated using stitchTogether, which unfolds a melody
 by stitching it with itself.
+
+TODO the uses of stretchRelativeOnset is unnecessary for now. If the sustained notes are
+not in some non-decaying instrument (e.g. not metal percussion) it might be useful to set
+durations explicitly.
 -}
 
 subj :: (HasPitches' a, IsPitch a, S.Pitch a ~ Pitch) => Voice a
 subj =
   compress 16
-    $ simplifyPitches
     $ (!! 3)
     $ stitchTogether
     $ mconcat
     $ concat
     $ replicate 5 [c, g, bb, g, cs, b_]
-    --  $ replicate 15 [c, g, g, b_, e, d]
 
--- subj2 = compress 16 $ simplifyPitches $ (!! 3) $ stitchTogether $ mconcat $ concat $ replicate 5 [c,e,f,e,c,cs]
+--  $ replicate 15 [c, g, g, b_, e, d]
+
 subj2 :: (HasPitches' a, IsPitch a, S.Pitch a ~ Pitch) => Voice a
 subj2 =
   compress 16
-    $ simplifyPitches
     $ (!! 3)
     $ stitchTogether
     $ mconcat
     $ concat
     $ replicate 5 [c, e, f, e, c, ds]
-    --  $ replicate 15 [c, e, d] -- f, e, c, ds]
+
+--  $ replicate 15 [c, e, d] -- f, e, c, ds]
 
 otherNotes :: a -> Voice a -> Score a
-otherNotes def v = ppar $ zipWith (\t n -> delay t (pure n)) ts (fmap (fromMaybe
-  def . voiceAtDuration v) ts)
+otherNotes def v =
+  ppar $
+    zipWith singleNoteAt
+      ts
+      ( fmap
+          ( fromMaybe
+              def
+              . voiceAtDuration v
+          )
+          ts
+      )
   where
     -- Times to sample
     ts = [1, 5.25, 7, 9.75, 15, 16.5, 18, 19]
+
+singleNoteAt :: Duration -> a -> Score a
+singleNoteAt t n = delay t (pure n)
 
 music :: Music
 music =
@@ -98,4 +113,3 @@ octavesBelow n x = x <> octavesDown n x
 
 stitchTogether :: (HasPitches' a, Transposable a) => Voice a -> [Voice a]
 stitchTogether = Data.List.unfoldr (\v -> let v2 = stitch v v in Just (v2, v2))
-
