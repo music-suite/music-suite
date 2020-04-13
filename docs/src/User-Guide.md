@@ -331,6 +331,8 @@ TODO basic functions
 
 ### Function composition
 
+TODO analogously to composition of music seen above we can compose *funtions*.
+
 Here is an example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
 
 ```music+haskell
