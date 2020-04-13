@@ -119,6 +119,7 @@ module Music.Pitch.Scale
     diminishedChord,
     halfDiminishedChord,
     majorMinorSeventhChord,
+    dominantSeventhChord,
     majorMajorSeventhChord,
     minorMinorSeventhChord,
     minorMajorSeventhChord,
@@ -481,9 +482,11 @@ diminishedChord = Mode [m3, m3, m3, m3]
 halfDiminishedChord :: ChordType Interval Pitch
 halfDiminishedChord = Mode [m3, m3, _M3, _M2]
 
--- | Also known as "dominant seventh".
 majorMinorSeventhChord :: ChordType Interval Pitch
 majorMinorSeventhChord = Mode [_M3, m3, m3, _M2]
+
+dominantSeventhChord :: ChordType Interval Pitch
+dominantSeventhChord = majorMinorSeventhChord
 
 -- | Also known as "major seventh".
 majorMajorSeventhChord :: ChordType Interval Pitch
