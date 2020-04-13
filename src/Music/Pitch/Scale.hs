@@ -40,31 +40,42 @@ module Music.Pitch.Scale
     Orientation(..),
     Rooting(..),
     ScaleChord(..),
+    generator,
+    index,
+    member,
+    tabulate,
 
     -- * Modes and Chord types
     Mode,
     ChordType,
-    modeIntervals,
-    chordTypeIntervals,
+    -- modeIntervals,
+    -- chordTypeIntervals,
+    leadingInterval,
+    complementInterval,
     invertMode,
 
     -- * Scales
     Scale,
-    scaleTonic,
-    scaleMode,
-    leadingInterval,
     scale,
     scaleToList,
+    -- scaleTonic,
+    -- scaleMode,
 
     -- * Chords
     Chord,
-    chordTonic,
-    chordType,
-    complementInterval,
-    invertChord,
     chord,
     chordToList,
+    -- chordTonic,
+    -- chordType,
+    invertChord,
     repeatingInterval,
+
+    -- * Conversions
+    chordToScale,
+    scaleToChord,
+    chordTypeToMode,
+    modeToChordType,
+    reorient,
 
     -- * Common modes, scales and chords
 
@@ -186,12 +197,11 @@ instance Bitraversable (ScaleChord o r) where
   bitraverse f _ (Mode xs) = Mode <$> traverse f xs
   bitraverse f g (ScaleChord p xs) = ScaleChord <$> g p <*> bitraverse f g xs
 
-
 type instance S.Pitch (ScaleChord o r v p) = S.Pitch p
 
-type instance S.SetPitch p (ScaleChord o r v _p) = ScaleChord o r v (S.SetPitch p _p)
+type instance S.SetPitch p (ScaleChord o r v p') = ScaleChord o r v (S.SetPitch p p')
 
-instance HasPitches p1 p2 => HasPitches (ScaleChord o r v p1) (ScaleChord o r v p2) where
+instance HasPitches p p' => HasPitches (ScaleChord o r v p) (ScaleChord o r v p') where
   pitches = traverse . pitches
 
 mode :: NonEmpty v -> Mode v p
@@ -242,7 +252,7 @@ invertMode n (Mode xs) = Mode (rotate n xs)
 -- TODO move
 
 -- |
--- Class of types representing finite sets.
+-- Class of types representing finite sequences.
 --
 -- @
 -- n `mod` length n == 0 -> rotate n = id
@@ -284,12 +294,28 @@ scaleToList (ScaleChord tonic (Mode leaps)) = init $ offsetPoints tonic $ toList
 -- The length of this sequence gives the number of notes in the scale,
 -- e.g. for a pentatonic (5-note) scale @s@, @length (generator s) == 5@,
 -- for a heptatonic (7-note) scale it is 7, and so on.
-generator :: ScaleChord a 'Root v p -> NonEmpty v
+generator :: ScaleChord o r v p -> NonEmpty v
+generator (Mode x) = x
 generator (ScaleChord _ (Mode x)) = x
 
+reorient :: ScaleChord o r v p -> ScaleChord o' r v p
+reorient (Mode xs) = Mode xs
+reorient (ScaleChord x xs) = ScaleChord x (reorient xs)
+
+chordTypeToMode :: ChordType v p -> Mode v p
+chordTypeToMode = reorient
+
+modeToChordType :: Mode v p -> ChordType v p
+modeToChordType = reorient
+
+scaleToChord :: Scale v p -> Chord v p
+scaleToChord = reorient
+
+chordToScale :: Chord v p -> Scale v p
+chordToScale = reorient
 
 
-index :: AffinePair v p => Chord v p -> Integer -> p
+index :: AffinePair v p => ScaleChord o 'Root v p -> Integer -> p
 index s n = case fromIntegral n of
   n
     | n > 0 -> pos Stream.!! (n - 1)
@@ -297,9 +323,9 @@ index s n = case fromIntegral n of
     | n < 0 -> neg Stream.!! negate (n + 1)
     | otherwise -> error "impossible"
   where
-    (neg, z, pos) = scaleToSet s
+    (neg, z, pos) = tabulate s
 
-member :: (Ord p, AffinePair v p) => Chord v p -> p -> Bool
+member :: (Ord p, AffinePair v p) => ScaleChord o 'Root v p -> p -> Bool
 member s p = case p of
   p
     | p > z -> p `isHeadOf` Stream.dropWhile (< p) pos
@@ -307,11 +333,11 @@ member s p = case p of
     | p < z -> p `isHeadOf` Stream.dropWhile (> p) neg
     | otherwise -> error "impossible"
   where
-    (neg, z, pos) = scaleToSet s
+    (neg, z, pos) = tabulate s
 
 -- Could be generalized to ScaleChord o Root (TODO flip type params!)
-scaleToSet :: AffinePair v p => Chord v p -> (Stream p, p, Stream p)
-scaleToSet (ScaleChord tonic (Mode leaps)) =
+tabulate :: AffinePair v p => ScaleChord o 'Root v p -> (Stream p, p, Stream p)
+tabulate (ScaleChord tonic (Mode leaps)) =
   ( Stream.tail $ offsetPointsS tonic $ fmap negateV $ Stream.cycle $ NonEmpty.reverse leaps,
     tonic,
     Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
@@ -511,18 +537,35 @@ deriving instance (Eq (f v p)) => Eq (Voiced f v p)
 deriving instance (Ord (f v p)) => Ord (Voiced f v p)
 deriving instance (Show (f v p)) => Show (Voiced f v p)
 
+-- | Extract the pitches of a voiced chord.
 getVoiced :: (AffinePair v p) => Voiced Chord v p -> NonEmpty p
 getVoiced x = index (getChordScale x) <$> getSteps x
 
+-- | The default closed voicing.
+--
+-- @
+-- voiced (chord c majorTriad) = [c,e,g]
+-- @
 voiced :: Chord v p -> Voiced Chord v p
 voiced x = voiceIn (fromIntegral $ length (generator x)) x
 
--- | Like 'voiced' but include the leading/repeating interval.
+-- | A closed voicing but including the repeating interval.
+--
+-- @
+-- voiced (chord c majorTriad) = [c,e,g,c']
+-- @
 voicedLong :: Chord v p -> Voiced Chord v p
 voicedLong x = voiceIn (fromIntegral $ length (generator x) + 1) x
 
+-- | A closed voicing with the given number of pitches, using the
+-- tonic as root.
+--
+-- @
+-- voicedIn 5 (chord c majorTriad) = [c,e,g,c',e']
+-- @
 voiceIn :: Integer -> Chord v p -> Voiced Chord v p
 voiceIn n x = Voiced x [0 .. n - 1]
 
+-- | Invert a voiced chord.
 invertVoicing :: Integer -> Voiced Chord v p -> Voiced Chord v p
 invertVoicing n (Voiced f xs) = Voiced f (fmap (+ n) xs)

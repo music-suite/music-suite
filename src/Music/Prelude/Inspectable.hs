@@ -111,9 +111,6 @@ instance Inspectable (ChordType Interval Pitch) where
 instance Inspectable (Scale Interval Pitch) where
   inspectableToMusic = inspectableToMusic . voiced . scaleToChord
 
-scaleToChord :: Scale v p -> Chord v p
-scaleToChord = error "TODO scaleToChord"
-
 instance Inspectable (Chord Interval Pitch) where
   inspectableToMusic = inspectableToMusic . voiced
 
