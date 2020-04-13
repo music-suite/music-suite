@@ -915,7 +915,18 @@ inspectableToMusic @[Chord Pitch] $
 
 As musicians we tend to think of scales and chords as distinct entities. From a structural point there is very little difference: both represent a subset of some larger pitch space. The main difference is in how they are *used*: scales provide pitch material for melodies and chords, while chords are played in parallel, after applying textures, voicings and so on.
 
-TODO convert back/forth
+Like @[Ambitus], @[Scale] and @[Chord] are type constructors taking two type parameters for interval and pitch respectively. We can convert back and forth between them:
+
+```haskell
+chordToScale (chord c majorTriad)
+  :: Chord Interval Pitch
+
+chordToScale (chord c majorScale)
+  :: Scale Interval Pitch
+
+chordToScale (chord c majorTriad)
+  :: Scale Interval Pitch
+```
 
 TODO examples: Whole tone is a superset of augmented, octatonic a superset of dimimished and so on
 
@@ -1378,24 +1389,28 @@ Dynamic values are overloaded in the same way as pitches. The dynamic literals h
 TODO explain overloading of articulation
 -->
 
-## Updating
+## More examples
 
-TODO
+A note with default articulation and dynamics:
 
 ```music+haskell
 c
 ```
 
+Setting dynamics:
+
 ```music+haskell
 set dynamics' pp c
 ```
+
+Setting the accentuation and separation components of articulation:
 
 ```music+haskell
 set articulations' (accentuation +~ 2 $ mempty) c
 ```
 
 ```music+haskell
-over (articulations' . accentuation) (+ 2) c
+over (articulations' . separation) (+ 2) c
 ```
 
 
@@ -1765,11 +1780,13 @@ set parts' violins $ pseq
 TODO chord tremolo
 
 
+<!--
 ### Wind techniques
 
 TODO fingering, multiphonics
 
 TODO key sounds, percussive attacks ("pizz"), haromonics/whistle tones
+-->
 
 ### Brass techniques
 
@@ -1786,7 +1803,7 @@ set parts' trombones $ pseq
   |* (3/2)
 ```
 
-TODO alternative mutes
+<!-- TODO alternative mutes -->
 
 TODO hand stopping
 
@@ -1806,14 +1823,16 @@ parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
 
 For rolls see [the previous section](tremolo-trills-and-rolls).
 
-TODO render e.g. snare drum parts correctly
+TODO render e.g. snare drum parts correctly on single-line staff
 
 
+<!--
 # Lyrics and Vocals
 
 TODO adding lyrics (including syllables/word boundaries/melismas)
 
 TODO soloists/character name
+-->
 
 <!--
 
@@ -2238,8 +2257,6 @@ Inspecting the duration
 
 Inspecting the position
 
-TODO instead of using Transformable, show how to set duration explicitly via lens
-
 ```music+haskell
 let
     melody = legato $ pseq [pseq [c,d,e,c], pseq [e,f], g|*2]
@@ -2349,8 +2366,6 @@ inspectableToMusic @(Voice [StandardNote]) $
   ]
 ```
 
-TODO names of isMelodicConsonance/isConsonance is confusing
-
 ```music+haskell
 inspectableToMusic @(Voice [Pitch]) $
 
@@ -2437,7 +2452,11 @@ TODO sequential composition of aligned voices "snap to next stressed beat":
 
 A @[Score] represents a *parallel composition of values*, each tagged with *time span*.
 
-TODO empty scores and rests (see (HasPosition Score) in TODO.md)
+An empty scores has no duration, but we can represent rests using `Score (Maybe a)`.
+
+```music+haskell
+pseq [c,rest,d] |/ 4
+```
 
 
 TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
@@ -2467,7 +2486,7 @@ fmap Just $ renderPattern (a <> b) (0.5 <-> 1.5)
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
 ```
 
-TODO Patterns are @[Transformable], @[Transposing], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns.
+TODO Patterns are @[Transformable], @[Transposable], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns.
 
 ```music+haskell
 fmap Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
@@ -2476,10 +2495,7 @@ fmap Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
 ```
 
-TODO renderPatternsRel
-
-TODO renderPatternsAbs
-
+TODO rendering patterns
 
 TODO finish/move to examples:
 
@@ -2517,6 +2533,7 @@ inspectableToMusic bachCMajChords
     bachCMajPattern = newPattern $ stretchTo 1 $ (view voice) $ fmap pure [0,1,2,3,4,2,3,4]
 ```
 
+<!--
 ## Splitting and reversing
 
 @[Splittable]
@@ -2559,6 +2576,7 @@ music |> rev music
     music = (1/16) *| pseq [c|*3, legato $ pseq [accent eb, fs|*3, a, b|*3], gs, f|*3, d]
 ```
 
+-->
 
 
 
@@ -2573,7 +2591,7 @@ TODO general intro on how to build/organize larger forms in Haskell/pure FP.
 
 ```music+haskell
 let
-    melody = legato $ pseq [c,d,e,c]|/16
+    melody = accent $ pseq [c,d,e]|/16
 in times 4 $ melody
 ```
 
