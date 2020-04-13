@@ -106,3 +106,13 @@ dmProgression1 = _8vb $
 
 -- TODO voicings sound "better/fuller" when the intervals get larger (and more
 -- consonant) towards the bottom
+
+-- TODO voice leading concerns when dealing with chord sequences. For example in
+-- classical harmony:
+--
+-- * Dissonant notes (relative the root) in a dominanth chords (e.g. 7th, 9th)
+--   are resolved downwards.
+--
+-- * Leading tone resolves upwards
+
+-- TODO "drop" voicings
