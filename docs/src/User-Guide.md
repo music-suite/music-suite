@@ -322,7 +322,14 @@ compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
 
 ## Functions and types
 
+So far we have written our musical expressions in terms of pre-defined expressions and functions. However the real power of using a functional language is to be able to define our own functions.
+
+> Note: In Haskell, functions and operators are the same, apart from syntax.
+
+
 TODO basic functions
+
+### Function composition
 
 Here is an example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
 
@@ -1211,6 +1218,17 @@ us to the Western/classical set of pitches and are relative (assuming, but not i
 
 We will also see how *tuning systems* relate structured pitch representations (such as `Pitch`) to unstructured ones (such as `Hertz`).
 
+## Tuning and intonation
+
+### Absolute pitch
+
+@[Hertz]
+
+Logarithmic scales:
+
+@[Fifths]
+@[Cents]
+
 ## Alternative pitch representations
 
 ### Equal tempered scales
@@ -1225,16 +1243,6 @@ TODO the Common.Pitch type has built-in support for chromatic/diatonic harmony. 
 
 
 
-## Tuning and intonation
-
-### Absolute pitch
-
-@[Hertz]
-
-Logarithmic scales:
-
-@[Fifths]
-@[Cents]
 
 
 <!--
@@ -2634,7 +2642,7 @@ TODO traverals are a very powerful concept and we'll only
 
 A traversal that targets exactly one element is known as a *lens*. We've already seen examples of lenses and traversals in the chapters on [dynamics](TODO) and [articulation](TODO) in the form of `.~` (or `set`) operator.
 
-> Note: For those familiar with Haskell: Music Suite defines lenses and traversals compatible with `lens` (and `microlens`).
+> Note: For those familiar lenses in Haskell: Music Suite defines lenses and traversals compatible with the `lens` and `microlens` packages.
 
 Can be used to:
 
