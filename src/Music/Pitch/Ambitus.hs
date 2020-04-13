@@ -12,8 +12,6 @@
 module Music.Pitch.Ambitus
   ( Ambitus (..),
     ambitus,
-    ambitusHighest,
-    ambitusLowest,
     ambitusInterval,
     inAmbitus,
   )
@@ -32,7 +30,7 @@ import Music.Pitch.Common.Semitones
 -- | A set of pitches between two extremes.
 --
 -- Also known as range, tessitura or (in maths) interval.
-data Ambitus v p = Ambitus !p !p
+data Ambitus v p = Ambitus { low :: !p, high :: !p }
   deriving (Functor, Foldable, Traversable, Show)
 
 instance Bifunctor Ambitus where
@@ -52,15 +50,8 @@ ambitus = iso f g
     f (x, y) = Ambitus x y
     g (Ambitus x y) = (x, y)
 
--- | Returns a postive interval (or _P1 for empty ambitus)
 ambitusInterval :: (AffinePair v p) => Ambitus v p -> v
 ambitusInterval (Ambitus x y) = x .-. y
-
-ambitusLowest :: AffinePair v p => Ambitus v p -> p
-ambitusLowest (Ambitus x _y) = x
-
-ambitusHighest :: AffinePair v p => Ambitus v p -> p
-ambitusHighest (Ambitus _x y) = y
 
 inAmbitus :: (AffinePair v p, HasSemitones v) => Ambitus v p -> p -> Bool
 inAmbitus (Ambitus a c) b =

@@ -516,7 +516,7 @@ ambitusOctaves = fromIntegral . octaves . ambitusInterval
 
 -- | The lowest octave (relative middle C) in present a given ambitus.
 ambitusLowestOctave :: Ambitus Common.Interval Common.Pitch -> Int
-ambitusLowestOctave = fromIntegral . octaves . (.-. c) . ambitusLowest
+ambitusLowestOctave = fromIntegral . octaves . (.-. c) . Music.Pitch.Ambitus.low
 
 -- |  Interpolate between the highest and lowest points in an ambitus.
 --
