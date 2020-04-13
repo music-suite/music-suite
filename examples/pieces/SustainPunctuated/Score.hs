@@ -12,6 +12,7 @@ import qualified Data.Monoid
 import Data.Maybe
 import Music.Prelude
 import qualified Music.Score.Pitch
+import qualified Music.Score.Pitch as S
 
 main = defaultMain $ inspectableToMusic music
 
@@ -26,7 +27,7 @@ The fast notes (subj, subj2) are generated using stitchTogether, which unfolds a
 by stitching it with itself.
 -}
 
-subj :: Voice StandardNote
+subj :: (HasPitches' a, IsPitch a, S.Pitch a ~ Pitch) => Voice a
 subj =
   compress 16
     $ simplifyPitches
@@ -38,6 +39,7 @@ subj =
     --  $ replicate 15 [c, g, g, b_, e, d]
 
 -- subj2 = compress 16 $ simplifyPitches $ (!! 3) $ stitchTogether $ mconcat $ concat $ replicate 5 [c,e,f,e,c,cs]
+subj2 :: (HasPitches' a, IsPitch a, S.Pitch a ~ Pitch) => Voice a
 subj2 =
   compress 16
     $ simplifyPitches
@@ -48,13 +50,12 @@ subj2 =
     $ replicate 5 [c, e, f, e, c, ds]
     --  $ replicate 15 [c, e, d] -- f, e, c, ds]
 
-otherNotes :: Voice a -> Score a
-otherNotes v = ppar $ zipWith (\t n -> delay t (pure n)) ts (fmap (fromMaybe (error "Outside voice") . voiceAtDuration v) ts)
+otherNotes :: a -> Voice a -> Score a
+otherNotes def v = ppar $ zipWith (\t n -> delay t (pure n)) ts (fmap (fromMaybe
+  def . voiceAtDuration v) ts)
   where
     -- Times to sample
     ts = [1, 5.25, 7, 9.75, 15, 16.5, 18, 19]
-
-noteToScore n = [renderAlignedNote $ aligned 0 0 n] ^. score
 
 music :: Music
 music =
@@ -62,7 +63,7 @@ music =
       $ level ff
       $ octavesAbove 1
       $ _8va
-      $ over (events . each) (stretchRelativeOnset 1) (otherNotes subj)
+      $ over (events . each) (stretchRelativeOnset 1) (otherNotes Nothing subj)
   )
     <> ( set parts' violins1 $
            renderAlignedVoice (aligned 0 0 subj)
@@ -70,7 +71,7 @@ music =
     <> ( set parts' (tutti marimba) $ level ff
            $ octavesAbove 1
            $ _8va
-           $ over (events . each) (stretchRelativeOnset 1) (otherNotes subj2)
+           $ over (events . each) (stretchRelativeOnset 1) (otherNotes Nothing subj2)
        )
     <> ( set parts' violins2 $
            renderAlignedVoice (aligned 0 0 subj2)
@@ -87,7 +88,7 @@ midSect1 =
       $ level ff
       $ octavesAbove 0
       $ _15va
-      $ over (events . each) (stretchRelativeOnset 1) (otherNotes subj2)
+      $ over (events . each) (stretchRelativeOnset 1) (otherNotes Nothing subj2)
   )
     <> (set parts' violas $ renderAlignedVoice (aligned 0 0 subj2))
 
