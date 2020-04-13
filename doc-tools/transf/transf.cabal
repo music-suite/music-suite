@@ -35,9 +35,6 @@ description:
     You can supply your own file names. In the above example, the file name is a hash of the source code.
 
 
-source-repository head
-  type:             git
-  location:         git://github.com/hanshoglund/transf.git
 
 library
     build-depends:
