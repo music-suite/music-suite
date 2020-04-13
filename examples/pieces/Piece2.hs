@@ -1,5 +1,5 @@
 
-{-# LANGUAGE ConstraintKinds, FlexibleContexts, MultiParamTypeClasses, ViewPatterns, FlexibleInstances #-}
+{-# LANGUAGE DeriveFunctor, TypeApplications, TypeFamilies, ConstraintKinds, FlexibleContexts, MultiParamTypeClasses, ViewPatterns, FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, TupleSections #-}
 
 module Piece2 where
@@ -10,7 +10,9 @@ import Music.Prelude hiding (
     clarinets1, clarinets2,
     bassoons1,  bassoons2,
     trumpets1,  trumpets2,
-    trombones1, trombones2
+    trombones1, trombones2,
+    doubleParts,
+    chord
     )
 import Data.Foldable (Foldable)
 import Data.Tree (Tree(..), unfoldTree, drawTree)
@@ -25,9 +27,36 @@ import qualified Control.Comonad
 import qualified Debug.Trace
 import qualified Music.Time.Internal.Convert
 import Music.Time.Internal.Util (rotate)
-import Util
--- FIXME why?
+-- import Util ()
 import Music.Prelude.Inspectable ()
+import Control.Lens (Iso')
+
+newtype Floater a = Floater { getFloater :: [Aligned (Note a)] }
+  deriving (Eq, Ord, Show, Functor, Semigroup, Monoid, Transformable, Alignable)
+
+newtype Shape = Shape { getShape :: Int -> ([Alignment],[Duration]) } -- both lists infinite!
+type PartOf a = Music.Score.Part a
+chord :: (IsInterval (Diff a), AffineSpace a) => Iso' [a] (Chord a)
+chord = undefined
+asScore = id @Music
+takeV = undefined
+dropV = undefined
+merge = undefined
+fmap2 = fmap . fmap
+doubleParts = undefined
+pitchHertz = undefined
+makeFloater = undefined
+renderFloater = undefined
+center = undefined
+left = undefined
+right = undefined
+justT = undefined
+trimChord = undefined
+pseqPad = undefined
+combineShape = undefined
+toDouble = undefined
+interpShape = undefined
+
 {-
 
 MIST for orchestra
@@ -42,7 +71,7 @@ Don't use strict tempo throughout – experiment with 3/4 etc and add some acc/r
   timp[large cymbal on timp, bowed and w large mallets]
   2perc[BD,med and large TD,bright sus cym,low sus cymb,vib,chimes w brushes]
   str
-  
+
   Tpt mutes: Straight, Bucket and Harmon
   Tbn mutes: Straight and Harmon
   Tuba mutes: Straight
@@ -130,7 +159,7 @@ fullToTop       = compress 8 $ leftLeaningShape'   $ \n -> map ((+ 2) . (*) (4/1
 topToFullToTop  = compress 8 $ centeredShape'      $ \n -> map ((+ 2) . (*) (4/12)) $ [1..fromIntegral n]
 bottomToFull    = compress 8 $ rightLeaningShape'  $ \n -> map ((+ 2) . (*) (4/12)) $ reverse $ [1..fromIntegral n]
 fullToBottom    = compress 8 $ leftLeaningShape'   $ \n -> map ((+ 2) . (*) (4/12)) $ reverse $ [1..fromIntegral n]
-bottomToFullToBottom 
+bottomToFullToBottom
                 = compress 8 $ centeredShape'      $ \n -> map ((+ 2) . (*) (4/12)) $ reverse $ [1..fromIntegral n]
 
 topToFull2       = compress 8 $ rightLeaningShape'  $ \n -> map ((+ 2) . (*) (4/12)) $ fmap ((*12).(^2).(/12)) $ [1..fromIntegral n]
@@ -194,7 +223,7 @@ allShapes = stretch 4 $ pseqPad 1 $ fmap ({-stretchTo 1.-}renderFloater.flip mak
   [
   circShape,
   randShape,
-  
+
   topToFull,
   fullToTop,
   topToFullToTop,
@@ -204,12 +233,12 @@ allShapes = stretch 4 $ pseqPad 1 $ fmap ({-stretchTo 1.-}renderFloater.flip mak
 
   -- topToFull2,
   -- topToFull3,
-  
+
   rhombusShape,
   torsoShape,
   checkerShape,
   rectShape,
-  
+
   bellShape,
   -- bellShape2,
   bellShapeL,
@@ -218,7 +247,7 @@ allShapes = stretch 4 $ pseqPad 1 $ fmap ({-stretchTo 1.-}renderFloater.flip mak
   -- bellShape2R,
   -- bellShapeSomewhatL,
   -- bellShape2SomewhatL,
-  
+
   vaseShape,
   slopeShape,
   -- stretch 1.5 vaseShape,
@@ -226,7 +255,7 @@ allShapes = stretch 4 $ pseqPad 1 $ fmap ({-stretchTo 1.-}renderFloater.flip mak
 
   combineShape checkerShape bellShape2
   -- combineShape rhombusShape fullToTop,
-  
+
     -- basicRightShape,
   -- basicCenteredShape,
   -- basicLeftShape
@@ -235,7 +264,7 @@ allShapes = stretch 4 $ pseqPad 1 $ fmap ({-stretchTo 1.-}renderFloater.flip mak
     -- pitchMat = otWithExtra
     -- pitchMat = enumDiatonicFromTo c c''
     pitchMat = enumDiatonicFromTo c__ c''
-                        
+
 
 diatonicField  = (takeEvery 1 (enumDiatonicFromTo c___ c'''))^.chord
   where
@@ -269,13 +298,13 @@ Construct the piece primarily out of 2 layers:
     The piece is made out of a [Aligned (Voice (Maybe (Floater StandardNote)))]
     The "slow" layer is l-aligned to 0 and stretches through the piece, the other
      layers are more local.
-  
+
   Keep the slow layer simple (but coherent with the movement of the piece!)
 -}
 fast :: [Aligned (Voice (Maybe (Floater StandardNote)))]
-fast = 
+fast =
   mconcat [
-  (set (parts'._instrument) clarinet . mconcat) [
+  (set (parts'.instrument) clarinet . mconcat) [
     [
     -- aligned 10  center smalls,
     aligned 25  center smalls2, -- In winds
@@ -301,7 +330,7 @@ fast =
     ]
   ]
   ,
-  (set (parts'._instrument) horn . delay 5) [
+  (set (parts'.instrument) horn . delay 5) [
     aligned 60   center (dummy),
     aligned 70   center (_8vb $ dummy),
     -- aligned 80   center (dummy),
@@ -315,7 +344,7 @@ fast =
     aligned 160  center (_15vb $ dummy)
   ]
   ]
-  
+
   where
     -- First section (all play "inside"), strings in mid reg -> winds mid reg -> strings full reg
     recapOffset = 210
@@ -343,7 +372,7 @@ fast =
 -- slowHarmPart2_4 = xxhighReg diatonicField <> vlowReg diatonicField3
 -- slowHarmPart2_5 = fullReg diatonicField2
 -- slowHarmPart2_6 = vlowReg diatonicField3
-                                                               
+
 slowHarmPart1_1 = midReg (chords5!!1)                             -- Dbl bass and vla
 slowHarmPart1_2 = midReg (chords5!!2) <> highReg (chords5!!2)
 slowHarmPart1_3 = lowReg (chords5!!2) <> highReg (chords5!!2)     -- Vlns group 1
@@ -362,10 +391,10 @@ slowHarmPart2_5 = fullReg (chords1!!6)
 Most important chords:
   chords1!!6
   chords1!!3 -- both used at climax
-  
+
   chords5!!1
   chords5!!2
-  
+
     Secondary (slightly nicer)
       chords1!!5
       chords1!!4
@@ -386,12 +415,12 @@ slow = aligned 0 left $ stretch 6 sl
           -- WW (inter: str ord)
           0   *| rest,  1   *| norest circShape (slowHarmPart1_2),
           -- Str ord tasto (inter: W)
-          
+
           0   *| rest,  1.5 *| norest circShape (slowHarmPart1_3),
           -- Str ord tasto (inter: solo groups, nat/pont)
           0   *| rest,  3.5 *| norest basicCenteredShape (slowHarmPart1_1),
           0   *| rest,  1.5 *| norest circShape (slowHarmPart1_4),
-          
+
           -- Str ord tasto+WW (inter: muted brass)
           0   *| rest,  2   *| norest fullToBottom (slowHarmPart1_5)
         ]^.voice,
@@ -422,11 +451,11 @@ slow = aligned 0 left $ stretch 6 sl
       ]
 
 renderLayer :: (HasParts' a, PartOf a ~ Part) => Aligned (Voice (Maybe (Floater a))) -> Score a
-renderLayer = tempo (metronome (1/4) 72) 
-  . join . mcatMaybes 
+renderLayer = tempo (metronome (1/4) 72)
+  . join . mcatMaybes
   . renderAlignedVoice . fmap3 (set era (0<->1) . renderFloater)
   where fmap3 = fmap.fmap.fmap
-    
+
 norest :: Shape -> Chord Pitch -> Note (Maybe (Floater StandardNote))
 norest x y = pure $ Just $ makeFloater x y
 
@@ -441,7 +470,7 @@ example = piece
 
 
 fmChords :: [[Hertz]]
-fmChords = 
+fmChords =
   -- map fmChord' [2,3,5,6,1.1232]
   map fmChord [_M3,m3,_A4,_A5,_P5,_M2,m2]
   where
@@ -458,7 +487,7 @@ fmChords =
         fsum  i = abs $ carr + modu*(fromInteger i)
         fdiff i = abs $ carr - modu*(fromInteger i)
 
-                                                                        
+
 
 
 chords1 :: [Chord Pitch]
@@ -484,7 +513,7 @@ allChords = pseq $ fmap (uncurry addText . fmap inspectableToMusic) [
 
 {-
 Randomness idea:
->>> openMusicXml$  set (parts'._instrument) violin $ rcat $ simplifyPitches $ take 40 $ zipWith (flip transform) (fmap (\x-> up (_M2^*(floor$x*16)) (c::Music))(drop 205 rands)) $ fmap (\x->(realToFrac$floor$x*(16*2))/16<->32/16) rands
+>>> openMusicXml$  set (parts'.instrument) violin $ rcat $ simplifyPitches $ take 40 $ zipWith (flip transform) (fmap (\x-> up (_M2^*(floor$x*16)) (c::Music))(drop 205 rands)) $ fmap (\x->(realToFrac$floor$x*(16*2))/16<->32/16) rands
 -}
 
 
@@ -529,11 +558,11 @@ tub = tutti tuba
 -- It has a nice shape to it, but is also *extremely* regular. Also the total lack of phasing differences
 -- (based on freq relations rather than phase relations) means it has a tendency to thin out/fatten.
 -- Commbine with phasing somehow?
--- 
--- TODO how to rewrite the expression below to allow for that kind of variation? 
+--
+-- TODO how to rewrite the expression below to allow for that kind of variation?
 -- -}
 -- recursiveFloaters :: Music
--- recursiveFloaters = 
+-- recursiveFloaters =
 --   startAt 0 $
 --   set (parts'._instrument) violin $ mconcat $ sendToSubParts [
 --     octavesUp ( 2) $ (>>= renderFloater) $ renderAlignedVoice $ aligned 0 0.5 $ beginning 100 $ stretch (2^1) $ timesN' 100 $ layer1,
@@ -544,18 +573,18 @@ tub = tutti tuba
 --   where
 --     sendToSubParts xs = let m = length xs in zipWith (\n ->  prependDiv n m) [0..m] xs
 --     prependDiv n m =  over (parts'._subpart._Wrapped') (division n m:)
---     
+--
 --     layer1 :: Voice (Floater StandardNote)
 --     layer1 = [pure flo1,rr,pure flo1,rr,pure flo1,rr,pure flo1,rr]^.voice
 --     layer2 = [pure flo1,rr,pure flo1,rr,pure flo1,rr,pure flo1,rr]^.voice
 --     layer3 = [pure flo1,rr,pure flo1,rr,pure flo1,rr,pure flo1,rr]^.voice
 --     layer4 = [pure flo1,rr,pure flo1,rr,pure flo1,rr,pure flo1,rr]^.voice
--- 
+--
 --     flo1 = makeFloater beginShape [c,d,e,f,g]
 --     -- Empty floater to fill out space between other floaters
 --     rr = stretch 0.5 (pure mempty)
---     
--- 
+--
+--
 {-
 This sounds very nice, but the time structure is much to regular!
 REMEMBER TO DO LATER: copy layers/recursiveFloaters and experiment with varying durations in the layers, alternate floaters/pitch material
@@ -571,9 +600,9 @@ Think more about pitch material.
 
 
 -- -- otWithExtra = (scaleToList $ modeToScale c__ ot) <> enumChromaticFromTo c'' c'''
--- 
+--
 -- bigFlo1NS = makeFloater randShape $ otWithExtra
--- 
+--
 -- bigFlo1  = makeFloater (stretch 15 randShape) $ otWithExtra
 -- bigFlo2  = makeFloater topToFull $ otWithExtra
 -- bigFlo1a = makeFloater (stretch 15 randShape) $ reverse $ otWithExtra
@@ -582,19 +611,19 @@ Think more about pitch material.
 -- bigFlo4  = makeFloater topToFullToTop $ reverse $ otWithExtra
 -- bigFlo3a = makeFloater fullToTop $ otWithExtra
 -- bigFlo4a = makeFloater topToFullToTop $ otWithExtra
--- 
+--
 -- -- Interpolate between different shapes
 -- example2 = pseq $ fmap (renderFloater.flip makeFloater [c..c'']) $ fmap (interpShape randShape topToFull) [0,0.1..1]
 -- -- ... pitches
 -- example3 = pseq $ fmap (renderFloater.makeFloater basicLeftShape) $ fmap (interpPitches [c,e',g'] [f,d',a']) [0,0.1..1]
--- 
+--
 -- example = mempty
 --   |> pseqPad 5 [
 --      renderFloater bigFlo1,
 --      renderFloater bigFlo2,
 --      renderFloater bigFlo3,
 --      renderFloater bigFlo4,
--- 
+--
 --      renderFloater bigFlo1a,
 --      renderFloater bigFlo2a,
 --      renderFloater bigFlo3a,
@@ -604,13 +633,13 @@ Think more about pitch material.
 --   |> (pseq $ zipWith stretch (take 10 [1.1^x | x<-[1..] ]) $ repeat $ renderFloater bigFlo2)
 --   |> (renderFloater bigFlo3 <> recursiveFloaters)
 --   |> renderFloater bigFlo3
--- 
+--
 
- 
+
 {-
--- Show chords in ascending order of dissonance. 
+-- Show chords in ascending order of dissonance.
 showDiss :: [Chord Pitch] -> Music
-showDiss = asScore . pseq . fmap (\ps -> addText (take 12 $ show $ chordDiss ps) $ ppar $ fmap fromPitch'' ps) 
+showDiss = asScore . pseq . fmap (\ps -> addText (take 12 $ show $ chordDiss ps) $ ppar $ fmap fromPitch'' ps)
   . Data.List.sortBy (Data.Ord.comparing chordDiss) . fmap (^.from chord)
 
 -- Example
@@ -637,7 +666,7 @@ disses = fmap (^.chord) [
   chordToList $ functionToChord e halfDiminishedChord,
   chordToList $ functionToChord c majorMinorSeventhChord,
   chordToList $ functionToChord c majorMajorSeventhChord,
-  
+
   interpPitches (chordToList $ functionToChord c augmentedChord) (chordToList $ functionToChord fs' halfDiminishedChord) (0/12),
   interpPitches (chordToList $ functionToChord c augmentedChord) (chordToList $ functionToChord fs' halfDiminishedChord) (1/12),
   interpPitches (chordToList $ functionToChord c augmentedChord) (chordToList $ functionToChord fs' halfDiminishedChord) (2/12),
@@ -653,32 +682,32 @@ disses = fmap (^.chord) [
 
 -}
 
--- 
+--
 -- -- Approximation of the first 17 notes of the harmonic series
 -- ot :: Mode Pitch
 -- ot = modeFromSteps ([_P8,_P5,_P4,_M3,m3,m3,_M2,_M2,_M2,_M2,m2,_A1,m2,_A1,m2,m2]) _P1
 -- {-
--- 
+--
 -- -}
--- 
+--
 -- otTree :: Tree Pitch
 -- otTree = unfoldTree (\p -> (p,filter (\p2 -> p < p2 && p2 < c''') $ drop 2 $ scaleToList $ modeToScale p m)) (octavesDown 5 c)
 --   where
 --     m = ot
 --     -- m = invertMode 1 ot
--- 
+--
 -- treeToScore :: Tree a -> Score a
 -- treeToScore (Node x xs) = pure x |> (compress 1 $ pseq $ fmap treeToScore xs)
--- 
+--
 -- showOt = putStr $ drawTree $ fmap show otTree
 -- sibOt  = openMusicXml $ asScore $ compress 32 $ treeToScore $ fmap fromPitch'' $ otTree
 
--- 
+--
 -- tutti1 = sortBy (comparing (highestPitch.instrumentRange.view _instrument)) $ tuttiParts
 -- tutti2 = sortBy (comparing (lowestPitch.instrumentRange.view _instrument)) $ tuttiParts
 -- tutti3 = sortBy (comparing (lowestPitch.instrumentRange.view _instrument)) $ takeEvery 3 tuttiParts
 -- tuttiProb = [piccoloFlutes,altoFlutes,ebClarinets,bassClarinets,contraBassoons]
--- 
+--
 -- tuttiParts :: [Part]
 -- tuttiParts = mconcat
 --     [
@@ -687,7 +716,7 @@ disses = fmap (^.chord) [
 --     divide 8  violas,
 --     divide 6  cellos,
 --     divide 4  doubleBasses,
---     
+--
 --     divide 2  piccoloFlutes,
 --     divide 1  flutes,
 --     divide 3  oboes,
@@ -700,17 +729,17 @@ disses = fmap (^.chord) [
 --     divide 1  tubas
 --     ]
 -- tuttiStrings = filter (isStringInstr.view _instrument) tuttiParts
--- 
+--
 -- floaters = [
--- 
+--
 --   stretch 1 $ makeFloater' randShape ((chords5!!0)) tutti1,
 --   stretch 1 $ makeFloater' topToFull ((chords5!!1)) tutti2,
 --   stretch 1 $ makeFloater' randShape ((chords5!!2)) tutti2,
 --   stretch 1 $ makeFloater' topToFull ((chords5!!3)) tutti3,
 --   stretch 1 $ makeFloater' fullToTop ((chords5!!4)) tutti3, -- nice trans:
 --   stretch 1 $ makeFloater' torsoShape ((chords5!!5)) tutti1,
--- 
---   
+--
+--
 --   stretch 1 $ makeFloater' torsoShape ((chords4!!0)) tutti2,
 --   stretch 1 $ makeFloater' torsoShape ((chords4!!1)) tutti2,
 --   stretch 1 $ makeFloater' checkerShape ((chords4!!2)) tutti1,
@@ -719,25 +748,25 @@ disses = fmap (^.chord) [
 --   stretch 1 $ makeFloater' rectShape ((chords4!!5)) tutti2,
 --   mempty
 --   ]
--- 
--- floaters2 = [  
+--
+-- floaters2 = [
 --   stretch 1 $ makeFloater' torsoShape ((chords1!!5)) tutti2,
 --   stretch 1 $ makeFloater' torsoShape ((chords1!!5)) tuttiParts,
 --   stretch 1 $ makeFloater' checkerShape ((chords1!!5)) tuttiParts,
 --   stretch 1 $ makeFloater' rectShape ((chords1!!5)) tuttiParts,
 --   stretch 1 $ makeFloater' randShape ((chords1!!5)) tutti2,
---   
---   
+--
+--
 --   stretch 1 $ makeFloater' topToFull ((chords3!!0)) tutti3,
 --   stretch 1 $ makeFloater' fullToTop ((chords3!!1)) tutti3,
 --   stretch 1 $ makeFloater' topToFullToTop ((chords3!!2)) tutti3,
 --   stretch 1 $ makeFloater' topToFull ((chords3!!3)) tutti3,
 --   stretch 1 $ makeFloater' fullToTop ((chords3!!4)) tutti3,
---   stretch 1 $ makeFloater' topToFullToTop ((chords3!!5)) tutti3,   
--- 
+--   stretch 1 $ makeFloater' topToFullToTop ((chords3!!5)) tutti3,
+--
 --   mempty
 --   ]
--- 
+--
 -- {-
 -- List of all harmony
 -- Good stuff in here but needs cleaning/simplifying
@@ -753,7 +782,7 @@ disses = fmap (^.chord) [
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords1!!7)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords1!!8)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords1!!9)) tuttiStrings,
--- 
+--
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords3!!0)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords3!!1)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords3!!2)) tuttiStrings,
@@ -764,7 +793,7 @@ disses = fmap (^.chord) [
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords3!!7)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords3!!8)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords3!!9)) tuttiStrings,
--- 
+--
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords4!!0)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords4!!1)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords4!!2)) tuttiStrings,
@@ -779,7 +808,7 @@ disses = fmap (^.chord) [
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords4!!11)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords4!!12)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords4!!13)) tuttiStrings,
--- 
+--
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords5!!0)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords5!!1)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords5!!2)) tuttiStrings,
@@ -787,21 +816,21 @@ disses = fmap (^.chord) [
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords5!!4)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords5!!5)) tuttiStrings,
 --   stretch 1 $ makeFloater' basicCenteredShape ((chords5!!6)) tuttiStrings,
--- 
+--
 --   mempty
 --   ]
--- 
+--
 
 testTutti :: [Part] -> Chord Pitch -> Music
 testTutti tutti ch =
-  asScore $ ppar $ zipWith (set parts') tutti (map fromPitch'' $ pitchMaterial)
+  asScore $ ppar $ zipWith (set parts') tutti (map fromPitch $ pitchMaterial)
   where
     pitchMaterial = ch^.from chord
 
 testTuttis :: [Chord Pitch] -> [[Part]] -> [Music]
 testTuttis chords tutti = liftA2 testTutti tutti chords
 
-  
+
 
 
 
