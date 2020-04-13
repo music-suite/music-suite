@@ -22,10 +22,14 @@ module Music.Time.Aligned
     renderAlignedVoice,
     renderAlignedNote,
     renderAlignedDuration,
+    voiceAtDuration,
+    voiceToBehavior,
+    scoreToBehavior,
   )
 where
 
 import qualified Data.Aeson as JSON
+import qualified Data.Monoid
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Time.Event
@@ -34,6 +38,7 @@ import Music.Time.Juxtapose
 import Music.Time.Note
 import Music.Time.Score
 import Music.Time.Voice
+import Music.Time.Behavior
 
 -- |
 -- TODO docs/laws
@@ -146,3 +151,34 @@ renderAlignedNote = renderAligned noteToEventInEra
 -- | Convert an aligned duration to a span.
 renderAlignedDuration :: Aligned Duration -> Span
 renderAlignedDuration = renderAligned durationToSpanInEra
+
+-- |
+-- Treat a voice as a partial function of time.
+--
+-- >>> voiceAtDuration (stretch 2 c <> stretch 3 d) (-1)
+-- Nothing
+--
+-- >>> voiceAtDuration (stretch 2 c <> stretch 3 d)) 0
+-- Just c
+--
+-- >>> voiceAtDuration (stretch 2 c <> stretch 3 d) 2
+-- Just d
+--
+-- >>> voiceAtDuration (stretch 2 c <> stretch 3 d) 6
+-- Nothing
+voiceAtDuration :: Voice a -> Duration -> Maybe a
+voiceAtDuration v =
+  Data.Monoid.getLast . voiceAtDuration' (fmap pure v)
+
+voiceAtDuration' :: Monoid a => Voice a -> Duration -> a
+voiceAtDuration' v d = voiceToBehavior (aligned o 0 v) ! (o .+^ d)
+  where
+    o = 0 -- Any value will do
+
+-- Turn a voice into a behavior by aligning.
+-- Value at switchpoint is determined by the monoid (see voiceAtDurationFirst etc).
+voiceToBehavior :: Monoid a => Aligned (Voice a) -> Behavior a
+voiceToBehavior = scoreToBehavior . renderAlignedVoice
+
+scoreToBehavior :: Monoid a => Score a -> Behavior a
+scoreToBehavior = concatB . fmap pure

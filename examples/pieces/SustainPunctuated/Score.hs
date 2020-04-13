@@ -8,6 +8,7 @@ module Main where
 
 import Control.Lens (_head, _last, each, nullOf)
 import qualified Data.List
+import qualified Data.Monoid
 import Data.Maybe
 import Music.Prelude
 import qualified Music.Score.Pitch
@@ -34,6 +35,7 @@ subj =
     $ mconcat
     $ concat
     $ replicate 5 [c, g, bb, g, cs, b_]
+    --  $ replicate 15 [c, g, g, b_, e, d]
 
 -- subj2 = compress 16 $ simplifyPitches $ (!! 3) $ stitchTogether $ mconcat $ concat $ replicate 5 [c,e,f,e,c,cs]
 subj2 =
@@ -44,6 +46,7 @@ subj2 =
     $ mconcat
     $ concat
     $ replicate 5 [c, e, f, e, c, ds]
+    --  $ replicate 15 [c, e, d] -- f, e, c, ds]
 
 otherNotes :: Voice a -> Score a
 otherNotes v = ppar $ zipWith (\t n -> delay t (pure n)) ts (fmap (fromMaybe (error "Outside voice") . voiceAtDuration v) ts)
@@ -91,32 +94,6 @@ midSect1 =
 octavesAbove n x = x <> octavesUp n x
 
 octavesBelow n x = x <> octavesDown n x
-
-{-
->>> :da over (events.each) (stretchRelativeOnset 1) (otherNotes subj) <<> (renderAlignedVoice (aligned 0 0 subj))
-
--}
--- FIXME unsafe
--- Switchpoint belongs to latter value
-voiceAtDuration :: Voice a -> Alignment -> Maybe a
-voiceAtDuration v =
-  fmap getLast
-    . getOption
-    . voiceAtDuration' (fmap (Option . Just . Last) v)
-
-voiceAtDuration' :: Monoid a => Voice a -> Alignment -> a
-voiceAtDuration' v d = voiceToBehavior (aligned o a v) ! (o .+^ d)
-  where
-    o = 0 -- Does not matter
-    a = 0 -- Align to onset
-
--- Turn a voice into a behavior by aligning.
--- Value at switchpoint is determined by the monoid (see voiceAtDurationFirst etc).
-voiceToBehavior :: Monoid a => Aligned (Voice a) -> Behavior a
-voiceToBehavior = scoreToBehavior . renderAlignedVoice
-
-scoreToBehavior :: Monoid a => Score a -> Behavior a
-scoreToBehavior = concatB . fmap pure
 
 stitchTogether :: (HasPitches' a, Transposable a) => Voice a -> [Voice a]
 stitchTogether = Data.List.unfoldr (\v -> let v2 = stitch v v in Just (v2, v2))
