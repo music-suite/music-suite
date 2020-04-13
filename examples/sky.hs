@@ -9,9 +9,9 @@ music =
     intersperse
       rest
       [ mempty,
-        -- x1,
-        -- x2,
-        -- b1,
+        x1,
+        x2,
+        b1,
         c1,
         c1,
         c1
