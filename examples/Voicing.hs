@@ -10,8 +10,13 @@ a7   = chord a dominantSeventhChord
 e7b5 = chord e halfDiminishedChord
 eFS  = chord e frenchSixthChord
 
-music = set parts' violins $ inspectableToMusic @[Voiced Chord Interval Pitch]
-  messiaenProg1
+music = set parts' violins $ inspectableToMusic @[Voiced Chord Interval Pitch] $ mconcat
+  [ fsProgression
+  , dmProgression
+  , dmProgression1
+  , messiaenProg
+  , messiaenProg1
+  ]
 
 -- Treat Messiaen's modes as chords.
 -- Does not sound too pleasant in close voicing.
