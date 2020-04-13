@@ -89,16 +89,18 @@ dmProgression =
    pitches and voices.
 
    For example in a 3-note chord such as dm, an full voicing should contain
-   at least one number n satisfying 3n+0, one satisfying 3n+1 and one 3n+2
+   at least one number n satisfying 3n+0, one satisfying 3n+1 and one 3n+2.
+   In classical harmony out the firth (3n+2) is sometimes acceptable.
+
     [0,1,2,3] (closed) is good
     [0,3,5,6] is bad because we're missing the 3rd: there's no 3n+1
  -}
 dmProgression1 :: [Voiced Chord Interval Pitch]
 dmProgression1 = _8vb $
-  [ Voiced dm   [0,3,4,6]
-  , Voiced e7b5 [0,2,4,8]
-  , Voiced a7   [0,1..5]
-  , Voiced dm   [0,3,5,6,  7]
+  [ Voiced dm   [0,3,5,7]
+  , Voiced e7b5 [0,5,2,3]
+  , Voiced a7   [0,2,3,5]
+  , Voiced dm   [0,3,4,6]
   ]
 
 -- TODO voicings sound "better/fuller" when the intervals get larger (and more
