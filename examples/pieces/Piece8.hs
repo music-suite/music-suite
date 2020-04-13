@@ -207,7 +207,7 @@ I.e. it becomes possible to cut out notes.
 melodicAmbitus :: (HasPitch' a, Music.Score.Pitch.Pitch a ~ Pitch) => Voice a -> Ambitus Interval Pitch
 melodicAmbitus ys =
   let xs = fmap (^.pitch) ys in case (headV xs, lastV xs) of
-  (Just a, Just b) -> (a `min` b, a `max` b)^.ambitus
+  (Just a, Just b) -> Ambitus (a `min` b) (a `max` b)
   _                -> error "melodicAmbitus: Empty voice"
 
 

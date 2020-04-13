@@ -11,7 +11,6 @@
 -- | Pitch range or ambitus.
 module Music.Pitch.Ambitus
   ( Ambitus (..),
-    ambitus,
     ambitusInterval,
     inAmbitus,
   )
@@ -39,16 +38,6 @@ instance Bifoldable Ambitus where
   bifoldMap = undefined
 instance Bitraversable Ambitus where
   bitraverse = undefined
-
--- TODO replace with accessors a la Span
--- In fact this type could be unified with Span
-ambitus ::
-  (AffinePair v p, AffinePair v' p') =>
-  Iso (p, p) (p', p') (Ambitus v p) (Ambitus v' p')
-ambitus = iso f g
-  where
-    f (x, y) = Ambitus x y
-    g (Ambitus x y) = (x, y)
 
 ambitusInterval :: (AffinePair v p) => Ambitus v p -> v
 ambitusInterval (Ambitus x y) = x .-. y

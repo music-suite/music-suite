@@ -522,7 +522,8 @@ ambitusLowestOctave = fromIntegral . octaves . (.-. c) . Music.Pitch.Ambitus.low
 --
 --  Can be used as a primitive contour-based melody generator.
 interpolateAmbitus :: AffinePair v p => Ambitus v p -> Scalar v -> p
-interpolateAmbitus a = let (m, n) = a ^. from ambitus in alerp m n
+interpolateAmbitus a = let Ambitus m n = a in alerp m n
+-- TODO move to Pitch.Ambitus!
 
 -- |
 -- Same as @interpolateAmbitus@ but allow continous interpolation of standard pitch
