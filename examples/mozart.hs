@@ -21,27 +21,26 @@ import qualified Music.Score
 -}
 
 
--- Vocal parts
-[vl1, vl2]  = divide 2 (tutti violin)
-vla         = tutti viola
-vc          = tutti cello
+-- Vocal parts (TODO use actual voices!)
+[vl1, vl2]  = divide 2 violins
+vla         = violas
+vc          = cellos
 
 -- Instruments
-[sop, alt]  = divide 2 (tutti violin)
-ten         = tutti viola
--- bs          = tutti cello
-bc          = tutti doubleBass
+[sop, alt]  = divide 2 flutes
+ten         = oboes
+bc          = clarinets
 
 
 info = id
     . title "Ave Verum Corpus (excerpt)"
     . composer "W.A. Mozart"
-    . timeSignature (4/4)
-    . keySignature (key g False)
+    . keySignature (key d True)
+    . tempo (metronome (1/4) 69)
 
-score' :: Music
-score' = info $ compress 4 $ tempo (metronome (1/4) 30) $ {-delay (4*2) $ -}
-    stanza1_voc </> stanza1_instr
+music :: Music
+music = info $ compress 4 $
+    stanza1_voc <> stanza1_instr
 
 -- Rhythm helper functions
 lss l s1 s2     = l|*2 |> s1 |> s2
@@ -83,21 +82,21 @@ gb2 = gb |* 2
     (c d)   :: PitchL           -> Score a
     (c d) e ::                     Score a
 
-    Alternatively, make score' instance of IsString and use Lilypond syntax
+    Alternatively, make music instance of IsString and use Lilypond syntax
 -}
 
 -- Stanza 1
-stanza1_voc = stanza1_sop </> stanza1_alto </> stanza1_ten </> stanza1_bass
-stanza1_sop = delay 8 $ empty
+stanza1_voc = stanza1_sop <> stanza1_alto <> stanza1_ten <> stanza1_bass
+stanza1_sop = set parts' sop $ delay 8 $ empty
     |> s3 a2 d' fs |> s3 a gs g2   |> s4 g b a g           |> ssl g fs fs
     |> ls e e      |> s4 fs fs g g |> lss g (fit2 fs e) fs |> l4 e
-stanza1_alto = delay 8 $ empty
+stanza1_alto = set parts' alt $ delay 8 $ empty
     |> ll fs fs    |> ll e e       |> s4 e g fs e          |> ssl e d d
     |> ls cs cs    |> s4 d d e e   |> lss e (fit2 d cs) d  |> l4 cs
-stanza1_ten = delay 8 $ octavesDown 1 $ empty
+stanza1_ten = set parts' ten $ delay 8 $ octavesDown 1 $ empty
     |> ll a  a     |> ll b b       |> ls a   a             |> ll a a
     |> ls e  e     |> s4 a a b b   |> ls a             a   |> l4 e
-stanza1_bass = delay 8 $ octavesDown 1 $ empty
+stanza1_bass = set parts' bc $ delay 8 $ octavesDown 1 $ empty
     |> ll d  d     |> ll d d       |> ls cs  cs            |> ll d d
     |> ls a  a     |> s4 d d cs cs |> ls d             d   |> l4 a_
 
@@ -119,7 +118,6 @@ stanza1_bc = octavesDown 1 $ empty
     |> ll d  d     |> ll d d       |> ls cs  cs            |> ll d d
     |> ls a  a     |> s4 d d cs cs |> ls d             d   |> l4 a_
 
--- FIXME tempo!
 main :: IO ()
 main =
-  defaultMain score'
+  defaultMain music
