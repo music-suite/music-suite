@@ -32,6 +32,8 @@ Consider switching to a decentralized issue tracker such as:
   - Should ideally be invoked in CI
   - Because of overeager caching in doc gens ($transfCache), requires `rm -rf docs/build` to be reproducible
 
+- Rename Music.Score.Pitch -> GetPitch
+
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
 
 - `tremolo` should take a duration, not an integer!
@@ -51,6 +53,7 @@ Consider switching to a decentralized issue tracker such as:
 - API improvements:
   - Move varticulation, addArticulation out of public API
   - Move vdynamic, addDynCon out of public API
+  - Move vtechnique, etc out of public API
   - Put combinators (not classes) on top of the following modules
     - Music.Score.Articulation
     - Music.Score.Dynamics
@@ -63,6 +66,8 @@ Consider switching to a decentralized issue tracker such as:
     - Music.Score.Text
     - Music.Score.Ties
     - Music.Score.Tremolo
+  - Music.Articulation.Articulation and Music.Articulation.Common should be "record types"
+    with proper field names.
   - Remove Alignable class (use Aligned the type)
   - Remove upChromatic/downChromatic (use up/down instead!)
   - Remove Time parameter from aligned/alignTo (use delay)
@@ -534,7 +539,7 @@ Consider switching to a decentralized issue tracker such as:
 
 - Replace Aeson with typed serialization (or just GHC.Generic/Typeable instances)
 
-- Get rid of Option (can use plain Maybe/First/Last now)
+- Get rid of Data.Semigroup.Option (can use Maybe/First/Last from Data.Monoid now)
 
 - Piano/multi-stave/automatic voice separation support.
   Test cases:
