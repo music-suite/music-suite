@@ -4,22 +4,13 @@
 import Music.Prelude
 import Control.Lens (over)
 
--- TODO move?
-instance Transformable Amplitude where
-  transform _ = id
-instance AffineSpace Amplitude where
-instance VectorSpace Amplitude where
-
--- A simple subject
-subj :: Score (PartT Part (DynamicT (Behavior Amplitude) Pitch))
-subj  = times 20 $ pseq [c,d,e,f]|/8 |> pseq [g,fs]|/2
 
 music = id
   $ title "Dynamics"
   $ composer "Anonymous"
-  $ fmap (over dynamics (! 0))
-  $ 
-    rcat $ map (\phase -> level (stretch phase sine*fff) $ subj) [5.0,5.2..6.0]
-
--- FIXME does not compile
+  $ (over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] (fmap fromPitch [c..]))
+  |> (rest |* 1.5)
+  |> (over phrases' (cresc pp mf) $ pseq [c,d,e,f,g,a,b,c'] |/8)
+  |> (rest |* 1)
+  |> (over phrases' (cresc ff mp) $ pseq [c,d,e,f,g,a,b,c'] |/8)
 main = defaultMain music

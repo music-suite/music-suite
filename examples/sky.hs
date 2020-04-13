@@ -64,5 +64,6 @@ c1
     (level ff $
       -- TODO orchestrate with brass/pno/strings?
       -- add repetition patterns (just restating chord notes, a la "Varseblivning")
-      (accent $ ppar [gs'',cs'',b,a])
+      ((level ff $ accent $ ppar [gs'',cs'',b,a])
+      <>(level mp $ set parts' horns $ accent $ ppar [d,a_]))
       )

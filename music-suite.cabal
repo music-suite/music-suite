@@ -412,6 +412,13 @@ executable "music-suite-examples-time-signatures"
     hs-source-dirs:     examples
     main-is:            TimeSignatures.hs
 
+executable "music-suite-examples-dynamics"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    main-is:            dynamics.hs
+
 executable "music-suite-examples-trio"
     build-depends:      base,
                         lens,
