@@ -34,22 +34,24 @@ durations explicitly.
 subj :: (HasPitches' a, IsPitch a, S.Pitch a ~ Pitch) => Voice a
 subj =
   compress 16
-    $ (!! 3)
+    $ mconcat $ take 6
+    -- (!! 3)
     $ stitchTogether
     $ mconcat
     $ concat
-    $ replicate 5 [c, g, bb, g, cs, b_]
+    $ replicate 1 [c, g, bb, g, cs, b_]
 
 --  $ replicate 15 [c, g, g, b_, e, d]
 
 subj2 :: (HasPitches' a, IsPitch a, S.Pitch a ~ Pitch) => Voice a
 subj2 =
   compress 16
-    $ (!! 3)
+    $ mconcat $ take 6 -- (!! 3)
+    -- $ (!! 3)
     $ stitchTogether
     $ mconcat
     $ concat
-    $ replicate 5 [c, e, f, e, c, ds]
+    $ replicate 1 [c, e, f, e, c, ds]
 
 --  $ replicate 15 [c, e, d] -- f, e, c, ds]
 

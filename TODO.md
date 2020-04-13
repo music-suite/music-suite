@@ -10,8 +10,11 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
-- [X] BUG: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
+- [X] Bug: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
   Intervals not displayed properly
+
+- [ ] Bug: since GHC 8.8.3 upgrade, doctester does not compile
+  - Try cabal-doctest instead https://github.com/phadej/cabal-doctest
 
 - $doctests
   - [X] Run locally (README)
@@ -68,7 +71,7 @@ Consider switching to a decentralized issue tracker such as:
     - Music.Score.Tremolo
   - Music.Articulation.Articulation and Music.Articulation.Common should be "record types"
     with proper field names.
-  - Remove Alignable class (use Aligned the type)
+  - [X] Remove Alignable class (use Aligned the type)
   - Remove upChromatic/downChromatic (use up/down instead!)
   - Remove Time parameter from aligned/alignTo (use delay)
   - Rename eventee/notee to transformed or similar (could be a class)

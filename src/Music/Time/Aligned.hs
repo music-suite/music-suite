@@ -9,19 +9,23 @@
   -fno-warn-redundant-constraints #-}
 
 module Music.Time.Aligned
-  ( -- * Alignable class
-    Alignable (..),
-
-    -- * Aligned values
+  (
+    -- * Aligned type
     Aligned,
+    -- ** Creating aligned values
     aligned,
     alignTo,
     (||>),
+    -- ** Update aligned values
+    align,
     realign,
+    -- ** Extracting/rendering aligned values
     renderAligned,
     renderAlignedVoice,
     renderAlignedNote,
     renderAlignedDuration,
+
+    -- * Conversion functions
     voiceAtDuration,
     voiceToBehavior,
     scoreToBehavior,
@@ -40,20 +44,17 @@ import Music.Time.Score
 import Music.Time.Voice
 import Music.Time.Behavior
 
--- |
--- TODO docs/laws
+-- | Update the local origin of a value, but not its attachment point.
 --
--- Aligned is like a "free HasPosition"
+--   If the new alignment is different from the previous alignment,
+--   the value is moved.
 --
--- renderAligned... is forgetting local origin
-class Alignable a where
-  align :: Alignment -> a -> a
-
-instance Alignable a => Alignable [a] where
-  align l = fmap (align l)
-
-instance Alignable (Aligned a) where
-  align l (Aligned ((t, _), a)) = Aligned ((t, l), a)
+-- @
+-- align x (aligned t y) = aligned t x
+-- align x (align y v) = align x v
+-- @
+align :: Alignment -> Aligned a -> Aligned a
+align l (Aligned ((t, _), a)) = Aligned ((t, l), a)
 
 -- type AlignedVoice a = Aligned (Voice a)
 
@@ -84,6 +85,8 @@ aligned :: Time -> Alignment -> v -> Aligned v
 aligned t d a = Aligned ((t, d), a)
 
 -- | Align so that the given local duration occurs at the given time.
+--
+-- If @_duration x = 1@ then @aligned t d x = alignTo t d x@
 alignTo :: (Transformable a, HasDuration a) => Time -> Duration -> a -> Aligned a
 alignTo t d x = aligned t (d / view duration x) x
 
