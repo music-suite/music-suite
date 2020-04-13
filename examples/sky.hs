@@ -9,9 +9,11 @@ music =
     intersperse
       rest
       [ mempty,
-        x1,
-        x2,
-        b1,
+        -- x1,
+        -- x2,
+        -- b1,
+        c1,
+        c1,
         c1
       ]
 
@@ -57,6 +59,7 @@ b1 =
 -- TODO make chord fall on downbeat (use Aligned)
 --
 -- TODO instead of chromatic rising scale use some (still dissonant/non-diatonic) subset
+-- What is that pitch space?
 c1 :: Music
 c1 =
   ( legato $ over phrases' (cresc pp _f) $ accentLast $ compress 24

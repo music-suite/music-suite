@@ -6,6 +6,8 @@ import Music.Prelude
 main = defaultMain music
 
 {-
+"Haberdashery"
+
 Work with basic phrases and dynamics in winds.
 Set off against long pedals in strings.
 
