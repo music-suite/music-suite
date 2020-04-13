@@ -555,9 +555,11 @@ Consider switching to a decentralized issue tracker such as:
 
 - Interactive shell
   - Move source tree into this repo
-  - Bug: crashes on multi-page Lilypond output
+  - [X] Bug: crashes on multi-page Lilypond output
   - Repeat works, should look at cache/output dir
   - See $interactive
+  - Make feedback loop faster: Optimize "Compiling" (Haskell) phase, run Typesetting/RenderingAudio in parallel
+
 
 - [X] Fix lawless (HasPosition (Score a))
   - Preference: Idea 1!!
