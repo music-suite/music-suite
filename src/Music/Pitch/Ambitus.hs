@@ -20,6 +20,9 @@ module Music.Pitch.Ambitus
 where
 
 import Control.Lens
+import Data.Bifunctor
+import Data.Bifoldable
+import Data.Bitraversable
 import Data.AffineSpace
 import Data.AffineSpace.Point.Offsets (AffinePair)
 import Data.Interval hiding (Interval, interval)
@@ -31,6 +34,13 @@ import Music.Pitch.Common.Semitones
 -- Also known as range, tessitura or (in maths) interval.
 data Ambitus v p = Ambitus !p !p
   deriving (Functor, Foldable, Traversable, Show)
+
+instance Bifunctor Ambitus where
+  bimap = undefined
+instance Bifoldable Ambitus where
+  bifoldMap = undefined
+instance Bitraversable Ambitus where
+  bitraverse = undefined
 
 -- TODO replace with accessors a la Span
 -- In fact this type could be unified with Span

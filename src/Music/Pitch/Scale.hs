@@ -1,4 +1,9 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE OverloadedLists #-}
@@ -6,7 +11,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances #-} -- FIXME TODO get rid of!
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -15,6 +20,7 @@
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-unused-top-binds #-} -- FIXME
 
 {-
  - TODO get rid of UndecidableInstances by tracking both pitch and interval in the type
@@ -30,7 +36,16 @@
 --
 -- A 'Mode' (or 'ChordType) is like a Chord/Scale that has forgotten its origin.
 module Music.Pitch.Scale
-  ( -- * TODO move
+  ( -- * TODO NEW
+    Orientation(..),
+    Rooting(..),
+    ScaleChord(..),
+    MODE,
+    SCALE,
+    CHORD,
+    CHORDTYPE,
+
+    -- * TODO move
     Countable (..),
     Generated (..),
 
@@ -131,8 +146,13 @@ import Data.AffineSpace.Point.Offsets
   ( distanceVs,
     offsetPoints,
     offsetPointsS,
+    AffinePair,
   )
 import Data.Foldable
+import Data.Kind
+import Data.Bifunctor
+import Data.Bifoldable
+import Data.Bitraversable
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Stream.Infinite (Stream)
@@ -143,6 +163,46 @@ import Music.Pitch.Literal
 import Music.Pitch.Literal
 import Music.Score.Pitch (HasPitches (..))
 import qualified Music.Score.Pitch as S
+
+data Orientation = Seq | Par
+data Rooting     = NoRoot | Root
+
+data ScaleChord :: Orientation -> Rooting -> Type -> Type -> Type where
+  Mode_ :: NonEmpty v -> ScaleChord a 'NoRoot v p
+  ScaleChord ::
+    p
+    -> ScaleChord o 'NoRoot v p
+    -> ScaleChord o 'Root   v p
+
+type MODE       = ScaleChord 'Seq 'NoRoot
+type SCALE      = ScaleChord 'Seq 'Root
+type CHORDTYPE  = ScaleChord 'Par 'NoRoot
+type CHORD      = ScaleChord 'Par 'Root
+
+deriving instance (Eq v, Eq p) => Eq (ScaleChord o r v p)
+deriving instance (Ord v, Ord p) => Ord (ScaleChord o r v p)
+deriving instance (Show v, Show p) => Show (ScaleChord o r v p)
+deriving instance Functor (ScaleChord o r v)
+deriving instance Foldable (ScaleChord o r v)
+deriving instance Traversable (ScaleChord o r v)
+
+instance Bifunctor (ScaleChord o r) where
+  bimap = bimapDefault
+
+instance Bifoldable (ScaleChord o r) where
+  bifoldMap = bifoldMapDefault
+
+instance Bitraversable (ScaleChord o r) where
+  bitraverse f _ (Mode_ xs) = Mode_ <$> traverse f xs
+  bitraverse f g (ScaleChord p xs) = ScaleChord <$> g p <*> bitraverse f g xs
+
+
+type instance S.Pitch (ScaleChord o r v p) = S.Pitch p
+
+type instance S.SetPitch p (ScaleChord o r v _p) = ScaleChord o r v (S.SetPitch p _p)
+
+instance HasPitches p1 p2 => HasPitches (ScaleChord o r v p1) (ScaleChord o r v p2) where
+  pitches = traverse . pitches
 
 -- |  A mode is a list of intervals and a characteristic repeating interval.
 data Mode a = Mode {getMode :: NonEmpty (Diff a)}
