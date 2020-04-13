@@ -57,7 +57,7 @@ b1 =
 -- TODO instead of chromatic rising scale use some (still dissonant/non-diatonic) subset
 c1 :: Music
 c1
-  = (legato $ accentLast $ compress 24 $
+  = (legato $ over phrases' (cresc pp _f) $ accentLast $ compress 24 $
     set parts' flutes $ pseq $ fmap fromPitch $
     enumChromaticFromTo c' g'')
     |>
