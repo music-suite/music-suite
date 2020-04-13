@@ -11,7 +11,7 @@ e7b5 = chord e halfDiminishedChord
 eFS  = chord e frenchSixthChord
 
 music = set parts' violins $ inspectableToMusic @[Voiced Chord Interval Pitch]
-  dmProgression1
+  messiaenProg1
 
 -- Treat Messiaen's modes as chords.
 -- Does not sound too pleasant in close voicing.
@@ -91,6 +91,7 @@ dmProgression =
    For example in a 3-note chord such as dm, an full voicing should contain
    at least one number n satisfying 3n+0, one satisfying 3n+1 and one 3n+2.
    In classical harmony out the firth (3n+2) is sometimes acceptable.
+   TODO invertVoicing preserves such "complete" voicings.
 
     [0,1,2,3] (closed) is good
     [0,3,5,6] is bad because we're missing the 3rd: there's no 3n+1
