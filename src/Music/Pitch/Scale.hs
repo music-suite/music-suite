@@ -36,22 +36,13 @@
 --
 -- A 'Mode' (or 'ChordType) is like a Chord/Scale that has forgotten its origin.
 module Music.Pitch.Scale
-{-
   ( -- * TODO NEW
     Orientation(..),
     Rooting(..),
     ScaleChord(..),
-    MODE,
-    SCALE,
-    CHORD,
-    CHORDTYPE,
-
-    -- * TODO move
-    Countable (..),
-    Generated (..),
 
     -- * Modes and Chord types
-    Mode (..),
+    Mode,
     modeFromSteps,
     modeIntervals,
     ChordType,
@@ -139,7 +130,6 @@ module Music.Pitch.Scale
     voiceIn,
     invertVoicing,
   )
--}
 where
 
 import Control.Lens (Lens, Lens', coerced)
@@ -210,12 +200,12 @@ instance HasPitches p1 p2 => HasPitches (ScaleChord o r v p1) (ScaleChord o r v 
 -- @
 -- majorScale = modeFromSteps [M2,M2,m3,M2,M2,M2,m3]
 --
--- > [Interval] -> Mode Pitch
+-- > [Interval] -> Mode Interval Pitch
 modeFromSteps :: NonEmpty v -> Mode v p
 modeFromSteps = Mode
 
 -- |
--- > Lens' (Mode Pitch) [Interval]
+-- > Lens' (Mode Interval Pitch) [Interval]
 modeIntervals :: Lens' (Mode v p) (NonEmpty v)
 modeIntervals f (Mode is) = fmap (\is -> Mode is) $ f is
 
@@ -229,7 +219,7 @@ scaleTonic :: Lens' (Scale v p) p
 scaleTonic f (ScaleChord t xs) = fmap (\t -> ScaleChord t xs) $ f t
 
 -- |
--- > Lens' (Scale Pitch) (Mode Pitch)
+-- > Lens' (Scale Pitch) (Mode Interval Pitch)
 scaleMode :: Lens' (Scale v p) (Mode v p)
 scaleMode f (ScaleChord t xs) = fmap (\xs -> ScaleChord t xs) $ f xs
 
@@ -310,81 +300,59 @@ scaleToList (ScaleChord tonic (Mode leaps)) = init $ offsetPoints tonic $ toList
 generator :: ScaleChord a 'Root v p -> NonEmpty v
 generator (ScaleChord _ (Mode x)) = x
 
-{-
 
-class Countable f where
 
-  -- | Convert to a countably infinite set (represented as a tuple
-  -- of "negative", "zero" and "positive" components.
-  scaleToSet :: AffineSpace a => f a -> (Stream a, a, Stream a)
+index :: AffinePair v p => Chord v p -> Integer -> p
+index s n = case fromIntegral n of
+  n
+    | n > 0 -> pos Stream.!! (n - 1)
+    | n == 0 -> z
+    | n < 0 -> neg Stream.!! negate (n + 1)
+    | otherwise -> error "impossible"
+  where
+    (neg, z, pos) = scaleToSet s
 
-  index :: AffineSpace p => f p -> Integer -> p
+member :: (Ord p, AffinePair v p) => Chord v p -> p -> Bool
+member s p = case p of
+  p
+    | p > z -> p `isHeadOf` Stream.dropWhile (< p) pos
+    | p == z -> True
+    | p < z -> p `isHeadOf` Stream.dropWhile (> p) neg
+    | otherwise -> error "impossible"
+  where
+    (neg, z, pos) = scaleToSet s
 
-  member :: (Ord p, AffineSpace p) => f p -> p -> Bool
-
-  index s n = case fromIntegral n of
-    n
-      | n > 0 -> pos Stream.!! (n - 1)
-      | n == 0 -> z
-      | n < 0 -> neg Stream.!! negate (n + 1)
-      | otherwise -> error "impossible"
-    where
-      (neg, z, pos) = scaleToSet s
-
-  member s p = case p of
-    p
-      | p > z -> p `isHeadOf` Stream.dropWhile (< p) pos
-      | p == z -> True
-      | p < z -> p `isHeadOf` Stream.dropWhile (> p) neg
-      | otherwise -> error "impossible"
-    where
-      (neg, z, pos) = scaleToSet s
-
-instance Countable Scale where
-  scaleToSet :: AffineSpace a => Scale a -> (Stream a, a, Stream a)
-  scaleToSet (Scale tonic (Mode leaps)) =
-    ( Stream.tail $ offsetPointsS tonic $ fmap negateV $ Stream.cycle $ NonEmpty.reverse leaps,
-      tonic,
-      Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
-    )
-
-instance Countable Chord where
-  scaleToSet = scaleToSet . getChord
-
--- TODO rename to ChordType or similar
-type ChordType a = Mode a
+-- Could be generalized to ScaleChord o Root (TODO flip type params!)
+scaleToSet :: AffinePair v p => Chord v p -> (Stream p, p, Stream p)
+scaleToSet (ScaleChord tonic (Mode leaps)) =
+  ( Stream.tail $ offsetPointsS tonic $ fmap negateV $ Stream.cycle $ NonEmpty.reverse leaps,
+    tonic,
+    Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
+  )
 
 -- |
--- > [Interval] -> Interval -> ChordType Pitch
-functionFromSteps :: NonEmpty (Diff a) -> ChordType a
-functionFromSteps = modeFromSteps
+-- > [Interval] -> Interval -> ChordType Interval Pitch
+functionFromSteps :: NonEmpty v -> ChordType v p
+functionFromSteps = Mode
+
+chord :: AffinePair v p => p -> ChordType v p -> Chord v p
+chord = ScaleChord
 
 -- |
--- > Lens' (ChordType Pitch) [Interval]
-functionIntervals :: Lens' (ChordType a) (NonEmpty (Diff a))
-functionIntervals = modeIntervals
-
--- Note: The only difference between a chord and a Scale is the Inspectable instance
-newtype Chord a = Chord {getChord :: Scale a}
-
-deriving instance (Eq a, Eq (Diff a)) => Eq (Chord a)
-
-deriving instance (Ord a, Ord (Diff a)) => Ord (Chord a)
-
-deriving instance (Show a, Show (Diff a)) => Show (Chord a)
-
-chord :: AffineSpace a => a -> ChordType a -> Chord a
-chord x xs = Chord $ scale x xs
+-- > Lens' (ChordType Interval Pitch) [Interval]
+functionIntervals :: Lens' (ChordType v p) (NonEmpty v)
+functionIntervals f (Mode is) = fmap (\is -> Mode is) $ f is
 
 -- |
 -- > Lens' (Chord Pitch) Pitch
-chordTonic :: Lens' (Chord a) a
-chordTonic = coerced . scaleTonic
+chordTonic :: Lens' (Chord v p) p
+chordTonic f (ScaleChord t xs) = fmap (\t -> ScaleChord t xs) $ f t
 
 -- |
--- > Lens' (Chord Pitch) (ChordType Pitch)
-chordType :: Lens' (Chord a) (ChordType a)
-chordType = coerced . scaleMode
+-- > Lens' (Chord Pitch) (ChordType Interval Pitch)
+chordType :: Lens' (Chord v p) (ChordType v p)
+chordType f (ScaleChord t xs) = fmap (\xs -> ScaleChord t xs) $ f xs
+
 
 -- |
 --
@@ -395,140 +363,144 @@ chordType = coerced . scaleMode
 -- >>> complementInterval majorMinorSeventhChord
 -- _M2
 --
--- > Lens' (ChordType Pitch) Interval
-complementInterval :: AffineSpace a => ChordType a -> Diff a
-complementInterval = leadingInterval
+-- > Lens' (ChordType Interval Pitch) Interval
+complementInterval :: AffinePair v p => ChordType v p -> v
+complementInterval (Mode xs) = NonEmpty.last xs
 
-invertChord :: AffineSpace a => Integer -> ChordType a -> ChordType a
-invertChord = invertMode
+
+invertChord :: AffinePair v p => Integer -> ChordType v p -> ChordType v p
+invertChord n (Mode xs) = Mode (rotate n xs)
 
 
 -- | Returns a single inversion of the given chord (no repeats!).
-chordToList :: AffineSpace a => Chord a -> [a]
-chordToList = scaleToList . getChord
+chordToList :: AffinePair v p => Chord v p -> [p]
+chordToList (ScaleChord tonic (Mode leaps)) = init $ offsetPoints tonic $ toList leaps
+
 
 -- Common scales
 
-majorScale :: Mode Pitch
+majorScale :: Mode Interval Pitch
 majorScale = Mode [_M2, _M2, m2, _M2, _M2, _M2, m2]
+
 
 -- |
 -- @
 -- pureMinorScale = invertMode 5 majorScale
 -- majorScale     = invertMode 2 pureMinorScale
 -- @
-pureMinorScale :: Mode Pitch
+pureMinorScale :: Mode Interval Pitch
 pureMinorScale = Mode [_M2, m2, _M2, _M2, m2, _M2, _M2]
 
-harmonicMinorScale :: Mode Pitch
+harmonicMinorScale :: Mode Interval Pitch
 harmonicMinorScale = Mode [_M2, m2, _M2, _M2, m2, _A2, m2]
 
-melodicMinorScaleUp :: Mode Pitch
+melodicMinorScaleUp :: Mode Interval Pitch
 melodicMinorScaleUp = Mode [_M2, m2, _M2, _M2, _M2, _M2, m2]
 
-ionian :: Mode Pitch
+ionian :: Mode Interval Pitch
 ionian = invertMode 0 majorScale
 
-dorian :: Mode Pitch
+dorian :: Mode Interval Pitch
 dorian = invertMode 1 majorScale
 
-phrygian :: Mode Pitch
+phrygian :: Mode Interval Pitch
 phrygian = invertMode 2 majorScale
 
-lydian :: Mode Pitch
+lydian :: Mode Interval Pitch
 lydian = invertMode 3 majorScale
 
-mixolydian :: Mode Pitch
+mixolydian :: Mode Interval Pitch
 mixolydian = invertMode 4 majorScale
 
-aeolian :: Mode Pitch
+aeolian :: Mode Interval Pitch
 aeolian = invertMode 5 majorScale
 
-locrian :: Mode Pitch
+locrian :: Mode Interval Pitch
 locrian = invertMode 6 majorScale
 
-majorPentaTonic :: Mode Pitch
+majorPentaTonic :: Mode Interval Pitch
 majorPentaTonic = Mode [_M2, _M2, m3, _M2, m3]
 
-bluesMinor :: Mode Pitch
+bluesMinor :: Mode Interval Pitch
 bluesMinor = invertMode 2 majorPentaTonic
 
-bluesMajor :: Mode Pitch
+bluesMajor :: Mode Interval Pitch
 bluesMajor = invertMode 3 majorPentaTonic
 
-minorPentaTonic :: Mode Pitch
+minorPentaTonic :: Mode Interval Pitch
 minorPentaTonic = invertMode 4 majorPentaTonic
 
 -- a.k.a. "bebop major"
-bebopScale :: Mode Pitch
+bebopScale :: Mode Interval Pitch
 bebopScale = Mode [_M2, _M2, m2, _M2, m2, m2, _M2, m2]
 
-wholeTone :: Mode Pitch
+wholeTone :: Mode Interval Pitch
 wholeTone = firstMode
 
-octatonic :: Mode Pitch
+octatonic :: Mode Interval Pitch
 octatonic = secondMode
 
-firstMode :: Mode Pitch
+firstMode :: Mode Interval Pitch
 firstMode = Mode [_M2, _M2, _M2, _M2, _M2, _M2]
 
-secondMode :: Mode Pitch
+secondMode :: Mode Interval Pitch
 secondMode = Mode [m2, _M2, _A1, _M2, m2, _M2, m2, _M2]
 
-thirdMode :: Mode Pitch
+thirdMode :: Mode Interval Pitch
 thirdMode = Mode [_M2, m2, m2, _M2, m2, m2, _M2, m2, m2]
 
-fourthMode :: Mode Pitch
+fourthMode :: Mode Interval Pitch
 fourthMode = Mode [m2, m2, m3, m2, m2, m2, m3, m2]
 
-fifthMode :: Mode Pitch
+fifthMode :: Mode Interval Pitch
 fifthMode = Mode [m2, _M3, m2, m2, _M3, m2]
 
-sixthMode :: Mode Pitch
+sixthMode :: Mode Interval Pitch
 sixthMode = Mode [_M2, _M2, m2, m2, _M2, _M2, m2, m2]
 
-seventhMode :: Mode Pitch
+seventhMode :: Mode Interval Pitch
 seventhMode = Mode [m2, m2, m2, _M2, m2, m2, m2, m2, _M2, m2]
+
 
 -- Common chords
 
-majorTriad :: ChordType Pitch
+majorTriad :: ChordType Interval Pitch
 majorTriad = Mode [_M3, m3, _P4]
 
-minorTriad :: ChordType Pitch
+minorTriad :: ChordType Interval Pitch
 minorTriad = Mode [m3, _M3, _P4]
 
-augmentedChord :: ChordType Pitch
+augmentedChord :: ChordType Interval Pitch
 augmentedChord = Mode [_M3, _M3, _M3]
 
-diminishedChord :: ChordType Pitch
+diminishedChord :: ChordType Interval Pitch
 diminishedChord = Mode [m3, m3, m3, m3]
 
-halfDiminishedChord :: ChordType Pitch
+halfDiminishedChord :: ChordType Interval Pitch
 halfDiminishedChord = Mode [m3, m3, _M3, _M2]
 
 -- | Also known as "dominant seventh".
-majorMinorSeventhChord :: ChordType Pitch
+majorMinorSeventhChord :: ChordType Interval Pitch
 majorMinorSeventhChord = Mode [_M3, m3, m3, _M2]
 
 -- | Also known as "major seventh".
-majorMajorSeventhChord :: ChordType Pitch
+majorMajorSeventhChord :: ChordType Interval Pitch
 majorMajorSeventhChord = Mode [_M3, m3, _M3, m2]
 
 -- | Also known as a "ii7". First inversion of major sixth.
-minorMinorSeventhChord :: ChordType Pitch
+minorMinorSeventhChord :: ChordType Interval Pitch
 minorMinorSeventhChord = Mode [m3, _M3, m3, _M2]
 
 -- | Also known as "major seventh".
-minorMajorSeventhChord :: ChordType Pitch
+minorMajorSeventhChord :: ChordType Interval Pitch
 minorMajorSeventhChord = Mode [m3, _M3, _M3, m2]
 
 -- TODO ninth chords, sixths chords, 6/9 (pentatonic field), Guido's hexachord?
 
-germanSixthChord :: ChordType Pitch
+germanSixthChord :: ChordType Interval Pitch
 germanSixthChord = majorMinorSeventhChord
 
-frenchSixthChord :: ChordType Pitch
+frenchSixthChord :: ChordType Interval Pitch
 frenchSixthChord = Mode [_M3, d3, _M3, _M2]
 
 -- | Build a harmonic filed from repeating a single interval.
@@ -541,42 +513,40 @@ frenchSixthChord = Mode [_M3, d3, _M3, _M2]
 -- repeating m3  = diminishedChord
 -- repeating P4  = quartal
 -- @
-repeating :: Diff p -> ChordType p
+repeating :: v -> ChordType v p
 repeating x = Mode (x NonEmpty.:| [])
 
-chromaticCluster :: ChordType Pitch
+chromaticCluster :: ChordType Interval Pitch
 chromaticCluster = repeating m2
 
-wholeToneCluster :: ChordType Pitch
+wholeToneCluster :: ChordType Interval Pitch
 wholeToneCluster = repeating _M2
 
-quartal :: ChordType Pitch
+quartal :: ChordType Interval Pitch
 quartal = repeating _P4
 
-quintal :: ChordType Pitch
+quintal :: ChordType Interval Pitch
 quintal = repeating _P5
 
-data Voiced f p = Voiced {getChordScale :: f p, getSteps :: NonEmpty Integer}
 
-deriving instance Eq (f a) => Eq (Voiced f a)
+data Voiced f v p = Voiced {getChordScale :: f v p, getSteps :: NonEmpty Integer}
 
-deriving instance Ord (f a) => Ord (Voiced f a)
+deriving instance (Eq (f v p)) => Eq (Voiced f v p)
+deriving instance (Ord (f v p)) => Ord (Voiced f v p)
+deriving instance (Show (f v p)) => Show (Voiced f v p)
 
-deriving instance Show (f a) => Show (Voiced f a)
-
-getVoiced :: (AffineSpace p, Countable f) => Voiced f p -> NonEmpty p
+getVoiced :: (AffinePair v p) => Voiced Chord v p -> NonEmpty p
 getVoiced x = index (getChordScale x) <$> getSteps x
 
-voiced :: Generated f => f p -> Voiced f p
+voiced :: Chord v p -> Voiced Chord v p
 voiced x = voiceIn (fromIntegral $ length (generator x)) x
 
 -- | Like 'voiced' but include the leading/repeating interval.
-voicedLong :: Generated f => f p -> Voiced f p
+voicedLong :: Chord v p -> Voiced Chord v p
 voicedLong x = voiceIn (fromIntegral $ length (generator x) + 1) x
 
-voiceIn :: Integer -> f p -> Voiced f p
+voiceIn :: Integer -> Chord v p -> Voiced Chord v p
 voiceIn n x = Voiced x [0 .. n - 1]
 
-invertVoicing :: Integer -> Voiced f a -> Voiced f a
+invertVoicing :: Integer -> Voiced Chord v p -> Voiced Chord v p
 invertVoicing n (Voiced f xs) = Voiced f (fmap (+ n) xs)
--}
