@@ -438,6 +438,8 @@ Consider switching to a decentralized issue tracker such as:
 
 - Check `examples` dir for code that can be moved upstream to the main library
 
+- Finalize and test laws for Splittable/Reversible
+
 - $splitSemantics
   - [ ] Check split semantics for Voice/Note. Should be possble to write a simple instance for both not and voice,
     not requiring a Splittable instance for the contained note.
