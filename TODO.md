@@ -69,10 +69,10 @@ Consider switching to a decentralized issue tracker such as:
     - Music.Score.Text
     - Music.Score.Ties
     - Music.Score.Tremolo
-  - Music.Articulation.Articulation and Music.Articulation.Common should be "record types"
+  - Music.Articulation.Articulation and Music.Dynamics.Common should be "record types"
     with proper field names.
   - [X] Remove Alignable class (use Aligned the type)
-  - Remove upChromatic/downChromatic (use up/down instead!)
+  - [X] Remove upChromatic/downChromatic (use up/down instead!)
   - Remove Time parameter from aligned/alignTo (use delay)
   - Rename eventee/notee to transformed or similar (could be a class)
   - withContext/addCtxt can be generalized to any Traversable

@@ -2,11 +2,16 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wall
+{-# OPTIONS_GHC -Weverything
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
+  -fno-warn-missing-local-signatures
+  -fno-warn-unsafe
+  -fno-warn-unused-type-patterns
+  -fno-warn-identities
+  -fno-warn-missing-import-lists
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
@@ -31,8 +36,6 @@ module Music.Score.Pitch
     _15vb,
     upDiatonic,
     downDiatonic,
-    upChromatic,
-    downChromatic,
 
     -- ** Inversion
     invertPitches,
