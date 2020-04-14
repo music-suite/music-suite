@@ -696,6 +696,8 @@ Consider switching to a decentralized issue tracker such as:
 - Import data from various corpuses
   - musescore.com
   - https://web.mit.edu/music21/doc/about/referenceCorpus.html
+  - http://kern.ccarh.org/
+  - Nice viwer: https://verovio.humdrum.org/
 
 - [X] $reactiveSemantics
   - Briefly: Simultaneous events should not be allowed with Reactive. Semantically:
