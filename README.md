@@ -4,11 +4,11 @@
 
 Music Suite is a language for describing music, based on Haskell.
 
-See <http://music-suite.github.io>.
+<!-- See <http://music-suite.github.io>. -->
 
 ## Set up build environment
 
-Install Nix (2.3.1 is tested).
+Install Nix (2.3.1 or later).
 
 Enter build environment using:
 
