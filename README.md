@@ -6,7 +6,10 @@ Music Suite is a language for describing music, based on Haskell.
 
 <!-- See <http://music-suite.github.io>. -->
 
-## Set up build environment
+
+## How to build
+
+### Set up the build environment
 
 Install Nix (2.3.1 or later).
 
@@ -18,31 +21,31 @@ nix-shell --pure
 
 Inside the build shell, the following commands can be used:
 
-### Build everything
+### Build the library and examples
 
 ```
-cabal update
-cabal build
+music-suite-build$ cabal update
+music-suite-build$ cabal build
 ```
 
-### Test everything
+### Build and run the tests
 
 #### Property tests
 
 ```
-cabal test
+music-suite-build$ cabal test
 ```
 
 To run individual tests:
 
 ```
-cabal run TEST_NAME -- TEST_ARGS...
+music-suite-build$ cabal run TEST_NAME -- TEST_ARGS...
 ```
 
 #### Doctests
 
 ```
-cabal build && cabal exec --package music-suite -- cabal run doctester PATHS
+music-suite-build$ cabal build && cabal exec --package music-suite -- cabal run doctester PATHS
 ```
 
 where `PATHS` is a list of Haskell files or directories containing Haskell files.
@@ -53,15 +56,15 @@ explicitly in each file using a `LANGUAGE` pragma.
 ### Development shell
 
 ```
-cabal build music-suite && cabal exec --package music-suite ghci
+music-suite-build$ cabal build music-suite && cabal exec --package music-suite ghci
 ```
 
-### Generate documentation
+### Build the documentation
 
-#### Reference docs
+#### User Guide
 
 ```
-cabal build music-suite transf hslinks && (cd docs && make)
+music-suite-build$ cabal build music-suite transf hslinks && (cd docs && make)
 ```
 
 The output appears in `docs/build`. You can point a HTTP server to this directory.
@@ -69,11 +72,11 @@ The output appears in `docs/build`. You can point a HTTP server to this director
 #### API docs
 
 ```
-cabal haddock
+music-suite-build$ cabal haddock
 ```
 
 
-# How to upgrade the compiler/Nixpkgs
+## How to upgrade the compiler/Nixpkgs
 
 - Update the commit/URL and hash in `default.nix`
   - Use `$ nix-prefetch-url --unpack <url>` to obtain the hash (and verify)
