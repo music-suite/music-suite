@@ -2475,11 +2475,11 @@ TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" o
 
 ## Patterns
 
-A @[Pattern] can be throught of as a generalization of a *rhythm* or *beat*. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself, though the repetition frequence may be very long.
+A @[Pattern] can be throught of as a generalization of a *rhythm* or *beat*. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself (though the repeating duration may be long).
 
-TODO more ways of buildings patterns
+The basic way of buildings patterns are @[newPattern] and @[rhythmPattern].
 
-
+We can compose patterns in parallel using @[<>] just as with scores.
 
 ```music+haskell
 fmap Just $ renderPattern (a <> b) (0 <-> 4)
@@ -2489,14 +2489,14 @@ fmap Just $ renderPattern (a <> b) (0 <-> 4)
     -- TODO use claves, maracas here
 ```
 
+Patterns are @[Transformable], @[Transposable], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns. For example we can set parts and dynamics, or transpose patterns.
+
 ```music+haskell
 fmap Just $ renderPattern (a <> b) (0.5 <-> 1.5)
   where
     a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
 ```
-
-TODO Patterns are @[Transformable], @[Transposable], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns.
 
 ```music+haskell
 fmap Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
@@ -2505,7 +2505,34 @@ fmap Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
 ```
 
-TODO rendering patterns
+As patterns are infinite, we can compose patterns of different durations. Both patterns will just be repeated indefinately.
+
+```music+haskell
+fmap Just $ renderPattern (a <> b) (0 <-> 2)
+  where
+    a = parts' .~ trumpets  $ newPattern [c,d] |/ 8
+    b = parts' .~ trombones $ newPattern [c,d,e] |/ 8
+```
+
+```music+haskell
+fmap Just $ renderPattern (a <> b) (0 <-> 2)
+  where
+    a = parts' .~ trumpets  $ newPattern [c,d,e] |* (3/15)
+    b = parts' .~ trombones $ newPattern [c,d,e] |* (3/8)
+```
+
+You can adjust the "phase" of a pattern using delay. This is useful together with the composition operator:
+
+```music+haskell
+fmap Just $ renderPattern (a <> b <> delay (1/4) c <> delay (1/4) d) (0 <-> 2)
+  where
+    a = parts' .~ flutes    $ rhythmPattern [1/2,1/2]
+    b = parts' .~ oboes     $ rhythmPattern [1,1/2,1/2]
+    c = parts' .~ trumpets  $ rhythmPattern [1/2,1/2]
+    d = parts' .~ trombones $ rhythmPattern [1,1/2,1/2]
+```
+
+The @[renderPattern] function returns the events of the pattern within a given time span.
 
 TODO finish/move to examples:
 
