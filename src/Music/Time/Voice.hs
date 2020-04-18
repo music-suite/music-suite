@@ -124,7 +124,7 @@ import Music.Time.Note
 newtype Voice a = Voice {getVoice :: [Note a]}
   deriving (Eq, Ord, Typeable, Foldable, Traversable, Functor, Semigroup, Monoid)
 
-instance (Show a, Transformable a) => Show (Voice a) where
+instance Show a => Show (Voice a) where
   show x = show (x ^. notes) ++ "^.voice"
 
 -- A voice is a list of events with explicit duration. Events can not overlap.

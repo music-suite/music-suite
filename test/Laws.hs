@@ -2,6 +2,9 @@
 
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -15,6 +18,7 @@
 
 import Prelude hiding ((**))
 
+import Data.Void (Void)
 import Data.Monoid.Average
 import Data.Ord (comparing)
 import Music.Prelude hiding (defaultMain, elements)
@@ -357,14 +361,29 @@ unzipR f = (fmap fst f, fmap snd f)
 
 main = defaultMain $ testGroup "all" [newTests, oldTests]
 
+data TProxy (a :: k) where
+  TP :: Typeable a => TProxy a
+
+unT :: TProxy a -> Proxy a
+unT _ = Proxy
+
+monad :: (Monad m
+  , forall x . Eq x => Eq (m x)
+  , forall x . Show x => Show (m x)
+  , forall x . Arbitrary x => Arbitrary (m x)
+  ) => TProxy m -> TestTree
+monad p@TP = testMonadLaws
+    (unT p)
+    (Proxy @())
+    (Proxy @())
+    (Proxy @Int)
+    (Proxy @[Int])
+    (\() -> (==))
+
 newTests = testGroup "Instances (new tests)"
-  [ testMonadLaws
-    (Proxy @Maybe)
-    (Proxy @())
-    (Proxy @())
-    (Proxy @())
-    (Proxy @())
-    (const (==))
+  [ monad (TP @Maybe)
+  , monad (TP @Voice)
+  , monad (TP @Score)
   ]
 
 oldTests =

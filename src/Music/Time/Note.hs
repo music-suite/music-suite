@@ -69,7 +69,7 @@ newtype Note a = Note {getNote :: Duration `Couple` a}
       RealFrac
     )
 
-instance (Show a, Transformable a) => Show (Note a) where
+instance (Show a) => Show (Note a) where
   show x = show (x ^. from note) ++ "^.note"
 
 instance Wrapped (Note a) where

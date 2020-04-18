@@ -245,7 +245,7 @@ instance Enum a => Enum (Score a) where
 newtype Score' a = Score' {getScore' :: [Event a]}
   deriving ({-Eq, -} {-Ord, -} {-Show, -} Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
-instance (Show a, Transformable a) => Show (Score a) where
+instance (Show a) => Show (Score a) where
   show x = show (x ^. events) ++ "^.score"
 
 deriving via
