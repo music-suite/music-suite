@@ -94,6 +94,8 @@ import qualified Data.Traversable as T
 import Data.Typeable
 import Data.VectorSpace
 import Data.VectorSpace hiding (Sum (..))
+import Iso.Deriving
+
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Time.Event
@@ -256,12 +258,15 @@ deriving via
   instance
     Monad Score'
 
-instance Isomorphic (WriterT Span [] x) (Score' x) where
+instance Inject (WriterT Span [] x) (Score' x) where
 
   -- TODO zero-cost version
   inj (WriterT xs) = Score' (fmap (view event . swap) xs)
 
+instance Project (WriterT Span [] x) (Score' x) where
   prj (Score' xs) = WriterT (fmap (swap . view (from event)) xs)
+
+instance Isomorphic (WriterT Span [] x) (Score' x) where
 
 swap :: (a, b) -> (b, a)
 swap (x, y) = (y, x)
@@ -483,48 +488,3 @@ anyDistinctOverlaps xs = hasDuplicates xs || anyOverlaps xs
 combined :: Eq a => (a -> a -> b) -> [a] -> [b]
 combined f as = mcatMaybes [if x == y then Nothing else Just (x `f` y) | x <- as, y <- as]
 
--- TODO move:
--- type As1 :: k1 -> (k2 -> Type) -> k2 -> Type
-newtype As1 f g a = As1 {getAs1 :: g a}
-
--- |
--- Laws: isom is an isomorphism, that is:
---
--- @
--- view isom . view (from isom) = id = view (from isom) . view isom
--- @
-class Isomorphic a b where
-
-  isom :: Iso' a b
-  isom = iso inj prj
-
-  inj :: Isomorphic a b => a -> b
-  inj = view isom
-
-  prj :: Isomorphic a b => b -> a
-  prj = view $ from isom
-
-instance (forall x. Isomorphic (f x) (g x), Functor f) => Functor (As1 f g) where
-  fmap h (As1 x) = As1 $ inj $ fmap h $ prj @(f _) @(g _) x
-
-instance (forall x. Isomorphic (f x) (g x), Applicative f) => Applicative (As1 f g) where
-
-  pure x = As1 $ inj @(f _) @(g _) $ pure x
-
-  (<*>) :: forall a b. As1 f g (a -> b) -> As1 f g a -> As1 f g b
-  As1 h <*> As1 x = As1 $ inj @(f b) @(g b) $ (prj @(f (a -> b)) @(g (a -> b)) h) <*> (prj @(f a) @(g a) x)
-
--- TODO use liftA2 instead of <*>, requires recent base library!
--- liftA2 h (As1 x) (As1 y) = As1 $ inj $ liftA2 h (prj x) (prj y)
-
-instance (forall x. Isomorphic (f x) (g x), Alternative f) => Alternative (As1 f g) where
-
-  empty :: forall a. As1 f g a
-  empty = As1 $ inj @(f a) @(g a) $ empty
-
-  (<|>) :: forall a. As1 f g a -> As1 f g a -> As1 f g a
-  As1 h <|> As1 x = As1 $ inj @(f a) @(g a) $ (prj @(f a) @(g a) h) <|> (prj @(f a) @(g a) x)
-
-instance (forall x. Isomorphic (f x) (g x), Monad f) => Monad (As1 f g) where
-  (>>=) :: forall a b. As1 f g a -> (a -> As1 f g b) -> As1 f g b
-  As1 k >>= f = As1 $ inj @(f b) @(g b) $ (prj @(f a) @(g a) k) >>= prj . getAs1 . f
