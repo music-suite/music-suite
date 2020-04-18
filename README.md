@@ -19,13 +19,19 @@ Enter build environment using:
 nix-shell --pure
 ```
 
+You should see this prompt:
+
+```
+m>
+```
+
 Inside the build shell, the following commands can be used:
 
 ### Build the library and examples
 
 ```
-music-suite-build$ cabal update
-music-suite-build$ cabal build
+m> cabal update
+m> cabal build
 ```
 
 ### Build and run the tests
@@ -33,19 +39,19 @@ music-suite-build$ cabal build
 #### Property tests
 
 ```
-music-suite-build$ cabal test
+m> cabal test
 ```
 
 To run individual tests:
 
 ```
-music-suite-build$ cabal run TEST_NAME -- TEST_ARGS...
+m> cabal run TEST_NAME -- TEST_ARGS...
 ```
 
 #### Doctests
 
 ```
-music-suite-build$ cabal build && cabal exec --package music-suite -- cabal run doctester PATHS
+m> cabal build && cabal exec --package music-suite -- cabal run doctester PATHS
 ```
 
 where `PATHS` is a list of Haskell files or directories containing Haskell files.
@@ -56,7 +62,7 @@ explicitly in each file using a `LANGUAGE` pragma.
 ### Development shell
 
 ```
-music-suite-build$ cabal build music-suite && cabal exec --package music-suite ghci
+m> cabal build music-suite && cabal exec --package music-suite ghci
 ```
 
 ### Build the documentation
@@ -64,7 +70,7 @@ music-suite-build$ cabal build music-suite && cabal exec --package music-suite g
 #### User Guide
 
 ```
-music-suite-build$ cabal build music-suite transf hslinks && (cd docs && make)
+m> cabal build music-suite transf hslinks && (cd docs && make)
 ```
 
 The output appears in `docs/build`. You can point a HTTP server to this directory.
@@ -72,7 +78,7 @@ The output appears in `docs/build`. You can point a HTTP server to this director
 #### API docs
 
 ```
-music-suite-build$ cabal haddock
+m> cabal haddock
 ```
 
 
