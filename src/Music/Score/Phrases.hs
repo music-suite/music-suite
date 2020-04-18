@@ -54,7 +54,7 @@ import Music.Time.Internal.Convert ()
 import Music.Time.Internal.Util
 import Music.Time.Note
 import Music.Time.Placed
-import Music.Time.Reverse
+import Music.Time.Duration
 import Music.Time.Score
 import Music.Time.Track
 import Music.Time.Voice

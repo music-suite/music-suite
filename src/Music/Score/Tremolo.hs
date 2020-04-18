@@ -121,8 +121,6 @@ deriving instance HasText a => HasText (TremoloT a)
 
 deriving instance Transformable a => Transformable (TremoloT a)
 
-deriving instance Reversible a => Reversible (TremoloT a)
-
 deriving instance Alterable a => Alterable (TremoloT a)
 
 deriving instance Augmentable a => Augmentable (TremoloT a)

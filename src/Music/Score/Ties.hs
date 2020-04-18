@@ -39,7 +39,6 @@ import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Time.Behavior
 import Music.Time.Note (note)
-import Music.Time.Reverse
 import Music.Time.Transform
 import Music.Time.Voice
 
@@ -129,9 +128,6 @@ instance IsDynamics a => IsDynamics (TieT a) where
 
 instance Transformable a => Transformable (TieT a) where
   transform s = fmap (transform s)
-
-instance Reversible a => Reversible (TieT a) where
-  rev = fmap rev
 
 instance Num a => Num (TieT a) where
 

@@ -406,7 +406,10 @@ fadeIn d x = x & dynamics *~ ((x ^. onset >-> d) `transform` unit)
 -- |
 -- Fade in.
 fadeOut :: (HasPosition1 a, Transformable a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
-fadeOut d x = x & dynamics *~ ((d <-< (x ^. offset)) `transform` rev unit)
+fadeOut d x = x & dynamics *~ ((d <-< (x ^. offset)) `transform` revB unit)
+
+revB :: Behavior a -> Behavior a
+revB = stretch (-1)
 
 newtype DynamicT n a = DynamicT {getDynamicT :: (n, a)}
   deriving
@@ -523,8 +526,6 @@ deriving instance (IsInterval a, Monoid n) => IsInterval (DynamicT n a)
 
 instance (IsDynamics n, Monoid a) => IsDynamics (DynamicT n a) where
   fromDynamics l = DynamicT (fromDynamics l, mempty)
-
-deriving instance Reversible a => Reversible (DynamicT p a)
 
 instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
   toTied (DynamicT (d, a)) = (DynamicT (d1, a1), DynamicT (d2, a2))

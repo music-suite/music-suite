@@ -19,13 +19,12 @@ import Music.Time.Event
 import Music.Time.Juxtapose
 import Music.Time.Note
 import Music.Time.Placed
-import Music.Time.Reverse
 import Music.Time.Score
 import Music.Time.Split
 import Music.Time.Transform
 import Music.Time.Voice
 
-instance (IsPitch a, Reversible a) => IsPitch (Pattern a) where
+instance (IsPitch a) => IsPitch (Pattern a) where
   fromPitch = pureP . fromPitch
 
 sppar = pseq . fmap ppar
@@ -94,8 +93,8 @@ nominalDuration :: Lunga a -> Duration
 nominalDuration (Lunga (d, _, _)) = d
 
 -- Transform a voice (assumed to be finite) into a lunga.
-newLunga :: Reversible a => Voice a -> Lunga a
-newLunga v = Lunga (v ^. duration, cycleV $ rev v, cycleV v)
+newLunga :: Voice a -> Lunga a
+newLunga v = Lunga (v ^. duration, cycleV $ over notes reverse v, cycleV v)
   where
     cycleV = over notes cycle
 
@@ -135,7 +134,7 @@ Render the cycles 0<->3, 3<->6, an extra cycle of (takeM 1), finally drop 1
 Render the cycles -, an extra cycle of (takeM 2), finally drop 1
 
 -}
-renderLunga :: (HasDuration a, Reversible a, Splittable a) => Span -> Lunga a -> Aligned (Voice a)
+renderLunga :: (HasDuration a, Transformable a, Splittable a) => Span -> Lunga a -> Aligned (Voice a)
 renderLunga s (Lunga (d, _, b))
   | d < 0 = error "renderLunga: Negative (nominal) duration"
   | otherwise =
@@ -150,7 +149,6 @@ renderLunga s (Lunga (d, _, b))
     dropM = ending
 
 -- List of repeated voices
--- TODO we could possibly lose the Reversible constriant alltogether
 -- TODO is this isomorphic to Tidal's pattern (i.e. Span -> Score a)
 newtype Pattern a
   = Pattern {getPattern :: [Placed (Lunga a)]} -- origo, pattern
@@ -183,25 +181,25 @@ instance HasParts a b => HasParts (Pattern a) (Pattern b) where
 --   pure x = newPattern' (pure x) (pure x)
 --   Pattern fs <*> Pattern xs = Pattern (fs <*> xs)
 
-pureP :: Reversible a => a -> Pattern a
+pureP :: a -> Pattern a
 pureP = newPattern . pure
 
-newPattern :: Reversible a => Voice a -> Pattern a
+newPattern :: Voice a -> Pattern a
 newPattern v = Pattern [pure $ newLunga v]
 
-rhythmPattern :: (IsPitch a, Reversible a) => [Duration] -> Pattern a
+rhythmPattern :: IsPitch a => [Duration] -> Pattern a
 rhythmPattern a = newPattern $ fmap (const c) $ a ^. durationsAsVoice
 
 newPattern' :: Voice a -> Voice a -> Pattern a
 newPattern' vb vf = Pattern [pure $ newLunga' vb vf]
 
 -- TODO variant that returns [Aligned (Voice a)]
-renderPattern :: (HasDuration a, Reversible a, Splittable a) => Pattern a -> Span -> Score a
+renderPattern :: (HasDuration a, Transformable a, Splittable a) => Pattern a -> Span -> Score a
 renderPattern (Pattern ((unzip . fmap (^. from placed)) -> (origos, lungas))) s =
   ppar $
     zipWith (renderLunga' s) origos lungas
 
-renderLunga' :: (HasDuration a, Reversible a, Splittable a) => Span -> Time -> Lunga a -> Score a
+renderLunga' :: (HasDuration a, Transformable a, Splittable a) => Span -> Time -> Lunga a -> Score a
 renderLunga' s t = renderAlignedVoice . delay' t . renderLunga (delay' t s)
   where
     -- TODO terminology here is not super-nice
@@ -213,21 +211,21 @@ renderLunga' s t = renderAlignedVoice . delay' t . renderLunga (delay' t s)
 --
 -- Each note triggers exactly /one/ cycle of the pattern (frequency = 1), starting at the beginning of the pattern (phase =
 -- 0).
-renderPatternsRel :: (HasDuration a, Reversible a, Splittable a) => Score (Pattern a) -> Score a
+renderPatternsRel :: (HasDuration a, Transformable a, Splittable a) => Score (Pattern a) -> Score a
 renderPatternsRel = join . fmap (flip renderPattern zeroV)
 
 -- | Renders each pattern in the span of its note.
 --
 -- This means that notes of different onset and duration may trigger a different number of cycles (frequency), with
 -- different starting point in the pattern (phase).
-renderPatternsAbs :: (HasDuration a, Reversible a, Splittable a) => Score (Pattern a) -> Score a
+renderPatternsAbs :: (HasDuration a, Transformable a, Splittable a) => Score (Pattern a) -> Score a
 renderPatternsAbs = join . mapWithSpan (\s -> transform (negateV s) . flip renderPattern s)
 
 -- Note: We can not change the span of a note using mapWithSpan, so we transform the result to position (0<->1)
 -- and trust join to put it back in the same position it was rendered.
 
-spat :: Reversible a => [Note a] -> Pattern a
+spat :: [Note a] -> Pattern a
 spat = newPattern . mconcat . map noteToVoice
 
-ppat :: Reversible a => [Note a] -> Pattern (Voice a)
+ppat :: [Note a] -> Pattern (Voice a)
 ppat = mconcat . map (pureP . noteToVoice)

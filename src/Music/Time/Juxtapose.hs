@@ -7,11 +7,10 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+  #-}
 
 module Music.Time.Juxtapose
   ( module Music.Time.Split,
-    module Music.Time.Reverse,
 
     -- * Align without composition
     lead,
@@ -25,6 +24,7 @@ module Music.Time.Juxtapose
     (<|),
 
     -- ** More exotic
+    rev,
     sustain,
     palindrome,
 
@@ -46,7 +46,6 @@ import Data.Semigroup
 import Data.Stream.Infinite hiding (group)
 import Data.VectorSpace
 import GHC.Generics (Generic)
-import Music.Time.Reverse
 import Music.Time.Split
 
 -- |
@@ -75,8 +74,11 @@ a `before` b = (a `lead` b) <> b
 
 -- |
 -- A value followed by its reverse (retrograde).
-palindrome :: (Semigroup a, Reversible a, HasPosition a) => a -> a
+palindrome :: (Semigroup a, Transformable a, HasPosition a) => a -> a
 palindrome a = a `after` rev a
+
+rev :: (Transformable a, HasPosition a) => a -> a
+rev = stretchRelativeMidpoint (-1)
 
 infixr 6 |>
 
@@ -97,14 +99,14 @@ infixr 6 <|
 
 -- |
 -- Compose a list of sequential objects, with onset and offset tangent to one another.
-pseq :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
+pseq :: (Monoid a, HasPosition a, Transformable a) => [a] -> a
 pseq = Prelude.foldr (|>) mempty
 
 -- |
 -- Compose a list of parallel objects, so that their local origins align.
 --
 -- For positioned types this is the same as 'mconcat'.
-ppar :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
+ppar :: (Monoid a) => [a] -> a
 ppar = mconcat
 
 -- Though (ppar = mconcat), the extra constraints prevents ppar from being used on sequential
@@ -112,7 +114,7 @@ ppar = mconcat
 
 -- |
 -- Move a value so that its era is equal to the era of another value.
-during :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
+during :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
 y `during` x = case _era x of
   Nothing -> y
   Just e -> setEra e y

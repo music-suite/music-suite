@@ -138,7 +138,6 @@ library
                         Music.Time.Duration
                         Music.Time.Position
                         Music.Time.Split
-                        Music.Time.Reverse
                         Music.Time.Juxtapose
                         Music.Time.Rest
                         Music.Time.Aligned

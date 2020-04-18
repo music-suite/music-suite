@@ -105,9 +105,6 @@ newtype Reactive a = Reactive {getReactive :: ([Time], Behavior a)}
 instance Transformable (Reactive a) where
   transform s (Reactive (t, r)) = Reactive (transform s t, transform s r)
 
-instance Reversible (Reactive a) where
-  rev = stretch (-1)
-
 instance Wrapped (Reactive a) where
 
   type Unwrapped (Reactive a) = ([Time], Behavior a)

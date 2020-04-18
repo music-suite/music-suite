@@ -70,14 +70,17 @@ music = times 4 $ set parts' clarinets $ fmap fromPitch $
       , addLeadingD (-1) v
       , addLeadingD (-2) v
       -- , addLeadingD 5 v
-      , addLeadingD 1 (rev $ addLeadingD (-1) v)
-      , addLeadingD 1 (addLeadingD 2 (rev $ addLeadingD (-1) v))
-      , addLeadingD (-2) (addLeadingD (-1) (addLeadingD 1 (rev $ addLeadingD (-3) v)))
-      , up _P5 $ addLeadingD (-2) (rev $ addLeadingD (-1) (addLeadingD 1 (addLeadingD (-3) v)))
-      , up _P5 $ addLeadingD (-2) (addLeadingD (-1) (addLeadingD 1 (addLeadingD (-3) $ rev v)))
+      , addLeadingD 1 (retr $ addLeadingD (-1) v)
+      , addLeadingD 1 (addLeadingD 2 (retr $ addLeadingD (-1) v))
+      , addLeadingD (-2) (addLeadingD (-1) (addLeadingD 1 (retr $ addLeadingD (-3) v)))
+      , up _P5 $ addLeadingD (-2) (retr $ addLeadingD (-1) (addLeadingD 1 (addLeadingD (-3) v)))
+      , up _P5 $ addLeadingD (-2) (addLeadingD (-1) (addLeadingD 1 (addLeadingD (-3) $ retr v)))
       ]
   -- (\x -> x <> upDiatonic c 2 x) $ downDiatonic c 2 $ renderAlignedVoice $ aligned 0 0 $transposeSingleNote 1 m3 $ addLeadingD (-1) v
   where
     v = [c,d,g|*2]^.voice
+
+retr :: Voice a -> Voice a
+retr = over notes reverse
 
 main = defaultMain music

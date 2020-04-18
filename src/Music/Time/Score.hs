@@ -195,9 +195,6 @@ instance FromJSON a => FromJSON (Score a) where
 instance Transformable (Score a) where
   transform t (Score (m, x)) = Score (transform t m, transform t x)
 
--- instance Reversible a => Reversible (Score a) where
--- rev (Score (m,x)) = Score (rev m, rev x)
-
 -- instance Splittable a => Splittable (Score a) where
 -- split t (Score (m,x)) = (Score (m1,x1), Score (m2,x2))
 -- where
@@ -284,8 +281,6 @@ instance MonadPlus Score' where
 instance Transformable (Score' a) where
   transform t = Score' . transform t . getScore'
 
--- instance Reversible a => Reversible (Score' a) where
---   rev (Score' xs) = Score' (fmap rev xs)
 instance HasPosition (Score' a) where
   _era x = case foldMap (NonEmptyInterval . _era1) $ getScore' x of
     EmptyInterval -> Nothing

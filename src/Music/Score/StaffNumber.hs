@@ -119,8 +119,6 @@ deriving instance HasText a => HasText (StaffNumberT a)
 
 deriving instance Transformable a => Transformable (StaffNumberT a)
 
-deriving instance Reversible a => Reversible (StaffNumberT a)
-
 deriving instance Alterable a => Alterable (StaffNumberT a)
 
 deriving instance Augmentable a => Augmentable (StaffNumberT a)

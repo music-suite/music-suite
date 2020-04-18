@@ -308,8 +308,6 @@ deriving instance IsDynamics a => IsDynamics (ColorT a)
 
 deriving instance Transformable a => Transformable (ColorT a)
 
-deriving instance Reversible a => Reversible (ColorT a)
-
 deriving instance Alterable a => Alterable (ColorT a)
 
 deriving instance Augmentable a => Augmentable (ColorT a)
@@ -327,12 +325,6 @@ deriving instance Transformable a => Transformable (SlideT a)
 deriving instance Transformable a => Transformable (HarmonicT a)
 
 deriving instance Transformable a => Transformable (TextT a)
-
-deriving instance Reversible a => Reversible (SlideT a)
-
-deriving instance Reversible a => Reversible (HarmonicT a)
-
-deriving instance Reversible a => Reversible (TextT a)
 
 deriving instance Alterable a => Alterable (SlideT a)
 
@@ -560,12 +552,6 @@ instance Splittable a => Splittable (DynamicT b a) where
 
 instance Splittable a => Splittable (TieT a) where
   split t = unzipR . fmap (split t)
-
-instance Reversible Common.Pitch where
-  rev = id
-
-instance Reversible (Score a) where
-  rev = revDefault
 
 unzipR :: Functor f => f (a, b) -> (f a, f b)
 unzipR x = (fmap fst x, fmap snd x)

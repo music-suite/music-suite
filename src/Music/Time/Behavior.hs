@@ -116,13 +116,6 @@ instance Transformable (Behavior a) where
     where
       f `whilst` s = f . transform (negateV s)
 
-instance Reversible (Behavior a) where
-  rev = stretch (-1)
-
--- Or: alternative
--- rev = (stretch (-1) `whilst` undelaying 0.5)
--- (i.e. revDefault pretending that Behaviors have era (0 <-> 1))
-
 deriving instance Semigroup a => Semigroup (Behavior a)
 
 deriving instance Monoid a => Monoid (Behavior a)

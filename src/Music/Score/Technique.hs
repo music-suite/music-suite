@@ -469,8 +469,6 @@ deriving instance (IsPitch a, Monoid n) => IsPitch (TechniqueT n a)
 
 deriving instance (IsInterval a, Monoid n) => IsInterval (TechniqueT n a)
 
-deriving instance (Monoid p, Reversible a) => Reversible (TechniqueT p a)
-
 deriving instance (Tiable a) => Tiable (TechniqueT n a)
 
 {-

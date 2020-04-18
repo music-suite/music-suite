@@ -48,7 +48,7 @@ silentBass = [((3/4),Just c_)^.note,((3/4),Just c_)^.note,((3/4),Just g_)^.note,
 -- Example of why melodies as sequences doesn't really make sense (we can't just move the pickup to the position of the final tonic)
 fs1 = beginning 20 $ mconcat $ stitchTogether fiskeskar
 -- Split off part at beginning, transform before stitching back together
-fs2 = (rev $ beginning 2.5 $ fiskeskar) `stitch` fiskeskar
+fs2 = (retr $ beginning 2.5 $ fiskeskar) `stitch` fiskeskar
 -- Expand chunks, gradually increasing
 fs3 = simplifyPitches $ beginning 40 $ mconcat $ zipWith (\n -> over pitches (relative d  (^*n))) [1..] (chunks 4.25 $ cycleV fiskeskar)
 fs4 = simplifyPitches $ beginning 40 $ mconcat $ zipWith (\n -> over pitches (relative a  (^*n))) [1..] (chunks 4.25 $ cycleV fiskeskar)
@@ -311,6 +311,8 @@ rotateRhythm n = over melodyAsRhythm (rotateR n)
 transposeSingleNote :: Int -> Interval -> Melody -> Melody
 transposeSingleNote n i = over (notes . element n) (up i)
 
+retr :: Voice a -> Voice a
+retr = over notes reverse
 
 {-
 Surprisingly effective for a "stupid" combinator.

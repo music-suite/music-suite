@@ -368,6 +368,8 @@ Consider switching to a decentralized issue tracker such as:
       - Note we need to *run* the examples to make sure the expressions don't
         diverge.
 
+- [ ] Get rid of Transformable constraint in Pattern API
+
 - [ ] Get rid of duplication in music-suite.cabal
 
 - Test generating all examples/documentation (and add more) in CI (nightly?)

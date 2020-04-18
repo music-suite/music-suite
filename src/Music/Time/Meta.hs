@@ -109,12 +109,9 @@ instance Transformable Attribute where
   transform _ (Attribute a) = Attribute a
   transform s (TAttribute a) = TAttribute (transform s a)
 
-instance Reversible Attribute where
-  rev = id
-
 -- Meta is Transformable because the contents of the map is transformable
 newtype Meta = Meta {_getMeta :: Map String Attribute}
-  deriving (Transformable, Reversible)
+  deriving (Transformable)
 
 instance Semigroup Meta where
   Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
@@ -277,9 +274,6 @@ instance Traversable AddMeta where
 
 instance Transformable a => Transformable (AddMeta a) where
   transform t = over meta (transform t) . over annotated (transform t)
-
-instance Reversible a => Reversible (AddMeta a) where
-  rev = over meta rev . over annotated rev
 
 instance Splittable a => Splittable (AddMeta a) where
   split t = unzipR . fmap (split t)

@@ -67,7 +67,6 @@ import Music.Time.Aligned
 import Music.Time.Event
 import Music.Time.Internal.Transform
 import Music.Time.Note
-import Music.Time.Reverse
 import Music.Time.Score
 import Music.Time.Voice
 
@@ -314,9 +313,6 @@ instance (IsPitch a, Monoid n) => IsPitch (PartT n a) where
 
 instance (IsDynamics a, Monoid n) => IsDynamics (PartT n a) where
   fromDynamics l = PartT (mempty, fromDynamics l)
-
-instance Reversible a => Reversible (PartT p a) where
-  rev = fmap rev
 
 instance Tiable a => Tiable (PartT n a) where
   toTied (PartT (v, a)) = (PartT (v, b), PartT (v, c)) where (b, c) = toTied a
