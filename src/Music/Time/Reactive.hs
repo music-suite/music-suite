@@ -102,6 +102,13 @@ newtype Reactive a = Reactive {getReactive :: ([Time], Behavior a)}
       discrete/atTime/continous - Forces implementation to choose arbitrary value at switchpoint
 -}
 
+instance Eq a => Eq (Reactive a) where
+  a == b =
+    initial a == initial b && updates a == updates b
+
+instance Show a => Show (Reactive a) where
+  showsPrec n a = showsPrec n (initial a, updates a)
+
 instance Transformable (Reactive a) where
   transform s (Reactive (t, r)) = Reactive (transform s t, transform s r)
 

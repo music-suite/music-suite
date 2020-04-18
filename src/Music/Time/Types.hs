@@ -1,4 +1,5 @@
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -117,6 +118,7 @@ import Data.Typeable
 import Data.VectorSpace
 import Music.Score.Internal.Util (unRatio)
 import Music.Time.Internal.Util (showRatio)
+import GHC.Generics (Generic)
 
 -- import           Data.Fixed
 
@@ -157,7 +159,7 @@ type Alignment = Duration
 -- to convert it. To convert between 'Time' and 'Duration', use the 'AffineSpace'
 -- instance.
 newtype Duration = Duration {_getDuration :: TimeBase}
-  deriving (Eq, Ord, Typeable, Enum, Num, Fractional, Real, RealFrac)
+  deriving (Eq, Ord, Generic, Typeable, Enum, Num, Fractional, Real, RealFrac)
 
 -- Duration is a one-dimensional 'VectorSpace', and is the associated vector space of time points.
 -- It is a also an 'AdditiveGroup' (and hence also 'Monoid' and 'Semigroup') under addition.
@@ -212,7 +214,7 @@ instance InnerSpace Duration where
 -- to convert it. To convert between 'Time' and 'Duration', use the 'AffineSpace'
 -- instance.
 newtype Time = Time {_getTime :: TimeBase}
-  deriving (Eq, Ord, Typeable, Enum, Num, Fractional, Real, RealFrac)
+  deriving (Eq, Ord, Generic, Typeable, Enum, Num, Fractional, Real, RealFrac)
 
 -- Time forms an affine space with durations as the underlying vector space, that is, we
 -- can add a time to a duration to get a new time using '.+^', take the difference of two

@@ -160,8 +160,8 @@ _HasDuration t = property cd
 
 -- TODO tests HasPosition/HasDuration/Transformable instances
 -- We should also test types that are not instances of all these classes at once
-_HasPosition :: (Checkable a, Transformable a, HasDuration a, HasPosition a) => a -> Property
-_HasPosition t = property sd -- .&&. ass
+_HasDurationHasPosition :: (Checkable a, Transformable a, HasDuration a, HasPosition a) => a -> Property
+_HasDurationHasPosition t = property sd -- .&&. ass
   where
     sd x =
       True ==>
@@ -233,6 +233,7 @@ sameType1 _ x = x
 
 
 
+instance CoArbitrary Time
 
 instance Arbitrary Time where
   arbitrary = fmap toTime (arbitrary::Gen Double)
@@ -285,6 +286,12 @@ instance Arbitrary a => Arbitrary (After a) where
 --   arbitrary = fmap Product arbitrary
 instance Arbitrary a => Arbitrary (Average a) where
   arbitrary = fmap Average arbitrary
+
+instance Arbitrary a => Arbitrary (Behavior a) where
+  arbitrary = view behavior <$> arbitrary
+
+instance Arbitrary a => Arbitrary (Reactive a) where
+  arbitrary = Music.Prelude.sample <$> arbitrary <*> arbitrary
 
 
 -- TODO move
@@ -345,6 +352,9 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("Monoid Voice Int", _Monoid, Voice Int),
   I_TEST2("Monoid Score Int", _Monoid, Score Int),
 
+  -- TODO lawless!
+  -- I_TEST2("Monoid (After (Score ()))", _Monoid, After (Score ())),
+  -- TODO lawless!
   -- I_TEST2("Monoid (After (Score Int))", _Monoid, After (Score Int)),
 
   I_TEST2("Transformable Time", _Transformable, Time),
@@ -375,41 +385,35 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("Transformable AddMeta (Placed Double)", _Transformable, AddMeta (Placed Double)),
 
   -- TODO how to test "pointwise" for Segment and Behavior
-  -- I_TEST2("Transformable Reactive Int", _Transformable, Reactive Int),
+  I_TEST2("Transformable Reactive Int", _Transformable, Reactive Int),
 
   I_TEST2("Transformable Voice Int", _Transformable, Voice Int),
-  -- I_TEST2("Transformable Chord Int", _Transformable, Chord Int),
   I_TEST2("Transformable Score Int", _Transformable, Score Int),
   I_TEST2("Transformable Track Int", _Transformable, Track Int),
   I_TEST2("Transformable [Voice Int]", _Transformable, [Voice Int]),
 
-  -- I_TEST2("HasDuration Time", _HasDuration, Time),
   I_TEST2("HasDuration Span", _HasDuration, Span),
   I_TEST2("HasDuration Event Int", _HasDuration, Event Int),
   I_TEST2("HasDuration Event Double", _HasDuration, Event Double),
-  -- I_TEST2("HasDuration Placed Int", _HasDuration, Placed Int),
-  -- I_TEST2("HasDuration Placed Double", _HasDuration, Placed Double),
 
-  -- I_TEST2("HasDuration Score Int", _HasDuration, Score Int),
-  -- I_TEST2("HasDuration Chord Int", _HasDuration, Chord Int),
   -- TODO remove instance I_TEST2("HasDuration [Score Int]", _HasDuration, [Score Int]),
   -- TODO remove instance I_TEST2("HasDuration [Chord Int]", _HasDuration, [Chord Int]),
 
 
-  I_TEST2("HasPosition Span", _HasPosition, Span),
-  I_TEST2("HasPosition Event Int", _HasPosition, Event Int),
-  I_TEST2("HasPosition Event Double", _HasPosition, Event Double),
-  -- I_TEST2("HasPosition Placed Int", _HasPosition, Placed Int),
-  -- I_TEST2("HasPosition Placed Double", _HasPosition, Placed Double),
+  I_TEST2("HasPosition/HasDuration Span", _HasDurationHasPosition, Span),
+  I_TEST2("HasPosition/HasDuration Event Int", _HasDurationHasPosition, Event Int),
+  I_TEST2("HasPosition/HasDuration Event Double", _HasDurationHasPosition, Event Double),
+  -- I_TEST2("HasPosition/HasDuration Placed Int", _HasDurationHasPosition, Placed Int),
+  -- I_TEST2("HasPosition/HasDuration Placed Double", _HasDurationHasPosition, Placed Double),
   I_TEST2("HasPosition/Transformable Score Int", _HasPositionTransformable, Score Int),
-  I_TEST2("HasPosition Event (Event Int)", _HasPosition, Event (Event Int)),
-  I_TEST2("HasPosition Event (Score Int)", _HasPosition, Event (Score Int)),
-  -- I_TEST2("HasPosition Score (Placed Int)", _HasPosition, Score (Placed Int)),
+  I_TEST2("HasPosition/HasDuration Event (Event Int)", _HasDurationHasPosition, Event (Event Int)),
+  I_TEST2("HasPosition/HasDuration Event (Score Int)", _HasDurationHasPosition, Event (Score Int)),
+  -- I_TEST2("HasPosition/HasDuration Score (Placed Int)", _HasDurationHasPosition, Score (Placed Int)),
 
-  -- I_TEST2("HasPosition AddMeta (Placed Duration)", _HasPosition, AddMeta (Placed Duration)),
-  -- I_TEST2("HasPosition Chord Int", _HasPosition, Chord Int),
-  -- TODO remove instance I_TEST2("HasPosition [Score Int]", _HasPosition, [Score Int]),
-  -- TODO remove instance I_TEST2("HasPosition [Chord Int]", _HasPosition, [Chord Int]),
+  -- I_TEST2("HasPosition/HasDuration AddMeta (Placed Duration)", _HasDurationHasPosition, AddMeta (Placed Duration)),
+  -- I_TEST2("HasPosition/HasDuration Chord Int", _HasDurationHasPosition, Chord Int),
+  -- TODO remove instance I_TEST2("HasPosition/HasDuration [Score Int]", _HasDurationHasPosition, [Score Int]),
+  -- TODO remove instance I_TEST2("HasPosition/HasDuration [Chord Int]", _HasDurationHasPosition, [Chord Int]),
 
 
 
