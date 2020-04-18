@@ -32,7 +32,6 @@ library
                         comonad,
                         streams,
                         vector-space,
-                        -- vector-space-points,
                         process,
                         filepath,
                         optparse-applicative,
@@ -274,7 +273,6 @@ test-suite "music-suite-test-umts"
                         type-unary,
                         unordered-containers,
                         vector-space,
-                        -- vector-space-points,
                         xml,
                         music-suite
     main-is:            UMTS.hs
