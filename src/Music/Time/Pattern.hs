@@ -2,9 +2,16 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
-module Music.Time.Pattern where
+module Music.Time.Pattern
+  ( Pattern
+  , newPattern
+  , rhythmPattern
+  , renderPattern
+  , renderPatternsRel
+  , renderPatternsAbs
+  )
+where
 
--- TODO export list
 
 import Control.Lens (Rewrapped (..), Wrapped (..), (^.), _Wrapped, from, iso, over, view)
 import Control.Monad (join)
