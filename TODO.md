@@ -360,14 +360,15 @@ Consider switching to a decentralized issue tracker such as:
 - [X] Large scores makes Lilypond segfault
   - Solved by upgrading to Lilypond 2.20
 
-- [ ] Examples should not be Cabal executables
+- [X] Examples should not be Cabal executables
+  - Fixed by adding -fno-code
   - Saves the slow linking step when doing Cabal build
     - Could also just disable codegen/linking!
     - Test in CI with cabal runhaskell
       - Note we need to *run* the examples to make sure the expressions don't
         diverge.
-  - Related:
-    - [ ] Get rid of duplication in music-suite.cabal
+
+- [ ] Get rid of duplication in music-suite.cabal
 
 - Test generating all examples/documentation (and add more) in CI (nightly?)
   - [ ] Make CI validate MIDI output (how?)

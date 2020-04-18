@@ -306,6 +306,7 @@ executable "music-suite-examples-analysis"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            analysis.hs
 
 executable "music-suite-examples-analysis-durations"
@@ -313,6 +314,7 @@ executable "music-suite-examples-analysis-durations"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            AnalysisDurations.hs
 
 executable "music-suite-examples-annotations"
@@ -320,6 +322,7 @@ executable "music-suite-examples-annotations"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            annotations.hs
 
 executable "music-suite-examples-bartok"
@@ -327,6 +330,7 @@ executable "music-suite-examples-bartok"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            bartok.hs
 
 executable "music-suite-examples-behavior"
@@ -334,6 +338,7 @@ executable "music-suite-examples-behavior"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            behavior.hs
 
 executable "music-suite-examples-canon"
@@ -341,6 +346,7 @@ executable "music-suite-examples-canon"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            canon.hs
 
 executable "music-suite-examples-chopin"
@@ -348,6 +354,7 @@ executable "music-suite-examples-chopin"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            chopin.hs
 
 executable "music-suite-examples-duo"
@@ -355,6 +362,7 @@ executable "music-suite-examples-duo"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            duo.hs
 
 executable "music-suite-examples-chords"
@@ -362,6 +370,7 @@ executable "music-suite-examples-chords"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            chords.hs
 
 executable "music-suite-examples-fugue1"
@@ -369,18 +378,21 @@ executable "music-suite-examples-fugue1"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            fugue1.hs
 
 executable "music-suite-examples-mozart"
     build-depends:      base,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            mozart.hs
 
 executable "music-suite-examples-part"
     build-depends:      base,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            part.hs
 
 executable "music-suite-examples-phrases"
@@ -388,12 +400,14 @@ executable "music-suite-examples-phrases"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            phrases.hs
 
 executable "music-suite-examples-hello"
     build-depends:      base,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            hello.hs
 
 executable "music-suite-examples-study-for-harp"
@@ -402,6 +416,7 @@ executable "music-suite-examples-study-for-harp"
                         containers,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            StudyForHarp.hs
 
 executable "music-suite-examples-time-signatures"
@@ -409,6 +424,7 @@ executable "music-suite-examples-time-signatures"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            TimeSignatures.hs
 
 executable "music-suite-examples-dynamics"
@@ -416,6 +432,7 @@ executable "music-suite-examples-dynamics"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            dynamics.hs
 
 executable "music-suite-examples-trio"
@@ -423,6 +440,7 @@ executable "music-suite-examples-trio"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            trio.hs
 
 executable "music-suite-examples-tuplet"
@@ -430,6 +448,7 @@ executable "music-suite-examples-tuplet"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            tuplet.hs
 
 executable "music-suite-examples-klangfarben"
@@ -437,6 +456,7 @@ executable "music-suite-examples-klangfarben"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            klangfarben.hs
 
 executable "music-suite-examples-chorale"
@@ -444,6 +464,7 @@ executable "music-suite-examples-chorale"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            chorale.hs
 
 -- executable "music-suite-examples-piece1"
@@ -458,6 +479,7 @@ executable "music-suite-examples-piece3"
                         lens,
                         music-suite
     hs-source-dirs:     examples/pieces
+    ghc-options:        -fno-code
     main-is:            Piece3.hs
 
 executable "music-suite-examples-ambitus"
@@ -465,6 +487,7 @@ executable "music-suite-examples-ambitus"
                         lens,
                         music-suite
     hs-source-dirs:     examples/pieces/Ambitus
+    ghc-options:        -fno-code
     main-is:            Score.hs
 
 executable "music-suite-examples-winds-phrasing"
@@ -472,6 +495,7 @@ executable "music-suite-examples-winds-phrasing"
                         lens,
                         music-suite
     hs-source-dirs:     examples/pieces/WindsPhrasing
+    ghc-options:        -fno-code
     main-is:            Score.hs
 
 executable "music-suite-examples-sustain-punctuated"
@@ -479,6 +503,7 @@ executable "music-suite-examples-sustain-punctuated"
                         lens,
                         music-suite
     hs-source-dirs:     examples/pieces/SustainPunctuated
+    ghc-options:        -fno-code
     main-is:            Score.hs
 
 executable "music-suite-examples-piece8"
@@ -488,6 +513,7 @@ executable "music-suite-examples-piece8"
                         vector-space,
                         music-suite
     hs-source-dirs:     examples/pieces
+    ghc-options:        -fno-code
     main-is:            Piece8.hs
 
 executable "music-suite-examples-brass-large-ensemble"
@@ -497,6 +523,7 @@ executable "music-suite-examples-brass-large-ensemble"
                         random,
                         music-suite
     hs-source-dirs:     examples/pieces/BrassLargeEnsemble
+    ghc-options:        -fno-code
     main-is:            Score.hs
 
 executable "music-suite-examples-salient-melodic-transformations"
@@ -506,6 +533,7 @@ executable "music-suite-examples-salient-melodic-transformations"
                         random,
                         music-suite
     hs-source-dirs:     examples/pieces/SalientMelodicTransformations
+    ghc-options:        -fno-code
     main-is:            Score.hs
 
 
