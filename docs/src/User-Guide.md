@@ -2188,7 +2188,7 @@ showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 
 TODO works for any `Typeable` `Monoid`.
 
-TODO Use more specicif wrappers to preserve `Transformable`, `Reversible` etc.
+TODO Use more specicif wrappers to preserve `Transformable`
 
 
 @[HasMeta]
@@ -2539,7 +2539,7 @@ inspectableToMusic bachCMajChords
       35,[c__,c_,e,g,c'])^.event]^.score
 
 
-    bachCMajPattern :: (Reversible a, Num a) => Pattern a
+    bachCMajPattern :: (Num a) => Pattern a
     bachCMajPattern = newPattern $ stretchTo 1 $ (view voice) $ fmap pure [0,1,2,3,4,2,3,4]
 ```
 
