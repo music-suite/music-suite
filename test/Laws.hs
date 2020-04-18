@@ -17,6 +17,7 @@ import Prelude hiding ((**))
 import Data.Monoid.Average
 import Data.Ord (comparing)
 import Music.Prelude hiding (defaultMain, elements)
+import Music.Pitch.Common.Internal (Interval(..), ChromaticSteps(..), DiatonicSteps(..))
 
 import Test.Tasty
 import Test.Tasty.QuickCheck (testProperty)
@@ -235,6 +236,28 @@ sameType1 _ x = x
 
 instance CoArbitrary Time
 
+instance Arbitrary DiatonicSteps where
+  arbitrary = DiatonicSteps <$> arbitrary
+
+instance Arbitrary ChromaticSteps where
+  arbitrary = ChromaticSteps <$> arbitrary
+
+instance Arbitrary Instrument where
+  -- TODO can only select GM instruments!
+  arbitrary = fromMidiProgram . (`mod` 128) <$> arbitrary
+
+instance Arbitrary Interval where
+  arbitrary = Interval <$> arbitrary
+
+instance Arbitrary Pitch where
+  arbitrary = (c .+^) <$> arbitrary
+
+instance Arbitrary Part where
+  arbitrary = do
+    x <- arbitrary
+    -- TODO also set subpart, division
+    pure $ set instrument x mempty
+
 instance Arbitrary Time where
   arbitrary = fmap toTime (arbitrary::Gen Double)
     where
@@ -356,6 +379,11 @@ main = defaultMain $ testGroup "Instances" $ [
   -- I_TEST2("Monoid (After (Score ()))", _Monoid, After (Score ())),
   -- TODO lawless!
   -- I_TEST2("Monoid (After (Score Int))", _Monoid, After (Score Int)),
+
+  I_TEST2("Transformable ()", _Transformable, ()),
+  I_TEST2("Transformable Bool", _Transformable, Bool),
+  I_TEST2("Transformable Pitch", _Transformable, Pitch),
+  I_TEST2("Transformable Part", _Transformable, Part),
 
   I_TEST2("Transformable Time", _Transformable, Time),
   I_TEST2("Transformable Duration", _Transformable, Duration),
