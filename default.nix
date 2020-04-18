@@ -15,10 +15,6 @@ let
     # Hash obtained using `nix-prefetch-url --unpack <url>`
     sha256 = "1jxb2kb83mrmzg06l7c1zw9pikk2l1lpg8dl0rvni65bgmlxf7xy";
   }) { config = opts; };
-
-  # TODO try adding HIE or ghcide
-  # https://github.com/hercules-ci/ghcide-nix/tarball/master"
-  # https://github.com/Infinisil/all-hies
 in
 
 pkgs.stdenv.mkDerivation {
