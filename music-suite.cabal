@@ -284,6 +284,7 @@ test-suite "music-suite-test-laws"
     build-depends:      base,
                         tasty,
                         tasty-golden,
+                        tasty-quickcheck-laws,
                         process,
                         average,
                         containers,

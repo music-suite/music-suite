@@ -2,6 +2,7 @@
 
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE ConstraintKinds #-}
@@ -24,6 +25,7 @@ import Test.Tasty.QuickCheck (testProperty)
 import Test.QuickCheck
 import Test.QuickCheck.Function
 import Test.QuickCheck.Gen
+import Test.Tasty.QuickCheck.Laws( testMonadLaws )
 
 import Data.Typeable
 import Data.Maybe
@@ -353,7 +355,20 @@ unzipR f = (fmap fst f, fmap snd f)
   )
 
 
-main = defaultMain $ testGroup "Instances" $ [
+main = defaultMain $ testGroup "all" [newTests, oldTests]
+
+newTests = testGroup "Instances (new tests)"
+  [ testMonadLaws
+    (Proxy @Maybe)
+    (Proxy @())
+    (Proxy @())
+    (Proxy @())
+    (Proxy @())
+    (const (==))
+  ]
+
+oldTests =
+  testGroup "Instances (old tests)" [
 
   I_TEST2("Monoid ()", _Monoid, ()),
   I_TEST2("Monoid Sum Int", _Monoid, Sum Int),
