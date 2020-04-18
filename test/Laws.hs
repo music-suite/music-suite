@@ -129,9 +129,9 @@ unass = \((a, b), c) -> (a, (b, c))
 _Transformable :: (Checkable a, Transformable a) => a -> Property
 _Transformable t = te .&&. tc .&&. tn
   where
-    te x     = True                               ==> transform mempty x === x .: t
-    tc s t x = isForwardSpan s && isForwardSpan t ==> transform (s <> t) x === transform s (transform t $ x .: t)
-    tn s x   = isForwardSpan s                    ==> transform (s <> negateV s) x === x .: t
+    te x     = True                          ==> transform mempty x === x .: t
+    tc s t x = True ==> transform (s <> t) x === transform s (transform t $ x .: t)
+    tn s x   = _duration s /= 0              ==> transform (s <> negateV s) x === x .: t
 
 {-
   Duration vs. onset and offset
