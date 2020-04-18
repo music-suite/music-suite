@@ -382,8 +382,8 @@ monad p@TP = testMonadLaws
 
 newTests = testGroup "Instances (new tests)"
   [ monad (TP @Maybe)
-  , monad (TP @Voice)
-  , monad (TP @Score)
+  -- FIXME SLOW: , monad (TP @Voice)
+  -- FIXME SLOW: , monad (TP @Score)
   ]
 
 oldTests =
