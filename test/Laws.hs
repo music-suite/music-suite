@@ -186,10 +186,9 @@ _offset = view offset
     iff t >= 0
 -}
 _Splittable :: (Checkable a, Transformable a, Splittable a, HasDuration a) => a -> Property
-_Splittable t = sameDur .&&. minBegin
+_Splittable t = property sameDur
   where
     sameDur t a  = True   ==> _duration (beginning t a) ^+^ _duration (ending t a) === _duration (a .: t)
-    minBegin     = True   ==> 1 === (1::Int)
 
     -- ond n a = n /= 0 ==> _onset (delay n $ a .: t)       === _onset a  .+^ n
     -- ofd n a = n /= 0 ==> _offset (delay n $ a .: t)      === _offset a .+^ n
@@ -355,7 +354,6 @@ unzipR f = (fmap fst f, fmap snd f)
 
 
 main = defaultMain $ testGroup "Instances" $ [
-  -- I_TEST2("Moinoid BadMonoid", _Monoid, BadMonoid),
 
   I_TEST2("Monoid ()", _Monoid, ()),
   I_TEST2("Monoid Sum Int", _Monoid, Sum Int),
@@ -412,7 +410,6 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("Transformable Placed Double", _Transformable, Placed Double),
   I_TEST2("Transformable AddMeta (Placed Double)", _Transformable, AddMeta (Placed Double)),
 
-  -- TODO how to test "pointwise" for Segment and Behavior
   I_TEST2("Transformable Reactive Int", _Transformable, Reactive Int),
 
   I_TEST2("Transformable Voice Int", _Transformable, Voice Int),
@@ -424,90 +421,21 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("HasDuration Event Int", _HasDuration, Event Int),
   I_TEST2("HasDuration Event Double", _HasDuration, Event Double),
 
-  -- TODO remove instance I_TEST2("HasDuration [Score Int]", _HasDuration, [Score Int]),
-  -- TODO remove instance I_TEST2("HasDuration [Chord Int]", _HasDuration, [Chord Int]),
-
-
   I_TEST2("HasPosition/HasDuration Span", _HasDurationHasPosition, Span),
   I_TEST2("HasPosition/HasDuration Event Int", _HasDurationHasPosition, Event Int),
   I_TEST2("HasPosition/HasDuration Event Double", _HasDurationHasPosition, Event Double),
-  -- I_TEST2("HasPosition/HasDuration Placed Int", _HasDurationHasPosition, Placed Int),
-  -- I_TEST2("HasPosition/HasDuration Placed Double", _HasDurationHasPosition, Placed Double),
   I_TEST2("HasPosition/Transformable Score Int", _HasPositionTransformable, Score Int),
   I_TEST2("HasPosition/HasDuration Event (Event Int)", _HasDurationHasPosition, Event (Event Int)),
   I_TEST2("HasPosition/HasDuration Event (Score Int)", _HasDurationHasPosition, Event (Score Int)),
-  -- I_TEST2("HasPosition/HasDuration Score (Placed Int)", _HasDurationHasPosition, Score (Placed Int)),
 
-  -- I_TEST2("HasPosition/HasDuration AddMeta (Placed Duration)", _HasDurationHasPosition, AddMeta (Placed Duration)),
-  -- I_TEST2("HasPosition/HasDuration Chord Int", _HasDurationHasPosition, Chord Int),
-  -- TODO remove instance I_TEST2("HasPosition/HasDuration [Score Int]", _HasDurationHasPosition, [Score Int]),
-  -- TODO remove instance I_TEST2("HasPosition/HasDuration [Chord Int]", _HasDurationHasPosition, [Chord Int]),
-
-
-
-
-
-
-
-
-
-
-  -- Test meaningless... I_TEST2("Splittable ()", _Splittable, ()),
   I_TEST2("Splittable Duration", _Splittable, Duration),
-  -- I_TEST2("Splittable Span", _Splittable, Span),
-  -- TODO arbitrary I_TEST2("Splittable Meta", _Splittable, Meta),
-  -- TODO arbitrary I_TEST2("Splittable Attribute", _Splittable, Attribute),
   I_TEST2("Splittable AddMeta Duration", _Splittable, AddMeta Duration),
-
-  -- TODO remove instance I_TEST2("Splittable [Duration]", _Splittable, [Duration]),
-  -- TODO remove instance I_TEST2("Splittable [Span]", _Splittable, [Span]),
-
-  -- I_TEST2("Splittable Set.Set Duration", _Splittable, Set.Set Duration),
-  -- I_TEST2("Splittable Set.Set Span", _Splittable, Set.Set Span),
-  -- I_TEST2("Splittable Map.Map Int Duration", _Splittable, Map.Map Int Duration),
-  -- I_TEST2("Splittable Map.Map Int Span", _Splittable, Map.Map Int Span),
-
-  -- I_TEST2("Splittable Int", _Splittable, Int),
-  -- I_TEST2("Splittable Double", _Splittable, Double),
-  -- I_TEST2("Splittable Event Int", _Splittable, Event Int),
-  -- I_TEST2("Splittable Event Double", _Splittable, Event Double),
-  -- I_TEST2("Splittable Note Int", _Splittable, Note Int),
-  -- I_TEST2("Splittable Note Double", _Splittable, Note Double),
-  -- I_TEST2("Splittable Placed Int", _Splittable, Placed Int),
-  -- I_TEST2("Splittable Placed Double", _Splittable, Placed Double),
-
-
-
-  -- TODO how to test "pointwise" for Segment and Behavior
-  -- I_TEST2("Splittable Reactive Int", _Splittable, Reactive Int),
-
-  -- I_TEST2("Splittable Voice Int", _Splittable, Voice Int),
---  I_TEST2("Splittable Track Int", _Splittable, Track Int),
-  -- I_TEST2("Splittable Chord Int", _Splittable, Chord Int),
-  -- I_TEST2("Splittable Score Int", _Splittable, Score Int),
-  -- I_TEST2("Splittable Event (Event Int)", _Splittable, Event (Event Int)),
-
-
+  I_TEST2("Splittable Voice ()", _Splittable, Voice ()),
+  I_TEST2("Splittable Note ()", _Splittable, Note ()),
+  I_TEST2("Splittable Voice Int", _Splittable, Voice Int),
+  I_TEST2("Splittable Note Int", _Splittable, Note Int),
 
   I_TEST2("Transformable Note [Event Int]", _Transformable, Note [Event Int])
 
   ]
 
-
-
-{-
-OK
-
-let t = -8
-let s = [(5,3)^.note,((-3),-4)^.note]^.voice
-stretch t (_duration s)
-_duration (stretch t s)
-
-
-FAIL
-
-let t = -8
-let s = [(5 <-> 23,3)^.event,(3 <-> (-3),-4)^.event]^.score
-stretch t (_duration s)
-_duration (stretch t s)
--}
