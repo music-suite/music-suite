@@ -29,7 +29,7 @@ import Test.Tasty.QuickCheck (testProperty)
 import Test.QuickCheck
 import Test.QuickCheck.Function
 import Test.QuickCheck.Gen
-import Test.Tasty.QuickCheck.Laws( testMonadLaws )
+import Test.Tasty.QuickCheck.Laws( testEqLaws, testMonadLaws, testApplicativeLaws )
 
 import Data.Typeable
 import Data.Maybe
@@ -273,16 +273,24 @@ instance Arbitrary Duration where
     where
       toDuration :: Real a => a -> Duration
       toDuration = realToFrac
+
 instance Arbitrary Span where
   arbitrary = liftA2 (<->) arbitrary arbitrary
+
 instance Arbitrary a => Arbitrary (Placed a) where
   arbitrary = fmap (view placed) arbitrary
+
 instance Arbitrary a => Arbitrary (Note a) where
   arbitrary = fmap (view note) arbitrary
+
 instance Arbitrary a => Arbitrary (Event a) where
   arbitrary = fmap (view event) arbitrary
+
 instance Arbitrary a => Arbitrary (AddMeta a) where
   arbitrary = fmap pure arbitrary
+
+instance Arbitrary a => Arbitrary (Aligned a) where
+  arbitrary = aligned <$> arbitrary <*> arbitrary <*> arbitrary
 
 {-
 instance (Ord a, Arbitrary a) => Arbitrary (Set.Set a) where
@@ -293,25 +301,17 @@ instance (Ord k, Arbitrary k, Ord a, Arbitrary a) => Arbitrary (Map.Map k a) whe
 -}
 
 instance Arbitrary a => Arbitrary (Voice a) where
-  arbitrary = fmap (view voice) arbitrary
--- instance Arbitrary a => Arbitrary (Chord a) where
-  -- arbitrary = fmap (view chord) arbitrary
+  arbitrary = fmap (view voice . take 3) arbitrary
+
 instance Arbitrary a => Arbitrary (Score a) where
-  arbitrary = fmap (view score) arbitrary
+  arbitrary = fmap (view score . take 3) arbitrary
+
 instance Arbitrary a => Arbitrary (Track a) where
-  arbitrary = fmap (view track) arbitrary
+  arbitrary = fmap (view track . take 3) arbitrary
 
 instance Arbitrary a => Arbitrary (After a) where
   arbitrary = fmap After arbitrary
 
--- instance Arbitrary a => Arbitrary (Reactive a) where
-  -- arbitrary = liftA2 zip arbitrary arbitrary
-
-
--- instance Arbitrary a => Arbitrary (Sum a) where
---   arbitrary = fmap Sum arbitrary
--- instance Arbitrary a => Arbitrary (Product a) where
---   arbitrary = fmap Product arbitrary
 instance Arbitrary a => Arbitrary (Average a) where
   arbitrary = fmap Average arbitrary
 
@@ -367,6 +367,19 @@ data TProxy (a :: k) where
 unT :: TProxy a -> Proxy a
 unT _ = Proxy
 
+applicative :: ( Applicative m
+  , forall x . Eq x => Eq (m x)
+  , forall x . Show x => Show (m x)
+  , forall x . Arbitrary x => Arbitrary (m x)
+  ) => TProxy m -> TestTree
+applicative p@TP = testApplicativeLaws
+    (unT p)
+    (Proxy @())
+    (Proxy @())
+    (Proxy @Int)
+    (Proxy @[Int])
+    (\() -> (==))
+
 monad :: (Monad m
   , forall x . Eq x => Eq (m x)
   , forall x . Show x => Show (m x)
@@ -381,9 +394,19 @@ monad p@TP = testMonadLaws
     (\() -> (==))
 
 newTests = testGroup "Instances (new tests)"
-  [ monad (TP @Maybe)
-  -- FIXME SLOW: , monad (TP @Voice)
-  -- FIXME SLOW: , monad (TP @Score)
+  [ testEqLaws (Proxy @(Reactive ()))
+  , testEqLaws (Proxy @(Reactive Int))
+  , applicative (TP @Maybe)
+  , applicative (TP @Note)
+  , applicative (TP @Event)
+  , applicative (TP @Reactive)
+  , applicative (TP @Voice)
+  , applicative (TP @Score)
+  , monad (TP @Maybe)
+  , monad (TP @Note)
+  , monad (TP @Event)
+  , monad (TP @Voice)
+  , monad (TP @Score)
   ]
 
 oldTests =
@@ -445,6 +468,7 @@ oldTests =
   I_TEST2("Transformable AddMeta (Placed Double)", _Transformable, AddMeta (Placed Double)),
 
   I_TEST2("Transformable Reactive Int", _Transformable, Reactive Int),
+  I_TEST2("Transformable Aligned Int", _Transformable, Aligned Int),
 
   I_TEST2("Transformable Voice Int", _Transformable, Voice Int),
   I_TEST2("Transformable Score Int", _Transformable, Score Int),
