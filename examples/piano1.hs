@@ -11,6 +11,7 @@ main = defaultMain music
 music :: Music
 music =
   fmap Just $ renderPatternsAbs
+    -- $ fmap renderSimple
     $ fmap render
     $ topLevelScore
 
@@ -43,7 +44,7 @@ topLevelScore =
          )
         (pure (Block Brown Lo Chord) |> (pure (Block Blue Lo Chord) |* 2))
   )
-    |> ( ( pure
+    <>  delay 4 ( ( pure
              (Block Brown Hi Repeat)
              |> (pure (Block Blue Hi Repeat) |* 2)
          )
@@ -53,6 +54,8 @@ topLevelScore =
              (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 2))
        )
 
+-- |
+-- Alternative to 'render' just to get a sense of 'topLevelScore'.
 renderSimple
   :: (IsPitch a, Transposable a) => Block -> Pattern a
 renderSimple Block{col,range,texture} = case (col,range,texture) of
