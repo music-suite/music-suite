@@ -11,7 +11,6 @@ main = defaultMain music
 music :: Music
 music =
   fmap Just $ renderPatternsAbs
-    -- $ fmap renderSimple
     $ fmap render
     $ topLevelScore
 
@@ -35,35 +34,135 @@ data Texture = Chord | Repeat
 
 topLevelScore :: Score Block
 topLevelScore =
-  ( ( pure
-        (Block Brown Hi Chord)
-        |> (pure (Block Blue Hi Chord) |* 2)
-    )
-      <> ( delay 2
-             . stretch 2
-         )
-        (pure (Block Brown Lo Chord) |> (pure (Block Blue Lo Chord) |* 2))
-  )
-    <>  delay 4 ( ( pure
-             (Block Brown Hi Repeat)
-             |> (pure (Block Blue Hi Repeat) |* 2)
-         )
-           <> ( delay 2
-                  . stretch 2
+  mempty
+    |> stretch
+      3.5
+      ( ( ( mempty
+              |> (pure (Block Brown Hi Chord))
+              |> (pure (Block Blue Hi Chord) |* 2)
+          )
+            <> ( delay 2
+                   . stretch 2
+               )
+              ( mempty
+                  |> (pure (Block Brown Lo Chord))
+                  |> ( pure
+                         (Block Blue Lo Chord)
+                         |* 2
+                     )
               )
-             (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 2))
+        )
+          <> delay
+            4
+            ( ( pure
+                  (Block Brown Hi Repeat)
+                  |> (pure (Block Blue Hi Repeat) |* 2)
+              )
+                <> ( delay 2
+                       . stretch 2
+                   )
+                  (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 0.5))
+            )
+      )
+    |> stretch 2 ( ( ( mempty
+               |> (pure (Block Brown Hi Chord))
+               |> (pure (Block Blue Hi Chord) |* 2)
+           )
+             <> ( delay 2
+                    . stretch 2
+                )
+               ( mempty
+                   |> (pure (Block Brown Lo Chord))
+                   |> ( pure
+                          (Block Blue Lo Chord)
+                          |* 2
+                      )
+               )
+         )
+           <> delay
+             4
+             ( ( pure
+                   (Block Brown Hi Repeat)
+                   |> (pure (Block Blue Hi Repeat) |* 2)
+               )
+                 <> ( delay 2
+                        . stretch 2
+                    )
+                   (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 0.5))
+             )
+       )
+    |> stretch
+      5.5
+      ( ( ( mempty
+              |> (pure (Block Brown Hi Chord))
+              |> (pure (Block Blue Hi Chord) |* 2)
+          )
+            <> ( delay 2
+                   . stretch 2
+               )
+              ( mempty
+                  |> (pure (Block Brown Lo Chord))
+                  |> ( pure
+                         (Block Blue Lo Chord)
+                         |* 2
+                     )
+              )
+        )
+          <> delay
+            4
+            ( ( pure
+                  (Block Brown Hi Repeat)
+                  |> (pure (Block Blue Hi Repeat) |* 2)
+              )
+                <> ( delay 2
+                       . stretch 2
+                   )
+                  (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 0.5))
+            )
+      )
+    |> stretch 3 ( ( ( mempty
+               |> (pure (Block Brown Hi Chord))
+               |> (pure (Block Blue Hi Chord) |* 2)
+           )
+             <> ( delay 2
+                    . stretch 2
+                )
+               ( mempty
+                   |> (pure (Block Brown Lo Chord))
+                   |> ( pure
+                          (Block Blue Lo Chord)
+                          |* 2
+                      )
+               )
+         )
+           <> delay
+             4
+             ( ( pure
+                   (Block Brown Hi Repeat)
+                   |> (pure (Block Blue Hi Repeat) |* 2)
+               )
+                 <> ( delay 2
+                        . stretch 2
+                    )
+                   (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 0.5))
+             )
        )
 
 -- |
 -- Alternative to 'render' just to get a sense of 'topLevelScore'.
-renderSimple
-  :: (IsPitch a, Transposable a) => Block -> Pattern a
-renderSimple Block{col,range,texture} = case (col,range,texture) of
-  (Blue,_,_) -> c
-  (Brown,_,_) -> c_
+renderSimple ::
+  (IsPitch a, Transposable a) => Block -> Pattern a
+renderSimple Block {col, range, texture} =
+  let transp =
+        case range of
+          Hi -> up _P15
+          Lo -> id
+   in transp $ case col of
+        Blue -> g
+        Brown -> c
 
-render
-  :: (IsPitch a, Transposable a) => Block -> Pattern a
+render ::
+  (IsPitch a, Transposable a) => Block -> Pattern a
 render Block {col, range, texture = Chord} = case col of
   Blue ->
     mconcat [c_, g_]
