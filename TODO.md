@@ -1,5 +1,6 @@
 
 ## TODO
+-- * DynamicTO
 
 **Note: We use this file instead of an issue tracker, for now**
 
@@ -93,6 +94,12 @@ Consider switching to a decentralized issue tracker such as:
   - Get rid of DynamicsL (unify with standard type a la Pitch/Interval/String)
   - [X] Remove meta-data extraction (withTempo et al) from public API
   - Remove HasOctaves/HasQuality/HasNumber (retain interval instance)
+  - Remove more classes/instances from StandardNote
+    - Hide Tiable from public API
+    - The following should be moved to constraints on the technique type:
+      - HasHarmonic
+      - HasSlide
+      - HasTremolo
   - Remove Augmentable/Alterable (?)
   - Remove triples/pairs in favor of explicit traversals (see example in Time.Score)
   - [X] Pattern does not need Reversible! (Just use forward version: think modulo arithmetic.)
@@ -700,6 +707,7 @@ Consider switching to a decentralized issue tracker such as:
   - Score/Event/Aligned/Pattern usually more compelling
   - Placed is currently used in the definition of Pattern, but that could be changed to Aligned (which is a
     strict generalization of Placed)
+  - Similarly Track can be replaced by a Score where all durations are 1
 
 - [X] Time.Voice API: Do not mention Meta (it's not used and there's no HasMeta instance).
 
