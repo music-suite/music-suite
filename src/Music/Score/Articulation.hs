@@ -103,9 +103,7 @@ class (HasArticulations s t) => HasArticulation s t where
 -- |
 -- Class of types that provide a articulation traversal.
 class
-  ( Transformable (Articulation s),
-    Transformable (Articulation t),
-    ArticulationLensLaws s t
+  ( ArticulationLensLaws s t
   ) =>
   HasArticulations s t where
   -- | Articulation type.
@@ -181,22 +179,22 @@ instance HasArticulations a b => HasArticulations (Either c a) (Either c b) wher
   articulations = traverse . articulations
 
 instance (HasArticulations a b) => HasArticulations (Event a) (Event b) where
-  articulations = from event . whilstL articulations
+  articulations = traverse . articulations
 
 instance (HasArticulation a b) => HasArticulation (Event a) (Event b) where
-  articulation = from event . whilstL articulation
+  articulation = from event . _2 . articulation
 
 instance (HasArticulations a b) => HasArticulations (Placed a) (Placed b) where
-  articulations = _Wrapped . whilstLT articulations
+  articulations = traverse . articulations
 
 instance (HasArticulation a b) => HasArticulation (Placed a) (Placed b) where
-  articulation = _Wrapped . whilstLT articulation
+  articulation = from placed . _2 . articulation
 
 instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
-  articulations = _Wrapped . whilstLD articulations
+  articulations = traverse . articulations
 
 instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
-  articulation = _Wrapped . whilstLD articulation
+  articulation = from note . _2 . articulation
 
 instance HasArticulations a b => HasArticulations (Voice a) (Voice b) where
   articulations = traverse . articulations
@@ -436,13 +434,11 @@ type instance Articulation (ArticulationT p a) = p
 type instance SetArticulation p' (ArticulationT p a) = ArticulationT p' a
 
 instance
-  (Transformable p, Transformable p') =>
   HasArticulation (ArticulationT p a) (ArticulationT p' a)
   where
   articulation = _Wrapped . _1
 
 instance
-  (Transformable p, Transformable p') =>
   HasArticulations (ArticulationT p a) (ArticulationT p' a)
   where
   articulations = _Wrapped . _1

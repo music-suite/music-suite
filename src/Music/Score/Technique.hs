@@ -115,10 +115,7 @@ type TechniqueLensLaws s t = TechniqueLensLaws' s t (Technique s) (Technique t)
 -- |
 -- Class of types that provide a technique traversal.
 class
-  ( -- Transformable (Technique s),
-    -- Transformable (Technique t),
-    -- SetTechnique (Technique t) s ~ t
-    TechniqueLensLaws s t
+  ( TechniqueLensLaws s t
   ) =>
   HasTechniques s t where
   -- | Access all techniques.

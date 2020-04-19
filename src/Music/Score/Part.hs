@@ -87,10 +87,6 @@ class (HasParts s t) => HasPart s t where
 -- |
 -- Class of types that provide a part traversal.
 class
-  ( Transformable (Part s),
-    Transformable (Part t)
-    -- , SetPart (Part t) s ~ t
-  ) =>
   HasParts s t where
   -- | Part type.
   parts :: Traversal s t (Part s) (Part t)
@@ -113,30 +109,30 @@ type instance Part Bool = Bool
 
 type instance SetPart a Bool = a
 
-instance (b ~ Part b, Transformable b) => HasPart Bool b where
+instance (b ~ Part b) => HasPart Bool b where
   part = ($)
 
-instance (b ~ Part b, Transformable b) => HasParts Bool b where
+instance (b ~ Part b) => HasParts Bool b where
   parts = ($)
 
 type instance Part Ordering = Ordering
 
 type instance SetPart a Ordering = a
 
-instance (b ~ Part b, Transformable b) => HasPart Ordering b where
+instance (b ~ Part b) => HasPart Ordering b where
   part = ($)
 
-instance (b ~ Part b, Transformable b) => HasParts Ordering b where
+instance (b ~ Part b) => HasParts Ordering b where
   parts = ($)
 
 type instance Part () = ()
 
 type instance SetPart a () = a
 
-instance (b ~ Part b, Transformable b) => HasPart () b where
+instance (b ~ Part b) => HasPart () b where
   part = ($)
 
-instance (b ~ Part b, Transformable b) => HasParts () b where
+instance (b ~ Part b) => HasParts () b where
   parts = ($)
 
 type instance Part Int = Int
@@ -212,20 +208,20 @@ type instance Part (Event a) = Part a
 type instance SetPart g (Event a) = Event (SetPart g a)
 
 instance (HasPart a b) => HasPart (Event a) (Event b) where
-  part = from event . whilstL part
+  part = from event . _2 . part
 
 instance (HasParts a b) => HasParts (Event a) (Event b) where
-  parts = from event . whilstL parts
+  parts = traverse . parts
 
 type instance Part (Note a) = Part a
 
 type instance SetPart g (Note a) = Note (SetPart g a)
 
 instance (HasPart a b) => HasPart (Note a) (Note b) where
-  part = from note . whilstLD part
+  part = from note . _2 . part
 
 instance (HasParts a b) => HasParts (Note a) (Note b) where
-  parts = from note . whilstLD parts
+  parts = traverse . parts
 
 -- |
 -- List all the parts
@@ -302,10 +298,10 @@ type instance Part (PartT p a) = p
 
 type instance SetPart p' (PartT p a) = PartT p' a
 
-instance (Transformable p, Transformable p') => HasPart (PartT p a) (PartT p' a) where
+instance HasPart (PartT p a) (PartT p' a) where
   part = _Wrapped . _1
 
-instance (Transformable p, Transformable p') => HasParts (PartT p a) (PartT p' a) where
+instance HasParts (PartT p a) (PartT p' a) where
   parts = _Wrapped . _1
 
 instance (IsPitch a, Monoid n) => IsPitch (PartT n a) where

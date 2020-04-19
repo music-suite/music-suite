@@ -45,7 +45,7 @@ Consider switching to a decentralized issue tracker such as:
 - [X] Won't fix!
   - Rename meta-information to "global"?
 
-- Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
+- [X] Remove whilstLT etc as well as Transformable constraints from HasPitch/HasDynamic/HasArticulations etc
 
 - [X] Do not expose IntervalL (hide or remove completely)
 

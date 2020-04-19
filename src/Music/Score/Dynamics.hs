@@ -98,10 +98,7 @@ type DynamicLensLaws s t = DynamicLensLaws' s t (Dynamic s) (Dynamic t)
 -- |
 -- Class of types that provide a dynamic traversal.
 class
-  ( Transformable (Dynamic s),
-    Transformable (Dynamic t),
-    -- SetDynamic (Dynamic t) s ~ t
-    DynamicLensLaws s t
+  ( DynamicLensLaws s t
   ) =>
   HasDynamics s t where
   -- | Access all dynamics.
@@ -182,22 +179,22 @@ instance HasDynamics a b => HasDynamics (Either c a) (Either c b) where
   dynamics = traverse . dynamics
 
 instance (HasDynamics a b) => HasDynamics (Event a) (Event b) where
-  dynamics = from event . whilstL dynamics
+  dynamics = traverse . dynamics
 
 instance (HasDynamic a b) => HasDynamic (Event a) (Event b) where
-  dynamic = from event . whilstL dynamic
+  dynamic = from event . _2 . dynamic
 
 instance (HasDynamics a b) => HasDynamics (Placed a) (Placed b) where
-  dynamics = _Wrapped . whilstLT dynamics
+  dynamics = traverse . dynamics
 
 instance (HasDynamic a b) => HasDynamic (Placed a) (Placed b) where
-  dynamic = _Wrapped . whilstLT dynamic
+  dynamic = from placed . _2 . dynamic
 
 instance (HasDynamics a b) => HasDynamics (Note a) (Note b) where
-  dynamics = _Wrapped . whilstLD dynamics
+  dynamics = traverse . dynamics
 
 instance (HasDynamic a b) => HasDynamic (Note a) (Note b) where
-  dynamic = _Wrapped . whilstLD dynamic
+  dynamic = from note . _2 . dynamic
 
 instance HasDynamics a b => HasDynamics (Voice a) (Voice b) where
   dynamics = traverse . dynamics
@@ -220,8 +217,7 @@ type instance Dynamic (Behavior a) = Behavior a
 type instance SetDynamic b (Behavior a) = b
 
 instance
-  ( Transformable b,
-    b ~ Dynamic b,
+  ( b ~ Dynamic b,
     SetDynamic (Behavior a) b ~ Behavior a
   ) =>
   HasDynamics (Behavior a) b
@@ -229,8 +225,7 @@ instance
   dynamics = ($)
 
 instance
-  ( Transformable b,
-    b ~ Dynamic b,
+  ( b ~ Dynamic b,
     SetDynamic (Behavior a) b ~ Behavior a
   ) =>
   HasDynamic (Behavior a) b
@@ -513,13 +508,11 @@ type instance Dynamic (DynamicT p a) = p
 type instance SetDynamic p' (DynamicT p a) = DynamicT p' a
 
 instance
-  (Transformable p, Transformable p') =>
   HasDynamic (DynamicT p a) (DynamicT p' a)
   where
   dynamic = _Wrapped . _1
 
 instance
-  (Transformable p, Transformable p') =>
   HasDynamics (DynamicT p a) (DynamicT p' a)
   where
   dynamics = _Wrapped . _1

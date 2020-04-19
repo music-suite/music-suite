@@ -131,11 +131,11 @@ import Music.Time.Voice
 --
 -- For simple types this is identity (they are their own pitch).
 --
--- > PitchOf Pitch = Pitch
+-- > GetPitch Pitch = Pitch
 --
 -- For containers this is a morhism
 --
--- > PitchOf (Voice Pitch) = PitchOf Pitch = Pitch
+-- > GetPitch (Voice Pitch) = PitchOf Pitch = Pitch
 type family Pitch (s :: Type) :: Type
 
 -- |
@@ -158,8 +158,7 @@ class HasPitches s t => HasPitch s t where
 
 -- | Types which has multiple pitches (i.e. voices, scores).
 class
-  ( Transformable (Pitch s),
-    Transformable (Pitch t),
+  (
     SetPitch (Pitch t) s ~ t
   ) =>
   HasPitches s t where
@@ -184,9 +183,9 @@ type instance Pitch () = ()
 
 type instance SetPitch a () = a
 
-instance (Transformable a, a ~ Pitch a) => HasPitch () a where pitch = ($)
+instance (a ~ Pitch a) => HasPitch () a where pitch = ($)
 
-instance (Transformable a, a ~ Pitch a) => HasPitches () a where pitches = ($)
+instance (a ~ Pitch a) => HasPitches () a where pitches = ($)
 
 type instance Pitch (c, a) = Pitch a
 
@@ -250,22 +249,22 @@ instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
 instance (HasPitches a b) => HasPitches (Event a) (Event b) where
-  pitches = from event . whilstL pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (Event a) (Event b) where
-  pitch = from event . whilstL pitch
+  pitch = from event . _2 . pitch
 
 instance (HasPitches a b) => HasPitches (Placed a) (Placed b) where
-  pitches = _Wrapped . whilstLT pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (Placed a) (Placed b) where
-  pitch = _Wrapped . whilstLT pitch
+  pitch = _Wrapped . _2 . pitch
 
 instance (HasPitches a b) => HasPitches (Note a) (Note b) where
-  pitches = _Wrapped . whilstLD pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (Note a) (Note b) where
-  pitch = _Wrapped . whilstLD pitch
+  pitch = _Wrapped . _2 . pitch
 
 instance HasPitches a b => HasPitches [a] [b] where
   pitches = traverse . pitches
@@ -316,10 +315,10 @@ type instance Pitch (Behavior a) = Behavior a
 
 type instance SetPitch b (Behavior a) = b
 
-instance (Transformable b, b ~ Pitch b) => HasPitches (Behavior a) b where
+instance (b ~ Pitch b) => HasPitches (Behavior a) b where
   pitches = ($)
 
-instance (Transformable b, b ~ Pitch b) => HasPitch (Behavior a) b where
+instance (b ~ Pitch b) => HasPitch (Behavior a) b where
   pitch = ($)
 
 type instance Pitch (Couple c a) = Pitch a
@@ -736,18 +735,18 @@ type instance Pitch Common.Pitch = Common.Pitch
 
 type instance SetPitch a Common.Pitch = a
 
-instance (Transformable a, a ~ Pitch a) => HasPitch Common.Pitch a where
+instance (a ~ Pitch a) => HasPitch Common.Pitch a where
   pitch = ($)
 
-instance (Transformable a, a ~ Pitch a) => HasPitches Common.Pitch a where
+instance (a ~ Pitch a) => HasPitches Common.Pitch a where
   pitches = ($)
 
 type instance Pitch Hertz = Hertz
 
 type instance SetPitch a Hertz = a
 
-instance (Transformable a, a ~ Pitch a) => HasPitch Hertz a where
+instance (a ~ Pitch a) => HasPitch Hertz a where
   pitch = ($)
 
-instance (Transformable a, a ~ Pitch a) => HasPitches Hertz a where
+instance (a ~ Pitch a) => HasPitches Hertz a where
   pitches = ($)
