@@ -99,26 +99,18 @@ import Music.Time.Types
 -- |
 -- Class of values that can be transformed (i.e. scaled and moved) in time.
 --
--- Laws:
+-- ==== Laws
 --
--- @
--- transform mempty   = id
--- transform (s <> t) = transform s . transform t
--- @
+-- [/identity/]
 --
--- In other words 'Transformable' values are monoid actions of 'Span'.
+--    @'transform' mempty = id@
 --
--- Instances of 'Transformable' and 'HasDuration should satisfy:
+-- [/compatibility/]
 --
--- @
--- _duration a = _duration (_era a)
--- @
+--    @'transform' (s <> t) = 'transform' s . 'transform' t@
 --
--- Instances of 'Transformable' and 'HasPosition' should satisfy:
+-- In other words, 'transform' must be a left-action of 'Span' on @a@.
 --
--- @
--- _era (transform s a) = transform s (_era a)
--- @
 class Transformable a where
   transform :: Span -> a -> a
 

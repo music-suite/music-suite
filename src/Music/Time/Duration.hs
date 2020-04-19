@@ -41,9 +41,8 @@ import Music.Time.Transform
 -- |
 -- Class of values that have a duration.
 --
--- For any type that is also 'Transformable', you should ensure that:
+-- For types that are also 'Transformable':
 --
--- Laws:
 -- @
 -- _duration (transform s x) = transform s (_duration x)
 -- @
@@ -53,10 +52,6 @@ class HasDuration a where
   _duration :: a -> Duration
 
   {-# MINIMAL _duration #-}
-
-{-
-"Standard" values has duration 1 and are non-transformable, to allow storage in recursive containers.
--}
 
 instance HasDuration () where
   _duration _ = 1
@@ -76,20 +71,6 @@ instance HasDuration Duration where
 instance HasDuration Span where
   _duration = snd . view onsetAndDuration
 
---
--- By convention, we treat pairs and triplets as having the form
--- (t,x), (d,x) and (t,d,x) where t has a position and d has a
--- duration. This makes it convenient to represent simple event
--- lists as [(Time, Duration, a)] without needing any special
--- structure.
---
-
-instance HasDuration a => HasDuration (a, b) where
-  _duration (d, _) = _duration d
-
-instance HasDuration b => HasDuration (a, b, c) where
-  _duration (_, d, _) = _duration d
-
 instance HasDuration a => HasDuration (Product a) where
   _duration (Product x) = _duration x
 
@@ -101,9 +82,6 @@ instance HasDuration a => HasDuration (Min a) where
 
 instance HasDuration a => HasDuration (Max a) where
   _duration (Max x) = _duration x
-
--- For HasDuration [a] we assume parallel composition and
--- use the HasPosition instance, see Music.Time.Position.
 
 instance (HasDuration a, HasDuration b) => HasDuration (Either a b) where
   _duration (Left x) = _duration x

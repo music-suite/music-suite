@@ -50,6 +50,14 @@ import Music.Score.Text
 import Music.Score.Ties
 import Music.Time
 
+-- |
+-- Class of types with a notion of tremolo.
+--
+-- ==== Laws
+--
+-- [/set-set/]
+--
+--    @'setTrem' n ('setTrem' n x) = 'setTrem' n x@
 class HasTremolo a where
 
   setTrem :: Int -> a -> a
