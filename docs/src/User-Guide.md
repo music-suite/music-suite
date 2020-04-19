@@ -1144,6 +1144,39 @@ inspectableToMusic @(Voiced Chord Pitch) $
   voiced (chord d majorTriad)
 ```
 
+To generate a closed voicing with doubled notes, use `voiceIn`.
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Pitch] $
+[ voiceIn 4 $ chord c majorTriad
+, invertVoicing (-2) $ voiced $ chord g majorMinorSeventhChord
+, voiceIn 4 $ chord c majorTriad
+]
+```
+
+### Operations on voicings
+
+We extract the pitches from a voiced chord like this:
+
+```music+haskell
+pseq $ fmap fromPitch ps
+  where
+    ps :: [Pitch]
+    ps = Data.List.NonEmpty.toList $ getVoiced v
+
+    v :: Voiced Chord Pitch
+    v = voiceIn 4 $ chord c majorTriad
+```
+
+Voiced chords allow inversion:
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Pitch] $
+  fmap (`invertVoicing` vs) [ -1..4 ]
+  where
+    vs = voiced (chord c majorTriad)
+```
+
 ### Other voicings
 
 We can also create custom voicings, using any combination of integers. Recall that `0` stands for the origin, `1` for the first note above the origin, `2` for the next and so on. Negative numbers repeat the pattern below the origin.
@@ -1163,40 +1196,6 @@ inspectableToMusic @(Voiced Chord Pitch) $
   Voiced (chord d minorTriad) [-2,0,2,4]
 ```
 
-TODO use voice, voiceIn
-
-TODO uneven voicing, e.g. [1,2,4,7] etc. and the reverse of that.
-
-
-Voiced chords allow inversion:
-
-
-```music+haskell
-inspectableToMusic @[Voiced Chord Pitch] $
-  fmap (`invertVoicing` vs) [ -1..4 ]
-  where
-    vs = voiced (chord c majorTriad)
-```
-
-```music+haskell
-inspectableToMusic @[Voiced Chord Pitch] $
-[ voiceIn 4 $ chord c majorTriad
-, invertVoicing (-2) $ voiced $ chord g majorMinorSeventhChord
-, voiceIn 4 $ chord c majorTriad
-]
-```
-
-We extract the pitches from a voiced chord like this:
-
-```music+haskell
-pseq $ fmap fromPitch ps
-  where
-    ps :: [Pitch]
-    ps = Data.List.NonEmpty.toList $ getVoiced v
-
-    v :: Voiced Chord Pitch
-    v = voiceIn 4 $ chord c majorTriad
-```
 
 
 
@@ -1680,7 +1679,7 @@ Note that in keeping with traditional notation, we notate unmeasured tremolo usi
 fastTremolo $ times 2 $ (c |> d)|/2
 ```
 
-## Repeating vs. alternating tremolo
+### Repeating vs. alternating tremolo
 
 The former is rare but happen e.g. when double-stopped strings play bow tremolo (without bariolage). The more common one is a rapid alteration among a set of notes. Logically we should treat both as an optional the property of a single chord. Alas in StandardNotation the latter is commonly written as two chords with half the duration (OR as a trill).
 
@@ -2521,7 +2520,7 @@ fmap Just $ renderPattern (a <> b) (0 <-> 2)
     b = parts' .~ trombones $ newPattern [c,d,e] |* (3/8)
 ```
 
-You can adjust the "phase" of a pattern using delay. This is useful together with the composition operator:
+You can adjust the "phase" of a pattern using @[delay]. This is useful together with the composition operator:
 
 ```music+haskell
 fmap Just $ renderPattern (a <> b <> delay (1/4) c <> delay (1/4) d) (0 <-> 2)
@@ -2651,9 +2650,11 @@ variation
 
 ## Time, change and sampling
 
-TODO Behavior and Reactive, Sampling
+TODO Behavior and Reactive
 
+@[Behaviors] are *continous* functions of time.
 
+A @[Reactive] is like a behaviours that can only change at certain well-known locations. Alternative, you can think of it as a @[Voice] that stretches out indefinately in both directions.
 
 
 
