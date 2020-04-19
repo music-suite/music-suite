@@ -165,9 +165,9 @@ render ::
   (IsPitch a, Transposable a) => Block -> Pattern a
 render Block {col, range, texture = Chord} = case col of
   Blue ->
-    mconcat [c_, a_,fs]
+    mconcat [c_, g_]
   Brown ->
-    mconcat [g_,d,a]
+    mconcat [d_, b_]
 render Block {col, range, texture = Repeat} =
   let transp =
         case range of
@@ -176,6 +176,6 @@ render Block {col, range, texture = Repeat} =
    in transp $
         case col of
           Blue ->
-            newPattern [a|*3, d, e] |/ 8
+            newPattern [c, d, e] |/ 8
           Brown ->
-            newPattern [e,fs|*2] |/ 6
+            newPattern [e, fs] |/ 6
