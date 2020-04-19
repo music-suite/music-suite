@@ -42,15 +42,14 @@ module Music.Time.Position
     stretchRelative,
     stretchRelativeOnset,
     stretchRelativeMidpoint,
+    stretchRelativeOffset,
+    transformRelative,
+    transformRelativeOnset,
+    transformRelativeMidpoint,
+    transformRelativeOffset,
   )
 where
 
--- stretchRelativeMidpoint,
--- stretchRelativeOffset,
--- transformRelative,
--- transformRelativeOnset,
--- transformRelativeMidpoint,
--- transformRelativeOffset,
 
 import Control.Lens hiding
   ( (<|),
@@ -240,7 +239,6 @@ stretchRelativeOnset = stretchRelative 0
 stretchRelativeMidpoint :: (HasPosition a, Transformable a) => Duration -> a -> a
 stretchRelativeMidpoint = stretchRelative 0.5
 
-{-
 -- |
 -- Stretch a value relative to its offset.
 --
@@ -258,7 +256,9 @@ stretchRelativeOffset = stretchRelative 1
 -- stretchRelativeOffset   = stretchRelative 1
 -- @
 transformRelative :: (HasPosition a, Transformable a) => Alignment -> Span -> a -> a
-transformRelative p n x = over (transformed $ undelaying (realToFrac $ x ^. position p)) (transform n) x
+transformRelative p n x = case _era x of
+  Nothing -> x
+  Just e -> over (transformed $ undelaying (realToFrac $ e ^. position p)) (transform n) x
 
 -- |
 -- Transform a value relative to its local origin.
@@ -292,4 +292,3 @@ transformRelativeMidpoint = transformRelative 0.5
 -- @
 transformRelativeOffset :: (HasPosition a, Transformable a) => Span -> a -> a
 transformRelativeOffset = transformRelative 1
--}

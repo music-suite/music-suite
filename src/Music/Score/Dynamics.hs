@@ -400,13 +400,17 @@ dim = cresc
 
 -- |
 -- Fade in.
-fadeIn :: (HasPosition1 a, Transformable a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
-fadeIn d x = x & dynamics *~ ((x ^. onset >-> d) `transform` unit)
+fadeIn :: (HasPosition a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeIn d x = case _era x of
+  Nothing -> x
+  Just e -> x & dynamics *~ ((e ^. onset >-> d) `transform` unit)
 
 -- |
 -- Fade in.
-fadeOut :: (HasPosition1 a, Transformable a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
-fadeOut d x = x & dynamics *~ ((d <-< (x ^. offset)) `transform` revB unit)
+fadeOut :: (HasPosition a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeOut d x = case _era x of
+  Nothing -> x
+  Just e -> x & dynamics *~ ((d <-< (e ^. offset)) `transform` revB unit)
 
 revB :: Behavior a -> Behavior a
 revB = stretch (-1)
