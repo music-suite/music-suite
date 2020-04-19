@@ -14,3 +14,4 @@ packages: ./music-suite.cabal
 
 package music-suite
   optimization: False
+  haddock-hyperlink-source: True

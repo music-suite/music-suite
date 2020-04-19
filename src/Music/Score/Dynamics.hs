@@ -12,7 +12,26 @@
 
 -- |  Provides functions for manipulating dynamics.
 module Music.Score.Dynamics
-  ( -- * Dynamic type functions
+  ( -- * Manipulating dynamics
+    level,
+    louder,
+    softer,
+    cresc,
+    dim,
+    volume,
+    compressor,
+    compressUp,
+    compressDown,
+    fadeIn,
+    fadeOut,
+
+    -- * DynamicT
+    DynamicT (..),
+
+    -- * Attenuable class
+    Attenuable,
+
+    -- * Dynamic type functions
     GetDynamic,
     GetLevel,
     SetDynamic,
@@ -27,22 +46,7 @@ module Music.Score.Dynamics
     dynamic',
     dynamics',
 
-    -- * Attenuable class
-    Attenuable,
 
-    -- * Manipulating dynamics
-    level,
-    louder,
-    softer,
-    cresc,
-    dim,
-    volume,
-    compressor,
-    compressUp,
-    compressDown,
-    fadeIn,
-    fadeOut,
-    DynamicT (..),
 
     -- * Context
     vdynamic,
@@ -287,15 +291,17 @@ instance (HasDynamic a b) => HasDynamic (SlideT a) (SlideT b) where
 type GetLevel a = Diff (GetDynamic a)
 
 -- | Set dynamic level, overwriting previous value.
-level :: Attenuable a => GetDynamic a -> a -> a
+level :: Attenuable level dyn a => dyn -> a -> a
 level a = dynamics .~ a
 
 -- |
 -- Class of types that can be modified dynamically.
-type Attenuable a =
-  ( HasDynamics a a,
-    VectorSpace (GetLevel a),
-    AffineSpace (GetDynamic a)
+type Attenuable level dyn a =
+  ( HasDynamics' a,
+    level ~ GetLevel a,
+    dyn ~ GetDynamic a,
+    VectorSpace level,
+    AffineSpace dyn
   )
 
 -- |
@@ -310,7 +316,7 @@ type Attenuable a =
 --
 -- >>> louder 5 [ppp,mf :: Dynamics]
 -- [_f, fffff]
-louder :: Attenuable a => GetLevel a -> a -> a
+louder :: Attenuable level dyn a => level -> a -> a
 louder a = dynamics %~ (.+^ a)
 
 -- >>> louder 1 (level ff cs :: DynamicT Dynamics (Sum Pitch))
@@ -322,11 +328,12 @@ louder a = dynamics %~ (.+^ a)
 
 -- | Decrease dynamic (linear).
 --   For standard notation, switches dynamic marks the given number of step downwards.
-softer :: Attenuable a => GetLevel a -> a -> a
+softer :: Attenuable v d a => v -> a -> a
 softer a = dynamics %~ (.-^ a)
 
 -- | Scale dynamic values.
-volume :: (Num (GetDynamic t), HasDynamics s t, GetDynamic s ~ GetDynamic t) => GetDynamic t -> s -> t
+volume :: (Attenuable v d a, Num d) =>
+  d -> a -> a
 volume a = dynamics *~ a
 
 -- | Compress dynamics upwards.
@@ -337,11 +344,11 @@ volume a = dynamics *~ a
 -- >>> compressUp 0 (1/2) (0.2 :: Amplitude)
 -- Amplitude {getAmplitude = 0.1}
 compressUp ::
-  (Attenuable a, Ord (GetLevel a), Num (GetLevel a)) =>
+  (Attenuable v d a, Ord v, Num v) =>
   -- | Threshold
-  GetDynamic a ->
+  d ->
   -- | Ratio
-  Scalar (GetLevel a) ->
+  Scalar v ->
   -- | Value to compress
   a ->
   a
@@ -355,22 +362,22 @@ compressUp th r = over dynamics (relative th $ \x -> if x < 0 then x else x ^* r
 -- >>> compressDown 0 1.5 (-0.2 :: Amplitude)
 -- Amplitude {getAmplitude = -0.30000000000000004}
 compressDown ::
-  (Attenuable a, Ord (GetLevel a), Num (GetLevel a)) =>
+  (Attenuable l d a, Ord (l), Num (l)) =>
   -- | Threshold
-  GetDynamic a ->
+  d ->
   -- | Ratio
-  Scalar (GetLevel a) ->
+  Scalar l ->
   -- | Value to compress
   a ->
   a
 compressDown th r = over dynamics (relative th $ \x -> if x > 0 then x else x ^* r)
 
 compressor ::
-  (Attenuable a, Ord (GetLevel a), Num (GetLevel a)) =>
+  (Attenuable l d a, Ord (l), Num (l)) =>
   -- | Threshold
-  GetDynamic a ->
+  d ->
   -- | Ratio
-  Scalar (GetLevel a) ->
+  Scalar (l) ->
   -- | Value to compress
   a ->
   a
@@ -381,28 +388,44 @@ compressor = compressUp
 -- TODO non-linear fades etc
 --
 
-cresc :: (Attenuable a, Fractional (Scalar (GetLevel a))) => GetDynamic a -> GetDynamic a -> Voice a -> Voice a
+cresc :: (Attenuable l d a, Fractional (Scalar (GetLevel a))) =>
+  d ->
+  d ->
+  Voice a ->
+  Voice a
 cresc a b x = stretchToD (_duration x) $ cresc' a b (stretchToD 1 x)
 
-cresc' :: (Attenuable a, Fractional (Scalar (GetLevel a))) => GetDynamic a -> GetDynamic a -> Voice a -> Voice a
+cresc' :: (Attenuable l d a, Fractional (Scalar (GetLevel a))) =>
+  d ->
+  d ->
+  Voice a -> Voice a
 cresc' a b = setLevelWithAlignment (\t -> alerp a b (realToFrac t))
 
-setLevelWithAlignment :: (Attenuable a) => (Duration -> GetDynamic a) -> Voice a -> Voice a
+setLevelWithAlignment :: (Attenuable l d a) => (Duration -> GetDynamic a) -> Voice a -> Voice a
 setLevelWithAlignment f = mapWithOnsetRelative 0 (\t x -> level (f (t .-. 0)) x)
 
-dim :: (Attenuable a, Fractional (Scalar (GetLevel a))) => GetDynamic a -> GetDynamic a -> Voice a -> Voice a
+dim :: (Attenuable l d a, Fractional (Scalar (GetLevel a))) =>
+ d ->
+ d ->
+ Voice a ->
+ Voice a
 dim = cresc
 
 -- |
 -- Fade in.
-fadeIn :: (HasPosition a, HasDynamics' a, GetDynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeIn :: (HasPosition a, HasDynamics' a, GetDynamic a ~ Behavior c, Fractional c) =>
+  Duration ->
+  a -> a
 fadeIn d x = case _era x of
   Nothing -> x
   Just e -> x & dynamics *~ ((e ^. onset >-> d) `transform` unit)
 
 -- |
 -- Fade in.
-fadeOut :: (HasPosition a, HasDynamics' a, GetDynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeOut :: (HasPosition a, HasDynamics' a, GetDynamic a ~ Behavior c, Fractional c) =>
+  Duration ->
+  a ->
+  a
 fadeOut d x = case _era x of
   Nothing -> x
   Just e -> x & dynamics *~ ((d <-< (e ^. offset)) `transform` revB unit)

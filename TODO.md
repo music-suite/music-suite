@@ -65,7 +65,7 @@ Consider switching to a decentralized issue tracker such as:
   - Move vtechnique, etc out of public API
   - Put combinators (not classes) on top of the following modules
     - Music.Score.Articulation
-    - Music.Score.Dynamics
+    - [X] Music.Score.Dynamics
     - Music.Score.Technique
     - Music.Score.Part
     - Music.Score.Color
