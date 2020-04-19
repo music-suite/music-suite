@@ -32,11 +32,13 @@ import Data.Functor.Couple
 import Data.Ratio
 
 -- |
--- Class of types that can be augmented.
+-- Class of things that can be augmented.
 --
--- > quality (augment a)  = augment (quality a)
--- > quality (diminish a) = diminish (quality a)
--- > augment . diminish   = id
+-- ==== Laws
+--
+-- [/inverse/]
+--
+--    @augment . diminish = id = diminish . augment@
 class Augmentable a where
 
   -- |

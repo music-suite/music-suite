@@ -34,9 +34,11 @@ import Data.Ratio
 -- |
 -- Class of things that can be altered.
 --
--- > accidental (sharpen a) = sharpen (accidental a)
--- > accidental (flatten a) = flatten (accidental a)
--- > sharpen . flatten      = id
+-- ==== Laws
+--
+-- [/inverse/]
+--
+--    @sharpen . flatten = id = flatten . sharpen@
 class Alterable a where
 
   -- |

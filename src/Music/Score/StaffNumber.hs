@@ -51,6 +51,14 @@ import Music.Score.Ties
 import Music.Time
 import Numeric.Natural
 
+-- |
+-- Class of types with a notion of staff number.
+--
+-- ==== Laws
+--
+-- [/set-set/]
+--
+--    @'setStaffNumber' n ('setStaffNumber' n x) = 'setStaffNumber' n x@
 class HasStaffNumber a where
 
   setStaffNumber :: Natural -> a -> a

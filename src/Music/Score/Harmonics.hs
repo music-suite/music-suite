@@ -40,14 +40,14 @@ import Music.Score.Phrases
 import Music.Time.Score
 import Numeric.Natural
 
--- 0 for none, positive for natural, negative for artificial
 class HasHarmonic a where
 
   setNatural :: Bool -> a -> a
 
+  -- 0 for none, positive for natural, negative for artificial
+  -- (isNatural, overtone series index where 0 is fundamental)
   setHarmonic :: Int -> a -> a
 
-  -- (isNatural, overtone series index where 0 is fundamental)
   default setNatural :: forall f b. (a ~ f b, Functor f, HasHarmonic b) => Bool -> a -> a
   setNatural s = fmap (setNatural s)
 

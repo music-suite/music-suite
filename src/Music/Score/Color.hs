@@ -50,6 +50,14 @@ import Music.Score.Tremolo
 import Music.Time
 import Music.Time.Internal.Transform
 
+-- |
+-- Class of types with a notion of tremolo.
+--
+-- ==== Laws
+--
+-- [/set-set/]
+--
+--    @'setColor' n ('setColor' n x) = 'setColor' n x@
 class HasColor a where
 
   setColor :: Colour Double -> a -> a

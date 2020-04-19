@@ -44,9 +44,13 @@ import Music.Time.Voice
 --
 -- ==== Laws
 --
--- [/set-set/]
+-- [/identity/]
 --
---    @'addText' m ('addText' n x) = 'addText' (m <> n) x@
+--    @'addText' mempty x = x@
+--
+-- [/composition/]
+--
+--    @'addText' (m <> n) x = 'addText' m ('addText' n x)@
 class HasText a where
 
   addText :: [String] -> a -> a

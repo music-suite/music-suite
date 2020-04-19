@@ -853,6 +853,10 @@ instance HasOctaves Octaves where octaves = id
 
 -- |
 -- Class of intervals that can be converted to a number of 'Semitones'.
+--
+-- ==== Laws
+--
+-- None.
 class HasSemitones a where
   -- |
   -- Returns the number of semitones spanned by an interval.
