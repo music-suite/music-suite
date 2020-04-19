@@ -232,7 +232,7 @@ type instance Technique SomeTechnique = SomeTechnique
 type instance SetTechnique a SomeTechnique = a
 
 instance HasTechniques a b => HasTechniques (Aligned a) (Aligned b) where
-  techniques = _Wrapped . techniques
+  techniques = traverse . techniques
 
 instance HasTechnique a b => HasTechnique (c, a) (c, b) where
   technique = _2 . technique

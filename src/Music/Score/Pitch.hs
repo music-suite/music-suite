@@ -240,7 +240,7 @@ type instance Pitch (Aligned a) = Pitch a
 type instance SetPitch b (Aligned a) = Aligned (SetPitch b a)
 
 instance HasPitches a b => HasPitches (Aligned a) (Aligned b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance HasPitch a b => HasPitch (c, a) (c, b) where
   pitch = _2 . pitch

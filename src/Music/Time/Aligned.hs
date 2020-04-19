@@ -64,16 +64,8 @@ align l (Aligned ((t, _), a)) = Aligned ((t, l), a)
 --
 -- This is analogous to alignment in a graphical program. To align something at onset, midpoint
 -- or offset, use 0, 0.5 or 1 as the local duration value.
-newtype Aligned v = Aligned {getAligned :: ((Time, Alignment), v)}
+newtype Aligned v = Aligned {_getAligned :: ((Time, Alignment), v)}
   deriving (Functor, Eq, Ord, Foldable, Traversable)
-
-instance Wrapped (Aligned v) where
-
-  type Unwrapped (Aligned v) = ((Time, Alignment), v)
-
-  _Wrapped' = iso getAligned Aligned
-
-instance Rewrapped (Aligned a) (Aligned b)
 
 -- | Align so that the given part of the value occurs at the given time.
 --

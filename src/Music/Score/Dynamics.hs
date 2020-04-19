@@ -166,7 +166,7 @@ type instance GetDynamic (Aligned a) = GetDynamic a
 type instance SetDynamic b (Aligned a) = Aligned (SetDynamic b a)
 
 instance HasDynamics a b => HasDynamics (Aligned a) (Aligned b) where
-  dynamics = _Wrapped . dynamics
+  dynamics = traverse . dynamics
 
 instance HasDynamic a b => HasDynamic (c, a) (c, b) where
   dynamic = _2 . dynamic

@@ -186,7 +186,7 @@ type instance Part (Aligned a) = Part a
 type instance SetPart b (Aligned a) = Aligned (SetPart b a)
 
 instance HasParts a b => HasParts (Aligned a) (Aligned b) where
-  parts = _Wrapped . parts
+  parts = traverse . parts
 
 instance HasPart a b => HasPart (c, a) (c, b) where
   part = _2 . part
