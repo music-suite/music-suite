@@ -342,19 +342,19 @@ data SystemBar
   = SystemBar
       {-
       We treat all the following information as global.
-      
+
       This is more restrictive than most classical notations, but greatly
       simplifies representation. In this view, a score is a matrix of bars
       (each belonging to a single staff). Each bar must have a single
       time sig/key sig/rehearsal mark/tempo mark.
-      
+
       ----
       Note: Option First ~ Maybe
-      
+
       Alternatively we could just make these things into Monoids such that
       mempty means "no notation at this point", and remove the "Option First"
       part here.
-      
+
       Actually I'm pretty sure this is the right approach. See also #242
       -}
       { _barNumbers :: Option (First BarNumber),
@@ -397,11 +397,11 @@ data StaffInfo
         _sibeliusFriendlyName :: SibeliusFriendlyName,
         {-
         See also clefChanges
-        
+
         TODO change name of _instrumentDefaultClef
         More accurately, it represents the first clef to be used on the staff
         (and the only one if there are no changes.)
-        
+
         OTOH having clef in the staff at all is redundant, specifying clef
         is optional (along with everything else) in this representation anyway.
         This is arguably wrong, as stanard notation generally requires a clef.
@@ -409,7 +409,7 @@ data StaffInfo
         _instrumentDefaultClef :: Music.Pitch.Clef,
         {-
         I.e. -P5 for horn
-        
+
         Note that this representation indicates *written pitch*, not sounding (as does MusicXML),
         so this value is redundant when rendering a graphical score. OTOH if this representation
         is used to render *sound*, pitches need to be transposed acconrdingly.
@@ -1080,7 +1080,8 @@ addKeySignature ::
   [Lilypond.Music]
 addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just (tonic, isMajor)))) =
   -- TODO convert
-  (Lilypond.Key (Music.Pitch.Literal.fromPitch tonic) (if isMajor then Lilypond.Major else Lilypond.Minor) :)
+  (Lilypond.Key (Music.Pitch.Literal.fromPitch tonic)
+      (case isMajor of { Music.Pitch.MajorMode -> Lilypond.Major; Music.Pitch.MinorMode -> Lilypond.Minor }) :)
 addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First Nothing)) = id
 
 addTimeSignature ::
@@ -1356,7 +1357,7 @@ movementToPartwiseXml movement = music
             We could also prepend it to other staves, but that is reduntant and makes the
             generated XML file much larger.
       Trying a new approach here by including this in all parts.
-    
+
       ---
       Again, this definition is a sequnce of elements to be prepended to each bar
       (typically divisions and attributes).
@@ -1400,7 +1401,7 @@ movementToPartwiseXml movement = music
     {-
       A matrix similar to the one returned from movementToPartwiseXml, but
       not including information from the system staff.
-    
+
       TODO we use movementAssureSameNumberOfBars
       We should do a sumilar check on the transpose of the bar/staff matrix
       to assure that all /bars/ have the same duration.
@@ -1449,12 +1450,12 @@ movementToPartwiseXml movement = music
            about this, are we always emitting the voice?)
             YES, see setDefaultVoice below?
             How about staff, are we always emitting that?
-        
+
           - TODO how does this interact with the staff-crossing feature?
             (are we always emitting staff?)
           - TODO how does it interact with clefs/other in-measure elements not
             connected to chords?
-        
+
             Lots of meta-stuff here about how a bar is represented, would be nice to write up music-score
             eloquently!
         -}
@@ -1491,7 +1492,7 @@ movementToPartwiseXml movement = music
         renderPitchLayer = renderBarMusic . fmap renderChord . getPitchLayer
         {-
         Render a rest/note/chord.
-        
+
         This returns a series of <note> elements, with appropriate <chord> tags.
         -}
         renderChord :: Chord -> Duration -> MusicXml.Music
@@ -2020,12 +2021,12 @@ toStandardNotation sc' = do
           support multi-voice staves as a starting point.
       - Bar splitting (adding ties)
       - Quantization
-  
-  
-  
+
+
+
     TODO layer sepration (which, again, does not actually happen in current code)
     should happen after bars have been split.
-  
+
   -}
   say "Separating voices"
   postVoiceSeparation :: [(Part, List0To4 (MVoice Asp2))] <-

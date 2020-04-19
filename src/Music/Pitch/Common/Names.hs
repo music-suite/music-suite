@@ -10,7 +10,7 @@
 -- | Common pitch names in various (human) languages.
 module Music.Pitch.Common.Names
   ( Language (..),
-    Mode (..),
+    MajorMinor (..),
     showKey,
     showPitch,
     showMode,
@@ -44,10 +44,10 @@ data Language
   | NewSwedish
   deriving (Show, Eq, Ord)
 
-data Mode = MajorMode | MinorMode
+data MajorMinor = MajorMode | MinorMode
   deriving (Eq, Ord, Show)
 
-showKey :: Language -> Pitch -> Mode -> String
+showKey :: Language -> Pitch -> MajorMinor -> String
 showKey lang pitch mode = showPitch lang pitch ++ showSep lang ++ showMode lang mode
 
 showPitch :: Language -> Pitch -> String
@@ -81,7 +81,7 @@ showPitch lang pitch = (!! (pitchToIndex + pitchNameOffset)) $ fromMaybe (error 
           ]
     pitchNameOffset = 3
 
-showMode :: Language -> Mode -> String
+showMode :: Language -> MajorMinor -> String
 showMode lang mode = (!! (modeToIndex + modeNameOffset)) $ fromMaybe (error "showMode: Bad lang") $ listToMaybe $ filter (\xs -> head xs == show lang) $ modeNames
   where
     modeToIndex =

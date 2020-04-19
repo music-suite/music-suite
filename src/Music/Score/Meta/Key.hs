@@ -71,6 +71,7 @@ import Music.Score.Internal.Util
 import Music.Score.Meta
 import Music.Score.Part
 import Music.Score.Pitch hiding (Pitch)
+import Music.Pitch.Common.Names (MajorMinor(MajorMode, MinorMode))
 import Music.Time
 import Music.Time.Reactive
 
@@ -137,7 +138,7 @@ instance IsPitch Fifths where
 -}
 
 -- | A key signature, represented by number of fifths from C and mode.
-newtype KeySignature = KeySignature {getKeySignature :: First (Pitch, Bool)}
+newtype KeySignature = KeySignature {getKeySignature :: First (Pitch, MajorMinor)}
   deriving (Eq, Ord, Typeable, Semigroup, Monoid)
 
 instance Show KeySignature where
@@ -145,7 +146,7 @@ instance Show KeySignature where
   show (KeySignature (First (Just (f, b)))) = "key " ++ showsPrec 1 f "" ++ " " ++ showsPrec 1 b ""
 
 -- | Create a major or minor signature.
-key :: Pitch -> Bool -> KeySignature
+key :: Pitch -> MajorMinor -> KeySignature
 key tonic mode = KeySignature $ First $ Just (tonic, mode)
 
 -- | Set the key signature of the given score.

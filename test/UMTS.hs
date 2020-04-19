@@ -39,6 +39,7 @@ import qualified Music.Pitch.Literal as P
 import qualified Music.Parts
 import qualified System.Directory
 import Music.Parts (Instrument)
+import Music.Pitch (MajorMinor(MajorMode, MinorMode))
 import qualified Music.Pitch
 import qualified Data.Music.MusicXml as MusicXml
 import qualified Music.Score.Meta.Key
@@ -657,7 +658,7 @@ umts_13a =
     keySigs :: [KeySignature]
     keySigs = concatMap (\i -> fmap (\m -> Music.Score.Meta.Key.key (error "TODO" i) m) modesPerBar) fifthPerTwoBars
     fifthPerTwoBars = [-11 .. 11] :: [Music.Score.Meta.Key.Fifths]
-    modesPerBar = [True, False]
+    modesPerBar = [MajorMode, MinorMode]
 
 -- ‘13b-KeySignatures-ChurchModes.xml’
 {-All different modes: major, minor, ionian, dorian, phrygian, lydian, mixolydian,
@@ -1614,7 +1615,7 @@ umts_41a =
   where
     sysStaff = [keySignature .~ keySig $ mempty]
     staves = zipWith (\name -> Staff (instrumentFullName .~ name $ mempty) . pure) names bars
-    keySig = Music.Score.Meta.Key.key Music.Pitch.g True
+    keySig = Music.Score.Meta.Key.key Music.Pitch.g MajorMode
     bars =
       fmap
         ( \p ->
@@ -1646,7 +1647,7 @@ umts_41b =
   where
     sysStaff = [keySignature .~ keySig $ mempty]
     staves = zipWith (\name -> Staff (instrumentFullName .~ name $ mempty) . pure) names bars
-    keySig = Music.Score.Meta.Key.key Music.Pitch.g True
+    keySig = Music.Score.Meta.Key.key Music.Pitch.g MajorMode
     bars =
       repeat $
         Bar
@@ -2065,7 +2066,7 @@ umts_72b =
         ]
     ----
     pitch = Music.Pitch.c'
-    origKeySig = Music.Score.Meta.Key.key Music.Pitch.g True
+    origKeySig = Music.Score.Meta.Key.key Music.Pitch.g MajorMode
     instruments :: [Instrument]
     instruments =
       [ Music.Parts.ebClarinet,

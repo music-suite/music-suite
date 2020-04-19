@@ -35,7 +35,7 @@ bc          = clarinets
 info = id
     . title "Ave Verum Corpus (excerpt)"
     . composer "W.A. Mozart"
-    . keySignature (key d True)
+    . keySignature (key d MajorMode)
     . tempo (metronome (1/4) 69)
 
 music :: Music

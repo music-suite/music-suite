@@ -1957,25 +1957,19 @@ Some backends may or may not render attribution information, depending on their 
 By default the key signature of C is used. We can override the *global* key signature using @[keySignature].
 
 ```music+haskell
-let major = True -- TODO!
-in
-keySignature (key db major) $ pseq [db,eb,f]
+keySignature (key db MajorMode) $ pseq [db,eb,f]
 ```
 
 We can also set the key signature for a specific time span using @[keySignatureDuring].
 
 ```music+haskell
-let major = True -- TODO!
-in
-keySignatureDuring (1 <-> 2) (key db major) $ pseq [db,eb,f]
+keySignatureDuring (1 <-> 2) (key db MinorMode) $ pseq [db,eb,f]
 ```
 
 A key signature change will always force a new bar.
 
 ```music+haskell
-let major = True -- TODO!
-in
-keySignatureDuring (1.5 <-> 2) (key db major) $ pseq [db,eb,f]
+keySignatureDuring (1.5 <-> 2) (key db MajorMode) $ pseq [db,eb,f]
 ```
 
 Part-specific key signatures are not supported, but transposing instruments will always use the correct relative key signature.

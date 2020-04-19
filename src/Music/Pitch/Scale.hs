@@ -160,7 +160,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Stream.Infinite (Stream)
 import qualified Data.Stream.Infinite as Stream
 import Data.VectorSpace
-import Music.Pitch.Common hiding (Mode)
+import Music.Pitch.Common
 import Music.Pitch.Literal
 import Music.Pitch.Literal
 import Music.Score.Pitch (HasPitches (..))
