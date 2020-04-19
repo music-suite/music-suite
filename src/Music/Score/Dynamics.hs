@@ -18,6 +18,7 @@ module Music.Score.Dynamics
     softer,
     cresc,
     dim,
+    crescVoice,
     volume,
     compressor,
     compressUp,
@@ -384,16 +385,23 @@ compressor ::
 compressor = compressUp
 {-# DEPRECATED compressor "Use compressUp (or compressDown)" #-}
 
---
--- TODO non-linear fades etc
---
 
-cresc :: (Attenuable l d a, Fractional (Scalar (GetLevel a))) =>
+cresc :: (HasPhrases' s a, Attenuable v d a, Fractional (Scalar v)) =>
+  d ->
+  -- | Initial dynamic.
+  d ->
+  -- | Final dynamic.
+  s ->
+  -- | Input value.
+  s
+cresc a b = over phrases' (crescVoice a b)
+
+crescVoice :: (Attenuable l d a, Fractional (Scalar (GetLevel a))) =>
   d ->
   d ->
   Voice a ->
   Voice a
-cresc a b x = stretchToD (_duration x) $ cresc' a b (stretchToD 1 x)
+crescVoice a b x = stretchToD (_duration x) $ cresc' a b (stretchToD 1 x)
 
 cresc' :: (Attenuable l d a, Fractional (Scalar (GetLevel a))) =>
   d ->
@@ -404,11 +412,14 @@ cresc' a b = setLevelWithAlignment (\t -> alerp a b (realToFrac t))
 setLevelWithAlignment :: (Attenuable l d a) => (Duration -> GetDynamic a) -> Voice a -> Voice a
 setLevelWithAlignment f = mapWithOnsetRelative 0 (\t x -> level (f (t .-. 0)) x)
 
-dim :: (Attenuable l d a, Fractional (Scalar (GetLevel a))) =>
- d ->
- d ->
- Voice a ->
- Voice a
+dim :: (HasPhrases' s a, Attenuable v d a, Fractional (Scalar v)) =>
+  d ->
+  -- | Initial dynamic.
+  d ->
+  -- | Final dynamic.
+  s ->
+  -- | Input value.
+  s
 dim = cresc
 
 -- |

@@ -1300,21 +1300,18 @@ Here is an overview of the standard dynamic values:
 over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] (fmap fromPitch [c..])
 ```
 
-TODO should the phrase traversal version be the default? E.g. do we want `cresc a b = over phrases' (crescV a b)`. Probably!
-
-
 We can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
 
 ```music+haskell
-(over phrases' (cresc pp mf) $ pseq [c,d,e,f,g,a,b,c'] |/8)
+(cresc pp mf $ pseq [c,d,e,f,g,a,b,c'] |/8)
   </>
-(over phrases' (dim fff ff) $ pseq [c,d,e,f,g,a,b,c'] |/8)
+(dim fff ff $ pseq [c,d,e,f,g,a,b,c'] |/8)
 ```
 
 Long crescendos and diminuendos are supported as well.
 
 ```music+haskell
-(over phrases' (cresc pp mf) $ (times 8 $ pseq [c,d,e,f,g]) |/8)
+cresc pp mf $ (times 8 $ pseq [c,d,e,f,g]) |/8
 ```
 
 ### How dynamics are represented
