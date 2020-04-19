@@ -9,7 +9,8 @@ import Music.Prelude
 main = defaultMain music
 
 music :: Music
-music = fmap Just $ renderPatternsAbs $ fmap renderA $ topLevelScore
+music = fmap Just $ renderPatternsAbs $
+  fmap renderA $ topLevelScore
 
 -- TODO add info
 --  Harmony
@@ -27,18 +28,18 @@ data Col = Blue | Brown
 
 data Range = Hi | Lo
 
-data Texture = Ch | Rep
+data Texture = Chord | Repeat
 
 topLevelScore :: Score Block
 topLevelScore =
   ( pure
-      (Block Brown Hi Rep)
-      |> (pure (Block Blue Hi Rep) |* 2)
+      (Block Brown Hi Repeat)
+      |> (pure (Block Blue Hi Repeat) |* 2)
   )
     <> ( delay 2
            . stretch 2
        )
-      (pure (Block Brown Lo Rep) |> (pure (Block Blue Lo Rep) |* 2))
+      (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 2))
 
 renderA :: (IsPitch a, Transposable a) => Block -> Pattern a
 renderA Block {col, range} =
