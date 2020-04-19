@@ -114,7 +114,7 @@ instance HasPitch a b => HasPitch (TechniqueT p a) (TechniqueT p b) where
 instance HasPitches a b => HasPitches (TechniqueT p a) (TechniqueT p b) where
   pitches = _Wrapped . pitches
 
-type instance Dynamic (TechniqueT p a) = Dynamic a
+type instance GetDynamic (TechniqueT p a) = GetDynamic a
 
 type instance SetDynamic b (TechniqueT p a) = TechniqueT p (SetDynamic b a)
 
@@ -164,7 +164,7 @@ instance HasPitch a b => HasPitch (ArticulationT p a) (ArticulationT p b) where
 instance HasPitches a b => HasPitches (ArticulationT p a) (ArticulationT p b) where
   pitches = _Wrapped . _2 . pitches
 
-type instance Dynamic (PartT p a) = Dynamic a
+type instance GetDynamic (PartT p a) = GetDynamic a
 
 type instance SetDynamic b (PartT p a) = PartT p (SetDynamic b a)
 
@@ -174,7 +174,7 @@ instance HasDynamic a b => HasDynamic (PartT p a) (PartT p b) where
 instance HasDynamics a b => HasDynamics (PartT p a) (PartT p b) where
   dynamics = _Wrapped . _2 . dynamics
 
-type instance Dynamic (ArticulationT p a) = Dynamic a
+type instance GetDynamic (ArticulationT p a) = GetDynamic a
 
 type instance SetDynamic b (ArticulationT p a) = ArticulationT p (SetDynamic b a)
 
@@ -205,7 +205,7 @@ instance (HasPitches a b) => HasPitches (ColorT a) (ColorT b) where
 instance (HasPitch a b) => HasPitch (ColorT a) (ColorT b) where
   pitch = _Wrapped . pitch
 
-type instance Dynamic (ColorT a) = Dynamic a
+type instance GetDynamic (ColorT a) = GetDynamic a
 
 type instance SetDynamic g (ColorT a) = ColorT (SetDynamic g a)
 
@@ -430,7 +430,7 @@ instance (Monoid v, Bounded a) => Bounded (PartT v a) where
 --   maxBound = [maxBound]
 
 -- TODO use wrapper type and replace withContext
-type instance Dynamic (a, b, c) = (a, b, c)
+type instance GetDynamic (a, b, c) = (a, b, c)
 
 type instance SetDynamic g (a, b, c) = g
 

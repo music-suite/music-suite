@@ -135,7 +135,7 @@ type instance Pitch (StaffNumberT a) = Pitch a
 
 type instance SetPitch g (StaffNumberT a) = StaffNumberT (SetPitch g a)
 
-type instance Dynamic (StaffNumberT a) = Dynamic a
+type instance GetDynamic (StaffNumberT a) = GetDynamic a
 
 type instance SetDynamic g (StaffNumberT a) = StaffNumberT (SetDynamic g a)
 

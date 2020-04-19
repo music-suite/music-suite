@@ -80,7 +80,7 @@ instance Wrapped DynamicNotation where
 
 instance Rewrapped DynamicNotation DynamicNotation
 
-type instance Dynamic DynamicNotation = DynamicNotation
+type instance GetDynamic DynamicNotation = DynamicNotation
 
 instance Transformable DynamicNotation where
   transform _ = id
@@ -134,7 +134,7 @@ notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ 
     EQ -> ([], False)
     GT -> ([EndDim], True)
 
-removeCloseDynMarks :: forall s a. (HasPhrases' s a, HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => s -> s
+removeCloseDynMarks :: forall s a. (HasPhrases' s a, HasDynamics' a, GetDynamic a ~ DynamicNotation, a ~ SetDynamic (GetDynamic a) a) => s -> s
 removeCloseDynMarks = mapPhrasesWithPrevAndCurrentOnset f
   where
     f :: Maybe (Time, Phrase a) -> Time -> Phrase a -> Phrase a
@@ -145,5 +145,5 @@ removeCloseDynMarks = mapPhrasesWithPrevAndCurrentOnset f
         then x
         else over (_head . mapped) removeDynMark x
 
-removeDynMark :: (HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => a -> a
+removeDynMark :: (HasDynamics' a, GetDynamic a ~ DynamicNotation, a ~ SetDynamic (GetDynamic a) a) => a -> a
 removeDynMark x = set (dynamics' . _Wrapped' . _2) Nothing x

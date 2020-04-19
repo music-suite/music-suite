@@ -13,8 +13,8 @@
 -- |  Provides functions for manipulating dynamics.
 module Music.Score.Dynamics
   ( -- * Dynamic type functions
-    Dynamic,
-    Level,
+    GetDynamic,
+    GetLevel,
     SetDynamic,
     DynamicLensLaws',
     DynamicLensLaws,
@@ -75,7 +75,7 @@ import Music.Time.Internal.Transform
 
 -- |
 -- Dynamics type.
-type family Dynamic (s :: Type) :: Type
+type family GetDynamic (s :: Type) :: Type
 
 -- |
 -- Dynamic type.
@@ -85,15 +85,15 @@ type family SetDynamic (b :: Type) (s :: Type) :: Type
 -- Class of types that provide a single dynamic.
 class (HasDynamics s t) => HasDynamic s t where
   -- | Access a single dynamic.
-  dynamic :: Lens s t (Dynamic s) (Dynamic t)
+  dynamic :: Lens s t (GetDynamic s) (GetDynamic t)
 
 type DynamicLensLaws' s t a b =
-  ( Dynamic (SetDynamic a s) ~ a,
-    SetDynamic (Dynamic t) s ~ t,
+  ( GetDynamic (SetDynamic a s) ~ a,
+    SetDynamic (GetDynamic t) s ~ t,
     SetDynamic a (SetDynamic b s) ~ SetDynamic a s
   )
 
-type DynamicLensLaws s t = DynamicLensLaws' s t (Dynamic s) (Dynamic t)
+type DynamicLensLaws s t = DynamicLensLaws' s t (GetDynamic s) (GetDynamic t)
 
 -- |
 -- Class of types that provide a dynamic traversal.
@@ -102,61 +102,61 @@ class
   ) =>
   HasDynamics s t where
   -- | Access all dynamics.
-  dynamics :: Traversal s t (Dynamic s) (Dynamic t)
+  dynamics :: Traversal s t (GetDynamic s) (GetDynamic t)
 
 type HasDynamic' a = HasDynamic a a
 
 type HasDynamics' a = HasDynamics a a
 
 -- | Access a single dynamic.
-dynamic' :: (HasDynamic s t, s ~ t) => Lens' s (Dynamic s)
+dynamic' :: (HasDynamic s t, s ~ t) => Lens' s (GetDynamic s)
 dynamic' = dynamic
 
 -- | Access all dynamics.
-dynamics' :: (HasDynamics s t, s ~ t) => Traversal' s (Dynamic s)
+dynamics' :: (HasDynamics s t, s ~ t) => Traversal' s (GetDynamic s)
 dynamics' = dynamics
 
-type instance Dynamic (c, a) = Dynamic a
+type instance GetDynamic (c, a) = GetDynamic a
 
 type instance SetDynamic b (c, a) = (c, SetDynamic b a)
 
-type instance Dynamic [a] = Dynamic a
+type instance GetDynamic [a] = GetDynamic a
 
 type instance SetDynamic b [a] = [SetDynamic b a]
 
-type instance Dynamic (Maybe a) = Dynamic a
+type instance GetDynamic (Maybe a) = GetDynamic a
 
 type instance SetDynamic b (Maybe a) = Maybe (SetDynamic b a)
 
-type instance Dynamic (Either c a) = Dynamic a
+type instance GetDynamic (Either c a) = GetDynamic a
 
 type instance SetDynamic b (Either c a) = Either c (SetDynamic b a)
 
-type instance Dynamic (Event a) = Dynamic a
+type instance GetDynamic (Event a) = GetDynamic a
 
 type instance SetDynamic b (Event a) = Event (SetDynamic b a)
 
-type instance Dynamic (Placed a) = Dynamic a
+type instance GetDynamic (Placed a) = GetDynamic a
 
 type instance SetDynamic b (Placed a) = Placed (SetDynamic b a)
 
-type instance Dynamic (Note a) = Dynamic a
+type instance GetDynamic (Note a) = GetDynamic a
 
 type instance SetDynamic b (Note a) = Note (SetDynamic b a)
 
-type instance Dynamic (Voice a) = Dynamic a
+type instance GetDynamic (Voice a) = GetDynamic a
 
 type instance SetDynamic b (Voice a) = Voice (SetDynamic b a)
 
-type instance Dynamic (Track a) = Dynamic a
+type instance GetDynamic (Track a) = GetDynamic a
 
 type instance SetDynamic b (Track a) = Track (SetDynamic b a)
 
-type instance Dynamic (Score a) = Dynamic a
+type instance GetDynamic (Score a) = GetDynamic a
 
 type instance SetDynamic b (Score a) = Score (SetDynamic b a)
 
-type instance Dynamic (Aligned a) = Dynamic a
+type instance GetDynamic (Aligned a) = GetDynamic a
 
 type instance SetDynamic b (Aligned a) = Aligned (SetDynamic b a)
 
@@ -212,12 +212,12 @@ instance HasDynamics a b => HasDynamics (Chord a) (Chord b) where
 instance (HasDynamics a b) => HasDynamics (Score a) (Score b) where
   dynamics = traverse . dynamics
 
-type instance Dynamic (Behavior a) = Behavior a
+type instance GetDynamic (Behavior a) = Behavior a
 
 type instance SetDynamic b (Behavior a) = b
 
 instance
-  ( b ~ Dynamic b,
+  ( b ~ GetDynamic b,
     SetDynamic (Behavior a) b ~ Behavior a
   ) =>
   HasDynamics (Behavior a) b
@@ -225,30 +225,30 @@ instance
   dynamics = ($)
 
 instance
-  ( b ~ Dynamic b,
+  ( b ~ GetDynamic b,
     SetDynamic (Behavior a) b ~ Behavior a
   ) =>
   HasDynamic (Behavior a) b
   where
   dynamic = ($)
 
-type instance Dynamic (Couple c a) = Dynamic a
+type instance GetDynamic (Couple c a) = GetDynamic a
 
 type instance SetDynamic g (Couple c a) = Couple c (SetDynamic g a)
 
-type instance Dynamic (TextT a) = Dynamic a
+type instance GetDynamic (TextT a) = GetDynamic a
 
 type instance SetDynamic g (TextT a) = TextT (SetDynamic g a)
 
-type instance Dynamic (HarmonicT a) = Dynamic a
+type instance GetDynamic (HarmonicT a) = GetDynamic a
 
 type instance SetDynamic g (HarmonicT a) = HarmonicT (SetDynamic g a)
 
-type instance Dynamic (TieT a) = Dynamic a
+type instance GetDynamic (TieT a) = GetDynamic a
 
 type instance SetDynamic g (TieT a) = TieT (SetDynamic g a)
 
-type instance Dynamic (SlideT a) = Dynamic a
+type instance GetDynamic (SlideT a) = GetDynamic a
 
 type instance SetDynamic g (SlideT a) = SlideT (SetDynamic g a)
 
@@ -283,19 +283,19 @@ instance (HasDynamic a b) => HasDynamic (SlideT a) (SlideT b) where
   dynamic = _Wrapped . dynamic
 
 -- |
--- The 'Level' type represents difference in dynamics.
-type Level a = Diff (Dynamic a)
+-- The 'GetLevel' type represents difference in dynamics.
+type GetLevel a = Diff (GetDynamic a)
 
 -- | Set dynamic level, overwriting previous value.
-level :: Attenuable a => Dynamic a -> a -> a
+level :: Attenuable a => GetDynamic a -> a -> a
 level a = dynamics .~ a
 
 -- |
 -- Class of types that can be modified dynamically.
 type Attenuable a =
   ( HasDynamics a a,
-    VectorSpace (Level a),
-    AffineSpace (Dynamic a)
+    VectorSpace (GetLevel a),
+    AffineSpace (GetDynamic a)
   )
 
 -- |
@@ -310,7 +310,7 @@ type Attenuable a =
 --
 -- >>> louder 5 [ppp,mf :: Dynamics]
 -- [_f, fffff]
-louder :: Attenuable a => Level a -> a -> a
+louder :: Attenuable a => GetLevel a -> a -> a
 louder a = dynamics %~ (.+^ a)
 
 -- >>> louder 1 (level ff cs :: DynamicT Dynamics (Sum Pitch))
@@ -322,11 +322,11 @@ louder a = dynamics %~ (.+^ a)
 
 -- | Decrease dynamic (linear).
 --   For standard notation, switches dynamic marks the given number of step downwards.
-softer :: Attenuable a => Level a -> a -> a
+softer :: Attenuable a => GetLevel a -> a -> a
 softer a = dynamics %~ (.-^ a)
 
 -- | Scale dynamic values.
-volume :: (Num (Dynamic t), HasDynamics s t, Dynamic s ~ Dynamic t) => Dynamic t -> s -> t
+volume :: (Num (GetDynamic t), HasDynamics s t, GetDynamic s ~ GetDynamic t) => GetDynamic t -> s -> t
 volume a = dynamics *~ a
 
 -- | Compress dynamics upwards.
@@ -337,11 +337,11 @@ volume a = dynamics *~ a
 -- >>> compressUp 0 (1/2) (0.2 :: Amplitude)
 -- Amplitude {getAmplitude = 0.1}
 compressUp ::
-  (Attenuable a, Ord (Level a), Num (Level a)) =>
+  (Attenuable a, Ord (GetLevel a), Num (GetLevel a)) =>
   -- | Threshold
-  Dynamic a ->
+  GetDynamic a ->
   -- | Ratio
-  Scalar (Level a) ->
+  Scalar (GetLevel a) ->
   -- | Value to compress
   a ->
   a
@@ -355,22 +355,22 @@ compressUp th r = over dynamics (relative th $ \x -> if x < 0 then x else x ^* r
 -- >>> compressDown 0 1.5 (-0.2 :: Amplitude)
 -- Amplitude {getAmplitude = -0.30000000000000004}
 compressDown ::
-  (Attenuable a, Ord (Level a), Num (Level a)) =>
+  (Attenuable a, Ord (GetLevel a), Num (GetLevel a)) =>
   -- | Threshold
-  Dynamic a ->
+  GetDynamic a ->
   -- | Ratio
-  Scalar (Level a) ->
+  Scalar (GetLevel a) ->
   -- | Value to compress
   a ->
   a
 compressDown th r = over dynamics (relative th $ \x -> if x > 0 then x else x ^* r)
 
 compressor ::
-  (Attenuable a, Ord (Level a), Num (Level a)) =>
+  (Attenuable a, Ord (GetLevel a), Num (GetLevel a)) =>
   -- | Threshold
-  Dynamic a ->
+  GetDynamic a ->
   -- | Ratio
-  Scalar (Level a) ->
+  Scalar (GetLevel a) ->
   -- | Value to compress
   a ->
   a
@@ -381,28 +381,28 @@ compressor = compressUp
 -- TODO non-linear fades etc
 --
 
-cresc :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
+cresc :: (Attenuable a, Fractional (Scalar (GetLevel a))) => GetDynamic a -> GetDynamic a -> Voice a -> Voice a
 cresc a b x = stretchToD (_duration x) $ cresc' a b (stretchToD 1 x)
 
-cresc' :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
+cresc' :: (Attenuable a, Fractional (Scalar (GetLevel a))) => GetDynamic a -> GetDynamic a -> Voice a -> Voice a
 cresc' a b = setLevelWithAlignment (\t -> alerp a b (realToFrac t))
 
-setLevelWithAlignment :: (Attenuable a) => (Duration -> Dynamic a) -> Voice a -> Voice a
+setLevelWithAlignment :: (Attenuable a) => (Duration -> GetDynamic a) -> Voice a -> Voice a
 setLevelWithAlignment f = mapWithOnsetRelative 0 (\t x -> level (f (t .-. 0)) x)
 
-dim :: (Attenuable a, Fractional (Scalar (Level a))) => Dynamic a -> Dynamic a -> Voice a -> Voice a
+dim :: (Attenuable a, Fractional (Scalar (GetLevel a))) => GetDynamic a -> GetDynamic a -> Voice a -> Voice a
 dim = cresc
 
 -- |
 -- Fade in.
-fadeIn :: (HasPosition a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeIn :: (HasPosition a, HasDynamics' a, GetDynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
 fadeIn d x = case _era x of
   Nothing -> x
   Just e -> x & dynamics *~ ((e ^. onset >-> d) `transform` unit)
 
 -- |
 -- Fade in.
-fadeOut :: (HasPosition a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeOut :: (HasPosition a, HasDynamics' a, GetDynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
 fadeOut d x = case _era x of
   Nothing -> x
   Just e -> x & dynamics *~ ((d <-< (e ^. offset)) `transform` revB unit)
@@ -503,7 +503,7 @@ instance Wrapped (DynamicT p a) where
 
 instance Rewrapped (DynamicT p a) (DynamicT p' b)
 
-type instance Dynamic (DynamicT p a) = p
+type instance GetDynamic (DynamicT p a) = p
 
 type instance SetDynamic p' (DynamicT p a) = DynamicT p' a
 
@@ -535,8 +535,8 @@ instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
 -- |
 -- View just the dynamices in a voice.
 vdynamic ::
-  ({-SetDynamic (Dynamic t) s ~ t,-} HasDynamic a a, HasDynamic a b) =>
-  Lens (Voice a) (Voice b) (Voice (Dynamic a)) (Voice (Dynamic b))
+  ({-SetDynamic (Dynamic t) s ~ t,-} HasDynamic' a, HasDynamic a b) =>
+  Lens (Voice a) (Voice b) (Voice (GetDynamic a)) (Voice (GetDynamic b))
 vdynamic = lens (fmap $ view dynamic) (flip $ zipVoiceWithNoScale (set dynamic))
 
 -- vdynamic = through dynamic dynamic
@@ -545,8 +545,8 @@ addDynCon ::
   ( HasPhrases s t a b,
     HasDynamic a a,
     HasDynamic a b,
-    Dynamic a ~ d,
-    Dynamic b ~ Ctxt d
+    GetDynamic a ~ d,
+    GetDynamic b ~ Ctxt d
   ) =>
   s ->
   t

@@ -36,6 +36,11 @@ Consider switching to a decentralized issue tracker such as:
   - Because of overeager caching in doc gens ($transfCache), requires `rm -rf docs/build` to be reproducible
 
 - Rename Music.Score.Pitch -> GetPitch
+  - [ ] Pitch
+  - [X] Dynamics
+  - [ ] Articulation
+  - [ ] Technique
+  - [ ] Part
   - Also rename SomeTechnique -> Music.Technique.Technique or similar (a la pitch et al)
 
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))

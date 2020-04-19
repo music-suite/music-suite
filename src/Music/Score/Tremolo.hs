@@ -137,7 +137,7 @@ type instance Pitch (TremoloT a) = Pitch a
 
 type instance SetPitch g (TremoloT a) = TremoloT (SetPitch g a)
 
-type instance Dynamic (TremoloT a) = Dynamic a
+type instance GetDynamic (TremoloT a) = GetDynamic a
 
 type instance SetDynamic g (TremoloT a) = TremoloT (SetDynamic g a)
 
