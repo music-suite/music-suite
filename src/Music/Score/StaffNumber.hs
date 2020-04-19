@@ -78,7 +78,7 @@ staffNumber :: HasStaffNumber a => Natural -> a -> a
 staffNumber = setStaffNumber
 
 newtype StaffNumberT a = StaffNumberT {getStaffNumberT :: Couple (First Natural) a}
-  deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
+  deriving (Eq, Show, Ord, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad)
 
 --
 -- We use Word instead of Int to get (mempty = Max 0), as (Max.mempty = Max minBound)

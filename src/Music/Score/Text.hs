@@ -65,6 +65,7 @@ newtype TextT a = TextT {getTextT :: Couple [String] a}
       Ord,
       Functor,
       Foldable,
+      Traversable,
       Typeable,
       Applicative,
       Monad,

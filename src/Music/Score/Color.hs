@@ -84,7 +84,7 @@ instance HasColor a => HasColor (PartT n a)
 instance HasColor a => HasColor (TieT a)
 
 newtype ColorT a = ColorT {getColorT :: Couple (Option (Last (Colour Double))) a}
-  deriving (Eq {-Ord,-}, Show, Functor, Foldable {-Typeable,-}, Applicative, Monad, Comonad)
+  deriving (Eq {-Ord,-}, Show, Functor, Foldable, Traversable {-Typeable,-}, Applicative, Monad, Comonad)
 
 runColorT :: ColorT a -> (Colour Double, a)
 runColorT (ColorT (Couple (_, a))) = (error "TODO color export", a)

@@ -205,7 +205,7 @@ instance (Real a, Enum a, Integral a) => Integral (TieT a) where
   toInteger = toInteger . extract
 
 newtype TieT a = TieT {getTieT :: ((Any, Any), a)}
-  deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
+  deriving (Eq, Ord, Show, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad)
 
 instance Wrapped (TieT a) where
 

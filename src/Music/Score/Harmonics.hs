@@ -61,6 +61,7 @@ newtype HarmonicT a = HarmonicT {getHarmonicT :: Couple (Any, Sum Int) a}
       Ord,
       Functor,
       Foldable,
+      Traversable,
       Typeable,
       Applicative,
       Monad,

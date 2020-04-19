@@ -81,7 +81,7 @@ tremolo :: HasTremolo a => Int -> a -> a
 tremolo = setTrem
 
 newtype TremoloT a = TremoloT {getTremoloT :: Couple (Max Word) a}
-  deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
+  deriving (Eq, Show, Ord, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad)
 
 --
 -- We use Word instead of Int to get (mempty = Max 0), as (Max.mempty = Max minBound)

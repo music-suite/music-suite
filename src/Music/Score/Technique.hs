@@ -154,7 +154,7 @@ type instance Technique (StaffNumberT a) = Technique a
 type instance SetTechnique b (StaffNumberT a) = StaffNumberT (SetTechnique b a)
 
 instance HasTechniques a b => HasTechniques (StaffNumberT a) (StaffNumberT b) where
-  techniques = _Wrapped . techniques
+  techniques = traverse . techniques
 
 instance HasTechnique a b => HasTechnique (StaffNumberT a) (StaffNumberT b) where
   technique = _Wrapped . technique
@@ -164,7 +164,7 @@ type instance Technique (TremoloT a) = Technique a
 type instance SetTechnique b (TremoloT a) = TremoloT (SetTechnique b a)
 
 instance HasTechniques a b => HasTechniques (TremoloT a) (TremoloT b) where
-  techniques = _Wrapped . techniques
+  techniques = traverse . techniques
 
 instance HasTechnique a b => HasTechnique (TremoloT a) (TremoloT b) where
   technique = _Wrapped . technique
@@ -174,7 +174,7 @@ type instance Technique (ColorT a) = Technique a
 type instance SetTechnique b (ColorT a) = ColorT (SetTechnique b a)
 
 instance HasTechniques a b => HasTechniques (ColorT a) (ColorT b) where
-  techniques = _Wrapped . techniques
+  techniques = traverse . techniques
 
 instance HasTechnique a b => HasTechnique (ColorT a) (ColorT b) where
   technique = _Wrapped . technique
@@ -256,13 +256,13 @@ instance (HasTechnique a b) => HasTechnique (Event a) (Event b) where
   technique = from event . technique
 
 instance (HasTechniques a b) => HasTechniques (Placed a) (Placed b) where
-  techniques = _Wrapped . techniques
+  techniques = traverse . techniques
 
 instance (HasTechnique a b) => HasTechnique (Placed a) (Placed b) where
   technique = _Wrapped . technique
 
 instance (HasTechniques a b) => HasTechniques (Note a) (Note b) where
-  techniques = _Wrapped . techniques
+  techniques = traverse . techniques
 
 instance (HasTechnique a b) => HasTechnique (Note a) (Note b) where
   technique = _Wrapped . technique
@@ -277,7 +277,7 @@ instance HasTechnique a b => HasTechnique (PartT p a) (PartT p b) where
   technique = _Wrapped . _2 . technique
 
 instance HasTechniques a b => HasTechniques (PartT p a) (PartT p b) where
-  techniques = _Wrapped . _2 . techniques
+  techniques = traverse . techniques
 
 {-
 type instance Technique (Chord a)       = Technique a
@@ -330,31 +330,31 @@ type instance Technique (SlideT a) = Technique a
 type instance SetTechnique g (SlideT a) = SlideT (SetTechnique g a)
 
 instance (HasTechniques a b) => HasTechniques (Couple c a) (Couple c b) where
-  techniques = _Wrapped . techniques
+  techniques = traverse . techniques
 
 instance (HasTechnique a b) => HasTechnique (Couple c a) (Couple c b) where
   technique = _Wrapped . technique
 
 instance (HasTechniques a b) => HasTechniques (TextT a) (TextT b) where
-  techniques = _Wrapped . techniques
+  techniques = traverse . techniques
 
 instance (HasTechnique a b) => HasTechnique (TextT a) (TextT b) where
   technique = _Wrapped . technique
 
 instance (HasTechniques a b) => HasTechniques (HarmonicT a) (HarmonicT b) where
-  techniques = _Wrapped . techniques
+  techniques = traverse . techniques
 
 instance (HasTechnique a b) => HasTechnique (HarmonicT a) (HarmonicT b) where
   technique = _Wrapped . technique
 
 instance (HasTechniques a b) => HasTechniques (TieT a) (TieT b) where
-  techniques = _Wrapped . techniques
+  techniques = traverse . techniques
 
 instance (HasTechnique a b) => HasTechnique (TieT a) (TieT b) where
   technique = _Wrapped . technique
 
 instance (HasTechniques a b) => HasTechniques (SlideT a) (SlideT b) where
-  techniques = _Wrapped . techniques
+  techniques = traverse . techniques
 
 instance (HasTechnique a b) => HasTechnique (SlideT a) (SlideT b) where
   technique = _Wrapped . technique

@@ -280,6 +280,8 @@ newtype PartT n a = PartT {getPartT :: (n, a)}
       Show,
       Typeable,
       Functor,
+      Foldable,
+      Traversable,
       Applicative,
       Comonad,
       Monad,

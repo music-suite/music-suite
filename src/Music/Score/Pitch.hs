@@ -309,7 +309,7 @@ type instance Pitch (Sum a) = Pitch a
 type instance SetPitch b (Sum a) = Sum (SetPitch b a)
 
 instance HasPitches a b => HasPitches (Sum a) (Sum b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 type instance Pitch (Behavior a) = Behavior a
 
@@ -346,31 +346,31 @@ type instance Pitch (Ambitus v a) = Pitch a
 type instance SetPitch g (Ambitus v a) = Ambitus v (SetPitch g a)
 
 instance (HasPitches a b) => HasPitches (Couple c a) (Couple c b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (Couple c a) (Couple c b) where
   pitch = _Wrapped . pitch
 
 instance (HasPitches a b) => HasPitches (TextT a) (TextT b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (TextT a) (TextT b) where
   pitch = _Wrapped . pitch
 
 instance (HasPitches a b) => HasPitches (HarmonicT a) (HarmonicT b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (HarmonicT a) (HarmonicT b) where
   pitch = _Wrapped . pitch
 
 instance (HasPitches a b) => HasPitches (TieT a) (TieT b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (TieT a) (TieT b) where
   pitch = _Wrapped . pitch
 
 instance (HasPitches a b) => HasPitches (SlideT a) (SlideT b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (SlideT a) (SlideT b) where
   pitch = _Wrapped . pitch
