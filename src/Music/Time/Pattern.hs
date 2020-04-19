@@ -1,6 +1,15 @@
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-deprecations
+  -fno-warn-unused-imports
+  -fno-warn-unused-matches #-}
 
 module Music.Time.Pattern
   ( Pattern
@@ -13,7 +22,7 @@ module Music.Time.Pattern
 where
 
 
-import Control.Lens (Rewrapped (..), Wrapped (..), (^.), _Wrapped, from, iso, over, view)
+import Control.Lens (Rewrapped, Wrapped (..), (^.), _Wrapped, from, iso, over, view)
 import Control.Monad (join)
 import Data.AffineSpace
 import Data.VectorSpace
@@ -34,9 +43,9 @@ import Music.Time.Voice
 instance (IsPitch a) => IsPitch (Pattern a) where
   fromPitch = pureP . fromPitch
 
-sppar = pseq . fmap ppar
+-- sppar = pseq . fmap ppar
 
-ppseq = ppar . fmap pseq
+-- ppseq = ppar . fmap pseq
 
 -- TODO move
 -- TODO use proper math terminology here!
@@ -96,8 +105,8 @@ instance HasPitches a b => HasPitches (Lunga a) (Lunga b) where
 instance HasParts a b => HasParts (Lunga a) (Lunga b) where
   parts = traverse . parts
 
-nominalDuration :: Lunga a -> Duration
-nominalDuration (Lunga (d, _, _)) = d
+-- nominalDuration :: Lunga a -> Duration
+-- nominalDuration (Lunga (d, _, _)) = d
 
 -- Transform a voice (assumed to be finite) into a lunga.
 newLunga :: Voice a -> Lunga a
@@ -105,10 +114,6 @@ newLunga v = Lunga (v ^. duration, cycleV $ over notes reverse v, cycleV v)
   where
     cycleV = over notes cycle
 
-newLunga' :: Voice a -> Voice a -> Lunga a
-newLunga' vb vf = Lunga (vf ^. duration, vb, vf)
-  where
-    cycleV = over notes cycle
 
 {-
 TODO write a version of renderLungaSpan'' that can handle *any* span
@@ -197,9 +202,6 @@ newPattern v = Pattern [pure $ newLunga v]
 rhythmPattern :: IsPitch a => [Duration] -> Pattern a
 rhythmPattern a = newPattern $ fmap (const c) $ a ^. durationsAsVoice
 
-newPattern' :: Voice a -> Voice a -> Pattern a
-newPattern' vb vf = Pattern [pure $ newLunga' vb vf]
-
 -- TODO variant that returns [Aligned (Voice a)]
 renderPattern :: (HasDuration a, Transformable a, Splittable a) => Pattern a -> Span -> Score a
 renderPattern (Pattern ((unzip . fmap (^. from placed)) -> (origos, lungas))) s =
@@ -231,8 +233,3 @@ renderPatternsAbs = join . mapWithSpan (\s -> transform (negateV s) . flip rende
 -- Note: We can not change the span of a note using mapWithSpan, so we transform the result to position (0<->1)
 -- and trust join to put it back in the same position it was rendered.
 
-spat :: [Note a] -> Pattern a
-spat = newPattern . mconcat . map noteToVoice
-
-ppat :: [Note a] -> Pattern (Voice a)
-ppat = mconcat . map (pureP . noteToVoice)

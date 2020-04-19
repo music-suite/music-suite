@@ -19,7 +19,8 @@ pres2 = subj1|*(2/2) </> delay 2 (subj1|*(3/2))
 part1 = pres1 |> pres2
 part2 = pres1 |> pres2
 
-music = level pp $ compress 2 $ part1 |> toLydian part2
+music = level mf $ set (parts' . instrument) viola $
+  compress 2 $ part1 |> toLydian part2
 
 main :: IO ()
 main = defaultMain music
