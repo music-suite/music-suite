@@ -12,15 +12,14 @@
   -fno-warn-unused-matches #-}
 
 module Music.Time.Pattern
-  ( Pattern
-  , newPattern
-  , rhythmPattern
-  , renderPattern
-  , renderPatternsRel
-  , renderPatternsAbs
+  ( Pattern,
+    newPattern,
+    rhythmPattern,
+    renderPattern,
+    renderPatternsRel,
+    renderPatternsAbs,
   )
 where
-
 
 import Control.Lens (Rewrapped, Wrapped (..), (^.), _Wrapped, from, iso, over, view)
 import Control.Monad (join)
@@ -113,7 +112,6 @@ newLunga :: Voice a -> Lunga a
 newLunga v = Lunga (v ^. duration, cycleV $ over notes reverse v, cycleV v)
   where
     cycleV = over notes cycle
-
 
 {-
 TODO write a version of renderLungaSpan'' that can handle *any* span
@@ -229,7 +227,5 @@ renderPatternsRel = join . fmap (flip renderPattern zeroV)
 -- different starting point in the pattern (phase).
 renderPatternsAbs :: (HasDuration a, Transformable a, Splittable a) => Score (Pattern a) -> Score a
 renderPatternsAbs = join . mapWithSpan (\s -> transform (negateV s) . flip renderPattern s)
-
 -- Note: We can not change the span of a note using mapWithSpan, so we transform the result to position (0<->1)
 -- and trust join to put it back in the same position it was rendered.
-

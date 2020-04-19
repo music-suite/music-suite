@@ -47,8 +47,6 @@ module Music.Score.Dynamics
     dynamic',
     dynamics',
 
-
-
     -- * Context
     vdynamic,
     addDynCon,
@@ -333,8 +331,11 @@ softer :: Attenuable v d a => v -> a -> a
 softer a = dynamics %~ (.-^ a)
 
 -- | Scale dynamic values.
-volume :: (Attenuable v d a, Num d) =>
-  d -> a -> a
+volume ::
+  (Attenuable v d a, Num d) =>
+  d ->
+  a ->
+  a
 volume a = dynamics *~ a
 
 -- | Compress dynamics upwards.
@@ -385,8 +386,8 @@ compressor ::
 compressor = compressUp
 {-# DEPRECATED compressor "Use compressUp (or compressDown)" #-}
 
-
-cresc :: (HasPhrases' s a, Attenuable v d a, Fractional (Scalar v)) =>
+cresc ::
+  (HasPhrases' s a, Attenuable v d a, Fractional (Scalar v)) =>
   d ->
   -- | Initial dynamic.
   d ->
@@ -396,23 +397,27 @@ cresc :: (HasPhrases' s a, Attenuable v d a, Fractional (Scalar v)) =>
   s
 cresc a b = over phrases' (crescVoice a b)
 
-crescVoice :: (Attenuable l d a, Fractional (Scalar (GetLevel a))) =>
+crescVoice ::
+  (Attenuable l d a, Fractional (Scalar (GetLevel a))) =>
   d ->
   d ->
   Voice a ->
   Voice a
 crescVoice a b x = stretchToD (_duration x) $ cresc' a b (stretchToD 1 x)
 
-cresc' :: (Attenuable l d a, Fractional (Scalar (GetLevel a))) =>
+cresc' ::
+  (Attenuable l d a, Fractional (Scalar (GetLevel a))) =>
   d ->
   d ->
-  Voice a -> Voice a
+  Voice a ->
+  Voice a
 cresc' a b = setLevelWithAlignment (\t -> alerp a b (realToFrac t))
 
 setLevelWithAlignment :: (Attenuable l d a) => (Duration -> GetDynamic a) -> Voice a -> Voice a
 setLevelWithAlignment f = mapWithOnsetRelative 0 (\t x -> level (f (t .-. 0)) x)
 
-dim :: (HasPhrases' s a, Attenuable v d a, Fractional (Scalar v)) =>
+dim ::
+  (HasPhrases' s a, Attenuable v d a, Fractional (Scalar v)) =>
   d ->
   -- | Initial dynamic.
   d ->
@@ -424,16 +429,19 @@ dim = cresc
 
 -- |
 -- Fade in.
-fadeIn :: (HasPosition a, HasDynamics' a, GetDynamic a ~ Behavior c, Fractional c) =>
+fadeIn ::
+  (HasPosition a, HasDynamics' a, GetDynamic a ~ Behavior c, Fractional c) =>
   Duration ->
-  a -> a
+  a ->
+  a
 fadeIn d x = case _era x of
   Nothing -> x
   Just e -> x & dynamics *~ ((e ^. onset >-> d) `transform` unit)
 
 -- |
 -- Fade in.
-fadeOut :: (HasPosition a, HasDynamics' a, GetDynamic a ~ Behavior c, Fractional c) =>
+fadeOut ::
+  (HasPosition a, HasDynamics' a, GetDynamic a ~ Behavior c, Fractional c) =>
   Duration ->
   a ->
   a
@@ -541,14 +549,10 @@ type instance GetDynamic (DynamicT p a) = p
 
 type instance SetDynamic p' (DynamicT p a) = DynamicT p' a
 
-instance
-  HasDynamic (DynamicT p a) (DynamicT p' a)
-  where
+instance HasDynamic (DynamicT p a) (DynamicT p' a) where
   dynamic = _Wrapped . _1
 
-instance
-  HasDynamics (DynamicT p a) (DynamicT p' a)
-  where
+instance HasDynamics (DynamicT p a) (DynamicT p' a) where
   dynamics = _Wrapped . _1
 
 deriving instance (IsPitch a, Monoid n) => IsPitch (DynamicT n a)

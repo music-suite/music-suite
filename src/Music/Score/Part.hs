@@ -86,8 +86,7 @@ class (HasParts s t) => HasPart s t where
 
 -- |
 -- Class of types that provide a part traversal.
-class
-  HasParts s t where
+class HasParts s t where
   -- | Part type.
   parts :: Traversal s t (Part s) (Part t)
 

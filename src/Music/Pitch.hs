@@ -14,7 +14,7 @@ module Music.Pitch
     module Music.Pitch.Literal,
     module Music.Pitch.Ambitus,
     module Music.Pitch.Scale,
-    MajorMinor(MajorMode, MinorMode),
+    MajorMinor (MajorMode, MinorMode),
   )
 where
 

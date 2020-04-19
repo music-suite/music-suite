@@ -433,14 +433,10 @@ type instance Articulation (ArticulationT p a) = p
 
 type instance SetArticulation p' (ArticulationT p a) = ArticulationT p' a
 
-instance
-  HasArticulation (ArticulationT p a) (ArticulationT p' a)
-  where
+instance HasArticulation (ArticulationT p a) (ArticulationT p' a) where
   articulation = _Wrapped . _1
 
-instance
-  HasArticulations (ArticulationT p a) (ArticulationT p' a)
-  where
+instance HasArticulations (ArticulationT p a) (ArticulationT p' a) where
   articulations = _Wrapped . _1
 
 deriving instance (IsPitch a, Monoid n) => IsPitch (ArticulationT n a)

@@ -1,5 +1,5 @@
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -116,9 +116,9 @@ import Data.Ratio
 import Data.Semigroup
 import Data.Typeable
 import Data.VectorSpace
+import GHC.Generics (Generic)
 import Music.Score.Internal.Util (unRatio)
 import Music.Time.Internal.Util (showRatio)
-import GHC.Generics (Generic)
 
 -- import           Data.Fixed
 

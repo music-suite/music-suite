@@ -17,11 +17,11 @@ module Music.Pitch.Ambitus
 where
 
 import Control.Lens
-import Data.Bifunctor
-import Data.Bifoldable
-import Data.Bitraversable
 import Data.AffineSpace
 import Data.AffineSpace.Point.Offsets (AffinePair)
+import Data.Bifoldable
+import Data.Bifunctor
+import Data.Bitraversable
 import Data.Interval hiding (Interval, interval)
 import Data.VectorSpace
 import Music.Pitch.Common.Semitones
@@ -29,13 +29,15 @@ import Music.Pitch.Common.Semitones
 -- | A set of pitches between two extremes.
 --
 -- Also known as range, tessitura or (in maths) interval.
-data Ambitus v p = Ambitus { low :: !p, high :: !p }
+data Ambitus v p = Ambitus {low :: !p, high :: !p}
   deriving (Functor, Foldable, Traversable, Show)
 
 instance Bifunctor Ambitus where
   bimap = undefined
+
 instance Bifoldable Ambitus where
   bifoldMap = undefined
+
 instance Bitraversable Ambitus where
   bitraverse = undefined
 

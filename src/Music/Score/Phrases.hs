@@ -49,12 +49,12 @@ import Data.Semigroup
 import Data.VectorSpace hiding (Sum (..))
 import Music.Score.Part
 import Music.Time.Aligned
+import Music.Time.Duration
 import Music.Time.Event
 import Music.Time.Internal.Convert ()
 import Music.Time.Internal.Util
 import Music.Time.Note
 import Music.Time.Placed
-import Music.Time.Duration
 import Music.Time.Score
 import Music.Time.Track
 import Music.Time.Voice

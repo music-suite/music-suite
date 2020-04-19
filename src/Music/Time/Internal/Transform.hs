@@ -110,7 +110,6 @@ import Music.Time.Types
 --    @'transform' (s <> t) = 'transform' s . 'transform' t@
 --
 -- In other words, 'transform' must be a left-action of 'Span' on @a@.
---
 class Transformable a where
   transform :: Span -> a -> a
 

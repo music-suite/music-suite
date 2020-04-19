@@ -34,6 +34,7 @@ module Music.Time.Voice
     erasRelative,
 
     -- * Transformations
+
     -- ** Rotation
     rotateDurations,
     rotateValues,
@@ -45,7 +46,6 @@ module Music.Time.Voice
     -- *** Fuse rests
     fuseRests,
     coverRests,
-
     {- TODO: Move here from Music.Score.Pitch when we can refer to HasPitches from here
     -- * Combining voices
     stitch,
@@ -733,7 +733,6 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy me
     merge Nothing (Just x) = True
     merge (Just x) (Just y) = False
     hasOnlyRests = all isNothing $ toListOf traverse x -- norm
-
 
 -- | Decorate all notes in a voice with their context, i.e. previous and following value
 -- if present.

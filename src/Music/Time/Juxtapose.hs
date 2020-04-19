@@ -6,8 +6,7 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  #-}
+  -fno-warn-unused-imports #-}
 
 module Music.Time.Juxtapose
   ( module Music.Time.Split,

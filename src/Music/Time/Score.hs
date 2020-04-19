@@ -95,7 +95,6 @@ import Data.Typeable
 import Data.VectorSpace
 import Data.VectorSpace hiding (Sum (..))
 import Iso.Deriving
-
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Time.Event
@@ -259,14 +258,13 @@ deriving via
     Monad Score'
 
 instance Inject (WriterT Span [] x) (Score' x) where
-
   -- TODO zero-cost version
   inj (WriterT xs) = Score' (fmap (view event . swap) xs)
 
 instance Project (WriterT Span [] x) (Score' x) where
   prj (Score' xs) = WriterT (fmap (swap . view (from event)) xs)
 
-instance Isomorphic (WriterT Span [] x) (Score' x) where
+instance Isomorphic (WriterT Span [] x) (Score' x)
 
 swap :: (a, b) -> (b, a)
 swap (x, y) = (y, x)
@@ -487,4 +485,3 @@ anyDistinctOverlaps xs = hasDuplicates xs || anyOverlaps xs
 
 combined :: Eq a => (a -> a -> b) -> [a] -> [b]
 combined f as = mcatMaybes [if x == y then Nothing else Just (x `f` y) | x <- as, y <- as]
-

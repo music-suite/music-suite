@@ -9,16 +9,18 @@
   -fno-warn-redundant-constraints #-}
 
 module Music.Time.Aligned
-  (
-    -- * Aligned type
+  ( -- * Aligned type
     Aligned,
+
     -- ** Creating aligned values
     aligned,
     alignTo,
     (||>),
+
     -- ** Update aligned values
     align,
     realign,
+
     -- ** Extracting/rendering aligned values
     renderAligned,
     renderAlignedVoice,
@@ -36,13 +38,13 @@ import qualified Data.Aeson as JSON
 import qualified Data.Monoid
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
+import Music.Time.Behavior
 import Music.Time.Event
 import Music.Time.Internal.Preliminaries
 import Music.Time.Juxtapose
 import Music.Time.Note
 import Music.Time.Score
 import Music.Time.Voice
-import Music.Time.Behavior
 
 -- | Update the local origin of a value, but not its attachment point.
 --

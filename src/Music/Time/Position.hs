@@ -50,7 +50,6 @@ module Music.Time.Position
   )
 where
 
-
 import Control.Lens hiding
   ( (<|),
     Indexable,
@@ -81,7 +80,6 @@ import Music.Time.Internal.Util
 -- fixed set of cases, this class provides an interpolation from a /local/ position to
 -- a /global/ position. While the local position goes from zero to one, the global position
 -- goes from the 'onset' to the 'offset' of the value.
-
 
 -- |
 -- Class of values that have a position in time.
@@ -250,6 +248,7 @@ stretchRelative p n x = case _era x of
 -- 0 <-> 2
 stretchRelativeOnset :: (HasPosition a, Transformable a) => Duration -> a -> a
 stretchRelativeOnset = stretchRelative 0
+
 -- |
 -- Stretch a value relative to its midpoint.
 --

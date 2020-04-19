@@ -158,8 +158,7 @@ class HasPitches s t => HasPitch s t where
 
 -- | Types which has multiple pitches (i.e. voices, scores).
 class
-  (
-    SetPitch (Pitch t) s ~ t
+  ( SetPitch (Pitch t) s ~ t
   ) =>
   HasPitches s t where
   -- | Access all pitches.
@@ -522,6 +521,7 @@ ambitusLowestOctave = fromIntegral . octaves . (.-. c) . Music.Pitch.Ambitus.low
 --  Can be used as a primitive contour-based melody generator.
 interpolateAmbitus :: AffinePair v p => Ambitus v p -> Scalar v -> p
 interpolateAmbitus a = let Ambitus m n = a in alerp m n
+
 -- TODO move to Pitch.Ambitus!
 
 -- |

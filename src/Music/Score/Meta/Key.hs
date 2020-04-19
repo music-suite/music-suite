@@ -66,12 +66,12 @@ import Data.Typeable
 import Music.Pitch hiding (Fifths, First, Last, Pitch)
 import qualified Music.Pitch as P
 import Music.Pitch.Common (Pitch)
+import Music.Pitch.Common.Names (MajorMinor (MajorMode, MinorMode))
 import Music.Pitch.Literal
 import Music.Score.Internal.Util
 import Music.Score.Meta
 import Music.Score.Part
 import Music.Score.Pitch hiding (Pitch)
-import Music.Pitch.Common.Names (MajorMinor(MajorMode, MinorMode))
 import Music.Time
 import Music.Time.Reactive
 

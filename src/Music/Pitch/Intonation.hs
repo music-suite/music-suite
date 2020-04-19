@@ -35,6 +35,7 @@ import Control.Applicative
 import Control.Lens
 import Control.Monad
 import Data.AffineSpace
+import Data.AffineSpace.Point.Offsets (AffinePair)
 import Data.Basis
 import Data.Either
 import Data.Fixed
@@ -42,7 +43,6 @@ import Data.Maybe
 import Data.Ratio
 import Data.Semigroup
 import Data.VectorSpace
-import Data.AffineSpace.Point.Offsets (AffinePair)
 import Music.Pitch.Absolute
 import Music.Pitch.Common.Internal
 import Music.Pitch.Common.Spell
