@@ -11,7 +11,7 @@ main = defaultMain music
 music :: Music
 music =
   fmap Just $ renderPatternsAbs
-    $ fmap renderA
+    $ fmap render
     $ topLevelScore
 
 -- TODO add info
@@ -53,13 +53,20 @@ topLevelScore =
              (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 2))
        )
 
-renderA :: (IsPitch a, Transposable a) => Block -> Pattern a
-renderA Block {col, range, texture = Chord} = case col of
+renderSimple
+  :: (IsPitch a, Transposable a) => Block -> Pattern a
+renderSimple Block{col,range,texture} = case (col,range,texture) of
+  (Blue,_,_) -> c
+  (Brown,_,_) -> c_
+
+render
+  :: (IsPitch a, Transposable a) => Block -> Pattern a
+render Block {col, range, texture = Chord} = case col of
   Blue ->
     mconcat [c_, g_]
   Brown ->
     mconcat [d_, b_]
-renderA Block {col, range, texture = Repeat} =
+render Block {col, range, texture = Repeat} =
   let transp =
         case range of
           Hi -> up _P8
