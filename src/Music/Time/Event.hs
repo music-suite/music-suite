@@ -60,14 +60,6 @@ newtype Event a = Event {getEvent :: Span `Couple` a}
       RealFrac
     )
 
-instance Wrapped (Event a) where
-
-  type Unwrapped (Event a) = (Span, a)
-
-  _Wrapped' = iso (getCouple . getEvent) (Event . Couple)
-
-instance Rewrapped (Event a) (Event b)
-
 instance Transformable (Event a) where
   transform t = over eventSpan (transform t)
 
@@ -110,7 +102,7 @@ instance FromJSON a => FromJSON (Event a) where
 
 -- | View a event as a pair of the original value and the transformation (and vice versa).
 event :: Iso (Span, a) (Span, b) (Event a) (Event b)
-event = from _Wrapped
+event = iso (Event . Couple) (getCouple . getEvent)
 
 eventSpan :: Lens' (Event a) Span
 eventSpan = from event . _1
