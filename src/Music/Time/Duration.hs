@@ -41,11 +41,13 @@ import Music.Time.Transform
 -- |
 -- Class of values that have a duration.
 --
+-- ==== Laws
+--
+-- [/transformable-duration/]
+--
 -- For types that are also 'Transformable':
 --
--- @
--- _duration (transform s x) = transform s (_duration x)
--- @
+--    @'_duration' ('transform' s x) = 'transform' s ('_duration' x)@
 class HasDuration a where
 
   -- | Return the duration of a value.

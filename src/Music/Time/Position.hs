@@ -74,28 +74,31 @@ import Data.VectorSpace hiding (Sum)
 import Music.Time.Duration
 import Music.Time.Internal.Util
 
--- |
--- Class of values that have a position in time.
+-- TODO: resture _position to HasPosition, then restore this comment:
 --
 -- Many values such as notes, envelopes etc can in fact have many positions such as onset,
 -- attack point, offset, decay point time etc. Rather than having separate methods for a
 -- fixed set of cases, this class provides an interpolation from a /local/ position to
 -- a /global/ position. While the local position goes from zero to one, the global position
 -- goes from the 'onset' to the 'offset' of the value.
+
+
+-- |
+-- Class of values that have a position in time.
 --
--- Laws:
+-- ==== Laws
+--
+-- [/duration-position/]
 --
 -- For 'HasDuration' instances:
 --
--- @
--- fmap _duration . _era = Just . _duration
--- @
+--    @fmap '_duration' . '_era' = Just . '_duration'@
+--
+-- [/transform-position/]
 --
 -- For 'Transformable' instances:
 --
--- @
--- _era (transform s x) = fmap (transform s) (_era x)
--- @
+--    @'_era' ('transform' s x) = fmap ('transform' s) ('_era' x)@
 class HasPosition a where
   -- | Return the conventional bounds of a value (local time zero and one).
   _era :: a -> Maybe Span
@@ -103,6 +106,22 @@ class HasPosition a where
 instance HasPosition Span where
   _era = Just
 
+-- |
+-- Class of values that have a position in time.
+--
+-- ==== Laws
+--
+-- [/duration-position/]
+--
+-- For 'HasDuration' instances:
+--
+--    @'_duration' . '_era1' = '_duration'@
+--
+-- [/transform-position/]
+--
+-- For 'Transformable' instances:
+--
+--    @'_era1' ('transform' s x) = 'transform' s ('_era1' x)@
 class HasPosition a => HasPosition1 a where
   _era1 :: a -> Span
 
@@ -261,34 +280,16 @@ transformRelative p n x = case _era x of
   Just e -> over (transformed $ undelaying (realToFrac $ e ^. position p)) (transform n) x
 
 -- |
--- Transform a value relative to its local origin.
---
--- @
--- stretchRelativeOnset    = stretchRelative 0
--- stretchRelativeMidpoint = stretchRelative 0.5
--- stretchRelativeOffset   = stretchRelative 1
--- @
+-- Transform a value relative to its onset.
 transformRelativeOnset :: (HasPosition a, Transformable a) => Span -> a -> a
 transformRelativeOnset = transformRelative 0
 
 -- |
--- Transform a value relative to its local origin.
---
--- @
--- stretchRelativeOnset    = stretchRelative 0
--- stretchRelativeMidpoint = stretchRelative 0.5
--- stretchRelativeOffset   = stretchRelative 1
--- @
+-- Transform a value relative to its midpoint.
 transformRelativeMidpoint :: (HasPosition a, Transformable a) => Span -> a -> a
 transformRelativeMidpoint = transformRelative 0.5
 
 -- |
--- Transform a value relative to its local origin.
---
--- @
--- stretchRelativeOnset    = stretchRelative 0
--- stretchRelativeMidpoint = stretchRelative 0.5
--- stretchRelativeOffset   = stretchRelative 1
--- @
+-- Transform a value relative to its offset.
 transformRelativeOffset :: (HasPosition a, Transformable a) => Span -> a -> a
 transformRelativeOffset = transformRelative 1
