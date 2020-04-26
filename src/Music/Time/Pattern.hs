@@ -1,3 +1,19 @@
+{-# LANGUAGE ConstraintKinds,
+                        DeriveDataTypeable,
+                        DeriveFoldable,
+                        DeriveFunctor,
+                        DeriveTraversable,
+                        GeneralizedNewtypeDeriving,
+                        MultiParamTypeClasses,
+                        NoMonomorphismRestriction,
+                        RankNTypes,
+                        StandaloneDeriving,
+                        TupleSections,
+                        TypeFamilies,
+                        TypeOperators,
+                        TypeApplications,
+                        ViewPatterns,
+                        OverloadedStrings #-}
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE BangPatterns #-}
@@ -311,6 +327,30 @@ testSplitAt = all id
     == ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice,[]^.voice)
   ]
 
+modDur :: Duration -> Duration -> Duration
+modDur a b = snd $ a `divModDur` b
+
+getCycles :: Span -> Span -> (Duration, Integer, Duration)
+getCycles ts s
+  | _duration ts <= 0 = error "getCycles: Duration of repeated span must be >0"
+  | _duration s < _duration ts = (_duration s, 0, 0)
+  | otherwise = (rem, cycles, phase)
+  where
+    phase = (view offset s .-. view offset ts) `modDur` _duration ts
+    (cycles, rem) = (_duration s - phase) `divModDur` _duration ts
+
+-- TODO proper test
+testGetCycles :: Bool
+testGetCycles = all id
+  [ getCycles (0 <-> 2) (0 <-> 4) == (0, 2, 0)
+  , getCycles (0 <-> 2) (1 <-> 4) == (1, 1, 0)
+  , getCycles (0 <-> 2) ((-1) <-> 5) == (1, 2, 1)
+  , getCycles (0 <-> 2) ((-9) <-> (-2.5)) == (1, 2, 1.5)
+  , getCycles (1 <-> 3) (1 <-> 2) == (1, 0, 0)
+  , getCycles (0 <-> 2) (2 <-> 4) == (0, 1, 0)
+  ]
+
+
 
 -- List of repeated voices
 -- TODO is this isomorphic to Tidal's pattern (i.e. Span -> Score a)
@@ -318,27 +358,20 @@ newtype Pattern a
   = Pattern {getPattern :: [Placed (Lunga a)]} -- origo, pattern
   deriving (Semigroup, Monoid, Transformable, Functor, Foldable, Traversable)
 
-instance Wrapped (Pattern a) where
-
-  type Unwrapped (Pattern a) = [Placed (Lunga a)]
-
-  _Wrapped' = iso getPattern Pattern
-
-instance Rewrapped (Pattern a) (Pattern b)
 
 type instance Articulation (Pattern a) = Articulation a
 
 type instance SetArticulation b (Pattern a) = Pattern (SetArticulation b a)
 
 instance HasArticulations a b => HasArticulations (Pattern a) (Pattern b) where
-  articulations = _Wrapped . articulations
+  articulations = iso getPattern Pattern . articulations
 
 type instance Pitch (Pattern a) = Pitch a
 
 type instance SetPitch b (Pattern a) = Pattern (SetPitch b a)
 
 instance HasPitches a b => HasPitches (Pattern a) (Pattern b) where
-  pitches = _Wrapped . pitches
+  pitches = iso getPattern Pattern . pitches
 
 type instance Part (Pattern a) = Part a
 
