@@ -41,8 +41,9 @@ main =
 
   -- defaultMain music
   defaultMain $
-    inspectableToMusic @(Pattern StandardNote)
+    renderPattern
       windAgile
+      (0 <-> 30)
 
 music :: Music
 music =
@@ -265,7 +266,7 @@ type Aspects a = (IsPitch a, HasParts' a, S.Part a ~ Part, Transposable a)
 windAgile :: (Aspects a) => Pattern (Maybe a)
 windAgile = phasePatterns fluteOboeDiv6 y z
   where
-    y = fmap (\r -> delaying (r/16) <> compressing 16) [0,0,0, 3,3,3]
+    y = fmap (\r -> delaying (r/16) <> compressing 3) [0..]
     z = fmap spat $ fmap (up _P8)
         [ [c,f,f,f,rest]
         , [d,g,g,g,rest|*2]
