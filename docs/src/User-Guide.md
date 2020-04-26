@@ -54,8 +54,6 @@ We can copy-paste all examples from this file into the above template. Whatever 
 
 ### Using an interactive environment
 
-TODO standard notebook format support?
-
 TODO "visual interpreter" support. See TODO.md.
 
 
@@ -1706,11 +1704,9 @@ fastTremolo $ times 2 $ (c |> d)|/2
 
 ### Repeating vs. alternating tremolo
 
-The former is rare but happen e.g. when double-stopped strings play bow tremolo (without bariolage). The more common one is a rapid alteration among a set of notes. Logically we should treat both as an optional the property of a single chord. Alas in StandardNotation the latter is commonly written as two chords with half the duration (OR as a trill).
+The former is rare but happen e.g. when double-stopped strings play bow tremolo (without bariolage). The more common one is a rapid alteration among a set of notes. Logically we should treat both as an optional the property of a single chord. Alas in standard notation the latter is commonly written as two chords with half the duration (or ins ome cases as a trill).
 
-### Slides
-
-@[glissando]
+### Slide and glissando
 
 ```music+haskell
 glissando $ pseq [c,d]|/2
@@ -1811,7 +1807,9 @@ set parts' violins $ pseq
   |* 1.5
 ```
 
+<!--
 TODO chord tremolo
+-->
 
 
 <!--
@@ -1839,7 +1837,7 @@ set parts' trombones $ pseq
 
 <!-- TODO alternative mutes -->
 
-TODO hand stopping
+<!-- TODO hand stopping -->
 
 ## Percussion
 
@@ -1897,6 +1895,8 @@ TODO
 TODO
 -->
 
+
+<!--
 # Text and Color
 
 > Warning: A core idea in Music Suite is that music expressions have clear *semantics*, based on how the sound or action they represent. Free text runs counter to this, and should be viewed as an "escape hatch". Try to use a more structured representation when possible.
@@ -1911,7 +1911,7 @@ text "pizz." $ c|/2
 TODO e.g. expressive marks ("dolce")
 
 TODO color
-
+-->
 
 
 
@@ -2278,22 +2278,40 @@ Time points form an affine space over durations, so we can use the operators @[.
 
 ### Time spans
 
-The @[Span] type represents a non-empty *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
+The @[Span] type represents a non-empty *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration.
+
+```haskell
+>>> (2 <-> 3)^.onset
+2
+
+>>> (2 <-> 3)^.offset
+3
+
+>>> (2 <-> 3)^.duration
+3
+
+```
+
+We can also enter a span using either its *onset and offset*, its *onset and duration*, or its *duration and offset*. The three literals are equivalent:
 
 ```haskell
 >>> 2 <-> 3
-(2 <-> 3) :: Duration
+(2 <-> 3) :: Span
 
 >>> 2 >-> 1
-(2 <-> 3) :: Duration
+(2 <-> 3) :: Span
 
 >>> 1 <-< 3
-(2 <-> 3) :: Duration
+(2 <-> 3) :: Span
 ```
+
+To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset].
 
 ### Spans as transformations
 
 Here is an alternative view of span: as an *affine transformation*.
+
+A span `a >-> b` represents the act of *stretching by b* followed by *delaying by a*.
 
 For those familiar with linear algebra or computer graphics: Because time is one-dimensional a *linear transformation matrix* in time is a 1x1 matrix (e.g. a scalar). Its *affine transformation matrix* is a 2x2 matrix. We can understand the monoid instance for @[Span] as multiplication of 2x2 matrices.
 
@@ -2307,9 +2325,25 @@ For those familiar with linear algebra or computer graphics: Because time is one
 
 @[Transformable]
 
-TODO transformations act upon time types. The basic intuition is that they move all the points.
+TODO spans are a group and `transform @X` is a left group action on some transformable type `X`. The basic intuition is that they move all the points.
 
 Applying the empty transformation changes nothing, and applying a composition of transfomrations is equivalent to applying them all from innermost to outermost (the Transformable laws).
+
+We have already seen how *augmentation*, *diminishion* and *phasing* can be accomplished with `stretch`, `compress` and `delay`. These are in fact all shortcuts for the common type of transformations.
+
+```music+haskell
+delay 1 (stretch 2 c)
+  </>
+transform (1 >-> 2) c
+  </>
+transform (1 <-> 3) c
+```
+
+Stretching by `(-1)` is the *retrograde* operation:
+
+```music+haskell
+stretch (-1) $ pseq [c,d,e]
+```
 
 ### Translation-invariant types
 
@@ -2326,16 +2360,35 @@ The @[TimeInterval] type is exactly the same as span, but also allows for empty 
 
 ## Position and duration
 
-@[HasDuration]
+The @[HasDuration] class represents values that have a duration. The most obvious example is `Duration` itself:
 
-Inspecting the duration
+```haskell
+>>> _duration (2 :: Duration)
+2
+```
 
+There are also instances for `Span` and, as we will see, most other time-based types:
 
-@[HasPosition]
+```haskell
+>>> _duration (1 <-> 3)
+2
+```
 
-@[HasPosition1]
+The @[HasPosition] class represent values that have an *absolute position* in time. The simplest example is `Span`:
 
-Inspecting the position
+```haskell
+>>> _era (1 <-> 3)
+Just (1 <-> 3)
+```
+
+Here `Maybe` is used to represent the "empty span". The class `HasPosition1` refines `HasPosition` by explicitly disallowing the empty span:
+
+```haskell
+>>> _era1 (1 <-> 3)
+1 <-> 3
+```
+
+Values with a position allow many useful combinators to be defined. For example here we use `during` to add a pedal note underneath a melody:
 
 ```music+haskell
 let
@@ -2344,7 +2397,9 @@ let
 in compress 4 $ melody </> pedal
 ```
 
+<!--
 TODO example with stretchRelative, stretchTo
+-->
 
 The laws for @[HasPosition] and @[HasPosition1] are not too exciting: they assure that transforming a value also transforms its position in the same manner, and that the duration of a value is exactly the duration between its onset and offset point.
 
@@ -2360,7 +2415,7 @@ A @[Note] represents a single value tagged with a *duration*:
 ```music+haskell
 inspectableToMusic @(Note Pitch) $
 
-  c
+c
 ```
 
 An @[Event] represents a single value tagged with a *time span*:
@@ -2368,25 +2423,77 @@ An @[Event] represents a single value tagged with a *time span*:
 ```music+haskell
 inspectableToMusic @(Event Pitch) $
 
-  c
+c
 ```
+
+Note that we can enter a single note or event as `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
+
+Notes and events are very similar. The main difference is that notes are translation-invariant and events are not.
+
+```music+haskell
+inspectableToMusic @(Note Pitch) $
+
+delay 1 $ stretch 0.5 c
+```
+
+```music+haskell
+inspectableToMusic @(Event Pitch) $
+
+delay 1 $ stretch 0.5 c
+```
+
+Similarly, `Note` is an instance of `HasDuration`, but not `HasPosition`. Events have both duration and position:
+
+```haskell
+>>> (c :: Note)^.duration
+1
+
+>>> (c :: Event)^.duration
+1
+
+>>> (c :: Event)^.era
+0 <-> 1
+```
+
+Notes and events have instances for `Functor`, `Foldable` and `Traversable`, which all visit the single element the contain. There are also instances for `HasPitches`, `HasDynamics` and so on, meaning that we can use most combinators from the previous chapters on notes and events.
+
+```music+haskell
+inspectableToMusic @(Note StandardNote) $
+
+set parts' violins $ pizz $ level ff $ accentAll $ compress 4 c
+```
+
+You may wonder, what is the point of representing music with *just a single note*? The answer is that these types are used in combinations with other types. For example we can use `Note [Pitch]` to represent a melody where all notes have the same duration.
+
+
 
 
 ## Voices
 
 A @[Voice] represents a *sequential composition of values*, each tagged with *duration*.
 
+### Creating voices
+
+TODO
+
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
 
-stretch (1/4) $ [cs, bb, a |* 2]
+[cs, bb, a |* 2] |/ 4
 ```
+
+
+As with notes and events, we can enter a single voice using `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
+
+You can put a rest in a voice. Notice how this changes the type:
 
 ```music+haskell
 inspectableToMusic @(Voice (Maybe Pitch)) $
 
 (1/4) *| [c |* 2, rest, e]
 ```
+
+This works because of [pitch overloading](TODO link).
 
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
@@ -2406,11 +2513,6 @@ stretch (1/4) $ do
   [x, b, c' |*4 ]
 ```
 
-```music+haskell
-stretch (1/2) $ pseq [c,d,e]|/3 |> f |> g|*2
-```
-
-TODO monad comprehensions:
 
 ```music+haskell
 inspectableToMusic @(Voice [Pitch]) $
@@ -2447,9 +2549,6 @@ inspectableToMusic @(Voice [Pitch]) $
 [ [x,y] | x <- view voice (fmap fromPitch $ enumChromaticFromTo c c''), y <- [d,e]
   , isMelodicConsonance (x .-. y) && isConsonance (x .-. y) ]
 ```
-
-
-It can be converted into a score by stretching each element and composing in sequence.
 
 <!--
 ```music+haskellx
@@ -2515,8 +2614,13 @@ delay 2 -- TODO get rid of this, see wall of shame
     av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
 ```
 
+The `||>` operator is similar to the normal sequential composition operator `|>`, but aligns the result to the point of composition.
+
+
+<!--
 TODO sequential composition of aligned voices "snap to next stressed beat":
 `snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]`
+-->
 
 
 ## Scores
@@ -2529,8 +2633,6 @@ An empty scores has no duration, but we can represent rests using `Score (Maybe 
 pseq [c,rest,d] |/ 4
 ```
 
-
-TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
 
 
 
@@ -2633,6 +2735,19 @@ inspectableToMusic bachCMajChords
 ```
 -->
 
+## Time, change and sampling
+
+TODO Behavior and Reactive
+
+@[Behaviors] are *continous* functions of time.
+
+A @[Reactive] is like a behaviours that can only change at certain well-known locations. Alternative, you can think of it as a @[Voice] that stretches out indefinately in both directions.
+
+<!--
+TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
+-->
+
+
 <!--
 ## Splitting and reversing
 
@@ -2711,16 +2826,6 @@ variation
 - Randomness
 
 - Do notation, comprehensions
-
-## Time, change and sampling
-
-TODO Behavior and Reactive
-
-@[Behaviors] are *continous* functions of time.
-
-A @[Reactive] is like a behaviours that can only change at certain well-known locations. Alternative, you can think of it as a @[Voice] that stretches out indefinately in both directions.
-
-
 
 
 
@@ -2808,19 +2913,16 @@ canon </> renderAlignedVoice rh
 
 ### Pitches, dynamics and articulations
 
-Music Suite defines traversals and lenses for all of the standard musical aspects (pitch, dynamic, articulation and so on). If you've been following the previous chapters, you might have seen examples of these already: expressions such as `pitches .~ c`, `dynamics .~ ff` or `over dynamics (+ 1)` make use of traversals to *update* all pitches, dynamics and so on, in a given piece of music.
+Music Suite defines traversals and lenses for pitch, dynamic, articulation, parts and playing technique. If you've been following the previous chapters, you might have seen examples of these already: expressions such as `pitches .~ c`, `dynamics .~ ff` or `over dynamics (+ 1)` make use of traversals to *update* all pitches, dynamics and so on, in a given piece of music.
 
-### Parts and playing techniques
 
-TODO
-
+<!--
 ### Traversals vs. Lenses (singular vs plural)
 
 TODO
+-->
 
 ### Polymorphic updates
-
-TODO introducing the polymorphic version of the lenses/traversals (`pitch`, `dynamic` etc.)
 
 TODO polymorphic update example (e.g. `Common.Pitch` vs `Hertz`)
 
@@ -2999,6 +3101,7 @@ parts of a score, but perform manual editing on the output result.
 
 
 
+<!--
 # Tips and tricks
 
 ### Lists and streams
@@ -3022,6 +3125,7 @@ pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
 ```music+haskell
 pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 ```
+-->
 
 
 # Wall of Shame
