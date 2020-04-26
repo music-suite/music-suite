@@ -56,8 +56,8 @@ class InspectableNote a where
 --   inspectableToMusic = id
 
 -- TODO not just Pitch
-instance Inspectable (Pattern Pitch) where
-  inspectableToMusic = fmap fromPitch . flip renderPattern (0 <-> 1)
+instance InspectableNote a => Inspectable (Pattern a) where
+  inspectableToMusic = inspectableToMusic . flip renderPattern (0 <-> 1)
 
 instance Inspectable a => Inspectable (Maybe a) where
   inspectableToMusic = maybe mempty id . fmap inspectableToMusic

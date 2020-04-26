@@ -36,9 +36,9 @@ import Music.Time.Juxtapose
 import Music.Time.Note
 import Music.Time.Placed
 import Music.Time.Score
-import Music.Time.Split
 import Music.Time.Transform
 import Music.Time.Voice
+import Control.Monad.State
 
 instance (IsPitch a) => IsPitch (Pattern a) where
   fromPitch = pureP . fromPitch
@@ -152,7 +152,7 @@ Render the cycles 0<->3, 3<->6, an extra cycle of (takeM 1), finally drop 1
 Render the cycles -, an extra cycle of (takeM 2), finally drop 1
 
 -}
-renderLunga :: (HasDuration a, Transformable a, Splittable a) => Span -> Lunga a -> Aligned (Voice a)
+renderLunga :: Span -> Lunga a -> Aligned (Voice a)
 renderLunga s (Lunga (d, _, b))
   | d < 0 = error "renderLunga: Negative (nominal) duration"
   | otherwise =
@@ -163,8 +163,10 @@ renderLunga s (Lunga (d, _, b))
     (n2, r2) = (s ^. offset) `cycleAndPhase` d
     fullCycles = fromIntegral $ n2 - n1 -- 0 or greater
     voca = dropM r1 $ takeM (d ^* fullCycles) b <> takeM r2 b
-    takeM = beginning
-    dropM = ending
+
+takeM, dropM :: Duration -> Voice a -> Voice a
+takeM = undefined -- beginning
+dropM = undefined -- ending
 
 -- List of repeated voices
 -- TODO is this isomorphic to Tidal's pattern (i.e. Span -> Score a)
@@ -216,12 +218,12 @@ rhythmPattern :: IsPitch a => [Duration] -> Pattern a
 rhythmPattern a = newPattern $ fmap (const c) $ a ^. durationsAsVoice
 
 -- TODO variant that returns [Aligned (Voice a)]
-renderPattern :: (HasDuration a, Transformable a, Splittable a) => Pattern a -> Span -> Score a
+renderPattern :: Pattern a -> Span -> Score a
 renderPattern (Pattern ((unzip . fmap (^. from placed)) -> (origos, lungas))) s =
-  ppar $
+  mconcat $
     zipWith (renderLunga' s) origos lungas
 
-renderLunga' :: (HasDuration a, Transformable a, Splittable a) => Span -> Time -> Lunga a -> Score a
+renderLunga' :: Span -> Time -> Lunga a -> Score a
 renderLunga' s t = renderAlignedVoice . delay' t . renderLunga (delay' t s)
   where
     -- TODO terminology here is not super-nice
@@ -233,14 +235,14 @@ renderLunga' s t = renderAlignedVoice . delay' t . renderLunga (delay' t s)
 --
 -- Each note triggers exactly /one/ cycle of the pattern (frequency = 1), starting at the beginning of the pattern (phase =
 -- 0).
-renderPatternsRel :: (HasDuration a, Transformable a, Splittable a) => Score (Pattern a) -> Score a
+renderPatternsRel :: Score (Pattern a) -> Score a
 renderPatternsRel = join . fmap (flip renderPattern zeroV)
 
 -- | Renders each pattern in the span of its note.
 --
 -- This means that notes of different onset and duration may trigger a different number of cycles (frequency), with
 -- different starting point in the pattern (phase).
-renderPatternsAbs :: (HasDuration a, Transformable a, Splittable a) => Score (Pattern a) -> Score a
+renderPatternsAbs :: Score (Pattern a) -> Score a
 renderPatternsAbs = join . mapWithSpan (\s -> transform (negateV s) . flip renderPattern s)
 -- Note: We can not change the span of a note using mapWithSpan, so we transform the result to position (0<->1)
 -- and trust join to put it back in the same position it was rendered.
