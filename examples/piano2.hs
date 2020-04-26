@@ -39,7 +39,7 @@ main =
   -- defaultMain music
   defaultMain $
     inspectableToMusic @(Pattern Pitch)
-      p11i
+      p4
 
 music :: Music
 music =
@@ -227,11 +227,18 @@ render Block {col, range, texture = Repeat} =
 p1 :: IsPitch a => Pattern a
 p1 = newPattern [a |* 3, d, e] |/ 8
 
-p11 :: IsPitch a => Pattern a
-p11 = newPattern [f, e, f, d, e, c, d |* 2, d |* 2] |/ 8
 
-p11i :: (IsPitch a, HasPitches' a, S.Pitch a ~ Pitch) => Pattern a
-p11i = invertDiatonic e p11
+p1_1 :: IsPitch a => Pattern a
+p1_1 = newPattern [f, e, f, d, e, c, d |* 2, d |* 2] |/ 8
+
+p1_1i :: (IsPitch a, HasPitches' a, S.Pitch a ~ Pitch) => Pattern a
+p1_1i = invertDiatonic e p1_1
 
 p2 :: IsPitch a => Pattern a
 p2 = newPattern [e, fs |* 2] |/ 3
+
+p4 :: IsPitch a => Pattern a
+p4 = newPattern [a,g,d,e] |/ 8
+
+p4_1 :: IsPitch a => Pattern a
+p4_1 = newPattern [a,g,d,e,b_,c,d,e] |/ 8
