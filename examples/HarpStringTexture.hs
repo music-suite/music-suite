@@ -10,30 +10,7 @@ import qualified Music.Score.Articulation as S
 import qualified Music.Score.Pitch as S
 import qualified Music.Score.Part as S
 
-{- TODO basic idea here is:
- -
- -  * Have a topLevelScore of some custom type Block
- -  * Use a render function (Block -> Pattern a) and renderPatternsAbs
- -
- - This is nice, but a basic problem is the difficulty of
- - visualizing/understanding the topLevelScore and render function separately.
- - We could use a graphical backend for topLevelScore.
- -
- - How about the render function? It might be hard to test all possible
- - inputs. Could we draw some representative samples? OTOH if the type
- - is finite and small, maybe just enumerate?
- -
- - We need to build a library of *values* such as:
- -
- -    - Melodies, or fragments thereof
- -    - Scales, chords, chord progressions
- -    - Rhythms, patterns
- -    - Predicates on dissonance, voice leading etc
- -
- - Try not to *add more types*! Focus on the values.
- -
- - Also a solution to the above: simpler patterns and simpler topLevelScore!
- -}
+-- TODO this is a fork of examples/piano2.hs. Minimize!
 main =
   -- TODO workaround for the fact that the REPL can only show
   -- the top-level definition.
