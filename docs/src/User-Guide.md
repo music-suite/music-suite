@@ -2871,17 +2871,25 @@ We can exploit this to:
 Let's look at the type of the @[traverse] function:
 
 ```haskell
->>> traverse @[]
-traverse :: Applicative f => (a -> f b) -> [a] -> f [b]
+>>> traverse @[] @_ @Bool @Bool
+traverse ::
+  forall f . Applicative f =>
+  (Bool -> f Bool) ->
+  [Bool] -> f [Bool]
 ```
 
-TODO similarly
+The way to read this is that `traverse` transforms an effectful function operating on `Bool` to operate on `[Bool]` instead.
+
+Here is another traversal called @[pitches]:
 
 ```haskell
->>> pitches' @Score :: (Pitch -> f Pitch) -> Score Pitch -> f (Score Pitch)
+>>> pitches' @Score ::
+  (Pitch -> f Pitch) ->
+  Score Pitch -> f (Score Pitch)
 ```
 
-TODO some traversals we have already seen: pitches, parts, dynamics, articulation, techniques.
+This means, given a score of pitches and a function operating on pitches, traverse the pitches in the score one by one using the function and return a *new* score containing the transformed pitches.
+
 
 <!--
 A traversal that targets exactly one element is known as a *lens*. We've already seen examples of lenses and traversals in the chapters on [dynamics](TODO) and [articulation](TODO) in the form of `.~` (or `set`) operator.
@@ -2889,15 +2897,18 @@ A traversal that targets exactly one element is known as a *lens*. We've already
 > Note: For those familiar lenses in Haskell: Music Suite defines lenses and traversals compatible with the `lens` and `microlens` packages.
 -->
 
+## Using traversals
 
-TODO monomorphic and polymorphic traversals (and switch names: `pitch'` is used much more than `pitch`!)
+Folding/accumulating: `toListOf`, `anyOf`, `allOf`
 
-Folds: `toListOf`, `anyOf`, `allOf`
+Setting/mapping: `over`,
 
-Traversals: `over`, `traverseOf/forOf`, arbitrary effects (e.g. State, Writer, Maybe)
+Arbitrary effects: State, Writer, Maybe
 
 
-## "Aspect" traversals: Pitch, dynamics, articulations, part and playing technique
+## Specific traversals
+
+TODO We have already seen these : pitches, parts, dynamics, articulation, techniques.
 
 Music Suite defines traversals and lenses for pitch, dynamic, articulation, parts and playing technique. If you've been following the previous chapters, you might have seen examples of these already: expressions such as `pitches .~ c`, `dynamics .~ ff` or `over dynamics (+ 1)` make use of traversals to *update* all pitches, dynamics and so on, in a given piece of music.
 
