@@ -16,7 +16,9 @@ import qualified Music.Score.Articulation as S
  - visualizing/understanding the topLevelScore and render function separately.
  - We could use a graphical backend for topLevelScore.
  -
- - How about the render function?
+ - How about the render function? It might be hard to test all possible
+ - inputs. Could we draw some representative samples? OTOH if the type
+ - is finite and small, maybe just enumerate?
  -
  -}
 main = defaultMain music
@@ -77,33 +79,35 @@ topLevelScore =
                   (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 0.5))
             )
       )
-    |> stretch 2 ( ( ( mempty
-               |> (pure (Block Brown Hi Chord))
-               |> (pure (Block Blue Hi Chord) |* 2)
-           )
-             <> ( delay 2
-                    . stretch 2
-                )
-               ( mempty
-                   |> (pure (Block Brown Lo Chord))
-                   |> ( pure
-                          (Block Blue Lo Chord)
-                          |* 2
-                      )
+    |> stretch
+      2
+      ( ( ( mempty
+              |> (pure (Block Brown Hi Chord))
+              |> (pure (Block Blue Hi Chord) |* 2)
+          )
+            <> ( delay 2
+                   . stretch 2
                )
-         )
-           <> delay
-             4
-             ( ( pure
-                   (Block Brown Hi Repeat)
-                   |> (pure (Block Blue Hi Repeat) |* 2)
-               )
-                 <> ( delay 2
-                        . stretch 2
-                    )
-                   (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 0.5))
-             )
-       )
+              ( mempty
+                  |> (pure (Block Brown Lo Chord))
+                  |> ( pure
+                         (Block Blue Lo Chord)
+                         |* 2
+                     )
+              )
+        )
+          <> delay
+            4
+            ( ( pure
+                  (Block Brown Hi Repeat)
+                  |> (pure (Block Blue Hi Repeat) |* 2)
+              )
+                <> ( delay 2
+                       . stretch 2
+                   )
+                  (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 0.5))
+            )
+      )
     |> stretch
       5.5
       ( ( ( mempty
@@ -133,59 +137,63 @@ topLevelScore =
                   (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 0.5))
             )
       )
-    |> stretch 3 ( ( ( mempty
-               |> (pure (Block Brown Hi Chord))
-               |> (pure (Block Blue Hi Chord) |* 2)
-           )
-             <> ( delay 2
-                    . stretch 2
-                )
-               ( mempty
-                   |> (pure (Block Brown Lo Chord))
-                   |> ( pure
-                          (Block Blue Lo Chord)
-                          |* 2
-                      )
+    |> stretch
+      3
+      ( ( ( mempty
+              |> (pure (Block Brown Hi Chord))
+              |> (pure (Block Blue Hi Chord) |* 2)
+          )
+            <> ( delay 2
+                   . stretch 2
                )
-         )
-           <> delay
-             4
-             ( ( pure
-                   (Block Brown Hi Repeat)
-                   |> (pure (Block Blue Hi Repeat) |* 2)
-               )
-                 <> ( delay 2
-                        . stretch 2
-                    )
-                   (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 0.5))
-             )
-       )
+              ( mempty
+                  |> (pure (Block Brown Lo Chord))
+                  |> ( pure
+                         (Block Blue Lo Chord)
+                         |* 2
+                     )
+              )
+        )
+          <> delay
+            4
+            ( ( pure
+                  (Block Brown Hi Repeat)
+                  |> (pure (Block Blue Hi Repeat) |* 2)
+              )
+                <> ( delay 2
+                       . stretch 2
+                   )
+                  (pure (Block Brown Lo Repeat) |> (pure (Block Blue Lo Repeat) |* 0.5))
+            )
+      )
 
 -- |
 -- Alternative to 'render' just to get a sense of 'topLevelScore'.
 renderSimple ::
-  (IsPitch a, Transposable a, HasArticulations' a, Articulated (S.Articulation a))
-    => Block -> Pattern a
-renderSimple Block {col, range, texture} = stretch 20 $
-  let h =
-        case range of
-          Hi -> up _P15
-          Lo -> id
-      i =
-        case texture of
-          Chord -> accentAll
-          Repeat -> id
-   in h $ i $ case col of
-        Blue -> g
-        Brown -> c
+  (IsPitch a, Transposable a, HasArticulations' a, Articulated (S.Articulation a)) =>
+  Block ->
+  Pattern a
+renderSimple Block {col, range, texture} =
+  stretch 20 $
+    let h =
+          case range of
+            Hi -> up _P15
+            Lo -> id
+        i =
+          case texture of
+            Chord -> accentAll
+            Repeat -> id
+     in h $ i $ case col of
+          Blue -> g
+          Brown -> c
 
 render ::
   (IsPitch a, Transposable a, HasArticulations' a) => Block -> Pattern a
 render Block {col, range, texture = Chord} = case col of
   Blue ->
-    mconcat [c_, a_,fs]
+    mconcat [c_, a_, fs]
   Brown ->
-    mconcat [g_,d,a]
+    mconcat [g_, d, a]
 render Block {col, range, texture = Repeat} =
   let transp =
         case range of
@@ -194,6 +202,6 @@ render Block {col, range, texture = Repeat} =
    in transp $
         case col of
           Blue ->
-            newPattern [a|*3, d, e] |/ 8
+            newPattern [a |* 3, d, e] |/ 8
           Brown ->
-            newPattern [e,fs|*2] |/ 6
+            newPattern [e, fs |* 2] |/ 6
