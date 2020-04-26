@@ -54,7 +54,7 @@ We can copy-paste all examples from this file into the above template. Whatever 
 
 ### Using an interactive environment
 
-TODO "visual interpreter" support. See TODO.md.
+TODO "visual interpreter" docs
 
 
 <!--
@@ -331,7 +331,7 @@ TODO basic functions
 
 ### Function composition
 
-TODO analogously to composition of music seen above we can compose *funtions*.
+Analogously to composition of music seen above we can compose *functions*.
 
 Here is an example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
 
@@ -341,7 +341,18 @@ Here is an example using function composition. The dot operator `.` is used to c
 
 ## More examples
 
-TODO make very clear that stretch, `_8va` etc work on arbitrarily complex scores, not just single notes as in the first examples
+Of course, the combinators we have seen so far such as `stretch`, `_8va` and so on work on arbitrarily complex scores, not just single notes. We can also nest most function within applications of the composition operators.
+
+```music+haskell
+_8va $ pseq [c, d]
+```
+
+```music+haskell
+let
+  x = pseq [c, d]
+in
+pseq [x, up m3 x]
+```
 
 Here is a more complex example using all forms of composition:
 
@@ -352,7 +363,9 @@ let
 in up _P8 scale </> (triad c) |/2 |> (triad g_) |/2
 ```
 
-TODO understanding types, types of the above operators and that `|>` and `</>` are based on `<>`.
+## Understanding composition types
+
+Looking at the type of the composition operators, it becomes clear that `|>` and `</>` are in fact based on `<>`:
 
 ```haskell
 (<>)  :: Semigroup a => a -> a -> a
@@ -366,7 +379,7 @@ TODO understanding types, types of the above operators and that `|>` and `</>` a
 (</>) :: (Semigroup a, HasParts a, HasSubpart p, p ~ Part a) => a -> a -> a
 ```
 
-In other words `Semigroup` is used for all composition in Music Suite.
+In fact the `<>` operator is used for almost all forms of composition in Music Suite. The other operators simply peform some kind of manipulation on their values before or after composing.
 
 
 ## Conclusion
@@ -1133,7 +1146,7 @@ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
-
+<!--
 TODO `chord` gives you the root position, define a version of `chord` that gives you 1st, 2nd, 3rd inversion etc. For example 4th inversion of a ninth chord
 
 TODO this is a rotation, what does it mean:
@@ -1145,8 +1158,8 @@ inspectableToMusic @[Chord Pitch] $
 , chord c $ invertChord 2    majorTriad
 ]
 ```
+-->
 
-To work with alternative voicings, see below.
 
 
 ### Set operations
@@ -2814,8 +2827,8 @@ let
 in times 4 $ melody
 ```
 
-
-variation
+<!--
+- variation
 
 - Basic repeatition: @[times], @[replicate]
 
@@ -2829,7 +2842,14 @@ variation
 
 - Randomness
 
-- Do notation, comprehensions
+- Logic programming
+  - Predicates
+  - Searching (MonadLogic)
+
+- Probabilistic programming
+  - Like logic programming, but not just "yes" or "no"
+  - E.g. we can express "it is better if": 1st species counterpoint example
+-->
 
 
 
@@ -2874,48 +2894,7 @@ Folds: `toListOf`, `anyOf`, `allOf`
 Traversals: `over`, `traverseOf/forOf`, arbitrary effects (e.g. State, Writer, Maybe)
 
 
-## Traversing the notes in a voice
-
-```music+haskell
-inspectableToMusic @(Voice [StandardNote]) $
-
-over t (\x -> if x^.duration > 1 then up m2 x else x) [d,d,d |* 2,d]
-  where
-    t = notes . each
-```
-
-```TODOmusic+haskell
-inspectableToMusic @(Voice [StandardNote]) $
-
-traverseOf t _ [d,d,d |* 2,d]
-  where
-    t = notes . each
-```
-
-
-## Traversing all the events in a score
-
-```music+haskell
-canon </> renderAlignedVoice rh
-  where
-    rh :: IsPitch a => Aligned (Voice a)
-    rh = fmap (fmap $ const c) $ aligned 0 0 $ view durationsAsVoice (tail $ toRelativeTime onsets)
-
-
-    onsets :: [Time]
-    onsets = Data.List.nub $ toListOf (events . each . onset) canon
-
-    canon = rcat
-      [ theme
-      , theme |* (3/2)
-      , theme |* 2
-      ]
-    theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
-```
-
-## Traversing the components of a note
-
-### Pitches, dynamics and articulations
+## "Aspect" traversals: Pitch, dynamics, articulations, part and playing technique
 
 Music Suite defines traversals and lenses for pitch, dynamic, articulation, parts and playing technique. If you've been following the previous chapters, you might have seen examples of these already: expressions such as `pitches .~ c`, `dynamics .~ ff` or `over dynamics (+ 1)` make use of traversals to *update* all pitches, dynamics and so on, in a given piece of music.
 
@@ -2926,7 +2905,7 @@ Music Suite defines traversals and lenses for pitch, dynamic, articulation, part
 TODO
 -->
 
-### Polymorphic updates
+## Polymorphic updates
 
 TODO polymorphic update example (e.g. `Common.Pitch` vs `Hertz`)
 
@@ -2976,6 +2955,47 @@ over t (up _P8) [d,d,d |* 2,d] |/ 4
     t = notes . each . filtered (\x -> x^.duration < 2)
 ```
 
+
+## More examples
+
+### Traversing the notes in a voice
+
+```music+haskell
+inspectableToMusic @(Voice [StandardNote]) $
+
+over t (\x -> if x^.duration > 1 then up m2 x else x) [d,d,d |* 2,d]
+  where
+    t = notes . each
+```
+
+```TODOmusic+haskell
+inspectableToMusic @(Voice [StandardNote]) $
+
+traverseOf t _ [d,d,d |* 2,d]
+  where
+    t = notes . each
+```
+
+
+### Traversing all the events in a score
+
+```music+haskell
+canon </> renderAlignedVoice rh
+  where
+    rh :: IsPitch a => Aligned (Voice a)
+    rh = fmap (fmap $ const c) $ aligned 0 0 $ view durationsAsVoice (tail $ toRelativeTime onsets)
+
+
+    onsets :: [Time]
+    onsets = Data.List.nub $ toListOf (events . each . onset) canon
+
+    canon = rcat
+      [ theme
+      , theme |* (3/2)
+      , theme |* 2
+      ]
+    theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
+```
 
 
 
