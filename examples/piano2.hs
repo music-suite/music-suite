@@ -41,7 +41,7 @@ main =
   -- defaultMain music
   defaultMain $
     renderPattern
-      crot2Pitches
+      (stringArpIn8 20 <> hrpGliss)
       (0 <-> 10)
 
 music :: Music
