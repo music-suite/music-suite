@@ -60,6 +60,8 @@ Consider switching to a decentralized issue tracker such as:
 
 - [ ] Long cresc/dim should render as text by default.
 
+- Show instance for Duration/Time should use decimal form when short (e.g. 1.5, not 3/2)
+
 - API improvements:
   - Move varticulation, addArticulation out of public API
   - Move vdynamic, addDynCon out of public API
