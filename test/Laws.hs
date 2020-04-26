@@ -340,12 +340,6 @@ instance Monoid a => Monoid (Event a) where
   mappend = liftA2 mappend
 
 
--- instance Ord a => Ord (Event a) where
---   x `compare` y = (x^.from note) `compare` (y^.from note)
-instance Eq a => Eq (Score a) where
-  x == y = Data.List.sortBy (comparing (^.era)) (x^.events) == Data.List.sortBy (comparing (^.era)) (y^.events)
--- instance Splittable Integer where
-  -- split _ x = (x,x)
 
 unzipR f = (fmap fst f, fmap snd f)
 
