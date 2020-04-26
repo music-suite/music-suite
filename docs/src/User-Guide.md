@@ -951,11 +951,13 @@ chordToScale (chord c majorTriad)
   :: Scale Interval Pitch
 ```
 
+<!--
 TODO examples: Whole tone is a superset of augmented, octatonic a superset of dimimished and so on
 
 TODO example: generate a "scale" by the union of two "chords"
 
 Consider "scale-chord texture"
+-->
 
 ### Chords are infinite
 
@@ -1830,13 +1832,21 @@ TODO hand stopping
 
 ## Percussion
 
-TODO working with instruments for percussion (much like normal instruments, though pitch may be ignored)
+Working with percussion is much like working with normal instruments. The main difference of course is that:
 
-Note: for percussion we break the singular/plural naming convention and export a `Part` in the singular form.
+- Some percussion instruments no notion of pitch, or a limited set of pitches they can play.
+
+- Percussion players tend to double on many different types of instruments than other musicians.
+
+We currently do not ruling out entering pitches for e.g. snare drum parts. However backends will ignore the pitch information, and the music will render on a single-line staff.
+
+As with other instruments we currently can not represent players doubling on multiple instrumentsexplicitly. You will have to manually enter the music in different parts and manually assure that there is no overlap in parts meant to be executed by the same performer.
+
+> Note: for percussion we break the singular/plural naming convention and export a `Part` in the singular form.
 
 The solo/tutti component is set to `Tutti` by default even though there might only be one performer in the group (the distinction would still make sense e.g. in a percussion concerto).
 
-```TODOmusic+haskell
+```music+haskell
 parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
   where
     rh = stretchTo 1 . pseq -- TODO put this in the library?
@@ -1844,7 +1854,6 @@ parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
 
 For rolls see [the previous section](tremolo-trills-and-rolls).
 
-TODO render e.g. snare drum parts correctly on single-line staff
 
 
 <!--
@@ -2256,7 +2265,10 @@ For those familiar with linear algebra or computer graphics: Because time is one
 
 @[Transformable]
 
-TODO Transformable laws
+TODO transformations act upon time types. The basic intuition is that they move all the points.
+
+Applying the empty transformation changes nothing, and applying a composition of transfomrations is equivalent to applying them all from innermost to outermost (the Transformable laws).
+
 
 
 ## Position and duration
@@ -2281,14 +2293,16 @@ in compress 4 $ melody </> pedal
 
 TODO example with stretchRelative, stretchTo
 
-TODO HasPosition/HasDuration laws
+The laws for @[HasPosition] and @[HasPosition1] are not too exciting: they assure that transforming a value also transforms its position in the same manner, and that the duration of a value is exactly the duration between its onset and offset point.
 
-Explain delay-invariant transformations: applying transformations to `Span` performs the delay/translation, applying to `Duration` does not. Note that this does *not* invalidate the laws. We can think of our time types as coming in two shapes:
+
+## Translation-invariant types
+
+TODO Explain delay-invariant transformations: applying transformations to `Span` performs the delay/translation, applying to `Duration` does not. Note that this does *not* invalidate the laws. We can think of our time types as coming in two shapes:
 
 - Translation-invariant types such as `Duration` are "floating" without being anchored to specific start/stop time (though they still have a duration)
 - Translation-variant types such as `Span` have both a specific duration and a specific point in which they "occur" relative to ther events.
 
-We will see much more of this distinction later on.
 
 
 ## Times with values
@@ -2429,22 +2443,18 @@ in trackToScore (1/8) y
 
 ## Aligned
 
-TODO @[Aligned] type adds position to anything with a duration
+The @[Aligned] type adds position to anything with a duration. This is akin to alignment in computer graphis, hence the name. Alignment works by picking:
 
-TODO pick a relative *origin* (e.g. 0 for the onset)
+- A time point to which the value is "anchored". By default this is time zero.
+- An alignment point in the duration of the value. By default this is the onset of the value.
 
-TODO using Aligned to represent upbeats
-Natural way of modelling pickups/upbeats etc. Can be combined with "beat hierarchy" model
-
-
-Here is an example. Without upbeat:
+Aligned is natural way of modelling pickups and upbeats. Consider this melody:
 
 ```music+haskell
 (pseq [g_,a_,b_]|/2 |> pseq [c, c, d, d]) |/ 4
 ```
 
-
-With upbeat.
+With @[Aligned] we can represent the fact that the first three notes are "upbeat" notes, and that the main stress of the value should fall on the fourth note:
 
 ```music+haskell
 inspectableToMusic @[Aligned (Voice Pitch)] $
@@ -2627,7 +2637,7 @@ music |> rev music
 
 ## Building larger musical structures
 
-TODO general intro on how to build/organize larger forms in Haskell/pure FP.
+Let's now look at how to use the types and classes introduced in this chapter to organize larger musical forms.
 
 ### Basic repetition
 

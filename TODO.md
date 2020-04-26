@@ -140,6 +140,8 @@ Consider switching to a decentralized issue tracker such as:
   Common implementation?
   Share operations in both directions?
 
+- [ ] render e.g. snare drum parts correctly on single-line staff
+
 - Internal improvements:
   - Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
 
