@@ -73,8 +73,16 @@ import Music.Score.Phrases
 import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
-import Music.Time
+import Music.Time.Track
+import Music.Time.Placed
+import Music.Time.Position
+import Music.Time.Behavior
+import Music.Time.Aligned
+import Music.Time.Event
 import Music.Time.Internal.Transform
+import Music.Time.Note
+import Music.Time.Score
+import Music.Time.Voice
 
 -- |
 -- Dynamics type.

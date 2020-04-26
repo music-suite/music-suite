@@ -63,6 +63,7 @@ import Music.Pitch (IsPitch (..))
 import Music.Pitch.Literal (c)
 import Music.Score.Part
 import Music.Score.Pitch
+import Music.Score.Dynamics
 import Music.Score.Articulation
 import Music.Time.Aligned
 import Music.Time.Event
@@ -76,8 +77,6 @@ import Control.Monad.State.Strict
 import Control.Monad.Except
 import Iso.Deriving
 
-instance (IsPitch a) => IsPitch (Pattern a) where
-  fromPitch = pureP . fromPitch
 
 -- sppar = pseq . fmap ppar
 
@@ -345,6 +344,8 @@ newtype Pattern a
   = Pattern {getPattern :: [Aligned (Voice a)]}
   deriving (Semigroup, Monoid, Transformable, Functor, Foldable, Traversable)
 
+instance (IsPitch a) => IsPitch (Pattern a) where
+  fromPitch = pureP . fromPitch
 
 type instance Articulation (Pattern a) = Articulation a
 
@@ -366,6 +367,13 @@ type instance SetPart b (Pattern a) = Pattern (SetPart b a)
 
 instance HasParts a b => HasParts (Pattern a) (Pattern b) where
   parts = traverse . parts
+
+type instance GetDynamic (Pattern a) = GetDynamic a
+
+type instance SetDynamic b (Pattern a) = Pattern (SetDynamic b a)
+
+instance HasDynamics a b => HasDynamics (Pattern a) (Pattern b) where
+  dynamics = traverse . dynamics
 
 -- What sort of Applicative is Pattern?
 -- instance Applicative Pattern where
