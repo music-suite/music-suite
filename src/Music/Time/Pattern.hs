@@ -1,4 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
@@ -33,10 +34,13 @@ module Music.Time.Pattern
   )
 where
 
+import Prelude hiding (splitAt)
 import Control.Lens (Rewrapped, Wrapped (..), (^.), _Wrapped, from, iso, over, view)
 import Control.Monad (join)
 import Data.AffineSpace
 import Data.VectorSpace
+import Data.Traversable (for)
+import qualified Data.List
 import Data.Bifunctor (first)
 import Music.Pitch (IsPitch (..))
 import Music.Pitch.Literal (c)
@@ -180,6 +184,10 @@ renderLunga s (Lunga (d, _, b))
     voca = dropM r1 $ takeM (d ^* fullCycles) b <> takeM r2 b
 
 
+-- TODO move Abort elsewhere
+
+
+
 -- |
 -- Abort is like 'State' but allow short-circuiting the computation.
 data Abort s a = Abort { runAbort :: s -> (Maybe a, s) }
@@ -209,7 +217,7 @@ maybeToEither :: Maybe a -> Either () a
 maybeToEither Nothing = Left ()
 maybeToEither (Just x) = Right x
 
--- TODO move
+-- TODO move this instance to iso-deriving
 -- TODO undecidable
 instance forall f g s . (forall x . Isomorphic (f x) (g x), MonadState s f) =>
   MonadState s (As1 f g) where
@@ -224,8 +232,49 @@ t = do
   t
 
 takeM, dropM :: Duration -> Voice a -> Voice a
-takeM = undefined -- beginning
-dropM = undefined -- ending
+takeM d = fst . splitAt d
+dropM d = snd . splitAt d
+
+data SplitAtState = SplitAtState { remainingDur :: Duration, notesEaten :: Integer }
+
+fromVoice :: Voice a -> [Note a]
+toVoice :: [Note a] -> Voice a
+(fromVoice, toVoice) = undefined
+
+uncons :: [a] -> Maybe (a, [a])
+uncons = undefined
+
+-- |
+-- Take the given number of notes and up to d of the next note.
+splitNotesAt :: Integer -> Duration -> Voice a -> (Voice a, Voice a)
+splitNotesAt n d xs
+  | d <= 0 =
+    case Data.List.splitAt (fromIntegral n) (fromVoice xs) of
+      (ys,zs) ->
+        (toVoice ys, toVoice zs)
+  | otherwise =
+    case fmap uncons $ Data.List.splitAt (fromIntegral n) (fromVoice xs) of
+      (ys, Nothing) -> (toVoice ys, mempty)
+      (ys, Just (z, zs)) ->
+        -- TODO FIXME use z!
+        (toVoice ys, toVoice zs)
+
+-- TODO move splitAt to Time.Voice
+
+splitAt :: Duration -> Voice a -> (Voice a, Voice a)
+splitAt d xs =
+  f $ snd $ flip runAbort (SplitAtState { remainingDur = d, notesEaten = 0 }) $
+    for (view notes xs) $ \note -> do
+      SplitAtState { remainingDur, notesEaten } <- get
+      if _duration note > remainingDur
+        then
+          abort
+        else
+          put $ SplitAtState { remainingDur = remainingDur + _duration note, notesEaten = notesEaten + 1 }
+  where
+    f (SplitAtState { remainingDur, notesEaten })
+      = ( splitNotesAt notesEaten remainingDur xs
+        )
 
 
 -- List of repeated voices
