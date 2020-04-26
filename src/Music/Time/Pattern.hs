@@ -36,7 +36,6 @@
   -fno-warn-deprecations
   -fno-warn-unused-imports
   -fno-warn-unused-matches #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-} -- TODO FIXME
 {-# OPTIONS_GHC -fno-warn-unused-top-binds #-} -- TODO FIXME
 {-# OPTIONS_GHC -fno-warn-unused-local-binds #-} -- TODO FIXME
 
@@ -264,48 +263,42 @@ testGetCycles = all id
   , getCycles (1 <-> 3) ((-1) <-> 0)      == Right (0, 0, 1)
   ]
 
--- TODO get dir of (newtype wrapper, or inline):
-instance (HasDuration a, Transformable a) => HasPosition [Aligned a] where
-  _era xs = case foldMap (NonEmptyInterval . _era1) $ xs of
-    EmptyInterval -> Nothing
-    NonEmptyInterval x -> Just x
-
 testC :: Span -> Aligned (Voice a) -> Either Duration (Duration, Integer, Duration)
 testC s l = getCycles (_era1 l) s
 
 testRenderLungaNEW :: Bool
 testRenderLungaNEW = all id
-  [ renderLungaNEW (0 <-> 2) aba
+  [ renderLunga (0 <-> 2) aba
   == [(0 <-> 1,'a')^.event,(1 <-> 2,'b')^.event]^.score
 
-  , renderLungaNEW (0 <-> 4) aba
+  , renderLunga (0 <-> 4) aba
   == [(0 <-> 1,'a')^.event,(1 <-> 3,'b')^.event,(3 <-> 4,'c')^.event]^.score
 
-  , renderLungaNEW (0 <-> 1) aba
+  , renderLunga (0 <-> 1) aba
   == [(0 <-> 1,'a')^.event]^.score
 
-  , renderLungaNEW ((-1)<->1) aba
+  , renderLunga ((-1)<->1) aba
   == [(-1 <-> 0,'c')^.event,(0 <-> 1,'a')^.event]^.score
 
-  , renderLungaNEW ((0)<->1) aba1
+  , renderLunga ((0)<->1) aba1
   == [(0 <-> 1,'c')^.event]^.score
 
-  , renderLungaNEW ((0.5)<->1.5) (aligned 0 0 $ stretch 2 $ pure 'c')
+  , renderLunga ((0.5)<->1.5) (aligned 0 0 $ stretch 2 $ pure 'c')
   == [(0.5 <-> 1.5,'c')^.event]^.score
 
-  , renderLungaNEW (3<->8) aba
+  , renderLunga (3<->8) aba
   == [(3 <-> 4,'c')^.event,(4 <-> 5,'a')^.event,(5 <-> 7,'b')^.event,(7 <-> 8,'c')^.event]^.score
 
-  , renderLungaNEW (0<->2) (aligned 0 0 c :: Aligned (Voice Int))
+  , renderLunga (0<->2) (aligned 0 0 c :: Aligned (Voice Int))
   == [(0 <-> 1,0)^.event,(1 <-> 2,0)^.event]^.score
 
-  , renderLungaNEW (0<->2) (stretch 2 $ aligned 0 0 c :: Aligned (Voice Int))
+  , renderLunga (0<->2) (stretch 2 $ aligned 0 0 c :: Aligned (Voice Int))
   == [(0 <-> 2,0)^.event]^.score
 
-  , renderLungaNEW (0<->2) (delay 0.3 $ stretch 0.9 $ aligned 0 0 c :: Aligned (Voice Int))
+  , renderLunga (0<->2) (delay 0.3 $ stretch 0.9 $ aligned 0 0 c :: Aligned (Voice Int))
   == [(0 <-> (3/10),0)^.event,((3/10) <-> (6/5),0)^.event,((6/5) <-> 2,0)^.event]^.score
 
-  , renderLungaNEW ((-4) <-> 0) aba
+  , renderLunga ((-4) <-> 0) aba
   == [((-4) <-> (-3),'a')^.event,((-3) <-> (-1),'b')^.event,((-1) <-> 0,'c')^.event]^.score
   ]
   where
@@ -314,17 +307,25 @@ testRenderLungaNEW = all id
     aba1 =
       (aligned 1 0 $ [(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
 
--- TODO replace the old ones, change type of pattern to [Aligned (Voice a)]
-renderLungaNEW :: Span -> Aligned (Voice a) -> Score a
-renderLungaNEW s l = case getCycles (_era1 l) s of
+
+newtype Lunga a = Lunga { getLunga :: [Aligned a] }
+  deriving (Functor, Foldable, Traversable, Transformable, Semigroup, Monoid)
+
+instance (HasDuration a, Transformable a) => HasPosition (Lunga a) where
+  _era (Lunga xs) = case foldMap (NonEmptyInterval . _era1) $ xs of
+    EmptyInterval -> Nothing
+    NonEmptyInterval x -> Just x
+
+renderLunga :: Span -> Aligned (Voice a) -> Score a
+renderLunga s l = case getCycles (_era1 l) s of
   Left phase ->
     renderAlignedVoice $ alignOnsetTo (view onset s)
       (takeM (_duration s) $ dropM phase $ unAlign l)
   Right (introDur, numCycles, outroDur) -> let
       intro  = alignOnsetTo (view onset s) (dropM (_duration l - introDur) $ unAlign l)
       outro  = alignOffsetTo (view offset s) (takeM outroDur $ unAlign l)
-      cycles = times (fromIntegral numCycles) $
-              pure $ alignOnsetTo (view onset s .+^ introDur) (unAlign l)
+      cycles = getLunga $ times (fromIntegral numCycles) $
+              Lunga $ pure $ alignOnsetTo (view onset s .+^ introDur) (unAlign l)
     in mconcat $ fmap renderAlignedVoice $ [intro] ++ cycles ++ [outro]
   where
     alignOnsetTo t = aligned t 0
@@ -383,7 +384,7 @@ rhythmPattern a = newPattern $ fmap (const c) $ a ^. durationsAsVoice
 
 -- TODO variant that returns [Aligned (Voice a)]
 renderPattern :: Pattern a -> Span -> Score a
-renderPattern (Pattern xs) s = mconcat $ fmap (renderLungaNEW s) xs
+renderPattern (Pattern xs) s = mconcat $ fmap (renderLunga s) xs
 
 
 -- |
