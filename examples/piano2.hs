@@ -3,7 +3,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MonadComprehensions #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE TypeApplications #-}
 
 import Music.Prelude
@@ -224,42 +223,42 @@ render Block {col, range, texture = Repeat} =
    in transp $
         case col of
           Blue ->
-            newPattern [a |* 3, d, e] |/ 8
+            newPattern ([a |* 3, d, e]^.voice) |/ 8
           Brown ->
-            newPattern [e, fs |* 2] |/ 6
+            newPattern ([e, fs |* 2]^.voice) |/ 6
 
 p1 :: IsPitch a => Pattern a
-p1 = newPattern [a |* 3, d, e] |/ 8
+p1 = newPattern ([a |* 3, d, e]^.voice) |/ 8
 
 p1_1 :: IsPitch a => Pattern a
-p1_1 = newPattern [f, e, f, d, e, c, d |* 2, d |* 2] |/ 8
+p1_1 = newPattern ([f, e, f, d, e, c, d |* 2, d |* 2]^.voice) |/ 8
 
 p1_1i :: (IsPitch a, HasPitches' a, S.Pitch a ~ Pitch) => Pattern a
 p1_1i = invertDiatonic e p1_1
 
 p2 :: IsPitch a => Pattern a
-p2 = newPattern [e, fs |* 2] |/ 3
+p2 = newPattern ([e, fs |* 2]^.voice) |/ 3
 
 p4 :: IsPitch a => Pattern a
-p4 = newPattern [a, g, d, e] |/ 8
+p4 = newPattern $ view voice $ [a, g, d, e] |/ 8
 
 p4_0 :: IsPitch a => Pattern a
 p4_0 = p4 <> delay (1 / 4) p4
 
 p4_1 :: IsPitch a => Pattern a
-p4_1 = newPattern [a, g, d, e, b_, c, d, e] |/ 8
+p4_1 = newPattern $ view voice $ [a, g, d, e, b_, c, d, e] |/ 8
 
 p4_11 :: IsPitch a => Pattern a
-p4_11 = newPattern [b, a, b, c', b, a, d', c', b, a, c', b, a, g, a, b, a, b, c', b] |/ 16
+p4_11 = newPattern $ view voice $ [b, a, b, c', b, a, d', c', b, a, c', b, a, g, a, b, a, b, c', b] |/ 16
 
 p4_2 :: IsPitch a => Pattern a
-p4_2 = newPattern [f, g, a, b, a, b, c', d', e', d', c', b] |/ 16
+p4_2 = newPattern $ view voice $ [f, g, a, b, a, b, c', d', e', d', c', b] |/ 16
 
 p5 :: IsPitch a => Pattern a
-p5 = newPattern [c__, g__, e_, c, e_, g__] |/ 12
+p5 = newPattern $ view voice $ [c__, g__, e_, c, e_, g__] |/ 12
 
 p5_1 :: IsPitch a => Pattern a
-p5_1 = newPattern [c__, g__, c_, e_, e, c, g_, c_] |/ 16
+p5_1 = newPattern $ view voice $ [c__, g__, c_, e_, e, c, g_, c_] |/ 16
 
 type Aspects a = (IsPitch a, HasParts' a, S.Part a ~ Part, Transposable a)
 
@@ -325,6 +324,21 @@ crot = tutti glockenspiel
 crot2Pitches :: Aspects a => (Pattern a)
 crot2Pitches = set (mapped . parts') crot $ compress 16 $ fmap (octavesUp 1) $ spat [c,d]
 
+stringArp :: Aspects a => Int -> (Pattern (Maybe a))
+stringArp m = straightPatterns (reverse stringsDiv6NoBass)
+  $ fmap spat $ fmap (\n -> take m $ drop n $ stringArpPitches) ([0..] :: [Int])
+
+stringArpIn8 :: Aspects a => Int -> (Pattern (Maybe a))
+stringArpIn8 m = straightPatterns (reverse stringsDiv8NoBass)
+  $ fmap spat $ fmap (\n -> take m $ drop n $ stringArpPitches) [0..]
+
+stringArpPitches :: IsPitch a => [Note a]
+stringArpPitches = [a_,c,d,e,f,g,a,c',d',e',f']
+
+stringSustain :: Aspects a => Pattern a
+stringSustain = straightPatterns stringsDiv6NoBass [a,g,f,e,d,c]
+
+
 phasePattern :: (Aspects a, Monoid a, Transformable a, S.Part a ~ Part)
   => [Part] -> [Span] -> a -> a
 phasePattern ps s pat = phasePatterns ps s (repeat pat)
@@ -340,6 +354,14 @@ phasePatterns :: (Aspects a, Monoid (a), Transformable (a))
 phasePatterns x y z = mconcat $ zipWith3 j x y z
   where
     j p s pat = set (parts') p $ transform s pat
+
+straightPattern :: (Aspects a, Monoid (a), Transformable (a))
+  => [Part] -> a -> a
+straightPattern x z = phasePattern x (repeat mempty) z
+
+straightPatterns :: (Aspects a, Monoid (a), Transformable (a))
+  => [Part] -> [a] -> a
+straightPatterns x z = phasePatterns x (repeat mempty) z
 
 
 fluteOboeDiv6 :: [Part]
@@ -403,7 +425,6 @@ hornsDiv4 = [horns1,horns2,horns3,horns4]
 [cellos1of4,cellos2of4,cellos3of4,cellos4of4] = divide 4 cellos
 
 
-{-
 highStringsDiv4 = [violins1_1,violins1_2,violins2_1,violins2_2]
 lowStringsDiv4 = [violas1,violas2,cellos1,cellos2] -- also consider cellos a4!
 
@@ -412,6 +433,7 @@ stringsDiv6        = [violins1,violins2,violas1,cellos1,cellos2,doubleBasses]
 
 stringsDiv5NoBass  = [violins1,violins2,violas1,cellos1,cellos2]
 -- These are our workhourse 6 part string tuttis:
+stringsDiv6NoBass :: [Part]
 stringsDiv6NoBass    = [violins1,violins2,violas1,violas2,cellos1,cellos2]
 stringsDiv6NoBassHi  = [violins1_1,violins1_2,violins2,violas,cellos1,cellos2]
 stringsDiv6NoBassHi' = [violins1_1,violins1_2,violins2_1,violins2_2,violas,cellos1]  -- No cello II
@@ -419,6 +441,7 @@ stringsDiv6NoBassHi''= [violins1_1,violins1_2,violins2_1,violins2_2,violas1,viol
 stringsDiv6NoBassLo  = [violins2,violas,cellos1of4,cellos2of4,cellos3of4,cellos4of4] -- No violin I
 stringsDiv6NoBassLo' = [violas1,violas2,cellos1of4,cellos2of4,cellos3of4,cellos4of4] -- No violins
 
+{-
 -- vI vI vlaI vlaII vcI vcII
 -- vI.1 vI.2 vII vla vcI vcII
 -- vI.1 vI.2 vII vla vcI vcII
@@ -433,9 +456,6 @@ flutesDiv3 = [flutes1,flutes2,flutes3]
 oboesAndCAs = [oboes1,oboes2,corAnglaises]
 trumpDiv2 = [trumpets1,trumpets2]
 
-stringsDiv8, stringsDiv8NoBass :: [Part]
-stringsDiv8       = [violins1_1,violins1_2,violins2_1,violins2_2,violas,cellos1,cellos2,basses]
-stringsDiv8NoBass = [violins1_1,violins1_2,violins2_1,violins2_2,violas1,violas2,cellos1,cellos2]
 
 stringsDiv10 :: [Part]
 stringsDiv10       = [violins1_1,violins1_2,violins2_1,violins2_2,violas,cellos1of4,cellos2of4,cellos3of4,cellos4of4,basses]
@@ -444,6 +464,9 @@ stringsDiv10NoBass :: [Part]
 stringsDiv10NoBass = [violins1_1,violins1_2,violins2_1,violins2_2,violas1,violas2,cellos1of4,cellos2of4,cellos3of4,cellos4of4]
 -- Note: consider colour differences: low violins vs. high cellos, just using violas and basses a la Pathetique, etc
 -}
+stringsDiv8, stringsDiv8NoBass :: [Part]
+stringsDiv8       = [violins1_1,violins1_2,violins2_1,violins2_2,violas,cellos1,cellos2,basses]
+stringsDiv8NoBass = [violins1_1,violins1_2,violins2_1,violins2_2,violas1,violas2,cellos1,cellos2]
 
 high3ToLow3 :: (HasParts' a, S.Part a ~ Part) => a -> a
 high3ToLow3 = replaceParts [(violins1,cellos1),(violins2,cellos2),(violas,doubleBasses)]
