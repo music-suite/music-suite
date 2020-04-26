@@ -2586,7 +2586,7 @@ in trackToScore (1/8) y
 ```
 -->
 
-## Aligned
+## Alignment
 
 The @[Aligned] type adds position to anything with a duration. This is akin to alignment in computer graphis, hence the name. Alignment works by picking:
 
@@ -2616,6 +2616,8 @@ delay 2 -- TODO get rid of this, see wall of shame
 
 The `||>` operator is similar to the normal sequential composition operator `|>`, but aligns the result to the point of composition.
 
+
+TODO align and realign
 
 <!--
 TODO sequential composition of aligned voices "snap to next stressed beat":
@@ -2817,7 +2819,7 @@ variation
 
 - Lambdas and abstracting out common patterns
 
-- Infinite streams, take, drop
+- Infinite streams, take, drop, generative music
 
 - "Indexed loops", zips, zipWith [0..]
 
