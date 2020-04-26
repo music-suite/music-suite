@@ -2,9 +2,11 @@
 
 ## Installing
 
+<!--
 ### Installing via Docker
 
 TODO Docker or other "easy" install options
+-->
 
 ### Installing from source
 
@@ -557,11 +559,9 @@ Intervals be understood as:
 
 - A pair of diatonic and (total) chromatic steps, *or*
 - A pair of diatonic steps and alteration, *or*
-- A pair of number and quality
+- A pair of @[number] and @[quality]
 
 Not all combinations of number and quality makes sense.
-
-TODO @[number] @[quality]
 
 For numbers, we follow traditional music theory conventions in counting from one. In other words, a second consists of one diatonic step, a third of two diatonic steps, and so on. We can convert between these using @[diatonicSteps]:
 
@@ -578,10 +578,19 @@ For numbers, we follow traditional music theory conventions in counting from one
 
 > Warning: The number `0` is undefined.
 
-TODO for pitches, extract name/accidental/octave:
+We can extract @[name], @[accidental] and @[octave] number from a pitch:
 
-@[name]
-@[accidental]
+```haskell
+>>> name c
+C :: Name
+
+>>> accidental c
+natural
+
+>>> accidental cs
+sharp
+```
+
 
 ### Interval overloading
 
@@ -665,7 +674,7 @@ pseq $ fmap (\x -> over pitches' (relative c $ spell x)  $ ppar [as,cs,ds,fs])
 ]
 ```
 
-TODO simpler short cut for `over pitches' (relative c $ spell ...)`:
+<!-- TODO simpler short cut for `over pitches' (relative c $ spell ...)`: -->
 
 ```music+haskell
 x </> over pitches' (relative c $ spell modally) x
@@ -791,7 +800,12 @@ In this case, the origin is also used as the tonic of the implied diatonic scale
 
 ## Listing and traversing pitches
 
-TODO forward reference to traversals chapter, @[HasPitch]
+You can extract all the pitches from a piece of music like this:
+
+```music+haskell
+inspectableToMusic $
+  toListOf pitches' (pseq [c,d, ppar[e,g]] :: Music)
+```
 
 > Note: `pitches` is a example of a [traversal](#traversals). We'll learn more about these later on.
 
@@ -1211,7 +1225,7 @@ Calculate dissonance of a chord (classical/"objective", by higest common fundame
 
 
 
-
+<!--
 # Absolute pitch
 
 In the previous chapters we worked exclusivey with Pitch/Interval. These restrict
@@ -1241,7 +1255,7 @@ TODO 24TET ("quarter tones")
 ## Beyond diatonic/chromatic
 
 TODO the Common.Pitch type has built-in support for chromatic/diatonic harmony. We can construct types that support other system instead.
-
+-->
 
 
 
@@ -1316,8 +1330,9 @@ cresc pp mf $ (times 8 $ pseq [c,d,e,f,g]) |/8
 
 ### How dynamics are represented
 
-TODO value at each note. No need to explicitly draw indications or cresc./dim. lines.
-This means you can freely split/merge without having to worry about dynamics.
+It is important to understand that dynamics are not stored as *marks and
+lines*, but rather as values attached to each note. This means you can freely
+split and merge without having to worry about dynamics.
 
 In general, a new dynamic mark is drawn at the start of each entry, that is after
 each period of rests per voice. However if the dynamic has not changed the mark is only
@@ -2524,6 +2539,7 @@ fmap Just $ renderPattern (a <> b <> delay (1/4) c <> delay (1/4) d) (0 <-> 2)
 
 The @[renderPattern] function returns the events of the pattern within a given time span.
 
+<!--
 TODO finish/move to examples:
 
 ```TODOmusic+haskell
@@ -2559,6 +2575,7 @@ inspectableToMusic bachCMajChords
     bachCMajPattern :: (Num a) => Pattern a
     bachCMajPattern = newPattern $ stretchTo 1 $ (view voice) $ fmap pure [0,1,2,3,4,2,3,4]
 ```
+-->
 
 <!--
 ## Splitting and reversing
@@ -2627,7 +2644,7 @@ variation
 
 - Basic repeatition: @[times], @[replicate]
 
-- Lambdas anda abstracting out
+- Lambdas and abstracting out common patterns
 
 - Infinite streams, take, drop
 
