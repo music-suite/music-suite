@@ -5,6 +5,7 @@
 {-# LANGUAGE OverloadedLists #-}
 
 import Music.Prelude
+import qualified Music.Score.Articulation as S
 
 {- TODO basic idea here is:
  -
@@ -163,7 +164,8 @@ topLevelScore =
 -- |
 -- Alternative to 'render' just to get a sense of 'topLevelScore'.
 renderSimple ::
-  (IsPitch a, Transposable a) => Block -> Pattern a
+  (IsPitch a, Transposable a, HasArticulations' a, Articulated (S.Articulation a))
+    => Block -> Pattern a
 renderSimple Block {col, range, texture} = stretch 20 $
   let h =
         case range of
@@ -178,7 +180,7 @@ renderSimple Block {col, range, texture} = stretch 20 $
         Brown -> c
 
 render ::
-  (IsPitch a, Transposable a) => Block -> Pattern a
+  (IsPitch a, Transposable a, HasArticulations' a) => Block -> Pattern a
 render Block {col, range, texture = Chord} = case col of
   Blue ->
     mconcat [c_, a_,fs]
