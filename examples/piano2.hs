@@ -31,6 +31,7 @@ import qualified Music.Score.Pitch as S
  -
  - Try not to *add more types*! Focus on the values.
  -
+ - Also a solution to the above: simpler patterns and simpler topLevelScore!
  -}
 main =
   -- TODO workaround for the fact that the REPL can only show
