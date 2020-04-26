@@ -42,7 +42,7 @@ main =
   -- defaultMain music
   defaultMain $
     inspectableToMusic @(Pattern StandardNote)
-      windAgile
+      lutoslaw
 
 music :: Music
 music =
@@ -275,6 +275,28 @@ windAgile = phasePatterns fluteOboeDiv6 y z
         , [e,a,a,a,rest,e,a,a,rest|*3]
         ]
 
+lutoslaw :: (Aspects a, Transformable a) => Pattern (Maybe a)
+lutoslaw = fmap (compress 4) $ phasePattern x [0>->1,0.25>->1,5>->2,6>->2] pat
+  where
+    x = [oboes1,clarinets1,oboes2,clarinets2,clarinets3]
+    pat = newPattern (up _P8 $ lutoslawFalling <> rest|*3)
+
+-- Just f,e, can be replaced by [d,c], [e,d], [g,f] or [a,g]
+lutoslawTrillToStacc :: IsPitch a => Voice a
+lutoslawTrillToStacc =
+  [((1/32),f)^.note,((1/32),e)^.note,((1/32),f)^.note,((1/32),e)^.note,((1/32),f)^.note,((1/32),e)^.note,
+  ((1/32),f)^.note,((1/32),e)^.note,((1/32),f)^.note,((1/32),e)^.note,((1/32),f)^.note,((1/32),e)^.note,
+  ((1/16),f)^.note,((1/16),f)^.note,((1/16),f)^.note,((1/16),f)^.note,((1/16),f)^.note,((1/16),f)^.note]^.voice
+
+lutoslawFalling :: IsPitch a => Voice a
+lutoslawFalling =
+  [((1/2),d)^.note,((1/8),d)^.note,((1/32),d)^.note,((1/32),e)^.note,((1/32),fs)^.note,((1/32),d)^.note,((1/4),cs)^.note,
+  ((1/4),cs)^.note]^.voice
+
+phasePattern :: (Aspects a, Monoid a, Transformable a, S.Part a ~ Part)
+  => [Part] -> [Span] -> a -> a
+phasePattern ps s pat = phasePatterns ps s (repeat pat)
+
 -- |
 -- Build a pattern by applying the different transformations in different parts.
 --
@@ -290,41 +312,52 @@ phasePatterns x y z = mconcat $ zipWith3 j x y z
 
 fluteOboeDiv6 :: [Part]
 fluteOboeDiv6       = [flutes1,flutes2,flutes3,oboes1,oboes2,corAnglaises]
-[_flutes1,_flutes2,flutes3] = divide 3 flutes
-[_oboes1,_oboes2,oboes3] = divide 3 oboes
 
-{-
 oboeClarinetDiv6IL :: [Part]
 oboeClarinetDiv6IL  = [oboes1,oboes2,clarinets1,clarinets2,clarinets3,corAnglaises]
+
+oboeFluteDiv6IL :: [Part]
 oboeFluteDiv6IL     = [oboes1,oboes2,flutes1,flutes2,flutes3,corAnglaises]
 
-fluteClarinetDiv6   = [flutes1,flutes2,flutes3,clarinets1,clarinets2,clarinets3]
-fluteClarinetDiv6IL = [flutes1,flutes2,clarinets1,flutes3,clarinets2,clarinets3]
-fluteOboeDiv6IL     = [flutes1,flutes2,oboes1,flutes3,oboes2,corAnglaises]
-fluteOboeDiv6IL'    = [flutes1,oboes1,flutes2,oboes2,flutes3,corAnglaises]
+-- fluteClarinetDiv6   = [flutes1,flutes2,flutes3,clarinets1,clarinets2,clarinets3]
+-- fluteClarinetDiv6IL = [flutes1,flutes2,clarinets1,flutes3,clarinets2,clarinets3]
+-- fluteOboeDiv6IL     = [flutes1,flutes2,oboes1,flutes3,oboes2,corAnglaises]
+-- fluteOboeDiv6IL'    = [flutes1,oboes1,flutes2,oboes2,flutes3,corAnglaises]
 
-clarinetsDiv3 = [clarinets1,clarinets2,clarinets3]
-bassoonsDiv3 = [bassoons1,bassoons2,bassoons3]
+-- clarinetsDiv3 = [clarinets1,clarinets2,clarinets3]
+-- bassoonsDiv3 = [bassoons1,bassoons2,bassoons3]
 
-fluteOboeClarinetDiv9 = [flutes1,flutes2,flutes3,oboes1,oboes2,corAnglaises,clarinets1,clarinets2,clarinets3]
-woodwindsDiv12 = [flutes1,flutes2,flutes3,oboes1,oboes2,corAnglaises,clarinets1,clarinets2,clarinets3,bassoons1,bassoons2,bassoons3]
+-- fluteOboeClarinetDiv9 = [flutes1,flutes2,flutes3,oboes1,oboes2,corAnglaises,clarinets1,clarinets2,clarinets3]
+-- woodwindsDiv12 = [flutes1,flutes2,flutes3,oboes1,oboes2,corAnglaises,clarinets1,clarinets2,clarinets3,bassoons1,bassoons2,bassoons3]
 
-woodwindsDiv12Loud = [
-  flutes1,flutes2,clarinets1,flutes3,oboes1,oboes2,
-  clarinets2,corAnglaises,clarinets3,bassoons1,bassoons2,bassoons3
-  ]
-woodwindsDiv12Soft = [
-  oboes1,oboes2,flutes1,flutes2,flutes3,corAnglaises,
-  clarinets1,clarinets2,bassoons1,clarinets3,bassoons2,bassoons3
-  ]
+-- woodwindsDiv12Loud = [
+--   flutes1,flutes2,clarinets1,flutes3,oboes1,oboes2,
+--   clarinets2,corAnglaises,clarinets3,bassoons1,bassoons2,bassoons3
+--   ]
+-- woodwindsDiv12Soft = [
+--   oboes1,oboes2,flutes1,flutes2,flutes3,corAnglaises,
+--   clarinets1,clarinets2,bassoons1,clarinets3,bassoons2,bassoons3
+--   ]
 
+trumpetsDiv3 :: [Part]
 trumpetsDiv3        = [trumpets1,trumpets2,trumpets3]
+
+trombonesDiv3 :: [Part]
 trombonesDiv3       = [trombones1,trombones2,trombones3]
+
+trombsDiv6 :: [Part]
 trombsDiv6           = trumpetsDiv3 <> trombonesDiv3
+
+trombsDiv5 :: [Part]
 trombsDiv5 = trumpetsDiv3 <> [trombones1,trombones2]
+
+hornsBsnDiv6 :: [Part]
 hornsBsnDiv6        = [horns1,horns2,bassoons1,bassoons2,horns3,horns4]
+
+lowBrassDiv4 :: [Part]
 lowBrassDiv4        = trombonesDiv3 <> [tub]
 
+hornsDiv4 :: [Part]
 hornsDiv4 = [horns1,horns2,horns3,horns4]
 
 
@@ -338,6 +371,7 @@ hornsDiv4 = [horns1,horns2,horns3,horns4]
 [cellos1of4,cellos2of4,cellos3of4,cellos4of4] = divide 4 cellos
 
 
+{-
 highStringsDiv4 = [violins1_1,violins1_2,violins2_1,violins2_2]
 lowStringsDiv4 = [violas1,violas2,cellos1,cellos2] -- also consider cellos a4!
 
@@ -378,6 +412,28 @@ stringsDiv10NoBass :: [Part]
 stringsDiv10NoBass = [violins1_1,violins1_2,violins2_1,violins2_2,violas1,violas2,cellos1of4,cellos2of4,cellos3of4,cellos4of4]
 -- Note: consider colour differences: low violins vs. high cellos, just using violas and basses a la Pathetique, etc
 -}
+
+high3ToLow3 :: (HasParts' a, S.Part a ~ Part) => a -> a
+high3ToLow3 = replaceParts [(violins1,cellos1),(violins2,cellos2),(violas,doubleBasses)]
+
+[_flutes1,_flutes2,flutes3] = divide 3 flutes
+[_oboes1,_oboes2,oboes3] = divide 3 oboes
+[_clarinets1,_clarinets2,clarinets3] = divide 3 clarinets
+[bassoons1,bassoons2,bassoons3] = divide 3 bassoons
+
+[horns1,horns2,horns3,horns4] = divide 4 horns
+[_trumpets1,_trumpets2,trumpets3] = divide 3 trumpets
+[_trombones1,_trombones2,trombones3] = divide 3 trombones
+
+basses = tutti doubleBass
+timp = tutti timpani
+[timp1,timp2] = divide 2 timp
+cel = tutti celesta
+vib = tutti vibraphone
+hrp = harp
+tub = tutti tuba
+
+_corAnglaises = tutti corAnglais
 
 spat :: [Note a] -> Pattern a
 spat = newPattern . mconcat . map noteToVoice
