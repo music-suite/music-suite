@@ -2454,7 +2454,6 @@ delay 1 $ stretch 0.5 c
 
 ```music+haskell
 inspectableToMusic @(Event Pitch) $
-
 delay 1 $ stretch 0.5 c
 ```
 
@@ -3122,9 +3121,7 @@ Usage: <executable> -f [xml|ly|mid] -o PATH
 To select e.g. the Lilypond backend:
 
 ```bash
-cabal exec runhaskell test.hs -- -f ly -o hello.ly
-```
-
+$ cabal exec runhaskell test.hs -- -f ly -o hello.ly ```
 <!-- TODO API to select backend rather than CLI -->
 
 ## Overview of backends
@@ -3253,9 +3250,6 @@ rcat $ fmap renderAlignedVoice $ delay 1
 In other words, scores with events before time 0 should be treated as pickups and rendered in the same time signature as the first bar (starting at 0).
 
 
-### Staves
-
-### Misc
 
 
 # Acknowledgements
