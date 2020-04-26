@@ -68,6 +68,8 @@ Consider switching to a decentralized issue tracker such as:
   - Move varticulation, addArticulation out of public API
   - Move vdynamic, addDynCon out of public API
   - Move vtechnique, etc out of public API
+  - Make Aligned a HKT, e.g. instead of (Aligned . Voice), we'd use (Aligned Voice)
+    (with the same Applicative)
   - Put combinators (not classes) on top of the following modules
     - Music.Score.Articulation
     - [X] Music.Score.Dynamics

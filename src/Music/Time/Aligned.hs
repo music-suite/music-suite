@@ -68,7 +68,7 @@ align l (Aligned ((t, _), a)) = Aligned ((t, l), a)
 -- This is analogous to alignment in a graphical program. To align something at onset, midpoint
 -- or offset, use 0, 0.5 or 1 as the local duration value.
 newtype Aligned v = Aligned {_getAligned :: ((Time, Alignment), v)}
-  deriving (Functor, Eq, Ord, Foldable, Traversable)
+  deriving (Functor, Eq, Ord, Foldable, Traversable, Applicative)
 
 unAlign :: Aligned a -> a
 unAlign (Aligned (_, x)) = x
@@ -138,8 +138,6 @@ noteToEventInEra e = set era e . view notee . fmap pure
 
 durationToSpanInEra :: Span -> Duration -> Span
 durationToSpanInEra = const
-
--- TODO compare placeAt etc.
 
 -- | Convert an aligned voice to a score.
 renderAlignedVoice :: Aligned (Voice a) -> Score a
