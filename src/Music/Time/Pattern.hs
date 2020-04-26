@@ -1,6 +1,16 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -10,6 +20,8 @@
   -fno-warn-deprecations
   -fno-warn-unused-imports
   -fno-warn-unused-matches #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-} -- TODO FIXME
+{-# OPTIONS_GHC -fno-warn-unused-top-binds #-} -- TODO FIXME
 
 module Music.Time.Pattern
   ( Pattern,
@@ -25,6 +37,7 @@ import Control.Lens (Rewrapped, Wrapped (..), (^.), _Wrapped, from, iso, over, v
 import Control.Monad (join)
 import Data.AffineSpace
 import Data.VectorSpace
+import Data.Bifunctor (first)
 import Music.Pitch (IsPitch (..))
 import Music.Pitch.Literal (c)
 import Music.Score.Part
@@ -38,7 +51,9 @@ import Music.Time.Placed
 import Music.Time.Score
 import Music.Time.Transform
 import Music.Time.Voice
-import Control.Monad.State
+import Control.Monad.State.Strict
+import Control.Monad.Except
+import Iso.Deriving
 
 instance (IsPitch a) => IsPitch (Pattern a) where
   fromPitch = pureP . fromPitch
@@ -164,9 +179,54 @@ renderLunga s (Lunga (d, _, b))
     fullCycles = fromIntegral $ n2 - n1 -- 0 or greater
     voca = dropM r1 $ takeM (d ^* fullCycles) b <> takeM r2 b
 
+
+-- |
+-- Abort is like 'State' but allow short-circuiting the computation.
+data Abort s a = Abort { runAbort :: s -> (Maybe a, s) }
+  deriving (Functor)
+  deriving (Applicative, Monad, MonadState s) via
+    (ExceptT () (State s) `As1` Abort s)
+
+-- | Abort the computation. The current state will be retained, but no
+-- result will be returned.
+abort :: Abort s a
+abort = Abort $ \s -> (Nothing, s)
+
+quit :: a -> Abort s a
+quit x = Abort $ \s -> (Just x, s)
+
+instance Inject (ExceptT () (State s) a) (Abort s a) where
+  inj (ExceptT f) = Abort $ \s -> first eitherToMaybe $ runState f s
+instance Project (ExceptT () (State s) a) (Abort s a) where
+  prj (Abort f) = ExceptT $ StateT $ fmap (pure . first maybeToEither) f
+instance Isomorphic (ExceptT () (State s) a) (Abort s a)
+
+eitherToMaybe :: Either a b -> Maybe b
+eitherToMaybe (Left _) = Nothing
+eitherToMaybe (Right x) = Just x
+
+maybeToEither :: Maybe a -> Either () a
+maybeToEither Nothing = Left ()
+maybeToEither (Just x) = Right x
+
+-- TODO move
+-- TODO undecidable
+instance forall f g s . (forall x . Isomorphic (f x) (g x), MonadState s f) =>
+  MonadState s (As1 f g) where
+    state :: forall a . (s -> (a, s)) -> As1 f g a
+    state k = As1 $ inj @(f a) @(g a) (state @s @f k)
+
+t :: Abort Int ()
+t = do
+  !x <- get
+  when (x > 10) abort
+  put $ x + 1
+  t
+
 takeM, dropM :: Duration -> Voice a -> Voice a
 takeM = undefined -- beginning
 dropM = undefined -- ending
+
 
 -- List of repeated voices
 -- TODO is this isomorphic to Tidal's pattern (i.e. Span -> Score a)
