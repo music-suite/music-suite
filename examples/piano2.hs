@@ -6,12 +6,24 @@
 
 import Music.Prelude
 
+{- TODO basic idea here is:
+ -
+ -  * Have a topLevelScore of some custom type Block
+ -  * Use a render function (Block -> Pattern a) and renderPatternsAbs
+ -
+ - This is nice, but a basic problem is the difficulty of
+ - visualizing/understanding the topLevelScore and render function separately.
+ - We could use a graphical backend for topLevelScore.
+ -
+ - How about the render function?
+ -
+ -}
 main = defaultMain music
 
 music :: Music
 music =
   fmap Just $ renderPatternsAbs
-    $ fmap render
+    $ fmap renderSimple
     $ topLevelScore
 
 -- TODO add info
@@ -152,7 +164,7 @@ topLevelScore =
 -- Alternative to 'render' just to get a sense of 'topLevelScore'.
 renderSimple ::
   (IsPitch a, Transposable a) => Block -> Pattern a
-renderSimple Block {col, range, texture} =
+renderSimple Block {col, range, texture} = stretch 20 $
   let transp =
         case range of
           Hi -> up _P15
