@@ -280,12 +280,11 @@ Comments are the same as in regular Haskell.
 ```
 
 
-## Chords and rests
+## Rests, tuplets and ties
 
-There is never any need to explicitly create rests, chords, tuplets or ties in Music Suite.
+There is never any need to explicitly create rests, tuplets or ties in Music Suite. Instead, each note exist in a dedicated time span, which can be inspected and transformed. When we compose music expressions in parallel, all notes are interleaved without affecting their onset or duration.
 
 Notes with the same onset and offset are rendered as chords by default.
-
 
 ```music+haskell
 pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]
@@ -297,14 +296,15 @@ Or, equivalently:
 ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
 ```
 
-> Note: To prevents notes from being merged into chords we must *explicitly* put them in separate parts. The `</>` and `rcat` combinators is a simple way of doing this.
+To prevents notes from being merged into chords we must *explicitly* put them in separate parts. The `</>` and `rcat` combinators is a simple way of doing this.
 
-Instead of using `delay` we can use `rest`. Rests are empty placeholders which take up space when using sequential composition but do not show up in the final score:
+To create space in our scores we can use `rest`. Rests are empty placeholders which take up space when using sequential composition but do not show up in the final score:
 
 ```music+haskell
 times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
 
+Rests can be stretched and delayed just like notes.
 
 Any note that crosses a barline will be notated using ties:
 
@@ -2197,6 +2197,7 @@ rehearsalMarkAt 1 (up m3 m) </> rehearsalMarkAt 2 m
 
 Rehearsal marks will always force a new bar.
 
+<!--
 ## Annotations
 
 Annotations are simply textual values attached to a specific section of the score. In contrast to other types of meta-information annotations always apply to the whole score, not to a single part. To annotate a score use @[annotate], to annotate a specific span, use @[annotateSpan].
@@ -2207,6 +2208,7 @@ Annotations are *invisible by default*. To show annotations in the generated out
 ```TODOmusic+haskell
 showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 ```
+-->
 
 <!--
 ## Custom meta-information
@@ -2260,6 +2262,8 @@ TODO Use more specicif wrappers to preserve `Transformable`
 
 ## Basic time types
 
+### Time and Duration
+
 Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
 
 Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
@@ -2272,10 +2276,18 @@ Time points form an affine space over durations, so we can use the operators @[.
 5 :: Time
 ```
 
-The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
+### Time spans
+
+The @[Span] type represents a non-empty *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
 
 ```haskell
 >>> 2 <-> 3
+(2 <-> 3) :: Duration
+
+>>> 2 >-> 1
+(2 <-> 3) :: Duration
+
+>>> 1 <-< 3
 (2 <-> 3) :: Duration
 ```
 
@@ -2298,6 +2310,17 @@ For those familiar with linear algebra or computer graphics: Because time is one
 TODO transformations act upon time types. The basic intuition is that they move all the points.
 
 Applying the empty transformation changes nothing, and applying a composition of transfomrations is equivalent to applying them all from innermost to outermost (the Transformable laws).
+
+### Translation-invariant types
+
+TODO Explain delay-invariant transformations: applying transformations to `Span` performs the delay/translation, applying to `Duration` does not. Note that this does *not* invalidate the laws. We can think of our time types as coming in two shapes:
+
+- Translation-invariant types such as `Duration` are "floating" without being anchored to specific start/stop time (though they still have a duration)
+- Translation-variant types such as `Span` have both a specific duration and a specific point in which they "occur" relative to ther events.
+
+### TimeInterval
+
+The @[TimeInterval] type is exactly the same as span, but also allows for empty spans to be represented. It forms a monoid with the convex @[hull] operator.
 
 
 
@@ -2325,13 +2348,6 @@ TODO example with stretchRelative, stretchTo
 
 The laws for @[HasPosition] and @[HasPosition1] are not too exciting: they assure that transforming a value also transforms its position in the same manner, and that the duration of a value is exactly the duration between its onset and offset point.
 
-
-## Translation-invariant types
-
-TODO Explain delay-invariant transformations: applying transformations to `Span` performs the delay/translation, applying to `Duration` does not. Note that this does *not* invalidate the laws. We can think of our time types as coming in two shapes:
-
-- Translation-invariant types such as `Duration` are "floating" without being anchored to specific start/stop time (though they still have a duration)
-- Translation-variant types such as `Span` have both a specific duration and a specific point in which they "occur" relative to ther events.
 
 
 
@@ -2710,22 +2726,36 @@ A @[Reactive] is like a behaviours that can only change at certain well-known lo
 
 # Traversals
 
-In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions. Traverals are a very powerful concept and we'll only scratch the surface here.
+In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions. Traverals are a subtle and powerful concept. The basic ideas is simple: given some functor type we have a way of visiting all the elements in a given order.
 
-They can be used to:
+We can exploit this to:
 
-- Visit elements in a score
-- Querying/folding
-- Updating
+- Accumulate computations over all the elements
+- Searching and querying the elements
+- Update the elements one at a time
 
-> Note: Mutating data structures is completely disallowed in Music suite, so whenever we refer to "change" or "update" in the context of a data structure, we are actually creating new structures on the fly.
+> Note: Mutating data structures is completely disallowed in Haskell, so whenever we refer to "change" or "update" in the context of a data structure, we are actually creating new structures on the fly.
+
+Let's look at the type of the @[traverse] function:
+
+```haskell
+>>> traverse @[]
+traverse :: Applicative f => (a -> f b) -> [a] -> f [b]
+```
+
+TODO similarly
+
+```haskell
+>>> pitches' @Score :: (Pitch -> f Pitch) -> Score Pitch -> f (Score Pitch)
+```
 
 TODO some traversals we have already seen: pitches, parts, dynamics, articulation, techniques.
 
+<!--
 A traversal that targets exactly one element is known as a *lens*. We've already seen examples of lenses and traversals in the chapters on [dynamics](TODO) and [articulation](TODO) in the form of `.~` (or `set`) operator.
 
 > Note: For those familiar lenses in Haskell: Music Suite defines lenses and traversals compatible with the `lens` and `microlens` packages.
-
+-->
 
 
 TODO monomorphic and polymorphic traversals (and switch names: `pitch'` is used much more than `pitch`!)
