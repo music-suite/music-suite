@@ -29,6 +29,7 @@ import Music.Pitch (IsPitch (..))
 import Music.Pitch.Literal (c)
 import Music.Score.Part
 import Music.Score.Pitch
+import Music.Score.Articulation
 import Music.Time.Aligned
 import Music.Time.Event
 import Music.Time.Juxtapose
@@ -91,6 +92,13 @@ type instance SetPitch b (Lunga a) = Lunga (SetPitch b a)
 type instance Part (Lunga a) = Part a
 
 type instance SetPart b (Lunga a) = Lunga (SetPart b a)
+
+type instance Articulation (Lunga a) = Articulation a
+
+type instance SetArticulation b (Lunga a) = Lunga (SetArticulation b a)
+
+instance HasArticulations a b => HasArticulations (Lunga a) (Lunga b) where
+  articulations = traverse . articulations
 
 instance HasPitches a b => HasPitches (Lunga a) (Lunga b) where
   {-
@@ -171,6 +179,13 @@ instance Wrapped (Pattern a) where
   _Wrapped' = iso getPattern Pattern
 
 instance Rewrapped (Pattern a) (Pattern b)
+
+type instance Articulation (Pattern a) = Articulation a
+
+type instance SetArticulation b (Pattern a) = Pattern (SetArticulation b a)
+
+instance HasArticulations a b => HasArticulations (Pattern a) (Pattern b) where
+  articulations = _Wrapped . articulations
 
 type instance Pitch (Pattern a) = Pitch a
 

@@ -165,11 +165,15 @@ topLevelScore =
 renderSimple ::
   (IsPitch a, Transposable a) => Block -> Pattern a
 renderSimple Block {col, range, texture} = stretch 20 $
-  let transp =
+  let h =
         case range of
           Hi -> up _P15
           Lo -> id
-   in transp $ case col of
+      i =
+        case texture of
+          Chord -> accentAll
+          Repeat -> id
+   in h $ i $ case col of
         Blue -> g
         Brown -> c
 

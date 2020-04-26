@@ -75,7 +75,12 @@ import Music.Score.Phrases
 import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
-import Music.Time
+import Music.Time.Voice
+import Music.Time.Score
+import Music.Time.Track
+import Music.Time.Note
+import Music.Time.Placed
+import Music.Time.Event
 import Music.Time.Internal.Transform
 
 -- |
