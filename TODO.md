@@ -14,6 +14,8 @@ Consider switching to a decentralized issue tracker such as:
 - [X] Bug: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
   Intervals not displayed properly
 
+- [ ] Bug: Scores with harp do not render in Lilypond
+
 - [ ] Bug: since GHC 8.8.3 upgrade, doctester does not compile
   - Try cabal-doctest instead https://github.com/phadej/cabal-doctest
 

@@ -41,8 +41,9 @@ main =
 
   -- defaultMain music
   defaultMain $
-    inspectableToMusic @(Pattern StandardNote)
-      lutoslaw
+    renderPattern
+      crot2Pitches
+      (0 <-> 10)
 
 music :: Music
 music =
@@ -293,6 +294,37 @@ lutoslawFalling =
   [((1/2),d)^.note,((1/8),d)^.note,((1/32),d)^.note,((1/32),e)^.note,((1/32),fs)^.note,((1/32),d)^.note,((1/4),cs)^.note,
   ((1/4),cs)^.note]^.voice
 
+
+
+hrpGliss :: Aspects a => (Pattern a)
+hrpGliss = set (mapped . parts') hrp $ compress 32 $ spat $ fmap fromPitch $ palindr $ enumDiatonicFromTo c_ c''
+
+-- TODO hrp high phased harmonics (2-3 of them, simple!!)
+
+hrpBroken :: Aspects a => (Pattern a)
+hrpBroken = set (mapped . parts') hrp $ compress 8 $ spat [d_,f_,a_,c,e,g,e,c,a_,f_]
+-- TODO bad spacing! see also celBroken
+
+hrp2Pitches :: Aspects a => (Pattern a)
+hrp2Pitches = set (mapped . parts') hrp $ compress 16 $ fmap (octavesUp 1) $ spat [c,d]
+
+
+hrpBisb :: Aspects a => (Pattern a)
+hrpBisb = set (mapped . parts') hrp $ compress 16 $ fmap (octavesUp 1) $ spat [c]
+
+vibBroken :: Aspects a => (Pattern a)
+vibBroken = set (mapped . parts') vib $ compress 8 $ fmap (octavesUp 1) $ spat [d_,f_,a_,c,e,g]
+-- TODO bad spacing!
+
+vib2Pitches :: Aspects a => (Pattern a)
+vib2Pitches = set (mapped . parts') vib $ compress 16 $ fmap (octavesUp 1) $ spat [c,d]
+
+-- TODO add crotales to library
+crot = tutti glockenspiel
+
+crot2Pitches :: Aspects a => (Pattern a)
+crot2Pitches = set (mapped . parts') crot $ compress 16 $ fmap (octavesUp 1) $ spat [c,d]
+
 phasePattern :: (Aspects a, Monoid a, Transformable a, S.Part a ~ Part)
   => [Part] -> [Span] -> a -> a
 phasePattern ps s pat = phasePatterns ps s (repeat pat)
@@ -443,3 +475,12 @@ ppat = mconcat . map (pureP . noteToVoice)
 
 pureP :: a -> Pattern a
 pureP = newPattern . pure
+
+palindr :: [a] -> [a]
+palindr []  = error "palindromeL: empty list"
+palindr [x] = [x]
+palindr xs@(_:_)  = begin <> middle <> end <> reverse middle
+  where
+    begin  = pure (head xs)
+    middle = init (tail xs)
+    end    = pure (last xs)
