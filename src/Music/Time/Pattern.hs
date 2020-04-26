@@ -333,7 +333,7 @@ modDur a b = snd $ a `divModDur` b
 getCycles :: Span -> Span -> (Duration, Integer, Duration)
 getCycles ts s
   | _duration ts <= 0 = error "getCycles: Duration of repeated span must be >0"
-  | _duration s < _duration ts = (_duration s, 0, 0)
+  | _duration s < _duration ts = (0, 0, _duration s)
   | otherwise = (rem, cycles, phase)
   where
     phase = (view offset s .-. view offset ts) `modDur` _duration ts
@@ -346,7 +346,7 @@ testGetCycles = all id
   , getCycles (0 <-> 2) (1 <-> 4) == (1, 1, 0)
   , getCycles (0 <-> 2) ((-1) <-> 5) == (1, 2, 1)
   , getCycles (0 <-> 2) ((-9) <-> (-2.5)) == (1, 2, 1.5)
-  , getCycles (1 <-> 3) (1 <-> 2) == (1, 0, 0)
+  , getCycles (1 <-> 3) (1 <-> 2) == (0, 0, 1)
   , getCycles (0 <-> 2) (2 <-> 4) == (0, 1, 0)
   ]
 
@@ -355,6 +355,31 @@ instance (HasDuration a, Transformable a) => HasPosition [Aligned a] where
   _era xs = case foldMap (NonEmptyInterval . _era1) $ xs of
     EmptyInterval -> Nothing
     NonEmptyInterval x -> Just x
+
+testC :: Span -> Aligned (Voice a) -> (Duration, Integer, Duration)
+testC s l = getCycles (_era1 l) s
+
+testRenderLungaNEW :: Bool
+testRenderLungaNEW = all id
+  [ renderLungaNEW (0 <-> 2) aba
+  == [(0 <-> 1,'a')^.event,(1 <-> 2,'b')^.event]^.score
+
+  , renderLungaNEW (0 <-> 4) aba
+  == [(0 <-> 1,'a')^.event,(1 <-> 3,'b')^.event,(3 <-> 4,'c')^.event]^.score
+
+  , renderLungaNEW (0 <-> 1) aba
+  == [(0 <-> 1,'a')^.event]^.score
+
+  -- FIXME:
+  -- , renderLungaNEW ((-1)<->1) aba
+  -- == [(-1 <-> 0,'c')^.event,(0 <-> 1,'a')^.event]^.score
+
+  , renderLungaNEW (3<->8) aba
+  == [(3 <-> 4,'c')^.event,(4 <-> 5,'a')^.event,(5 <-> 7,'b')^.event,(7 <-> 8,'c')^.event]^.score
+  ]
+  where
+    aba =
+      (aligned 0 0 $ [(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
 
 -- TODO replace the old ones, change type of pattern to [Aligned (Voice a)]
 renderLungaNEW :: Span -> Aligned (Voice a) -> Score a
@@ -366,8 +391,8 @@ renderLungaNEW s l = mconcat $ fmap renderAlignedVoice $ [intro] ++ cycles ++ [o
       pure $ alignOnsetTo (view onset s .+^ introDur) (unAlign l)
     (introDur, numCycles, outroDur) = getCycles (_era1 l) s
 
-    alignOnsetTo t = alignTo t 0
-    alignOffsetTo t = alignTo t 1
+    alignOnsetTo t = aligned t 0
+    alignOffsetTo t = aligned t 1
 
 -- List of repeated voices
 -- TODO is this isomorphic to Tidal's pattern (i.e. Span -> Score a)

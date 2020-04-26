@@ -247,6 +247,9 @@ newtype Score' a = Score' {getScore' :: [Event a]}
 instance (Show a) => Show (Score a) where
   show x = show (x ^. events) ++ "^.score"
 
+instance (Eq a) => Eq (Score a) where
+  x == y = (x ^. events) == (y ^. events)
+
 deriving via
   (WriterT Span [] `As1` Score')
   instance
