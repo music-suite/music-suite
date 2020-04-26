@@ -240,13 +240,13 @@ testSplitAt = all id
 modDur :: Duration -> Duration -> Duration
 modDur a b = snd $ a `divModDur` b
 
-getCycles :: Span -> Span -> Either (Duration, Duration) (Duration, Integer, Duration)
+getCycles :: Span -> Span -> Either Duration (Duration, Integer, Duration)
 getCycles ts s
   | _duration ts <= 0 = error "getCycles: Duration of repeated span must be >0"
   --  | _duration s < _duration ts = (0, 0, _duration s)
   | otherwise = if cycles >= 0
       then Right (rem, cycles, phase)
-      else Left (_duration ts - rem, 0)
+      else Left (_duration ts - rem)
   where
     phase = (view offset s .-. view offset ts) `modDur` _duration ts
     (cycles, rem) = (_duration s - phase) `divModDur` _duration ts
@@ -262,10 +262,9 @@ testGetCycles = all id
   , getCycles (0 <-> 2) (2 <-> 4)         == Right (0, 1, 0)
 
   -- No full cycles, s properly enclosed by a cycle
-  -- TODO second pair component is useless, remove!
-  , getCycles (0 <-> 2) (0.5 <-> 1.5)     == Left  (0.5, 0)
-  , getCycles (0 <-> 2) (0.6 <-> 1.6)     == Left  (0.6, 0)
-  , getCycles (0 <-> 2) ((-0.2) <-> (-0.1)) == Left (1.8, 0)
+  , getCycles (0 <-> 2) (0.5 <-> 1.5)     == Left  (0.5)
+  , getCycles (0 <-> 2) (0.6 <-> 1.6)     == Left  (0.6)
+  , getCycles (0 <-> 2) ((-0.2) <-> (-0.1)) == Left (1.8)
 
   -- No full cycles, s NOT properly enclosed by a cycle
   , getCycles (1 <-> 3) (1 <-> 2)         == Right (0, 0, 1)
@@ -280,7 +279,7 @@ instance (HasDuration a, Transformable a) => HasPosition [Aligned a] where
     EmptyInterval -> Nothing
     NonEmptyInterval x -> Just x
 
-testC :: Span -> Aligned (Voice a) -> Either (Duration, Duration) (Duration, Integer, Duration)
+testC :: Span -> Aligned (Voice a) -> Either Duration (Duration, Integer, Duration)
 testC s l = getCycles (_era1 l) s
 
 testRenderLungaNEW :: Bool
@@ -327,7 +326,7 @@ testRenderLungaNEW = all id
 -- TODO replace the old ones, change type of pattern to [Aligned (Voice a)]
 renderLungaNEW :: Span -> Aligned (Voice a) -> Score a
 renderLungaNEW s l = case getCycles (_era1 l) s of
-  Left (phase, _) ->
+  Left phase ->
     renderAlignedVoice $ alignOnsetTo (view onset s)
       (takeM (_duration s) $ dropM phase $ unAlign l)
   Right (introDur, numCycles, outroDur) -> let
