@@ -109,7 +109,7 @@ instance Inspectable (ChordType Interval Pitch) where
   inspectableToMusic = inspectableToMusic . chord c
 
 instance Inspectable (Scale Interval Pitch) where
-  inspectableToMusic = inspectableToMusic . voiced . scaleToChord
+  inspectableToMusic = pseq . fmap fromPitch . toList . getVoiced . voiced . scaleToChord
 
 instance Inspectable (Chord Interval Pitch) where
   inspectableToMusic = inspectableToMusic . voiced
@@ -118,8 +118,8 @@ instance Inspectable (Voiced Chord Interval Pitch) where
   inspectableToMusic = fmap fromPitch . ppar . map (\x -> pure x :: Score Pitch) . toList . getVoiced
 
 -- TODO should be on separate staves, but without left binding (implying simultanuety)
--- instance Inspectable [Mode Interval Pitch] where
---   inspectableToMusic = rcat . fmap inspectableToMusic
+instance Inspectable [Mode Interval Pitch] where
+   inspectableToMusic = inspectableToMusic . fmap (scale c)
 
 -- TODO should be on separate staves, but without left binding (implying simultanuety)
 instance Inspectable [Scale Interval Pitch] where
