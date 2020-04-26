@@ -996,6 +996,43 @@ m3 :| [_M3,_P4] :: List.NonEmpty Interval
 
 The repeating interval of the chord is the sum of the vectors in the generator sequence:
 
+We can inspect the *repeating interval* of a scale like this:
+
+```haskell
+>>> repeatingInterval majorScale
+_P8
+```
+
+All scales and chords we have seen so far repeat at the octave, but this is not a hard requirement. For example @[quartal] and @[quintal] chords can be seen as one-note scales repeating at the eponymous interval:
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Interval Pitch] $
+
+[ voiceIn 5 $ chord c quartal
+, voiceIn 4 $ chord c quintal
+]
+```
+
+Similarly *clusters* are one-note scales repeating at the second:
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Interval Pitch] $
+
+[ voiceIn 5 $ chord c chromaticCluster
+, voiceIn 7 $ chord c wholeToneCluster
+]
+```
+
+And we can repeat at arbitrary intervals:
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Pitch] $
+
+[ voiceIn 3 $ chord c $ repeating m7
+]
+```
+
+
 ```haskell
 >>> repeatingInterval majorScale
 _P8 :: Interval
@@ -1075,7 +1112,7 @@ compress 2 $ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
-### Custom scales/chods
+### Custom scales and chords
 
 While Music Suite predefines all common practice modes, scales and chords, we can also create custom chords from any interval sequence.
 
@@ -1088,44 +1125,6 @@ inspectableToMusic @[ChordType Interval Pitch] $
 ]
 ```
 
-### Repeating scales/chords
-
-We can inspect the *repeating interval* of a scale like this:
-
-```haskell
->>> repeatingInterval majorScale
-_P8
-```
-
-All scales and chords we have seen so far repeat at the octave, but this is not a hard requirement. For example @[quartal] and @[quintal] chords can be seen as one-note scales repeating at the eponymous interval:
-
-```music+haskell
-inspectableToMusic @[Voiced Chord Interval Pitch] $
-
-[ voiceIn 5 $ chord c quartal
-, voiceIn 4 $ chord c quintal
-]
-```
-
-Similarly *clusters* are one-note scales repeating at the second:
-
-```music+haskell
-inspectableToMusic @[Voiced Chord Interval Pitch] $
-
-[ voiceIn 5 $ chord c chromaticCluster
-, voiceIn 7 $ chord c wholeToneCluster
-]
-```
-
-And we can repeat at arbitrary intervals:
-
-```music+haskell
-inspectableToMusic @[Voiced Chord Pitch] $
-
-[ voiceIn 3 $ chord c $ repeating m7
-]
-```
-
 
 <!--
 ### Non-repeating scales/chords
@@ -1134,7 +1133,7 @@ Non-repeating/self-repeating scales (e.g. the overtone series). TODO create by u
 -->
 
 
-### Modal rotation/inversion
+### Modal inversions
 
 The @[chord] function converts a mode into a scale/chord in root position.
 
@@ -1145,6 +1144,8 @@ inspectableToMusic @[Chord Pitch] $
 , chord c majorTriad
 ]
 ```
+
+For chord inversions in the usual sense, see [the next section](#voicings).
 
 <!--
 TODO `chord` gives you the root position, define a version of `chord` that gives you 1st, 2nd, 3rd inversion etc. For example 4th inversion of a ninth chord
@@ -1169,7 +1170,7 @@ TODO set operations on chords/scales (e.g. union/difference/intersection/isSubse
 
 
 
-## Voicing
+## Voicings
 
 Recall that chords are infinite sets. A @[Voicing] is a finite subset of that set. For a normal (octave-repeating) chord, it defines what pitches appear and in what octave.
 
