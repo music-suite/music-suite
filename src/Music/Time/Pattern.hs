@@ -20,7 +20,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -139,13 +138,6 @@ eitherToMaybe (Right x) = Just x
 maybeToEither :: Maybe a -> Either () a
 maybeToEither Nothing = Left ()
 maybeToEither (Just x) = Right x
-
--- TODO move this instance to iso-deriving
--- TODO undecidable
-instance forall f g s . (forall x . Isomorphic (f x) (g x), MonadState s f) =>
-  MonadState s (As1 f g) where
-    state :: forall a . (s -> (a, s)) -> As1 f g a
-    state k = As1 $ inj @(f a) @(g a) (state @s @f k)
 
 t :: Abort Int ()
 t = do

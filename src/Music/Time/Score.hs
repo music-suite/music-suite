@@ -94,7 +94,7 @@ import qualified Data.Traversable as T
 import Data.Typeable
 import Data.VectorSpace
 import Data.VectorSpace hiding (Sum (..))
-import Iso.Deriving
+import Iso.Deriving hiding (Iso, Iso')
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Time.Event
