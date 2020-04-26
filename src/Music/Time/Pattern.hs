@@ -236,6 +236,7 @@ takeM d = fst . splitAt d
 dropM d = snd . splitAt d
 
 data SplitAtState = SplitAtState { remainingDur :: Duration, notesEaten :: Integer }
+  deriving (Show)
 
 fromVoice :: Voice a -> [Note a]
 toVoice :: [Note a] -> Voice a
@@ -268,18 +269,23 @@ splitNotesAt n d xs
 
 -- TODO move splitAt to Time.Voice
 
-splitAt :: Duration -> Voice a -> (Voice a, Voice a)
-splitAt d xs =
-  f $ snd $ flip runAbort (SplitAtState { remainingDur = d, notesEaten = 0 }) $
+getSplitPoint :: Duration -> Voice a -> SplitAtState
+getSplitPoint d xs =
+  snd $ flip runAbort (SplitAtState { remainingDur = d, notesEaten = 0 }) $
     for (view notes xs) $ \note -> do
       SplitAtState { remainingDur, notesEaten } <- get
       if _duration note > remainingDur
         then
           abort
         else
-          put $ SplitAtState { remainingDur = remainingDur + _duration note, notesEaten = notesEaten + 1 }
+          put $ SplitAtState
+            { remainingDur = remainingDur - _duration note,
+            notesEaten = notesEaten + 1 }
+
+splitAt :: Duration -> Voice a -> (Voice a, Voice a)
+splitAt d xs = split $ getSplitPoint d xs
   where
-    f (SplitAtState { remainingDur, notesEaten })
+    split (SplitAtState { remainingDur, notesEaten })
       = ( splitNotesAt notesEaten remainingDur xs
         )
 
