@@ -1872,7 +1872,7 @@ The solo/tutti component is set to `Tutti` by default even though there might on
 ```music+haskell
 parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
   where
-    rh = stretchTo 1 . pseq -- TODO put this in the library?
+    rh = stretchTo 1 . pseq
 ```
 
 For rolls see [the previous section](tremolo-trills-and-rolls).
@@ -3234,7 +3234,7 @@ In other words, scores with events before time 0 should be treated as pickups an
 
 ## Contributors
 
-TODO thanks
+Music Suite was made possible by [all the contributors](https://github.com/music-suite/music-score/graphs/contributors).
 
 ## Previous work
 
