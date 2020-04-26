@@ -1162,11 +1162,11 @@ inspectableToMusic @[Chord Pitch] $
 -->
 
 
-
+<!--
 ### Set operations
 
 TODO set operations on chords/scales (e.g. union/difference/intersection/isSubset/isPowerset etc).
-
+-->
 
 
 
@@ -2633,7 +2633,9 @@ delay 2 -- TODO get rid of this, see wall of shame
 The `||>` operator is similar to the normal sequential composition operator `|>`, but aligns the result to the point of composition.
 
 
+<!--
 TODO align and realign
+-->
 
 <!--
 TODO sequential composition of aligned voices "snap to next stressed beat":
