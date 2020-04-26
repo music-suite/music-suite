@@ -6,8 +6,8 @@
 {-# LANGUAGE TypeApplications #-}
 
 import Music.Prelude
-import qualified Music.Score.Pitch as S
 import qualified Music.Score.Articulation as S
+import qualified Music.Score.Pitch as S
 
 {- TODO basic idea here is:
  -
@@ -39,7 +39,7 @@ main =
   -- defaultMain music
   defaultMain $
     inspectableToMusic @(Pattern Pitch)
-      p4_0
+      p4_2
 
 music :: Music
 music =
@@ -227,7 +227,6 @@ render Block {col, range, texture = Repeat} =
 p1 :: IsPitch a => Pattern a
 p1 = newPattern [a |* 3, d, e] |/ 8
 
-
 p1_1 :: IsPitch a => Pattern a
 p1_1 = newPattern [f, e, f, d, e, c, d |* 2, d |* 2] |/ 8
 
@@ -238,10 +237,13 @@ p2 :: IsPitch a => Pattern a
 p2 = newPattern [e, fs |* 2] |/ 3
 
 p4 :: IsPitch a => Pattern a
-p4 = newPattern [a,g,d,e] |/ 8
+p4 = newPattern [a, g, d, e] |/ 8
 
 p4_0 :: IsPitch a => Pattern a
-p4_0 = p4 <> delay (1/4) p4
+p4_0 = p4 <> delay (1 / 4) p4
 
 p4_1 :: IsPitch a => Pattern a
-p4_1 = newPattern [a,g,d,e,b_,c,d,e] |/ 8
+p4_1 = newPattern [a, g, d, e, b_, c, d, e] |/ 8
+
+p4_2 :: IsPitch a => Pattern a
+p4_2 = newPattern [f,g,a,b,a,b,c',d',e',d',c',b] |/ 16
