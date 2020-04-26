@@ -350,7 +350,24 @@ testGetCycles = all id
   , getCycles (0 <-> 2) (2 <-> 4) == (0, 1, 0)
   ]
 
+-- TODO get dir of (newtype wrapper, or inline):
+instance (HasDuration a, Transformable a) => HasPosition [Aligned a] where
+  _era xs = case foldMap (NonEmptyInterval . _era1) $ xs of
+    EmptyInterval -> Nothing
+    NonEmptyInterval x -> Just x
 
+-- TODO replace the old ones, change type of pattern to [Aligned (Voice a)]
+renderLungaNEW :: Span -> Aligned (Voice a) -> Score a
+renderLungaNEW s l = mconcat $ fmap renderAlignedVoice $ [intro] ++ cycles ++ [outro]
+  where
+    intro  = alignOnsetTo (view onset s) (dropM (_duration l - introDur) $ unAlign l)
+    outro  = alignOffsetTo (view offset s) (takeM outroDur $ unAlign l)
+    cycles = times (fromIntegral numCycles) $
+      pure $ alignOnsetTo (view onset s .+^ introDur) (unAlign l)
+    (introDur, numCycles, outroDur) = getCycles (_era1 l) s
+
+    alignOnsetTo t = alignTo t 0
+    alignOffsetTo t = alignTo t 1
 
 -- List of repeated voices
 -- TODO is this isomorphic to Tidal's pattern (i.e. Span -> Score a)

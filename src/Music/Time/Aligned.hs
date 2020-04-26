@@ -26,6 +26,7 @@ module Music.Time.Aligned
     renderAlignedVoice,
     renderAlignedNote,
     renderAlignedDuration,
+    unAlign,
 
     -- * Conversion functions
     voiceAtDuration,
@@ -68,6 +69,9 @@ align l (Aligned ((t, _), a)) = Aligned ((t, l), a)
 -- or offset, use 0, 0.5 or 1 as the local duration value.
 newtype Aligned v = Aligned {_getAligned :: ((Time, Alignment), v)}
   deriving (Functor, Eq, Ord, Foldable, Traversable)
+
+unAlign :: Aligned a -> a
+unAlign (Aligned (_, x)) = x
 
 -- | Align so that the given part of the value occurs at the given time.
 --
