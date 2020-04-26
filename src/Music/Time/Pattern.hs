@@ -37,8 +37,6 @@
   -fno-warn-unused-imports
   -fno-warn-unused-matches #-}
 {-# OPTIONS_GHC -fno-warn-unused-top-binds #-} -- TODO FIXME
-{-# OPTIONS_GHC -fno-warn-unused-local-binds #-} -- TODO FIXME
-
 module Music.Time.Pattern
   ( Pattern,
     newPattern,
@@ -76,24 +74,7 @@ import Control.Monad.Except
 import Iso.Deriving
 
 
--- sppar = pseq . fmap ppar
-
--- ppseq = ppar . fmap pseq
-
--- TODO move
--- TODO use proper math terminology here!
-
--- | Given a duration, return the cycle number and phase of a given time point relative origo.
---
--- >>> (2::Time) `cycleAndPhase` 3
--- (0,2)                              -- The point in time 2 happens in the 0-th 3-cycle at phase 2
--- >>> (-2::Time) `cycleAndPhase` 3
--- (-1,1)                             -- The point in time -1 happens in the (-1)-th 3-cycle at phase 1
-cycleAndPhase :: Time -> Duration -> (Integer, Duration)
-cycleAndPhase t d = (t .-. 0) `divModDur` d
-{-# INLINE cycleAndPhase #-}
-
--- TODO move
+-- TODO move divModDur
 -- TODO generalize to any vector
 -- > v*^n ^+^ r = x where (n,r) = divModDur x v
 divModDur :: Duration -> Duration -> (Integer, Duration)
@@ -106,8 +87,6 @@ divModDur x v = (n, r)
 
 
 -- TODO move Abort elsewhere
-
-
 
 -- |
 -- Abort is like 'State' but allow short-circuiting the computation.
