@@ -239,10 +239,17 @@ data SplitAtState = SplitAtState { remainingDur :: Duration, notesEaten :: Integ
 
 fromVoice :: Voice a -> [Note a]
 toVoice :: [Note a] -> Voice a
-(fromVoice, toVoice) = undefined
+(fromVoice, toVoice) = (view notes, view voice)
 
-uncons :: [a] -> Maybe (a, [a])
-uncons = undefined
+fromNote :: Note a -> (Duration, a)
+toNote :: (Duration, a) -> Note a
+(fromNote, toNote) = (view $ from note, view note)
+
+-- | Duration must be >0
+splitNote :: Duration -> Note a -> (Note a, Maybe (Note a))
+splitNote d' (fromNote -> (d, x)) = if d' < d
+  then (toNote (d', x), Just $ toNote (d - d', x))
+  else (toNote (d, x), Nothing)
 
 -- |
 -- Take the given number of notes and up to d of the next note.
@@ -253,11 +260,11 @@ splitNotesAt n d xs
       (ys,zs) ->
         (toVoice ys, toVoice zs)
   | otherwise =
-    case fmap uncons $ Data.List.splitAt (fromIntegral n) (fromVoice xs) of
+    case fmap Data.List.uncons $ Data.List.splitAt (fromIntegral n) (fromVoice xs) of
       (ys, Nothing) -> (toVoice ys, mempty)
-      (ys, Just (z, zs)) ->
-        -- TODO FIXME use z!
-        (toVoice ys, toVoice zs)
+      (ys, Just (z, zs)) -> case splitNote d z of
+        (m, Nothing) -> (toVoice (ys++[m]), toVoice zs)
+        (m, Just o)  -> (toVoice (ys++[m]), toVoice (o : zs))
 
 -- TODO move splitAt to Time.Voice
 
