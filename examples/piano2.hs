@@ -1,11 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MonadComprehensions #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TypeApplications #-}
 
 import Music.Prelude
+import qualified Music.Score.Pitch as S
 import qualified Music.Score.Articulation as S
 
 {- TODO basic idea here is:
@@ -36,8 +37,9 @@ main =
   -- the top-level definition.
 
   -- defaultMain music
-  defaultMain $ inspectableToMusic @(Pattern Pitch)
-    p11i
+  defaultMain $
+    inspectableToMusic @(Pattern Pitch)
+      p11i
 
 music :: Music
 music =
@@ -222,11 +224,14 @@ render Block {col, range, texture = Repeat} =
           Brown ->
             newPattern [e, fs |* 2] |/ 6
 
-p1, p2 :: IsPitch a => Pattern a
+p1 :: IsPitch a => Pattern a
 p1 = newPattern [a |* 3, d, e] |/ 8
-p11 = newPattern [f,e,f,d,e,c,d |*2, d |* 2] |/ 8
-p11i = invertDiatonic f p11
+
+p11 :: IsPitch a => Pattern a
+p11 = newPattern [f, e, f, d, e, c, d |* 2, d |* 2] |/ 8
+
+p11i :: (IsPitch a, HasPitches' a, S.Pitch a ~ Pitch) => Pattern a
+p11i = invertDiatonic e p11
+
+p2 :: IsPitch a => Pattern a
 p2 = newPattern [e, fs |* 2] |/ 3
-
-
-
