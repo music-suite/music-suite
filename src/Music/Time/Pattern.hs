@@ -39,6 +39,7 @@
   -fno-warn-unused-matches #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-} -- TODO FIXME
 {-# OPTIONS_GHC -fno-warn-unused-top-binds #-} -- TODO FIXME
+{-# OPTIONS_GHC -fno-warn-unused-local-binds #-} -- TODO FIXME
 
 module Music.Time.Pattern
   ( Pattern,
@@ -301,6 +302,11 @@ getSplitPoint d xs =
             { remainingDur = remainingDur - _duration note,
             notesEaten = notesEaten + 1 }
 
+-- TODO property tests:
+--
+--    (\x y -> _duration + _duration y) (splitAt d xs) = _duration xs
+--
+--    _duration (takeM d xs) = min d (_duration xs)
 splitAt :: Duration -> Voice a -> (Voice a, Voice a)
 splitAt d xs = split $ getSplitPoint d xs
   where
@@ -333,7 +339,7 @@ modDur a b = snd $ a `divModDur` b
 getCycles :: Span -> Span -> (Duration, Integer, Duration)
 getCycles ts s
   | _duration ts <= 0 = error "getCycles: Duration of repeated span must be >0"
-  | _duration s < _duration ts = (0, 0, _duration s)
+  --  | _duration s < _duration ts = (0, 0, _duration s)
   | otherwise = (rem, cycles, phase)
   where
     phase = (view offset s .-. view offset ts) `modDur` _duration ts
@@ -342,12 +348,15 @@ getCycles ts s
 -- TODO proper test
 testGetCycles :: Bool
 testGetCycles = all id
-  [ getCycles (0 <-> 2) (0 <-> 4) == (0, 2, 0)
-  , getCycles (0 <-> 2) (1 <-> 4) == (1, 1, 0)
-  , getCycles (0 <-> 2) ((-1) <-> 5) == (1, 2, 1)
+  [ getCycles (0 <-> 2) (0 <-> 4)         == (0, 2, 0)
+  , getCycles (0 <-> 2) (1 <-> 4)         == (1, 1, 0)
+  , getCycles (0 <-> 2) ((-1) <-> 5)      == (1, 2, 1)
   , getCycles (0 <-> 2) ((-9) <-> (-2.5)) == (1, 2, 1.5)
-  , getCycles (1 <-> 3) (1 <-> 2) == (0, 0, 1)
-  , getCycles (0 <-> 2) (2 <-> 4) == (0, 1, 0)
+  , getCycles (0 <-> 2) (2 <-> 4)         == (0, 1, 0)
+  , getCycles (1 <-> 3) (1 <-> 2)         == (0, 0, 1)
+  , getCycles (1 <-> 3) (2 <-> 3)         == (1, 0, 0)
+  , getCycles (1 <-> 3) (0 <-> 1)         == (1, 0, 0)
+  , getCycles (1 <-> 3) ((-1) <-> 0)      == (0, 0, 1)
   ]
 
 -- TODO get dir of (newtype wrapper, or inline):
@@ -370,20 +379,39 @@ testRenderLungaNEW = all id
   , renderLungaNEW (0 <-> 1) aba
   == [(0 <-> 1,'a')^.event]^.score
 
-  -- FIXME:
-  -- , renderLungaNEW ((-1)<->1) aba
-  -- == [(-1 <-> 0,'c')^.event,(0 <-> 1,'a')^.event]^.score
+  , renderLungaNEW ((-1)<->1) aba
+  == [(-1 <-> 0,'c')^.event,(0 <-> 1,'a')^.event]^.score
+
+  , renderLungaNEW ((0)<->1) aba1
+  == [(0 <-> 1,'c')^.event]^.score
 
   , renderLungaNEW (3<->8) aba
   == [(3 <-> 4,'c')^.event,(4 <-> 5,'a')^.event,(5 <-> 7,'b')^.event,(7 <-> 8,'c')^.event]^.score
+
+
+  , renderLungaNEW (0<->2) (aligned 0 0 c :: Aligned (Voice Int))
+  == [(0 <-> 1,0)^.event,(1 <-> 2,0)^.event]^.score
+
+  , renderLungaNEW (0<->2) (stretch 2 $ aligned 0 0 c :: Aligned (Voice Int))
+  == [(0 <-> 2,0)^.event]^.score
+
+  , renderLungaNEW (0<->2) (delay 0.3 $ stretch 0.9 $ aligned 0 0 c :: Aligned (Voice Int))
+  == [(0 <-> (3/10),0)^.event,((3/10) <-> (6/5),0)^.event,((6/5) <-> 2,0)^.event]^.score
+
+  , renderLungaNEW ((-4) <-> 0) aba
+  == [((-4) <-> (-3),'a')^.event,((-3) <-> (-1),'b')^.event,((-1) <-> 0,'c')^.event]^.score
   ]
   where
     aba =
       (aligned 0 0 $ [(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
+    aba1 =
+      (aligned 1 0 $ [(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
 
 -- TODO replace the old ones, change type of pattern to [Aligned (Voice a)]
 renderLungaNEW :: Span -> Aligned (Voice a) -> Score a
-renderLungaNEW s l = mconcat $ fmap renderAlignedVoice $ [intro] ++ cycles ++ [outro]
+renderLungaNEW s l =
+  -- FIXME if too short, must take phase into account!
+  mconcat $ fmap renderAlignedVoice $ [intro] ++ cycles ++ [outro]
   where
     intro  = alignOnsetTo (view onset s) (dropM (_duration l - introDur) $ unAlign l)
     outro  = alignOffsetTo (view offset s) (takeM outroDur $ unAlign l)

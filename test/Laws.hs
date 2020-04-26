@@ -469,6 +469,11 @@ oldTests =
 
   I_TEST2("Transformable Reactive Int", _Transformable, Reactive Int),
   I_TEST2("Transformable Aligned Int", _Transformable, Aligned Int),
+  I_TEST2("Transformable Aligned (Voice Int)", _Transformable, Aligned (Voice Int)),
+  I_TEST2("HasPosition/Transformable (Aligned (Voice Int))",
+    _HasPositionTransformable, Aligned (Voice Int)),
+  I_TEST2("HasPosition/HasDuration (Aligned (Voice Int))",
+    _HasDurationHasPosition, Aligned (Voice Int)),
 
   I_TEST2("Transformable Voice Int", _Transformable, Voice Int),
   I_TEST2("Transformable Score Int", _Transformable, Score Int),
