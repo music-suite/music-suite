@@ -2347,10 +2347,12 @@ stretch (-1) $ pseq [c,d,e]
 
 ### Translation-invariant types
 
-TODO Explain delay-invariant transformations: applying transformations to `Span` performs the delay/translation, applying to `Duration` does not. Note that this does *not* invalidate the laws. We can think of our time types as coming in two shapes:
+We can think of our time types as coming in two shapes:
 
 - Translation-invariant types such as `Duration` are "floating" without being anchored to specific start/stop time (though they still have a duration)
 - Translation-variant types such as `Span` have both a specific duration and a specific point in which they "occur" relative to ther events.
+
+Note that this does *not* invalidate the laws.
 
 ### TimeInterval
 
