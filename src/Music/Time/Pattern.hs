@@ -171,11 +171,14 @@ Render the cycles 0<->3, 3<->6, an extra cycle of (takeM 1), finally drop 1
 Render the cycles -, an extra cycle of (takeM 2), finally drop 1
 
 -}
+
+
+
+
 renderLunga :: Span -> Lunga a -> Aligned (Voice a)
 renderLunga s (Lunga (d, _, b))
   | d < 0 = error "renderLunga: Negative (nominal) duration"
   | otherwise =
-    -- Debug.Trace.traceShow (s^.duration, round $ r1, round $ d^*fullCycles, round $ r2) $
     aligned (s ^. position 0) 0 $ voca
   where
     (n1, r1) = (s ^. onset) `cycleAndPhase` d
@@ -288,6 +291,25 @@ splitAt d xs = split $ getSplitPoint d xs
     split (SplitAtState { remainingDur, notesEaten })
       = ( splitNotesAt notesEaten remainingDur xs
         )
+
+-- TODO proper test
+testSplitAt :: Bool
+testSplitAt = all id
+  [ splitAt (-1) ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
+    == ([]^.voice, [(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
+
+  , splitAt 0 ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
+    == ([]^.voice, [(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
+
+  , splitAt 0.5 ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
+    == ([((0.5),'a')^.note]^.voice, [((0.5),'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
+
+  , splitAt 2.5 ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
+    == ([(1,'a')^.note,((1.5),'b')^.note]^.voice, [((0.5),'b')^.note,(1,'c')^.note]^.voice)
+
+  , splitAt 5 ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
+    == ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice,[]^.voice)
+  ]
 
 
 -- List of repeated voices
