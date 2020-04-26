@@ -20,6 +20,15 @@ import qualified Music.Score.Articulation as S
  - inputs. Could we draw some representative samples? OTOH if the type
  - is finite and small, maybe just enumerate?
  -
+ - We need to build a library of *values* such as:
+ -
+ -    - Melodies, or fragments thereof
+ -    - Scales, chords, chord progressions
+ -    - Rhythms, patterns
+ -    - Predicates on dissonance, voice leading etc
+ -
+ - Try not to *add more types*! Focus on the values.
+ -
  -}
 main = defaultMain music
 
