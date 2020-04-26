@@ -40,7 +40,7 @@ main =
   -- defaultMain music
   defaultMain $
     inspectableToMusic @(Pattern Pitch)
-      p4_2
+      p5_1
 
 music :: Music
 music =
@@ -248,3 +248,9 @@ p4_1 = newPattern [a, g, d, e, b_, c, d, e] |/ 8
 
 p4_2 :: IsPitch a => Pattern a
 p4_2 = newPattern [f,g,a,b,a,b,c',d',e',d',c',b] |/ 16
+
+p5 :: IsPitch a => Pattern a
+p5 = newPattern [c__,g__,e_,c,e_,g__] |/ 12
+
+p5_1 :: IsPitch a => Pattern a
+p5_1 = newPattern [c__,g__,c_,e_,e,c,g_,c_] |/ 16
