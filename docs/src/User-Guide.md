@@ -2898,11 +2898,21 @@ A traversal that targets exactly one element is known as a *lens*. We've already
 
 ## Using traversals
 
-Folding/accumulating: `toListOf`, `anyOf`, `allOf`
+Folding/accumulating:
 
-Setting/mapping: `over`,
+@[toListOf]
+@[anyOf]
+@[allOf]
 
-Arbitrary effects: State, Writer, Maybe
+Setting/mapping:
+
+@[over]
+
+Arbitrary effects:
+
+@[State]
+@[Writer]
+@[Maybe]
 
 
 ## Specific traversals
@@ -3121,7 +3131,9 @@ Usage: <executable> -f [xml|ly|mid] -o PATH
 To select e.g. the Lilypond backend:
 
 ```bash
-$ cabal exec runhaskell test.hs -- -f ly -o hello.ly ```
+$ cabal exec runhaskell test.hs -- -f ly -o hello.ly
+```
+
 <!-- TODO API to select backend rather than CLI -->
 
 ## Overview of backends
