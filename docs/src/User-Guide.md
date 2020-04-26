@@ -3108,7 +3108,24 @@ The @[Inspectable] class represents types that can be converted into a standard 
 
 In some cases, the generality of the Music Suite library leads to ambiguity when selecting the type of the top-level expression. The `Music` type defined in `Music.Prelude` can be used as a default.
 
-TODO how to select backend on the CLI, or via the API
+```haskell
+main = defaultMain $ inspectableToMusic (c :: Music)
+```
+
+You can write the the above to `test.hs` and invoke:
+
+```bash
+$ cabal exec runhaskell test.hs
+Usage: <executable> -f [xml|ly|mid] -o PATH
+```
+
+To select e.g. the Lilypond backend:
+
+```bash
+cabal exec runhaskell test.hs -- -f ly -o hello.ly
+```
+
+<!-- TODO API to select backend rather than CLI -->
 
 ## Overview of backends
 
