@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MonadComprehensions #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -30,7 +31,13 @@ import qualified Music.Score.Articulation as S
  - Try not to *add more types*! Focus on the values.
  -
  -}
-main = defaultMain music
+main =
+  -- TODO workaround for the fact that the REPL can only show
+  -- the top-level definition.
+
+  -- defaultMain music
+  defaultMain $ inspectableToMusic @(Pattern Pitch)
+    p11i
 
 music :: Music
 music =
@@ -214,3 +221,12 @@ render Block {col, range, texture = Repeat} =
             newPattern [a |* 3, d, e] |/ 8
           Brown ->
             newPattern [e, fs |* 2] |/ 6
+
+p1, p2 :: IsPitch a => Pattern a
+p1 = newPattern [a |* 3, d, e] |/ 8
+p11 = newPattern [f,e,f,d,e,c,d |*2, d |* 2] |/ 8
+p11i = invertDiatonic f p11
+p2 = newPattern [e, fs |* 2] |/ 3
+
+
+
