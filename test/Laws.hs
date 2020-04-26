@@ -474,6 +474,11 @@ oldTests =
   I_TEST2("Transformable Track Int", _Transformable, Track Int),
   I_TEST2("Transformable [Voice Int]", _Transformable, [Voice Int]),
 
+  -- TODO requires comparison of rendered form
+  -- Use newtype wrapper for Eq instance!
+  -- Similarly for Behavior
+  --  I_TEST2("Transformable Pattern Int", _Transformable, Pattern Int),
+
   I_TEST2("HasDuration Span", _HasDuration, Span),
   I_TEST2("HasDuration Event Int", _HasDuration, Event Int),
   I_TEST2("HasDuration Event Double", _HasDuration, Event Double),
