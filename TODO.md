@@ -14,6 +14,8 @@ Consider switching to a decentralized issue tracker such as:
 - [X] Bug: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
   Intervals not displayed properly
 
+- [ ] Bug: Scores with harp do not render in Lilypond
+
 - [ ] Bug: since GHC 8.8.3 upgrade, doctester does not compile
   - Try cabal-doctest instead https://github.com/phadej/cabal-doctest
 
@@ -60,10 +62,14 @@ Consider switching to a decentralized issue tracker such as:
 
 - [ ] Long cresc/dim should render as text by default.
 
+- Show instance for Duration/Time should use decimal form when short (e.g. 1.5, not 3/2)
+
 - API improvements:
   - Move varticulation, addArticulation out of public API
   - Move vdynamic, addDynCon out of public API
   - Move vtechnique, etc out of public API
+  - Make Aligned a HKT, e.g. instead of (Aligned . Voice), we'd use (Aligned Voice)
+    (with the same Applicative)
   - Put combinators (not classes) on top of the following modules
     - Music.Score.Articulation
     - [X] Music.Score.Dynamics
@@ -133,6 +139,8 @@ Consider switching to a decentralized issue tracker such as:
 - Scale/Chord and Pattern are isomorphic.
   Common implementation?
   Share operations in both directions?
+
+- [ ] render e.g. snare drum parts correctly on single-line staff
 
 - Internal improvements:
   - Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
@@ -380,7 +388,7 @@ Consider switching to a decentralized issue tracker such as:
       - Note we need to *run* the examples to make sure the expressions don't
         diverge.
 
-- [ ] Get rid of Transformable constraint in Pattern API
+- [X] Get rid of (Transformable...) constraints in Pattern API
 
 - [ ] Get rid of duplication in music-suite.cabal
 

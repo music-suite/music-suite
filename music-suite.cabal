@@ -466,6 +466,28 @@ executable "music-suite-examples-chorale"
     ghc-options:        -fno-code
     main-is:            chorale.hs
 
+executable "music-suite-examples-piano1"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    ghc-options:        -fno-code
+    main-is:            piano1.hs
+executable "music-suite-examples-piano2"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    ghc-options:        -fno-code
+    main-is:            piano2.hs
+executable "music-suite-examples-harp-string-texture"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    ghc-options:        -fno-code
+    main-is:            HarpStringTexture.hs
+
 -- executable "music-suite-examples-piece1"
 --     build-depends:      base,
 --                         lens,

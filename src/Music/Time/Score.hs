@@ -94,7 +94,7 @@ import qualified Data.Traversable as T
 import Data.Typeable
 import Data.VectorSpace
 import Data.VectorSpace hiding (Sum (..))
-import Iso.Deriving
+import Iso.Deriving hiding (Iso, Iso')
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Time.Event
@@ -246,6 +246,9 @@ newtype Score' a = Score' {getScore' :: [Event a]}
 
 instance (Show a) => Show (Score a) where
   show x = show (x ^. events) ++ "^.score"
+
+instance (Eq a) => Eq (Score a) where
+  x == y = (x ^. events) == (y ^. events)
 
 deriving via
   (WriterT Span [] `As1` Score')

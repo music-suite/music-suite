@@ -2,9 +2,11 @@
 
 ## Installing
 
+<!--
 ### Installing via Docker
 
 TODO Docker or other "easy" install options
+-->
 
 ### Installing from source
 
@@ -52,9 +54,7 @@ We can copy-paste all examples from this file into the above template. Whatever 
 
 ### Using an interactive environment
 
-TODO standard notebook format support?
-
-TODO "visual interpreter" support. See TODO.md.
+TODO "visual interpreter" docs
 
 
 <!--
@@ -278,12 +278,11 @@ Comments are the same as in regular Haskell.
 ```
 
 
-## Chords and rests
+## Rests, tuplets and ties
 
-There is never any need to explicitly create rests, chords, tuplets or ties in Music Suite.
+There is never any need to explicitly create rests, tuplets or ties in Music Suite. Instead, each note exist in a dedicated time span, which can be inspected and transformed. When we compose music expressions in parallel, all notes are interleaved without affecting their onset or duration.
 
 Notes with the same onset and offset are rendered as chords by default.
-
 
 ```music+haskell
 pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]
@@ -295,14 +294,15 @@ Or, equivalently:
 ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
 ```
 
-> Note: To prevents notes from being merged into chords we must *explicitly* put them in separate parts. The `</>` and `rcat` combinators is a simple way of doing this.
+To prevents notes from being merged into chords we must *explicitly* put them in separate parts. The `</>` and `rcat` combinators is a simple way of doing this.
 
-Instead of using `delay` we can use `rest`. Rests are empty placeholders which take up space when using sequential composition but do not show up in the final score:
+To create space in our scores we can use `rest`. Rests are empty placeholders which take up space when using sequential composition but do not show up in the final score:
 
 ```music+haskell
 times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
 
+Rests can be stretched and delayed just like notes.
 
 Any note that crosses a barline will be notated using ties:
 
@@ -331,7 +331,7 @@ TODO basic functions
 
 ### Function composition
 
-TODO analogously to composition of music seen above we can compose *funtions*.
+Analogously to composition of music seen above we can compose *functions*.
 
 Here is an example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
 
@@ -341,7 +341,18 @@ Here is an example using function composition. The dot operator `.` is used to c
 
 ## More examples
 
-TODO make very clear that stretch, `_8va` etc work on arbitrarily complex scores, not just single notes as in the first examples
+Of course, the combinators we have seen so far such as `stretch`, `_8va` and so on work on arbitrarily complex scores, not just single notes. We can also nest most function within applications of the composition operators.
+
+```music+haskell
+_8va $ pseq [c, d]
+```
+
+```music+haskell
+let
+  x = pseq [c, d]
+in
+pseq [x, up m3 x]
+```
 
 Here is a more complex example using all forms of composition:
 
@@ -352,7 +363,9 @@ let
 in up _P8 scale </> (triad c) |/2 |> (triad g_) |/2
 ```
 
-TODO understanding types, types of the above operators and that `|>` and `</>` are based on `<>`.
+## Understanding composition types
+
+Looking at the type of the composition operators, it becomes clear that `|>` and `</>` are in fact based on `<>`:
 
 ```haskell
 (<>)  :: Semigroup a => a -> a -> a
@@ -366,7 +379,7 @@ TODO understanding types, types of the above operators and that `|>` and `</>` a
 (</>) :: (Semigroup a, HasParts a, HasSubpart p, p ~ Part a) => a -> a -> a
 ```
 
-In other words `Semigroup` is used for all composition in Music Suite.
+In fact the `<>` operator is used for almost all forms of composition in Music Suite. The other operators simply peform some kind of manipulation on their values before or after composing.
 
 
 ## Conclusion
@@ -557,11 +570,9 @@ Intervals be understood as:
 
 - A pair of diatonic and (total) chromatic steps, *or*
 - A pair of diatonic steps and alteration, *or*
-- A pair of number and quality
+- A pair of @[number] and @[quality]
 
 Not all combinations of number and quality makes sense.
-
-TODO @[number] @[quality]
 
 For numbers, we follow traditional music theory conventions in counting from one. In other words, a second consists of one diatonic step, a third of two diatonic steps, and so on. We can convert between these using @[diatonicSteps]:
 
@@ -578,10 +589,19 @@ For numbers, we follow traditional music theory conventions in counting from one
 
 > Warning: The number `0` is undefined.
 
-TODO for pitches, extract name/accidental/octave:
+We can extract @[name], @[accidental] and @[octave] number from a pitch:
 
-@[name]
-@[accidental]
+```haskell
+>>> name c
+C :: Name
+
+>>> accidental c
+natural
+
+>>> accidental cs
+sharp
+```
+
 
 ### Interval overloading
 
@@ -665,7 +685,7 @@ pseq $ fmap (\x -> over pitches' (relative c $ spell x)  $ ppar [as,cs,ds,fs])
 ]
 ```
 
-TODO simpler short cut for `over pitches' (relative c $ spell ...)`:
+<!-- TODO simpler short cut for `over pitches' (relative c $ spell ...)`: -->
 
 ```music+haskell
 x </> over pitches' (relative c $ spell modally) x
@@ -791,7 +811,12 @@ In this case, the origin is also used as the tonic of the implied diatonic scale
 
 ## Listing and traversing pitches
 
-TODO forward reference to traversals chapter, @[HasPitch]
+You can extract all the pitches from a piece of music like this:
+
+```music+haskell
+inspectableToMusic $
+  toListOf pitches' (pseq [c,d, ppar[e,g]] :: Music)
+```
 
 > Note: `pitches` is a example of a [traversal](#traversals). We'll learn more about these later on.
 
@@ -833,7 +858,7 @@ This may look complicated, but it simply means that:
 
 While the `Pitch` and `Interval` types allow us to represent any pitch (the Western/classical framework), they do not tell us much about *harmony*. We need types to represent *collections* and *relationships* between pitches, including modes, chords and scales.
 
-The simplest (and most general) way of doing this is to work with *generic* container types provided by Haskell: these include sets, lists, maps and so on. However music theory defines some very specific structures that are not always captured by generic containers. In this chapter we will look at some structures that make particular sense from a musical point of view.
+While we can of course course use regular data structures like tuples, lists and maps for this, Music Sutie also defines some structures that makes particular sense from a musical point of view.
 
 ## Ambitus
 
@@ -883,12 +908,10 @@ pitchRange @Music $ pseq [c,d,fs,g,db,c,b_,c,g,c,e] |/ 8
 
 ## Scales and chords
 
-The @[Scale] and @[Chord] types represent infinite collections of pitches, anchored at some tonic. They form a subset of the pitch space as a whole. By forgetting the tonic we obtain what is known as a @[Mode].
-
-TODO make Mode vs Scale/Chord very clear.
+The @[Scale] and @[Chord] types represent infinite collections of pitches, anchored at some absolute pitch known as the *tonic*. Like @[Ambitus], @[Scale] and @[Chord] are type constructors taking two type parameters for interval and pitch respectively.
 
 ```music+haskell
-inspectableToMusic @[Scale Pitch] $
+inspectableToMusic @[Scale Interval Pitch] $
 
 [ scale c phrygian
 , scale d majorScale
@@ -900,7 +923,19 @@ inspectableToMusic @[Scale Pitch] $
 ```
 
 ```music+haskell
-inspectableToMusic @[ChordType Pitch] $
+inspectableToMusic @[Chord Interval Pitch] $
+
+[ chord g majorTriad
+, chord c minorTriad
+, chord f augmentedChord
+, chord eb diminishedChord
+]
+```
+
+The @[scale] and @[chord] functions take two parameters: the *tonic* (e.g. the absolute pitch at which the chord is centered) and a *mode* or *chord type* describings the characteristics of the chord. Most common scale and chord types are pre-defined, but as will see later it is also possible to make up custom scales and chords.
+
+```music+haskell
+inspectableToMusic @[ChordType Interval Pitch] $
 
 [ majorTriad
 , minorTriad
@@ -911,12 +946,12 @@ inspectableToMusic @[ChordType Pitch] $
 ```
 
 ```music+haskell
-inspectableToMusic @[Chord Pitch] $
+inspectableToMusic @[Mode Interval Pitch] $
 
-[ chord g majorTriad
-, chord c minorTriad
-, chord f augmentedChord
-, chord eb diminishedChord
+[ majorScale
+, lydian
+, wholeTone
+, octatonic
 ]
 ```
 
@@ -924,7 +959,7 @@ inspectableToMusic @[Chord Pitch] $
 
 As musicians we tend to think of scales and chords as distinct entities. From a structural point there is very little difference: both represent a subset of some larger pitch space. The main difference is in how they are *used*: scales provide pitch material for melodies and chords, while chords are played in parallel, after applying textures, voicings and so on.
 
-Like @[Ambitus], @[Scale] and @[Chord] are type constructors taking two type parameters for interval and pitch respectively. We can convert back and forth between them:
+We can convert freely between scales and chords:
 
 ```haskell
 chordToScale (chord c majorTriad)
@@ -937,33 +972,71 @@ chordToScale (chord c majorTriad)
   :: Scale Interval Pitch
 ```
 
+<!--
 TODO examples: Whole tone is a superset of augmented, octatonic a superset of dimimished and so on
 
 TODO example: generate a "scale" by the union of two "chords"
 
 Consider "scale-chord texture"
+-->
 
 ### Chords are infinite
 
-TODO understand that chords are infinite, but generated by repetition of a finite interval set
-TODO scales/chords as infinite/countable sets
+It's imporant to  understand that while chords and scales are conceptually infinite, they are always generated by repetition of a finite set of intervals. We refer to this as the *generator* of the chord or scale. While most common scales and chords repeat at the octave, this is not always the case: for example diminished chords repeat at a smaller interval (minor third), and many chords used in jazz such as 9th, 11th and 13th chords repeat at intervals larger than an octave.
 
-Chords and scales are *countably infinite* sets. This means that we can map them directly to any other such sets, such as the set of integers. For example the chord "C major" is the set `{ Cn En Gn | n ∈ all octaves }`. Using C4 (or "middle C") as the starting point, 0 will map to C4, 1 to E4, 2 to G4, -1 to G3, -2 to E3, and so on.
+We can extract the generating sequence of a chord or scale using @[generator]:
 
-While scales and chords are conceptually infinite, they always have a finite *generating set*.
+```haskell
+>>> generator majorTriad
+_M3 :| [m3,_P4] :: List.NonEmpty Interval
 
-TODO how to extract it with `scaleMode`, `chordType` or `generator`
+>>> generator minorTriad
+m3 :| [_M3,_P4] :: List.NonEmpty Interval
+```
+
+The repeating interval of the chord is the sum of the vectors in the generator sequence:
+
+We can inspect the *repeating interval* of a scale like this:
+
+```haskell
+>>> repeatingInterval majorScale
+_P8
+```
+
+All scales and chords we have seen so far repeat at the octave, but this is not a hard requirement. For example @[quartal] and @[quintal] chords can be seen as one-note scales repeating at the eponymous interval:
 
 ```music+haskell
-inspectableToMusic @[ChordType Pitch] $
+inspectableToMusic @[Voiced Chord Interval Pitch] $
 
-[ (chord c majorTriad)^.chordType
+[ voiceIn 5 $ chord c quartal
+, voiceIn 4 $ chord c quintal
 ]
 ```
 
-<!--
-Normal Haskell types correspond to sets as well. For example, our `Common.Pitch` type is the set of *all* pitches in the diatonic/chromatic system. Values such as `scale c major` of type `Scale p` correpond to some subset of `p`.
--->
+Similarly *clusters* are one-note scales repeating at the second:
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Interval Pitch] $
+
+[ voiceIn 5 $ chord c chromaticCluster
+, voiceIn 7 $ chord c wholeToneCluster
+]
+```
+
+And we can repeat at arbitrary intervals:
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Pitch] $
+
+[ voiceIn 3 $ chord c $ repeating m7
+]
+```
+
+
+```haskell
+>>> repeatingInterval majorScale
+_P8 :: Interval
+```
 
 ### Looking up pitches
 
@@ -1039,64 +1112,28 @@ compress 2 $ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
-### Custom scales/chods
+### Custom scales and chords
 
 While Music Suite predefines all common practice modes, scales and chords, we can also create custom chords from any interval sequence.
 
 Here is a mode that repeat at the fourth:
 
 ```music+haskell
-inspectableToMusic @[ChordType Pitch] $
+inspectableToMusic @[ChordType Interval Pitch] $
 
-[ modeFromSteps [_M2,_M2,m3]
+[ Mode [_M2,_M2,m3]
 ]
 ```
 
-### Repeating scales/chords
 
-We can inspect the *repeating interval* of a scale like this:
-
-```haskell
->>> repeatingInterval majorScale
-_P8
-```
-
-All scales and chords we have seen so far repeat at the octave, but this is not a hard requirement. For example @[quartal] and @[quintal] chords can be seen as one-note scales repeating at the eponymous interval:
-
-```music+haskell
-inspectableToMusic @[Voiced Chord Pitch] $
-
-[ voiceIn 5 $ chord c quartal
-, voiceIn 4 $ chord c quintal
-]
-```
-
-Similarly *clusters* are one-note scales repeating at the second:
-
-```music+haskell
-inspectableToMusic @[Voiced Chord Pitch] $
-
-[ voiceIn 5 $ chord c chromaticCluster
-, voiceIn 7 $ chord c wholeToneCluster
-]
-```
-
-And we can repeat at arbitrary intervals:
-
-```music+haskell
-inspectableToMusic @[Voiced Chord Pitch] $
-
-[ voiceIn 3 $ chord c $ repeating m7
-]
-```
-
+<!--
 ### Non-repeating scales/chords
 
 Non-repeating/self-repeating scales (e.g. the overtone series). TODO create by unfold?
+-->
 
 
-
-### Modal rotation/inversion
+### Modal inversions
 
 The @[chord] function converts a mode into a scale/chord in root position.
 
@@ -1108,7 +1145,9 @@ inspectableToMusic @[Chord Pitch] $
 ]
 ```
 
+For chord inversions in the usual sense, see [the next section](#voicings).
 
+<!--
 TODO `chord` gives you the root position, define a version of `chord` that gives you 1st, 2nd, 3rd inversion etc. For example 4th inversion of a ninth chord
 
 TODO this is a rotation, what does it mean:
@@ -1120,18 +1159,18 @@ inspectableToMusic @[Chord Pitch] $
 , chord c $ invertChord 2    majorTriad
 ]
 ```
+-->
 
-To work with alternative voicings, see below.
 
-
+<!--
 ### Set operations
 
 TODO set operations on chords/scales (e.g. union/difference/intersection/isSubset/isPowerset etc).
+-->
 
 
 
-
-## Voicing
+## Voicings
 
 Recall that chords are infinite sets. A @[Voicing] is a finite subset of that set. For a normal (octave-repeating) chord, it defines what pitches appear and in what octave.
 
@@ -1211,7 +1250,7 @@ Calculate dissonance of a chord (classical/"objective", by higest common fundame
 
 
 
-
+<!--
 # Absolute pitch
 
 In the previous chapters we worked exclusivey with Pitch/Interval. These restrict
@@ -1241,7 +1280,7 @@ TODO 24TET ("quarter tones")
 ## Beyond diatonic/chromatic
 
 TODO the Common.Pitch type has built-in support for chromatic/diatonic harmony. We can construct types that support other system instead.
-
+-->
 
 
 
@@ -1316,8 +1355,9 @@ cresc pp mf $ (times 8 $ pseq [c,d,e,f,g]) |/8
 
 ### How dynamics are represented
 
-TODO value at each note. No need to explicitly draw indications or cresc./dim. lines.
-This means you can freely split/merge without having to worry about dynamics.
+It is important to understand that dynamics are not stored as *marks and
+lines*, but rather as values attached to each note. This means you can freely
+split and merge without having to worry about dynamics.
 
 In general, a new dynamic mark is drawn at the start of each entry, that is after
 each period of rests per voice. However if the dynamic has not changed the mark is only
@@ -1678,11 +1718,9 @@ fastTremolo $ times 2 $ (c |> d)|/2
 
 ### Repeating vs. alternating tremolo
 
-The former is rare but happen e.g. when double-stopped strings play bow tremolo (without bariolage). The more common one is a rapid alteration among a set of notes. Logically we should treat both as an optional the property of a single chord. Alas in StandardNotation the latter is commonly written as two chords with half the duration (OR as a trill).
+The former is rare but happen e.g. when double-stopped strings play bow tremolo (without bariolage). The more common one is a rapid alteration among a set of notes. Logically we should treat both as an optional the property of a single chord. Alas in standard notation the latter is commonly written as two chords with half the duration (or ins ome cases as a trill).
 
-### Slides
-
-@[glissando]
+### Slide and glissando
 
 ```music+haskell
 glissando $ pseq [c,d]|/2
@@ -1783,7 +1821,9 @@ set parts' violins $ pseq
   |* 1.5
 ```
 
+<!--
 TODO chord tremolo
+-->
 
 
 <!--
@@ -1811,25 +1851,32 @@ set parts' trombones $ pseq
 
 <!-- TODO alternative mutes -->
 
-TODO hand stopping
+<!-- TODO hand stopping -->
 
 ## Percussion
 
-TODO working with instruments for percussion (much like normal instruments, though pitch may be ignored)
+Working with percussion is much like working with normal instruments. The main difference of course is that:
 
-Note: for percussion we break the singular/plural naming convention and export a `Part` in the singular form.
+- Some percussion instruments no notion of pitch, or a limited set of pitches they can play.
+
+- Percussion players tend to double on many different types of instruments than other musicians.
+
+We currently do not ruling out entering pitches for e.g. snare drum parts. However backends will ignore the pitch information, and the music will render on a single-line staff.
+
+As with other instruments we currently can not represent players doubling on multiple instrumentsexplicitly. You will have to manually enter the music in different parts and manually assure that there is no overlap in parts meant to be executed by the same performer.
+
+> Note: for percussion we break the singular/plural naming convention and export a `Part` in the singular form.
 
 The solo/tutti component is set to `Tutti` by default even though there might only be one performer in the group (the distinction would still make sense e.g. in a percussion concerto).
 
-```TODOmusic+haskell
+```music+haskell
 parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
   where
-    rh = stretchTo 1 . pseq -- TODO put this in the library?
+    rh = stretchTo 1 . pseq
 ```
 
 For rolls see [the previous section](tremolo-trills-and-rolls).
 
-TODO render e.g. snare drum parts correctly on single-line staff
 
 
 <!--
@@ -1862,6 +1909,8 @@ TODO
 TODO
 -->
 
+
+<!--
 # Text and Color
 
 > Warning: A core idea in Music Suite is that music expressions have clear *semantics*, based on how the sound or action they represent. Free text runs counter to this, and should be viewed as an "escape hatch". Try to use a more structured representation when possible.
@@ -1876,7 +1925,7 @@ text "pizz." $ c|/2
 TODO e.g. expressive marks ("dolce")
 
 TODO color
-
+-->
 
 
 
@@ -2162,6 +2211,7 @@ rehearsalMarkAt 1 (up m3 m) </> rehearsalMarkAt 2 m
 
 Rehearsal marks will always force a new bar.
 
+<!--
 ## Annotations
 
 Annotations are simply textual values attached to a specific section of the score. In contrast to other types of meta-information annotations always apply to the whole score, not to a single part. To annotate a score use @[annotate], to annotate a specific span, use @[annotateSpan].
@@ -2172,6 +2222,7 @@ Annotations are *invisible by default*. To show annotations in the generated out
 ```TODOmusic+haskell
 showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 ```
+-->
 
 <!--
 ## Custom meta-information
@@ -2225,37 +2276,135 @@ TODO Use more specicif wrappers to preserve `Transformable`
 
 ## Basic time types
 
+### Time and Duration
+
 Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
 
 Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
 
-The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
+```haskell
+>>> 2 :: Time
+2
 
-TODO time/span/duration examples
+>>> (2 :: Time) .+^ (3 :: Duration)
+5 :: Time
+```
+
+### Time spans
+
+The @[Span] type represents a non-empty *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration.
+
+```haskell
+>>> (2 <-> 3)^.onset
+2
+
+>>> (2 <-> 3)^.offset
+3
+
+>>> (2 <-> 3)^.duration
+3
+
+```
+
+We can also enter a span using either its *onset and offset*, its *onset and duration*, or its *duration and offset*. The three literals are equivalent:
+
+```haskell
+>>> 2 <-> 3
+(2 <-> 3) :: Span
+
+>>> 2 >-> 1
+(2 <-> 3) :: Span
+
+>>> 1 <-< 3
+(2 <-> 3) :: Span
+```
+
+To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset].
 
 ### Spans as transformations
 
 Here is an alternative view of span: as an *affine transformation*.
 
+A span `a >-> b` represents the act of *stretching by b* followed by *delaying by a*.
+
 For those familiar with linear algebra or computer graphics: Because time is one-dimensional a *linear transformation matrix* in time is a 1x1 matrix (e.g. a scalar). Its *affine transformation matrix* is a 2x2 matrix. We can understand the monoid instance for @[Span] as multiplication of 2x2 matrices.
+
+```haskell
+>>> mempty :: Span
+(0 <-> 1)
+
+>>> negateV (0 <-> 2)
+(0 <-> 0.5)
+```
 
 @[Transformable]
 
-TODO Transformable laws
+TODO spans are a group and `transform @X` is a left group action on some transformable type `X`. The basic intuition is that they move all the points.
+
+Applying the empty transformation changes nothing, and applying a composition of transfomrations is equivalent to applying them all from innermost to outermost (the Transformable laws).
+
+We have already seen how *augmentation*, *diminishion* and *phasing* can be accomplished with `stretch`, `compress` and `delay`. These are in fact all shortcuts for the common type of transformations.
+
+```music+haskell
+delay 1 (stretch 2 c)
+  </>
+transform (1 >-> 2) c
+  </>
+transform (1 <-> 3) c
+```
+
+Stretching by `(-1)` is the *retrograde* operation:
+
+```music+haskell
+stretch (-1) $ pseq [c,d,e]
+```
+
+### Translation-invariant types
+
+We can think of our time types as coming in two shapes:
+
+- Translation-invariant types such as `Duration` are "floating" without being anchored to specific start/stop time (though they still have a duration)
+- Translation-variant types such as `Span` have both a specific duration and a specific point in which they "occur" relative to ther events.
+
+Note that this does *not* invalidate the laws.
+
+### TimeInterval
+
+The @[TimeInterval] type is exactly the same as span, but also allows for empty spans to be represented. It forms a monoid with the convex @[hull] operator.
+
 
 
 ## Position and duration
 
-@[HasDuration]
+The @[HasDuration] class represents values that have a duration. The most obvious example is `Duration` itself:
 
-Inspecting the duration
+```haskell
+>>> _duration (2 :: Duration)
+2
+```
 
+There are also instances for `Span` and, as we will see, most other time-based types:
 
-@[HasPosition]
+```haskell
+>>> _duration (1 <-> 3)
+2
+```
 
-@[HasPosition1]
+The @[HasPosition] class represent values that have an *absolute position* in time. The simplest example is `Span`:
 
-Inspecting the position
+```haskell
+>>> _era (1 <-> 3)
+Just (1 <-> 3)
+```
+
+Here `Maybe` is used to represent the "empty span". The class `HasPosition1` refines `HasPosition` by explicitly disallowing the empty span:
+
+```haskell
+>>> _era1 (1 <-> 3)
+1 <-> 3
+```
+
+Values with a position allow many useful combinators to be defined. For example here we use `during` to add a pedal note underneath a melody:
 
 ```music+haskell
 let
@@ -2264,16 +2413,13 @@ let
 in compress 4 $ melody </> pedal
 ```
 
+<!--
 TODO example with stretchRelative, stretchTo
+-->
 
-TODO HasPosition/HasDuration laws
+The laws for @[HasPosition] and @[HasPosition1] are not too exciting: they assure that transforming a value also transforms its position in the same manner, and that the duration of a value is exactly the duration between its onset and offset point.
 
-Explain delay-invariant transformations: applying transformations to `Span` performs the delay/translation, applying to `Duration` does not. Note that this does *not* invalidate the laws. We can think of our time types as coming in two shapes:
 
-- Translation-invariant types such as `Duration` are "floating" without being anchored to specific start/stop time (though they still have a duration)
-- Translation-variant types such as `Span` have both a specific duration and a specific point in which they "occur" relative to ther events.
-
-We will see much more of this distinction later on.
 
 
 ## Times with values
@@ -2285,7 +2431,7 @@ A @[Note] represents a single value tagged with a *duration*:
 ```music+haskell
 inspectableToMusic @(Note Pitch) $
 
-  c
+c
 ```
 
 An @[Event] represents a single value tagged with a *time span*:
@@ -2293,25 +2439,76 @@ An @[Event] represents a single value tagged with a *time span*:
 ```music+haskell
 inspectableToMusic @(Event Pitch) $
 
-  c
+c
 ```
+
+Note that we can enter a single note or event as `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
+
+Notes and events are very similar. The main difference is that notes are translation-invariant and events are not.
+
+```music+haskell
+inspectableToMusic @(Note Pitch) $
+
+delay 1 $ stretch 0.5 c
+```
+
+```music+haskell
+inspectableToMusic @(Event Pitch) $
+delay 1 $ stretch 0.5 c
+```
+
+Similarly, `Note` is an instance of `HasDuration`, but not `HasPosition`. Events have both duration and position:
+
+```haskell
+>>> (c :: Note)^.duration
+1
+
+>>> (c :: Event)^.duration
+1
+
+>>> (c :: Event)^.era
+0 <-> 1
+```
+
+Notes and events have instances for `Functor`, `Foldable` and `Traversable`, which all visit the single element the contain. There are also instances for `HasPitches`, `HasDynamics` and so on, meaning that we can use most combinators from the previous chapters on notes and events.
+
+```music+haskell
+inspectableToMusic @(Note StandardNote) $
+
+set parts' violins $ pizz $ level ff $ accentAll $ compress 4 c
+```
+
+You may wonder, what is the point of representing music with *just a single note*? The answer is that these types are used in combinations with other types. For example we can use `Note [Pitch]` to represent a melody where all notes have the same duration.
+
+
 
 
 ## Voices
 
 A @[Voice] represents a *sequential composition of values*, each tagged with *duration*.
 
+### Creating voices
+
+TODO
+
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
 
-stretch (1/4) $ [cs, bb, a |* 2]
+[cs, bb, a |* 2] |/ 4
 ```
+
+
+As with notes and events, we can enter a single voice using `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
+
+You can put a rest in a voice. Notice how this changes the type:
 
 ```music+haskell
 inspectableToMusic @(Voice (Maybe Pitch)) $
 
 (1/4) *| [c |* 2, rest, e]
 ```
+
+This works because of [pitch overloading](TODO link).
 
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
@@ -2331,11 +2528,6 @@ stretch (1/4) $ do
   [x, b, c' |*4 ]
 ```
 
-```music+haskell
-stretch (1/2) $ pseq [c,d,e]|/3 |> f |> g|*2
-```
-
-TODO monad comprehensions:
 
 ```music+haskell
 inspectableToMusic @(Voice [Pitch]) $
@@ -2373,9 +2565,6 @@ inspectableToMusic @(Voice [Pitch]) $
   , isMelodicConsonance (x .-. y) && isConsonance (x .-. y) ]
 ```
 
-
-It can be converted into a score by stretching each element and composing in sequence.
-
 <!--
 ```music+haskellx
 let
@@ -2412,24 +2601,20 @@ in trackToScore (1/8) y
 ```
 -->
 
-## Aligned
+## Alignment
 
-TODO @[Aligned] type adds position to anything with a duration
+The @[Aligned] type adds position to anything with a duration. This is akin to alignment in computer graphis, hence the name. Alignment works by picking:
 
-TODO pick a relative *origin* (e.g. 0 for the onset)
+- A time point to which the value is "anchored". By default this is time zero.
+- An alignment point in the duration of the value. By default this is the onset of the value.
 
-TODO using Aligned to represent upbeats
-Natural way of modelling pickups/upbeats etc. Can be combined with "beat hierarchy" model
-
-
-Here is an example. Without upbeat:
+Aligned is natural way of modelling pickups and upbeats. Consider this melody:
 
 ```music+haskell
 (pseq [g_,a_,b_]|/2 |> pseq [c, c, d, d]) |/ 4
 ```
 
-
-With upbeat.
+With @[Aligned] we can represent the fact that the first three notes are "upbeat" notes, and that the main stress of the value should fall on the fourth note:
 
 ```music+haskell
 inspectableToMusic @[Aligned (Voice Pitch)] $
@@ -2444,8 +2629,17 @@ delay 2 -- TODO get rid of this, see wall of shame
     av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
 ```
 
+The `||>` operator is similar to the normal sequential composition operator `|>`, but aligns the result to the point of composition.
+
+
+<!--
+TODO align and realign
+-->
+
+<!--
 TODO sequential composition of aligned voices "snap to next stressed beat":
 `snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]`
+-->
 
 
 ## Scores
@@ -2458,8 +2652,6 @@ An empty scores has no duration, but we can represent rests using `Score (Maybe 
 pseq [c,rest,d] |/ 4
 ```
 
-
-TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
 
 
 
@@ -2524,6 +2716,7 @@ fmap Just $ renderPattern (a <> b <> delay (1/4) c <> delay (1/4) d) (0 <-> 2)
 
 The @[renderPattern] function returns the events of the pattern within a given time span.
 
+<!--
 TODO finish/move to examples:
 
 ```TODOmusic+haskell
@@ -2559,6 +2752,20 @@ inspectableToMusic bachCMajChords
     bachCMajPattern :: (Num a) => Pattern a
     bachCMajPattern = newPattern $ stretchTo 1 $ (view voice) $ fmap pure [0,1,2,3,4,2,3,4]
 ```
+-->
+
+## Time, change and sampling
+
+TODO Behavior and Reactive
+
+@[Behaviors] are *continous* functions of time.
+
+A @[Reactive] is like a behaviours that can only change at certain well-known locations. Alternative, you can think of it as a @[Voice] that stretches out indefinately in both directions.
+
+<!--
+TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
+-->
+
 
 <!--
 ## Splitting and reversing
@@ -2610,7 +2817,7 @@ music |> rev music
 
 ## Building larger musical structures
 
-TODO general intro on how to build/organize larger forms in Haskell/pure FP.
+Let's now look at how to use the types and classes introduced in this chapter to organize larger musical forms.
 
 ### Basic repetition
 
@@ -2622,14 +2829,14 @@ let
 in times 4 $ melody
 ```
 
-
-variation
+<!--
+- variation
 
 - Basic repeatition: @[times], @[replicate]
 
-- Lambdas anda abstracting out
+- Lambdas and abstracting out common patterns
 
-- Infinite streams, take, drop
+- Infinite streams, take, drop, generative music
 
 - "Indexed loops", zips, zipWith [0..]
 
@@ -2637,104 +2844,91 @@ variation
 
 - Randomness
 
-- Do notation, comprehensions
+- Logic programming
+  - Predicates
+  - Searching (MonadLogic)
 
-## Time, change and sampling
-
-TODO Behavior and Reactive
-
-@[Behaviors] are *continous* functions of time.
-
-A @[Reactive] is like a behaviours that can only change at certain well-known locations. Alternative, you can think of it as a @[Voice] that stretches out indefinately in both directions.
-
-
+- Probabilistic programming
+  - Like logic programming, but not just "yes" or "no"
+  - E.g. we can express "it is better if": 1st species counterpoint example
+-->
 
 
 
 # Traversals
 
-In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions.
+In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions. Traverals are a subtle and powerful concept. The basic ideas is simple: given some functor type we have a way of visiting all the elements in a given order.
 
-TODO explain how this works within pure FP: no change, just creating new structures
+We can exploit this to:
 
-TODO some traversals we have already seen: pitches, parts, dynamics, articulation, techniques.
+- Accumulate computations over all the elements
+- Searching and querying the elements
+- Update the elements one at a time
 
-TODO traverals are a very powerful concept and we'll only
+> Note: Mutating data structures is completely disallowed in Haskell, so whenever we refer to "change" or "update" in the context of a data structure, we are actually creating new structures on the fly.
 
+Let's look at the type of the @[traverse] function:
+
+```haskell
+>>> traverse @[] @_ @Bool @Bool
+traverse ::
+  forall f . Applicative f =>
+  (Bool -> f Bool) ->
+  [Bool] -> f [Bool]
+```
+
+The way to read this is that `traverse` transforms an effectful function operating on `Bool` to operate on `[Bool]` instead.
+
+Here is another traversal called @[pitches]:
+
+```haskell
+>>> pitches' @Score ::
+  (Pitch -> f Pitch) ->
+  Score Pitch -> f (Score Pitch)
+```
+
+This means, given a score of pitches and a function operating on pitches, traverse the pitches in the score one by one using the function and return a *new* score containing the transformed pitches.
+
+
+<!--
 A traversal that targets exactly one element is known as a *lens*. We've already seen examples of lenses and traversals in the chapters on [dynamics](TODO) and [articulation](TODO) in the form of `.~` (or `set`) operator.
 
 > Note: For those familiar lenses in Haskell: Music Suite defines lenses and traversals compatible with the `lens` and `microlens` packages.
+-->
 
-Can be used to:
+## Using traversals
 
-- Visit elements in a score
-- Querying/folding
-- Updating aspects
+Folding/accumulating:
 
+@[toListOf]
+@[anyOf]
+@[allOf]
 
-TODO monomorphic and polymorphic traversals (and switch names: `pitch'` is used much more than `pitch`!)
+Setting/mapping:
 
-Folds: `toListOf`, `anyOf`, `allOf`
+@[over]
 
-Traversals: `over`, `traverseOf/forOf`, arbitrary effects (e.g. State, Writer, Maybe)
+Arbitrary effects:
 
-
-## Traversing the notes in a voice
-
-```music+haskell
-inspectableToMusic @(Voice [StandardNote]) $
-
-over t (\x -> if x^.duration > 1 then up m2 x else x) [d,d,d |* 2,d]
-  where
-    t = notes . each
-```
-
-```TODOmusic+haskell
-inspectableToMusic @(Voice [StandardNote]) $
-
-traverseOf t _ [d,d,d |* 2,d]
-  where
-    t = notes . each
-```
+@[State]
+@[Writer]
+@[Maybe]
 
 
-## Traversing all the events in a score
+## Specific traversals
 
-```music+haskell
-canon </> renderAlignedVoice rh
-  where
-    rh :: IsPitch a => Aligned (Voice a)
-    rh = fmap (fmap $ const c) $ aligned 0 0 $ view durationsAsVoice (tail $ toRelativeTime onsets)
+TODO We have already seen these : pitches, parts, dynamics, articulation, techniques.
+
+Music Suite defines traversals and lenses for pitch, dynamic, articulation, parts and playing technique. If you've been following the previous chapters, you might have seen examples of these already: expressions such as `pitches .~ c`, `dynamics .~ ff` or `over dynamics (+ 1)` make use of traversals to *update* all pitches, dynamics and so on, in a given piece of music.
 
 
-    onsets :: [Time]
-    onsets = Data.List.nub $ toListOf (events . each . onset) canon
-
-    canon = rcat
-      [ theme
-      , theme |* (3/2)
-      , theme |* 2
-      ]
-    theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
-```
-
-## Traversing the components of a note
-
-### Pitches, dynamics and articulations
-
-Music Suite defines traversals and lenses for all of the standard musical aspects (pitch, dynamic, articulation and so on). If you've been following the previous chapters, you might have seen examples of these already: expressions such as `pitches .~ c`, `dynamics .~ ff` or `over dynamics (+ 1)` make use of traversals to *update* all pitches, dynamics and so on, in a given piece of music.
-
-### Parts and playing techniques
-
-TODO
-
+<!--
 ### Traversals vs. Lenses (singular vs plural)
 
 TODO
+-->
 
-### Polymorphic updates
-
-TODO introducing the polymorphic version of the lenses/traversals (`pitch`, `dynamic` etc.)
+## Polymorphic updates
 
 TODO polymorphic update example (e.g. `Common.Pitch` vs `Hertz`)
 
@@ -2784,6 +2978,47 @@ over t (up _P8) [d,d,d |* 2,d] |/ 4
     t = notes . each . filtered (\x -> x^.duration < 2)
 ```
 
+
+## More examples
+
+### Traversing the notes in a voice
+
+```music+haskell
+inspectableToMusic @(Voice [StandardNote]) $
+
+over t (\x -> if x^.duration > 1 then up m2 x else x) [d,d,d |* 2,d]
+  where
+    t = notes . each
+```
+
+```TODOmusic+haskell
+inspectableToMusic @(Voice [StandardNote]) $
+
+traverseOf t _ [d,d,d |* 2,d]
+  where
+    t = notes . each
+```
+
+
+### Traversing all the events in a score
+
+```music+haskell
+canon </> renderAlignedVoice rh
+  where
+    rh :: IsPitch a => Aligned (Voice a)
+    rh = fmap (fmap $ const c) $ aligned 0 0 $ view durationsAsVoice (tail $ toRelativeTime onsets)
+
+
+    onsets :: [Time]
+    onsets = Data.List.nub $ toListOf (events . each . onset) canon
+
+    canon = rcat
+      [ theme
+      , theme |* (3/2)
+      , theme |* 2
+      ]
+    theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
+```
 
 
 
@@ -2882,7 +3117,24 @@ The @[Inspectable] class represents types that can be converted into a standard 
 
 In some cases, the generality of the Music Suite library leads to ambiguity when selecting the type of the top-level expression. The `Music` type defined in `Music.Prelude` can be used as a default.
 
-TODO how to select backend on the CLI, or via the API
+```haskell
+main = defaultMain $ inspectableToMusic (c :: Music)
+```
+
+You can write the the above to `test.hs` and invoke:
+
+```bash
+$ cabal exec runhaskell test.hs
+Usage: <executable> -f [xml|ly|mid] -o PATH
+```
+
+To select e.g. the Lilypond backend:
+
+```bash
+$ cabal exec runhaskell test.hs -- -f ly -o hello.ly
+```
+
+<!-- TODO API to select backend rather than CLI -->
 
 ## Overview of backends
 
@@ -2913,6 +3165,7 @@ parts of a score, but perform manual editing on the output result.
 
 
 
+<!--
 # Tips and tricks
 
 ### Lists and streams
@@ -2936,6 +3189,7 @@ pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
 ```music+haskell
 pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 ```
+-->
 
 
 # Wall of Shame
@@ -3008,16 +3262,13 @@ rcat $ fmap renderAlignedVoice $ delay 1
 In other words, scores with events before time 0 should be treated as pickups and rendered in the same time signature as the first bar (starting at 0).
 
 
-### Staves
-
-### Misc
 
 
 # Acknowledgements
 
 ## Contributors
 
-TODO thanks
+Music Suite was made possible by [all the contributors](https://github.com/music-suite/music-score/graphs/contributors).
 
 ## Previous work
 

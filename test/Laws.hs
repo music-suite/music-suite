@@ -340,12 +340,6 @@ instance Monoid a => Monoid (Event a) where
   mappend = liftA2 mappend
 
 
--- instance Ord a => Ord (Event a) where
---   x `compare` y = (x^.from note) `compare` (y^.from note)
-instance Eq a => Eq (Score a) where
-  x == y = Data.List.sortBy (comparing (^.era)) (x^.events) == Data.List.sortBy (comparing (^.era)) (y^.events)
--- instance Splittable Integer where
-  -- split _ x = (x,x)
 
 unzipR f = (fmap fst f, fmap snd f)
 
@@ -469,11 +463,21 @@ oldTests =
 
   I_TEST2("Transformable Reactive Int", _Transformable, Reactive Int),
   I_TEST2("Transformable Aligned Int", _Transformable, Aligned Int),
+  I_TEST2("Transformable Aligned (Voice Int)", _Transformable, Aligned (Voice Int)),
+  I_TEST2("HasPosition/Transformable (Aligned (Voice Int))",
+    _HasPositionTransformable, Aligned (Voice Int)),
+  I_TEST2("HasPosition/HasDuration (Aligned (Voice Int))",
+    _HasDurationHasPosition, Aligned (Voice Int)),
 
   I_TEST2("Transformable Voice Int", _Transformable, Voice Int),
   I_TEST2("Transformable Score Int", _Transformable, Score Int),
   I_TEST2("Transformable Track Int", _Transformable, Track Int),
   I_TEST2("Transformable [Voice Int]", _Transformable, [Voice Int]),
+
+  -- TODO requires comparison of rendered form
+  -- Use newtype wrapper for Eq instance!
+  -- Similarly for Behavior
+  --  I_TEST2("Transformable Pattern Int", _Transformable, Pattern Int),
 
   I_TEST2("HasDuration Span", _HasDuration, Span),
   I_TEST2("HasDuration Event Int", _HasDuration, Event Int),

@@ -56,7 +56,6 @@ module Music.Time.Voice
     -- ** Zips and unzip
     zipVoiceScale,
     zipVoiceNoScale,
-    -- FIXME compose with (lens assoc unassoc) for the 3 and 4 versions
     zipVoiceScaleWith,
     zipVoiceWithNoScale,
     zipVoiceWith',

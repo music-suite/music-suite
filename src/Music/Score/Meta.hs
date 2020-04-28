@@ -5,11 +5,7 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
-  -fno-warn-unused-top-binds
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
-
--- FIXME unused-top-binds
+  -fno-warn-unused-matches #-}
 
 module Music.Score.Meta
   ( module Music.Time.Meta,
@@ -23,30 +19,12 @@ module Music.Score.Meta
   )
 where
 
--- withMetaAtStart,
-
-import Control.Applicative
 import Control.Lens hiding (parts)
-import Control.Monad
 import Control.Monad.Plus
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Bifunctor
-import Data.Foldable (Foldable (..))
-import qualified Data.Foldable as Foldable
-import qualified Data.List as List
 import Data.Maybe
-import Data.Ord
-import Data.Ratio
-import Data.Semigroup
-import Data.String
-import Data.Traversable
-import Data.VectorSpace
-import Music.Score.Internal.Util
-import Music.Score.Part
+import Music.Score.Internal.Util (composed)
 import Music.Time
 import Music.Time.Meta
-import Music.Time.Reactive
 
 addMetaNote :: forall a b. (AttributeClass a, HasMeta b) => Event a -> b -> b
 addMetaNote x = applyMeta $ wrapTMeta $ noteToReactive x
@@ -74,14 +52,6 @@ withMeta f x =
             $ (composed $ fmap (\(view (from event) -> (s, a)) -> mapDuring s $ f a) $ bs)
             $ mapAfter u (f c)
             $ x
-
--- withMetaAtStart :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
--- withMetaAtStart f x =
---   let m = view meta x
---    in f (fromMetaReactive m `atTime` (x ^. onset)) x
-
--- withSpan :: Score a -> Score (Span, a)
--- withSpan = mapWithSpan (,)
 
 -- TODO move
 withTime :: Score a -> Score (Time, a)
