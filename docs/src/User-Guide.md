@@ -223,7 +223,7 @@ staccato $ stretch (1/8) c
 
 ## Composition operators
 
-So far we have worked with a single note, which is not particularly interesting from a musical point of view. To combine multiple notes into a largers score we need a form of *composition*.
+So far we have worked with a single note, which is not particularly interesting from a musical point of view. To combine multiple notes into a larger score we need a form of *composition*.
 
 The basic composition operator is @[<>], which combines two pieces of music *simultaneously*. For example, we can combine the expressions `c`, `e` and `g`.
 
@@ -281,7 +281,7 @@ Comments are the same as in regular Haskell.
 
 ## Rests, tuplets and ties
 
-There is never any need to explicitly create rests, tuplets or ties in Music Suite. Instead, each note exist in a dedicated time span, which can be inspected and transformed. When we compose music expressions in parallel, all notes are interleaved without affecting their onset or duration.
+There is never any need to explicitly create rests, tuplets or ties in Music Suite. Instead, each note exists in a dedicated time span, which can be inspected and transformed. When we compose music expressions in parallel, all notes are interleaved without affecting their onset or duration.
 
 Notes with the same onset and offset are rendered as chords by default.
 
