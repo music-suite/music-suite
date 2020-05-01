@@ -1,4 +1,4 @@
-# Quick Start
+# Tutorial
 
 ## Installing
 
@@ -52,10 +52,11 @@ $ cabal exec runhaskell -- Test.hs
 We can copy-paste all examples from this file into the above template. Whatever value `music` is assigned to will be exported when you run the file.
 
 
+<!--
 ### Using an interactive environment
 
 TODO "visual interpreter" docs
-
+-->
 
 <!--
 
@@ -381,13 +382,21 @@ Looking at the type of the composition operators, it becomes clear that `|>` and
 
 In fact the `<>` operator is used for almost all forms of composition in Music Suite. The other operators simply peform some kind of manipulation on their values before or after composing.
 
+### Musical aspects
 
-## Conclusion
+While music is often though to be concerned primarily with time and pitch, Music Suite also allow representation of other "dimensions", including:
+
+- Dynamics: the *loudness* of a sound
+- Articulation: the *attack* and *relative length* of a sound
+- Instruments, parts and playing techniques, all of which affect *timbre*
+
+We'll sometimes refer to these collectively as *aspects*. Each aspect comes with its own traversal class, which is named after it, `HasPitches`, `HasDynamics`, `HasArticulations`, `HasParts`, `HasTechniques`, and so on.
+
+## Wrapping up
 
 This concludes the first chapter of the manual. We have seen how to write simple pieces, using melody, harmony and voices. You should now know enough to start working on your own music. You will find many more examples of pieces in the [examples directory](https://github.com/hanshoglund/music-suite/tree/master/examples).
 
 The rest of this manual can be read as a *reference*. We will be looking at musical aspects such as pitch, dynamics, rhythm, form and orchestration in detail. In general these chapters can generally be read in any order.
-
 
 
 
@@ -835,21 +844,11 @@ The type of the previous operations mention @[Transposable]:
 
 @[Transposable] is in fact a synonym for the following set of constraints:
 
-```haskell
-    HasPitches a
-    AffinePair (Interval a) (Pitch a)
-    IsInterval (Interval a)
-    IsPitch (Pitch a)
-    Num (Scalar v)
-```
-
-This may look complicated, but it simply means that:
-
-- `HasPitches' a` means that `a` is some type supporting pitch traversals
-- `AffinePair (Interval a) (Pitch a)` means that the pitch type is an affine space and the interval its underlying vector space
-- `IsInterval` and `IsPitch` means that We can lift standard pitch/interval
+- `HasPitches' a`, meaning that `a` is some type supporting pitch traversals
+- `AffinePair (Interval a) (Pitch a)`, meaing that the pitch type is an affine space and the interval its underlying vector space
+- `IsInterval` and `IsPitch`, meaning that We can lift standard pitch/interval
   names into the pitch space, so expressions such as `cs` and `m3` makes sense
-- `Num (Scalar v)` means that we can scale the intervals
+- `Num (Scalar v)`, meaning that we can scale the intervals
 
 
 
@@ -1318,12 +1317,6 @@ TODO spectral dissonance using HCF
 
 
 # Articulation and dynamics
-
-There is of course more to music than time and pitch. Music Suite provides particular support fot the following other dimensions (or *aspects*) of music:
-
-- Dynamics: relative loudness of a sound
-- Articulation: attack and relative length of a sound
-- Instruments, parts and playing techniques
 
 ## Adding dynamics
 
@@ -2136,7 +2129,7 @@ fermata StandardFermata (ppar [c,e,g])
 Note that a fermata attaches to a specific point known as the *sustain point* (the beginning of the given score is used by default). All notes overlapping the sustain point have a fermata drawn on them.
 
 ```music+haskell
-fermata StandardFermata (ppar [pseq[c,d] |/ 2,e,g]) |/ 4
+fermata StandardFermata (ppar [pseq[c,d] |/ 2,e,g])
 ```
 
 <!--
@@ -2327,7 +2320,11 @@ Here is an alternative view of span: as an *affine transformation*.
 
 A span `a >-> b` represents the act of *stretching by b* followed by *delaying by a*.
 
+<!--
 For those familiar with linear algebra or computer graphics: Because time is one-dimensional a *linear transformation matrix* in time is a 1x1 matrix (e.g. a scalar). Its *affine transformation matrix* is a 2x2 matrix. We can understand the monoid instance for @[Span] as multiplication of 2x2 matrices.
+-->
+
+TODO Spans are an affine group over Time: AdditiveGroup and Monoid instance
 
 ```haskell
 >>> mempty :: Span
@@ -2335,9 +2332,15 @@ For those familiar with linear algebra or computer graphics: Because time is one
 
 >>> negateV (0 <-> 2)
 (0 <-> 0.5)
+
+>>> negateV (2 <-> 1)
+(0.5 >-> 1)
+
+>>> (0 >-> 3) <> (2 >-> 1)
+(2 >-> 3)
 ```
 
-@[Transformable]
+The @[Transformable] class represent all things that can be transformed. TODO laws
 
 TODO spans are a group and `transform @X` is a left group action on some transformable type `X`. The basic intuition is that they move all the points.
 
@@ -2368,9 +2371,9 @@ We can think of our time types as coming in two shapes:
 
 Note that this does *not* invalidate the laws.
 
-### TimeInterval
+### Spans as time intervals
 
-The @[TimeInterval] type is exactly the same as span, but also allows for empty spans to be represented. It forms a monoid with the convex @[hull] operator.
+The @[TimeInterval] type is similar to @[Span], but also allows for empty spans to be represented. It forms a monoid with the convex @[hull] operator.
 
 
 
@@ -2510,6 +2513,72 @@ inspectableToMusic @(Voice (Maybe Pitch)) $
 
 This works because of [pitch overloading](TODO link).
 
+<!--
+```music+haskellx
+let
+    x = [ (1, c),
+          (1, d),
+          (1, f),
+          (1, e) ]^.voice
+
+    y = join $ [ (1, x),
+                 (0.5, up _P5 x),
+                 (4, up _P8 x) ]^.voice
+
+in stretch (1/8) $ voiceToScore $ y
+```
+-->
+
+
+<!--
+
+## Tracks
+
+A @[Track] is similar to a score, except that it events have no offset or duration. It is useful for representing point-wise occurrences such as samples, cues or percussion notes.
+
+It can be converted into a score by delaying each element and composing in parallel. An explicit duration has to be provided.
+
+```music+haskellx
+let
+    x = [ (0, c), (1, d), (2, e) ]^.track
+    y = join $ [ (0, x),
+                (1.5,  up _P5 x),
+                (3.25, up _P8 x) ]^.track
+
+in trackToScore (1/8) y
+```
+-->
+
+TODO create from rhythm
+
+TODO create from list of notes
+
+TODO create from IsPitch
+
+TODO create using (^.voice)
+
+### Traversing voices
+
+TODO
+
+### Transforming voices
+
+TODO Transformable, HasDuration
+
+Voices do not have a position, i.e. they are translation-invariant. In order to anchor a voice at a specific point in time use [`Aligned`](#alignment).
+
+TODO rotation
+
+TODO fusion and stretch
+
+TODO take/drop
+
+TODO filtering (MonadPlus!)
+
+### Combining voices
+
+TODO Monoid, Monad, Applicative, MonadZip + guard
+
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
 
@@ -2565,41 +2634,7 @@ inspectableToMusic @(Voice [Pitch]) $
   , isMelodicConsonance (x .-. y) && isConsonance (x .-. y) ]
 ```
 
-<!--
-```music+haskellx
-let
-    x = [ (1, c),
-          (1, d),
-          (1, f),
-          (1, e) ]^.voice
 
-    y = join $ [ (1, x),
-                 (0.5, up _P5 x),
-                 (4, up _P8 x) ]^.voice
-
-in stretch (1/8) $ voiceToScore $ y
-```
--->
-
-
-<!--
-
-## Tracks
-
-A @[Track] is similar to a score, except that it events have no offset or duration. It is useful for representing point-wise occurrences such as samples, cues or percussion notes.
-
-It can be converted into a score by delaying each element and composing in parallel. An explicit duration has to be provided.
-
-```music+haskellx
-let
-    x = [ (0, c), (1, d), (2, e) ]^.track
-    y = join $ [ (0, x),
-                (1.5,  up _P5 x),
-                (3.25, up _P8 x) ]^.track
-
-in trackToScore (1/8) y
-```
--->
 
 ## Alignment
 
@@ -2646,6 +2681,32 @@ TODO sequential composition of aligned voices "snap to next stressed beat":
 
 A @[Score] represents a *parallel composition of values*, each tagged with *time span*.
 
+
+### Creating scores
+
+Using IsPitch
+Using pure
+Composition
+Monad comprehensions
+From a list of events
+
+### Traversing scores
+Score is Traversable, HasPitches etc
+
+Special traversals such as mapWithSpan
+
+Filtering with MonadPlus
+
+### Transforming scores
+Transformable, HasPosition
+
+### Nested scores
+join
+
+### Overlapping events
+TODO
+
+### Representing rests
 An empty scores has no duration, but we can represent rests using `Score (Maybe a)`.
 
 ```music+haskell
@@ -2659,9 +2720,15 @@ pseq [c,rest,d] |/ 4
 
 A @[Pattern] can be throught of as a generalization of a *rhythm* or *beat*. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself (though the repeating duration may be long).
 
+### Creating patterns
+
 The basic way of buildings patterns are @[newPattern] and @[rhythmPattern].
 
-We can compose patterns in parallel using @[<>] just as with scores.
+TODO example
+
+### Composing patterns
+
+We can compose patterns in parallel using the regular composition operator @[<>].
 
 ```music+haskell
 fmap Just $ renderPattern (a <> b) (0 <-> 4)
@@ -2670,6 +2737,17 @@ fmap Just $ renderPattern (a <> b) (0 <-> 4)
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
     -- TODO use claves, maracas here
 ```
+
+As patterns are infinite, we can compose patterns of different durations. Both patterns will just be repeated indefinately.
+
+```music+haskell
+fmap Just $ renderPattern (a <> b) (0 <-> 2)
+  where
+    a = parts' .~ trumpets  $ newPattern [c,d] |/ 8
+    b = parts' .~ trombones $ newPattern [c,d,e] |/ 8
+```
+
+### Transforming patterns
 
 Patterns are @[Transformable], @[Transposable], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns. For example we can set parts and dynamics, or transpose patterns.
 
@@ -2687,14 +2765,6 @@ fmap Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
 ```
 
-As patterns are infinite, we can compose patterns of different durations. Both patterns will just be repeated indefinately.
-
-```music+haskell
-fmap Just $ renderPattern (a <> b) (0 <-> 2)
-  where
-    a = parts' .~ trumpets  $ newPattern [c,d] |/ 8
-    b = parts' .~ trombones $ newPattern [c,d,e] |/ 8
-```
 
 ```music+haskell
 fmap Just $ renderPattern (a <> b) (0 <-> 2)
@@ -2754,14 +2824,37 @@ inspectableToMusic bachCMajChords
 ```
 -->
 
-## Time, change and sampling
+## Time-varying values
 
-TODO Behavior and Reactive
+The structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points* or *notes*. We will now look at an alternative time structure where this is not necessarily the case. @[Behavior] represents a *time-varying values*, or functions of time.
 
-@[Behaviors] are *continous* functions of time.
+TODO example
 
-A @[Reactive] is like a behaviours that can only change at certain well-known locations. Alternative, you can think of it as a @[Voice] that stretches out indefinately in both directions.
+Behaviours are continous, which implies that:
 
+- They are defined at *any point in time*. A behavior always has a value, unlike, e.g. aligned boices.
+
+- They can change at infinitely small intervals. Just like with vector graphics, behaviours allow us to zoom in arbitrarily close, and potentially discover new changes. Thus it is (in general) nonsensical to talk about *when* a behaviour changes.
+
+A @[Reactive] is a discrete behabior, e.g. a time-varing value that can only change at certain well-known locations. A @[Reactibe] value is similar to a @[Voice], but stretches out indefinately in both directions.
+
+TODO exampels of Reactives
+
+### Constant values
+### Switching
+### Predefined behaviors
+### Transforming Behaviors and Reactives
+
+IsPitch/Transposable
+Transformable
+Functor
+Applicative
+Monad
+
+### Conversions
+#### Reactive to Behavior
+#### Behavior to Reactive
+#### Score to Behavior
 <!--
 TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
 -->
@@ -2898,24 +2991,36 @@ A traversal that targets exactly one element is known as a *lens*. We've already
 
 ## Using traversals
 
-Folding/accumulating:
+### Folding and accumulating
 
 @[toListOf]
-@[anyOf]
+
+```haskell
+>>> toListOf pitches' (c <> d :: Score Pitch)
+[c,d] :: [Pitch]
+```
+
+@[anyOf], @[allOf]
+
+```haskell
+anyOf pitches' (> c) (b_ <> c :: Score Pitch)
+False
+```
+
 @[allOf]
 
-Setting/mapping:
+### Mapping and setting
 
 @[over]
 
-Arbitrary effects:
+### Applicative side-effects
 
 @[State]
-@[Writer]
 @[Maybe]
+@[Either A]
 
 
-## Specific traversals
+## Aspect traversals
 
 TODO We have already seen these : pitches, parts, dynamics, articulation, techniques.
 
