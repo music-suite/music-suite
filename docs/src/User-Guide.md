@@ -2318,13 +2318,11 @@ To convert between these representations, we can use @[onsetAndOffset], @[onsetA
 
 Here is an alternative view of span: as an *affine transformation*.
 
-A span `a >-> b` represents the act of *stretching by b* followed by *delaying by a*.
+A span `a >-> b` represents the act of *stretching by b* followed by *delaying by a*. Spans form a group using *composition of transformations*. The identity transformation is `0 >-> 1` (scaling a by one and delaying by zero).
 
 <!--
 For those familiar with linear algebra or computer graphics: Because time is one-dimensional a *linear transformation matrix* in time is a 1x1 matrix (e.g. a scalar). Its *affine transformation matrix* is a 2x2 matrix. We can understand the monoid instance for @[Span] as multiplication of 2x2 matrices.
 -->
-
-TODO Spans are an affine group over Time: AdditiveGroup and Monoid instance
 
 ```haskell
 >>> mempty :: Span
@@ -2340,13 +2338,19 @@ TODO Spans are an affine group over Time: AdditiveGroup and Monoid instance
 (2 >-> 3)
 ```
 
-The @[Transformable] class represent all things that can be transformed. TODO laws
+TODO examples of transforming points
 
-TODO spans are a group and `transform @X` is a left group action on some transformable type `X`. The basic intuition is that they move all the points.
+### The Transformable class
 
-Applying the empty transformation changes nothing, and applying a composition of transfomrations is equivalent to applying them all from innermost to outermost (the Transformable laws).
+The @[Transformable] class represent all things that can be transformed. All instance satisfy the following laws:
 
-We have already seen how *augmentation*, *diminishion* and *phasing* can be accomplished with `stretch`, `compress` and `delay`. These are in fact all shortcuts for the common type of transformations.
+- `transform mempty x = x`, e.g. applying the empty transformation changes nothing.
+- `transform (s <> t) x = transform s (transform t) x`, e.g. applying a composition of transfomrations is equivalent to applying them all in sequence.
+- `transform (s <> negateV s) x = x`, e.g. each transformation has an inverse.
+
+Formally `transform @a` is a left group action on some transformable type `a`. Intuitively, transforming  a value is equivalent to transforming *all the points in the value*.
+
+We have already seen how classical counterpoint and serial operations can be formoulated as transformations. For example *augmentation*, *diminishion* and *phasing* can be accomplished with `stretch`, `compress` and `delay`:
 
 ```music+haskell
 delay 1 (stretch 2 c)
@@ -2950,37 +2954,61 @@ in times 4 $ melody
 
 # Traversals
 
-In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions. Traverals are a subtle and powerful concept. The basic ideas is simple: given some functor type we have a way of visiting all the elements in a given order.
+In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions. The most important tool for this in Music Suite is called a *traversal*.
 
-We can exploit this to:
+Traverals are a subtle and powerful concept. The basic ideas is simple: given some traverable "container" value, we have a way of visiting all of its element in some specific order. We can exploit this to:
 
 - Accumulate computations over all the elements
 - Searching and querying the elements
 - Update the elements one at a time
 
-> Note: Mutating data structures is completely disallowed in Haskell, so whenever we refer to "change" or "update" in the context of a data structure, we are actually creating new structures on the fly.
+Of course Haskell is a pure language, so whenever we refer to "change" or "update" in the context of a data structure, we are actually creating new structures on the fly.
 
-Let's look at the type of the @[traverse] function:
+The most common traversal is known as `traverse`, and is defined for all types that are `Traversable`. The type signature of `traverse` is highly general:
 
 ```haskell
->>> traverse @[] @_ @Bool @Bool
 traverse ::
-  forall f . Applicative f =>
+  (Traversable t, Applicative f) =>
+  (a -> f b) ->
+  t a -> f (t b)
+```
+
+This is easier to understand if we specify some of the type variables:
+
+```haskell
+traverse ::
+  Applicative f =>
   (Bool -> f Bool) ->
   [Bool] -> f [Bool]
 ```
 
 The way to read this is that `traverse` transforms an effectful function operating on `Bool` to operate on `[Bool]` instead.
 
-Here is another traversal called @[pitches]:
+Here is another example of a traversal:
 
 ```haskell
->>> pitches' @Score ::
+traversePitches ::
   (Pitch -> f Pitch) ->
   Score Pitch -> f (Score Pitch)
 ```
 
 This means, given a score of pitches and a function operating on pitches, traverse the pitches in the score one by one using the function and return a *new* score containing the transformed pitches.
+
+To make this more readable we can use the following two type synonyms:
+
+
+```haskell
+type Traversal  s t a b = forall f . Applicative f => (a -> f b) -> s -> f t
+type Traversal' s a     = forall f . Applicative f => (a -> f a) -> s -> f s
+```
+
+We can now write:
+
+```haskell
+traverse        :: Traversable t => Traversal (t a) (t b) a b
+traverse        :: Traversal' [Bool] Bool
+traversePitches :: Traversal' (Score Pitch) Pitch
+```
 
 
 <!--
