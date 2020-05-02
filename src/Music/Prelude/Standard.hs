@@ -10,6 +10,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
+  -fno-warn-unused-binds
   -fno-warn-redundant-constraints #-}
 
 ------------------------------------------------------------------------------------
@@ -75,7 +76,15 @@ type Music = Score StandardNote
 -- TODO set logging level
 -- TODO more options?
 data ExportBackend = ToXml | ToLy | ToMidi | ToLyAndMidi
-data CommandLineOptions = CommandLineOptions ExportBackend LilypondOptions FilePath
+data CommandLineOptions
+  = CommandLineOptions
+      { -- | Backend to use.
+        backend :: ExportBackend,
+        -- | Lilypond options, ignored when `backend` is not `ToLy`.
+        lilypondOptions :: LilypondOptions,
+        -- | Path to generated file.
+        output :: FilePath
+      }
 
 parseOpts :: O.Parser CommandLineOptions
 parseOpts =

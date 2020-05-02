@@ -66,8 +66,7 @@ library
                         random,
                         neat-interpolation,
                         modular-arithmetic,
-                        random-shuffle,
-                        optparse-applicative
+                        random-shuffle
     if !os(windows)
       build-depends:    unix
 
