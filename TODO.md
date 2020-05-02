@@ -1,8 +1,9 @@
 
 ## TODO
--- * DynamicTO
 
-**Note: We use this file instead of an issue tracker, for now**
+### Note
+
+We use this file instead of an issue tracker. Issues filed in Github etc should be copied here.
 
 Consider switching to a decentralized issue tracker such as:
 
