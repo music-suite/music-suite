@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -65,6 +66,7 @@ import Music.Score.Export.StandardNotation (Asp1, Asp1a, LilypondLayout (..), Li
 import qualified Music.Score.Part
 import qualified System.Environment
 import qualified Text.Pretty
+import qualified Options.Applicative as O
 
 type StandardNote = Asp1
 
@@ -72,52 +74,74 @@ type Music = Score StandardNote
 
 -- TODO set logging level
 -- TODO more options?
+data ExportBackend = ToXml | ToLy | ToMidi | ToLyAndMidi
 data CommandLineOptions
-  = ToXml FilePath
-  | ToLy LilypondOptions FilePath
-  | ToMidi FilePath
-  | ToLyAndMidi LilypondOptions FilePath
-  | Help
+  = CommandLineOptions
+      { -- | Backend to use.
+        backend :: ExportBackend,
+        -- | Lilypond options, ignored when `backend` is not `ToLy`.
+        lilypondOptions :: LilypondOptions,
+        -- | Path to generated file.
+        output :: FilePath
+      }
 
--- TOOD Proper parser using optparse-applicative or optparse-generic
-parse :: Applicative m => [String] -> m CommandLineOptions
-parse ("-f" : "xml" : "-o" : path : _) = pure $ ToXml path
-parse ("-f" : "ly" : "-o" : path : _) = pure $ ToLy defaultLilypondOptions path
-parse ("-f" : "ly+mid" : "-o" : path : _) = pure $ ToLyAndMidi defaultLilypondOptions path
-parse ("-f" : "ly" : "--layout=inline" : "-o" : path : _) = pure $ ToLy (defaultLilypondOptions {layout = LilypondInline}) path
-parse ("-f" : "mid" : "-o" : path : _) = pure $ ToMidi path
-parse _ = pure Help
+parseOpts :: O.Parser CommandLineOptions
+parseOpts =
+  CommandLineOptions
+    <$> O.option
+      (O.eitherReader readBackend)
+      (O.long "filetype" <> O.short 'f' <> O.metavar "[xml|ly|mid|ly+mid]")
+    <*> parseLyOpts
+    <*> (O.strOption (O.long "out" <> O.short 'o' <> O.metavar "PATH"))
+  where
+    readBackend = \case
+      "xml" -> Right ToXml
+      "mid" -> Right ToMidi
+      "ly" -> Right ToLy
+      "ly+mid" -> Right ToLyAndMidi
+      "mid+ly" -> Right ToLyAndMidi
+      s -> Left ("Backend must be one of [xml|ly|mid|ly+mid], not " <> s)
+
+parseLyOpts :: O.Parser LilypondOptions
+parseLyOpts =
+  LilypondOptions
+    <$> O.option
+      (O.eitherReader readLayout)
+      (O.long "layout" <> O.metavar "[inline|score|big-score] (default big-score)")
+    <|> pure defaultLilypondOptions
+  where
+    readLayout = \case
+      "inline" -> Right LilypondInline
+      "score" -> Right LilypondScore
+      "big-score" -> Right LilypondBigScore
+      _ -> Left "Lilypond layout must be one of [inline|score|big-score]"
+
+
 
 defaultMain :: Music -> IO ()
 defaultMain music = do
-  args <- System.Environment.getArgs
-  opts <- parse args
+  opts <- O.execParser $ O.info (parseOpts <**> O.helper) O.fullDesc
   handle opts
   where
-    handle opts = case opts of
-      Help ->
-        putStrLn
-          "Usage: <executable> -f [xml|ly|mid] -o PATH"
-      ToLyAndMidi lyOpts path -> do
+    handle opts = case backend opts of
+      ToLyAndMidi -> do
         -- TODO run in parallel?
-        handle $
-          ToMidi
-            (stripSuffix path ++ ".mid")
-        handle $ ToLy lyOpts path
-      ToMidi path -> do
+        handle $ opts {backend = ToMidi, output = stripSuffix (output opts) ++ ".mid"}
+        handle $ opts {backend = ToLy}
+      ToMidi -> do
         midi <- runIOExportM $ toMidi music
-        Codec.Midi.exportFile path midi
-      ToLy opts path -> do
+        Codec.Midi.exportFile (output opts) midi
+      ToLy -> do
         work <- runIOExportM $ toStandardNotation music
-        (h, ly) <- runIOExportM $ toLy opts work
+        (h, ly) <- runIOExportM $ toLy (lilypondOptions opts) work
         let ly' = h ++ show (Text.Pretty.pretty ly)
         -- TODO use ByteString/builders, not String?
-        writeFile path ly'
-      ToXml path -> do
+        writeFile (output opts) ly'
+      ToXml -> do
         work <- runIOExportM $ toStandardNotation music
         work' <- runIOExportM $ toXml work
         -- TODO use ByteString/builders, not String?
-        writeFile path $ Data.Music.MusicXml.showXml work'
+        writeFile (output opts) $ Data.Music.MusicXml.showXml work'
 
 stripSuffix :: String -> String
 stripSuffix xs
