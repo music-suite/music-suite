@@ -10,7 +10,6 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-unused-binds
   -fno-warn-redundant-constraints #-}
 
 ------------------------------------------------------------------------------------
@@ -124,25 +123,25 @@ defaultMain music = do
   opts <- O.execParser $ O.info (parseOpts <**> O.helper) O.fullDesc
   handle opts
   where
-    handle (CommandLineOptions backend lyOpts path) = case backend of
+    handle opts = case backend opts of
       ToLyAndMidi -> do
         -- TODO run in parallel?
-        handle $ CommandLineOptions ToMidi lyOpts (stripSuffix path ++ ".mid")
-        handle $ CommandLineOptions ToLy lyOpts path
+        handle $ opts {backend = ToMidi, output = stripSuffix (output opts) ++ ".mid"}
+        handle $ opts {backend = ToLy}
       ToMidi -> do
         midi <- runIOExportM $ toMidi music
-        Codec.Midi.exportFile path midi
+        Codec.Midi.exportFile (output opts) midi
       ToLy -> do
         work <- runIOExportM $ toStandardNotation music
-        (h, ly) <- runIOExportM $ toLy lyOpts work
+        (h, ly) <- runIOExportM $ toLy (lilypondOptions opts) work
         let ly' = h ++ show (Text.Pretty.pretty ly)
         -- TODO use ByteString/builders, not String?
-        writeFile path ly'
+        writeFile (output opts) ly'
       ToXml -> do
         work <- runIOExportM $ toStandardNotation music
         work' <- runIOExportM $ toXml work
         -- TODO use ByteString/builders, not String?
-        writeFile path $ Data.Music.MusicXml.showXml work'
+        writeFile (output opts) $ Data.Music.MusicXml.showXml work'
 
 stripSuffix :: String -> String
 stripSuffix xs
