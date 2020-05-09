@@ -482,6 +482,7 @@ data Technical
   | OpenString
   | ThumbPosition
   | Fingering
+      Natural -- TODO restrict to (0..5)?
   | Pluck
   | DoubleTongue
   | TripleTongue
@@ -489,6 +490,7 @@ data Technical
   | SnapPizzicato
   | Fret
   | String
+      Natural
   | HammerOn
   | PullOff
   | Bend

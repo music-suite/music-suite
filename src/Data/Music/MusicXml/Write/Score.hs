@@ -463,14 +463,14 @@ instance WriteMusicXml Technical where
   write Harmonic = single $ unode "harmonic" ()
   write OpenString = single $ unode "openstring" ()
   write ThumbPosition = single $ unode "thumb-position" ()
-  write Fingering = single $ unode "fingering" ()
+  write (Fingering f) = single $ unode "fingering" (show f)
   write Pluck = single $ unode "pluck" ()
   write DoubleTongue = single $ unode "double-tongue" ()
   write TripleTongue = single $ unode "triple-tongue" ()
   write Stopped = single $ unode "stopped" ()
   write SnapPizzicato = single $ unode "snap-pizzicato" ()
   write Fret = single $ unode "fret" ()
-  write String = single $ unode "string" ()
+  write (String s) = single $ unode "string" (show s)
   write HammerOn = single $ unode "hammer-on" ()
   write PullOff = single $ unode "pull-off" ()
   write Bend = single $ unode "bend" ()
@@ -481,7 +481,7 @@ instance WriteMusicXml Technical where
   write Hole = single $ unode "hole" ()
   write Arrow = single $ unode "arrow" ()
   write Handbell = single $ unode "handbell" ()
-  write (OtherTechnical tech) = notImplemented "OtherTechnical"
+  write (OtherTechnical tech) = notImplemented ("OtherTechnical " <> tech)
 
 instance WriteMusicXml Articulation where
   write Accent = single $ unode "accent" ()
@@ -521,7 +521,7 @@ instance WriteMusicXml Direction where
         <> singleIf dotted (unode "beat-unit-dot" ())
         <> [unode "per-minute" (show $ round $ getTempo tempo)]
   write Bracket = notImplemented "Unsupported directions"
-  write (OtherDirection dir) = notImplemented "OtherDirection"
+  write (OtherDirection dir) = notImplemented ("OtherDirection " <> dir)
 
 -- ----------------------------------------------------------------------------------
 -- Barline
