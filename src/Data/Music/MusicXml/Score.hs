@@ -87,8 +87,8 @@ module Data.Music.MusicXml.Score
     -----------------------------------------------------------------------------
 
     -- ** Pitch
-    Pitch (..),
-    DisplayPitch (..),
+    Pitch,
+    DisplayPitch,
     PitchClass,
     Semitones (..),
     noSemitones,
@@ -100,8 +100,8 @@ module Data.Music.MusicXml.Score
     -----------------------------------------------------------------------------
 
     -- ** Time
-    Duration (..),
-    NoteType (..),
+    Duration,
+    NoteType,
     Divs (..),
     NoteVal (..),
     NoteSize (..),
@@ -119,15 +119,14 @@ module Data.Music.MusicXml.Score
     LineType (..),
     Level (..),
     BeamType (..),
-    StartStop (..),
-    StartStopChange (..),
-    StartStopContinue (..),
+    StartStop,
+    StartStopChange,
+    StartStopContinue,
     StartStopContinueChange (..),
   )
 where
 
 import Data.Default
-import Data.Foldable
 import qualified Data.List as List
 import Data.Music.MusicXml.Dynamics
 import Data.Music.MusicXml.Pitch
@@ -393,7 +392,7 @@ instance HasNoteProps Note where
 
 instance HasNoteProps MusicElem where
   modifyNoteProps f (MusicNote n) = MusicNote (modifyNoteProps f n)
-  modifyNoteProps f x = x
+  modifyNoteProps _ x = x
 
 -- ----------------------------------------------------------------------------------
 -- Notations
