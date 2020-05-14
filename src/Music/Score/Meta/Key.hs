@@ -56,7 +56,7 @@ import qualified Data.List
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
-import Data.Monoid
+import Data.Semigroup
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.String
@@ -138,23 +138,22 @@ instance IsPitch Fifths where
 -}
 
 -- | A key signature, represented by number of fifths from C and mode.
-newtype KeySignature = KeySignature {getKeySignature :: First (Pitch, MajorMinor)}
-  deriving (Eq, Ord, Typeable, Semigroup, Monoid)
+newtype KeySignature = KeySignature { getKeySignature :: (Pitch, MajorMinor) }
+  deriving (Eq, Ord, Typeable)
 
 instance Show KeySignature where
-  show (KeySignature (First Nothing)) = "mempty"
-  show (KeySignature (First (Just (f, b)))) = "key " ++ showsPrec 1 f "" ++ " " ++ showsPrec 1 b ""
+  show (KeySignature (f, b)) = "key " ++ showsPrec 1 f "" ++ " " ++ showsPrec 1 b ""
 
 -- | Create a major or minor signature.
 key :: Pitch -> MajorMinor -> KeySignature
-key tonic mode = KeySignature $ First $ Just (tonic, mode)
+key tonic mode = KeySignature (tonic, mode)
 
 -- | Set the key signature of the given score.
-keySignature :: (HasMeta a, HasPosition a) => KeySignature -> a -> a
+keySignature :: (HasMeta a, HasPosition a, Transformable a) => KeySignature -> a -> a
 keySignature c x = case _era x of
   Nothing -> x
   Just e -> keySignatureDuring e c x
 
 -- | Set the key signature of the given part of a score.
 keySignatureDuring :: HasMeta a => Span -> KeySignature -> a -> a
-keySignatureDuring s c = addMetaNote $ view event (s, c)
+keySignatureDuring s c = addMetaNote $ view event (s, Option . Just . Last $ c) -- TODO Consolidate with Music.Score.Meta.Time

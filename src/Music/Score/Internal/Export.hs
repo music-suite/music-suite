@@ -64,6 +64,7 @@ import Data.Traversable
 import Data.Typeable
 import Data.VectorSpace
 import Music.Dynamics.Literal
+import Music.Pitch.Common (MajorMinor (..))
 import Music.Pitch.Literal
 import Music.Score.Articulation
 import Music.Score.Dynamics
@@ -134,7 +135,7 @@ extractBarsInEra era x = zip3 dss tss kss
     foo :: Reactive (TimeSignature, KeySignature)
     foo =
       (,) <$> getTimeSignatures defaultTimeSignature x
-        <*> getKeySignatures x
+        <*> getKeySignatures defaultKeySignature x
 
 -- | Extract bar-related information from score meta-data.
 --
@@ -163,13 +164,17 @@ extractTimeSignaturesInEra era score = zip (fmap realToFrac barTimeSignatures) (
         $ undefined timeSignatures
 
 -- | Extract the time signature meta-track, using the given default.
-getTimeSignatures :: HasMeta a => TimeSignature -> a -> Reactive TimeSignature
-getTimeSignatures def = fmap (fromMaybe def . fmap getLast . getOption) . fromMetaReactive . (view meta)
+getTimeSignatures = getSignatures @_ @TimeSignature
 
 -- | Extract the key signature meta-track
-getKeySignatures :: HasMeta a => a -> Reactive KeySignature
-getKeySignatures = fromMetaReactive . view meta
+getKeySignatures = getSignatures @_ @KeySignature
 
+getSignatures :: (HasMeta a, Typeable b) => b -> a -> Reactive b
+getSignatures def =
+  fmap (fromMaybe def . fmap getLast . getOption) . fromMetaReactive . (view meta)
+
+defaultKeySignature :: KeySignature
+defaultKeySignature = key c MajorMode
 defaultTimeSignature :: TimeSignature
 defaultTimeSignature = time 4 4
 
