@@ -104,7 +104,6 @@ library
                         Data.Music.MusicXml.Simple
                         Data.Music.MusicXml.Time
                         Data.Music.MusicXml.Write
-                        Data.Music.MusicXml.Write.Score
                         Music.Pitch
                         Music.Pitch.Equal
                         Music.Pitch.Common

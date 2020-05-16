@@ -114,7 +114,6 @@ import Data.Music.MusicXml.Read
 import Data.Music.MusicXml.Score
 import Data.Music.MusicXml.Time
 import Data.Music.MusicXml.Write
-import Data.Music.MusicXml.Write.Score
 import Text.XML.Light hiding (Line)
 
 -- --------------------------------------------------------------------------------
