@@ -104,11 +104,13 @@ instance WriteMusicXml ScoreHeader where
   write
     ( ScoreHeader
         title
+        mvmNumber
         mvm
         ident
         partList
       ) =
       mempty <> writeTitle title
+        <> writeMvmNumber (show <$> mvmNumber)
         <> writeMvm mvm
         <> writeIdent ident
         <> writePartList partList
@@ -117,6 +119,7 @@ instance WriteMusicXml ScoreHeader where
         writeIdent :: Maybe Identification -> [Element]
         writePartList :: PartList -> [Element]
         writeTitle = fmap (unode "title") . maybeToList
+        writeMvmNumber = fmap (unode "movement-number") . maybeToList
         writeMvm = fmap (unode "movement-title") . maybeToList
         writeIdent = single . unode "identification" . (write =<<) . maybeToList
         writePartList = single . unode "part-list" . (write =<<) . getPartList

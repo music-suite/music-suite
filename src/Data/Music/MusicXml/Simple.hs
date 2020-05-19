@@ -335,17 +335,20 @@ bar :: [Music] -> Music
 bar = measure
 
 header :: String -> String -> PartList -> ScoreHeader
-header title composer partList = ScoreHeader Nothing (Just title) (Just (Identification [Creator "composer" composer])) partList
+header title composer partList = ScoreHeader Nothing Nothing (Just title) (Just (Identification [Creator "composer" composer])) partList
 
 setHeader :: ScoreHeader -> Score -> Score
 setHeader header (Partwise attrs _ music) = Partwise attrs header music
 setHeader header (Timewise attrs _ music) = Timewise attrs header music
 
 setTitle :: String -> ScoreHeader -> ScoreHeader
-setTitle title (ScoreHeader _ mvmTitle ident partList) = ScoreHeader (Just title) mvmTitle ident partList
+setTitle title sh = sh { scoreTitle = Just title }
+
+setMovementNumber :: Int -> ScoreHeader -> ScoreHeader
+setMovementNumber n sh = sh { mvmNumber = Just n }
 
 setMovementTitle :: String -> ScoreHeader -> ScoreHeader
-setMovementTitle mvmTitle (ScoreHeader title _ ident partList) = ScoreHeader title (Just mvmTitle) ident partList
+setMovementTitle t sh = sh { mvmTitle = Just t }
 
 -- | The values P1, P2... which are conventionally used to identify parts in MusicXML.
 standardPartAttributes :: [String]
@@ -911,7 +914,7 @@ instance Default ScoreAttrs where
   def = ScoreAttrs []
 
 instance Default ScoreHeader where
-  def = ScoreHeader Nothing Nothing Nothing mempty
+  def = ScoreHeader Nothing Nothing Nothing Nothing mempty
 
 instance Default Note where
   def = Note def def [] def

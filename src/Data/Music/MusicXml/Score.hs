@@ -160,12 +160,14 @@ data Score
 
 data ScoreHeader
   = ScoreHeader
-      (Maybe String) --  ^ title
-      (Maybe String) --  ^ movement title
-      (Maybe Identification) --  ^ identification?
-        --  ^ defaults?
-        --  ^ credit*
-      PartList --  ^ partlist?
+      { scoreTitle :: Maybe String,
+        mvmNumber :: Maybe Int,
+        mvmTitle :: Maybe String,
+        scoreIdentification :: Maybe Identification,
+            --  ^ defaults?
+            --  ^ credit*
+        scorePartList :: PartList
+      }
 
 data Identification
   = Identification
