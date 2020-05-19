@@ -296,9 +296,9 @@ bracket :: PartList -> PartList
 bracket ps =
   PartList $
     mempty
-      <> [Group 1 Start "" Nothing (Just GroupBracket) (Just GroupBarLines) False]
+      <> [Group 1 Start Nothing Nothing (Just GroupBracket) (Just GroupBarLines) False]
       <> getPartList ps
-      <> [Group 1 Stop "" Nothing Nothing Nothing False]
+      <> [Group 1 Stop Nothing Nothing Nothing Nothing False]
 
 -- |
 -- Enclose the given parts in a brace.
@@ -306,9 +306,9 @@ brace :: PartList -> PartList
 brace ps =
   PartList $
     mempty
-      <> [Group 1 Start "" Nothing (Just GroupBrace) (Just GroupBarLines) False]
+      <> [Group 1 Start Nothing Nothing (Just GroupBrace) (Just GroupBarLines) False]
       <> getPartList ps
-      <> [Group 1 Stop "" Nothing Nothing Nothing False]
+      <> [Group 1 Stop Nothing Nothing Nothing Nothing False]
 
 -- |
 -- Convenient synonym for 'mconcat', allowing us to write things like

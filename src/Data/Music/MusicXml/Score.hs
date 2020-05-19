@@ -234,7 +234,7 @@ data PartListElem
     Group
       Level
       StartStop
-      String
+      (Maybe String)
       (Maybe String)
       (Maybe GroupSymbol)
       (Maybe GroupBarlines)

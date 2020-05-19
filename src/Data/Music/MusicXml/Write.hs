@@ -176,7 +176,7 @@ instance WriteMusicXml PartListElem where
           <> writeSymbol symbol
           <> writeBarlines barlines
       where
-        writeName = single . unode "group-name"
+        writeName = maybeToList . fmap (unode "group-name")
         writeAbbrev = maybeToList . fmap (unode "group-abbreviation")
         writeSymbol = maybeToList . fmap (unode "group-symbol" . writeGroupSymbol)
         writeBarlines = maybeToList . fmap (unode "group-barline" . writeGroupBarlines)
