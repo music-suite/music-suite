@@ -378,7 +378,8 @@ defaultClef = trebleClef
 -- |
 -- Create a clef.
 clef :: ClefSign -> Line -> Music
-clef symbol line = Music . single $ MusicAttributes $ single $ Clef symbol line
+clef symbol line =
+  Music . single $ MusicAttributes $ single $ Clef symbol line Nothing
 
 defaultKey :: Music
 defaultKey = key 0 Major
@@ -386,7 +387,7 @@ defaultKey = key 0 Major
 -- |
 -- Create a key signature.
 key :: Fifths -> Mode -> Music
-key n m = Music . single $ MusicAttributes [Key n m]
+key n m = Music . single $ MusicAttributes $ single $ Key n m
 
 -- Number of ticks per whole note (we use 768 per quarter like Sibelius).
 defaultDivisionsVal :: Divs

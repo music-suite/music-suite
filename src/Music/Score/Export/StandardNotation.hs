@@ -1414,7 +1414,7 @@ movementToPartwiseXml movement = music
         renderClef (Music.Pitch.Clef clef) = case clef of
           (clefSymbol, _octCh, line) ->
             X.Music $ pure $ X.MusicAttributes [
-              X.Clef (exportSymbol clefSymbol) (fromIntegral line + 3)
+              X.Clef (exportSymbol clefSymbol) (fromIntegral line + 3) Nothing
             ]
           where
             -- TODO add octave-adjust to musicxml2

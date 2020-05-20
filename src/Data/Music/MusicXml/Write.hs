@@ -206,13 +206,16 @@ instance WriteMusicXml Attributes where
     single $ unode "divisions"
       $ show
       $ getDivs divs
-  write (Clef sign line) =
-    single $
-      unode
+  write (Clef sign line octaveChange) =
+    single
+      $ unode
         "clef"
-        [ unode "sign" (writeClef sign),
+      $ [ unode "sign" (writeClef sign),
           unode "line" (show $ getLine line)
         ]
+        ++ case octaveChange of
+          Nothing -> []
+          Just (OctaveChange n) -> [unode "clef-octave-change" (show n)]
   write (Key fifths mode) =
     single $
       unode
@@ -242,13 +245,18 @@ instance WriteMusicXml Attributes where
           unode "beat-type" (show $ getBeatType beatType)
         ]
   write (Staves n) = single $ unode "staves" $ show n
-  write (Transpose d c) =
-    single $
-      unode
+  write (Transpose d c octaveChange) =
+    single
+      $ unode
         "transpose"
-        [ unode "diatonic" (show d),
+      $ [ unode "diatonic" (show d),
           unode "chromatic" (show c)
         ]
+        ++ case octaveChange of
+          Nothing -> []
+          Just (OctaveChange n) -> [unode "octave-change" (show n)]
+
+
 
 -- ----------------------------------------------------------------------------------
 -- Notes

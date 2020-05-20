@@ -44,6 +44,7 @@ module Data.Music.MusicXml.Score
     Attributes (..),
     TimeSignature (..),
     ClefSign (..),
+    OctaveChange (..),
     -----------------------------------------------------------------------------
 
     -- ** Notes
@@ -308,10 +309,12 @@ data Attributes
   | Clef
       ClefSign
       Line
+      (Maybe OctaveChange)
   | StaffDetails -- TODO
   | Transpose
       Int -- diatonic
       Int -- chromatic
+      (Maybe OctaveChange)
   | Directive -- TODO
   | MeasureStyle -- TODO
   deriving Show
@@ -331,6 +334,9 @@ data ClefSign
   | PercClef
   | TabClef
   deriving (Eq, Ord, Enum, Bounded, Show)
+
+newtype OctaveChange = OctaveChange {getOctaveChage :: Int}
+  deriving Show
 
 -- ----------------------------------------------------------------------------------
 -- Notes
