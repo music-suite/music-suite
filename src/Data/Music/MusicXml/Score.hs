@@ -157,6 +157,7 @@ data Score
           [(PartAttrs, Music)]
         )
       ]
+  deriving Show
 
 data ScoreHeader
   = ScoreHeader
@@ -168,15 +169,19 @@ data ScoreHeader
             --  ^ credit*
         scorePartList :: PartList
       }
+  deriving Show
 
 data Identification
   = Identification
       [Creator] --  ^ creator
+  deriving Show
 
 data Creator
   = Creator
-      String --  ^ type (composer, lyricist, arranger etc)
-      String --  ^ name
+      { creatorType :: String, -- (composer, lyricist, arranger etc)
+        creatorName :: String
+      }
+  deriving Show
 
 data Defaults
   = Defaults
@@ -190,20 +195,24 @@ data Defaults
 data ScoreAttrs
   = ScoreAttrs
       [Int] --  ^ score version
+  deriving Show
 
 data PartAttrs
   = PartAttrs
       String --  ^ part id
+  deriving Show
 
 data MeasureAttrs
   = MeasureAttrs
       Int --  ^ measure number
+  deriving Show
 
 -- ----------------------------------------------------------------------------------
 -- Part list
 -- ----------------------------------------------------------------------------------
 
 newtype PartList = PartList {getPartList :: [PartListElem]}
+  deriving Show
 
 instance Default PartList where
   def = PartList []
@@ -230,7 +239,10 @@ data PartListElem
       (Maybe String)
       (Maybe String)
       (Maybe String)
-  | -- | number start/stop name abbrev? symbol barline style
+      -- score-instrument?
+      -- midi-device?
+      -- midi-instrument?
+  | -- | number start/stop name? abbrev? symbol barline style
     Group
       Level
       StartStop
@@ -239,17 +251,20 @@ data PartListElem
       (Maybe GroupSymbol)
       (Maybe GroupBarlines)
       Bool
+  deriving Show
 
 data GroupSymbol = GroupBrace | GroupLine | GroupBracket | GroupSquare | NoGroupSymbol
+  deriving Show
 
 data GroupBarlines = GroupBarLines | GroupNoBarLines | GroupMensurstrich
+  deriving Show
 
 -- ----------------------------------------------------------------------------------
 -- Music
 -- ----------------------------------------------------------------------------------
 
 newtype Music = Music {getMusic :: [MusicElem]}
-  deriving (Semigroup, Monoid)
+  deriving (Semigroup, Monoid, Show)
 
 data MusicElem
   = MusicAttributes
@@ -271,6 +286,7 @@ data MusicElem
   | MusicGrouping -- TODO
   | MusicLink -- TODO
   | MusicBookmark -- TODO
+  deriving Show
 
 -- ----------------------------------------------------------------------------------
 -- Attributes
@@ -298,6 +314,7 @@ data Attributes
       Int -- chromatic
   | Directive -- TODO
   | MeasureStyle -- TODO
+  deriving Show
 
 data TimeSignature
   = CommonTime
@@ -305,6 +322,7 @@ data TimeSignature
   | DivTime
       Beat
       BeatType
+  deriving Show
 
 data ClefSign
   = GClef
@@ -312,7 +330,7 @@ data ClefSign
   | FClef
   | PercClef
   | TabClef
-  deriving (Eq, Ord, Enum, Bounded)
+  deriving (Eq, Ord, Enum, Bounded, Show)
 
 -- ----------------------------------------------------------------------------------
 -- Notes
@@ -332,6 +350,7 @@ data Note
       FullNote
       [Tie]
       NoteProps
+  deriving Show
 
 data FullNote
   = Pitched
@@ -343,6 +362,7 @@ data FullNote
   | Rest
       IsChord
       (Maybe DisplayPitch)
+  deriving Show
 
 type IsChord = Bool
 
@@ -377,6 +397,7 @@ data NoteProps
         -- | lyric
         noteLyrics :: [Lyric]
       }
+  deriving Show
 
 noChord :: IsChord
 noChord = False
@@ -439,8 +460,10 @@ data Notation
       Accidental
   | OtherNotation
       String
+  deriving Show
 
 data FermataSign = NormalFermata | AngledFermata | SquaredFermata
+  deriving Show
 
 data Articulation
   = Accent
@@ -459,6 +482,7 @@ data Articulation
   | Stress
   | Unstress
   | OtherArticulation
+  deriving Show
 
 data Ornament
   = TrillMark
@@ -476,6 +500,7 @@ data Ornament
       Natural -- TODO restrict to (1..8) range
   | OtherOrnament
       String
+  deriving Show
 
 data Technical
   = UpBow
@@ -505,6 +530,7 @@ data Technical
   | Handbell
   | OtherTechnical
       String
+  deriving Show
 
 -- ----------------------------------------------------------------------------------
 -- Directions
@@ -550,6 +576,7 @@ data Direction
   | Percussion -- TODO
   | OtherDirection
       String
+  deriving Show
 
 -- ----------------------------------------------------------------------------------
 -- Barlines/Repeats
@@ -612,6 +639,7 @@ instance Show BarlineLocation where
 -- ----------------------------------------------------------------------------------
 
 data Lyric = Lyric -- TODO
+  deriving Show
 
 -- ----------------------------------------------------------------------------------
 -- Basic types
@@ -625,6 +653,7 @@ data BeamType
   | EndBeam
   | ForwardHook
   | BackwardHook
+  deriving Show
 
 type StartStop = StartStopContinueChange
 
@@ -637,18 +666,21 @@ data StartStopContinueChange
   | Stop
   | Continue
   | Change
+  deriving Show
 
 data StemDirection
   = StemDown
   | StemUp
   | StemNone
   | StemDouble
+  deriving Show
 
 data LineType
   = Solid
   | Dashed
   | Dotted
   | Wavy
+  deriving Show
 
 data NoteHead
   = SlashNoteHead
@@ -670,6 +702,7 @@ data NoteHead
   | RectangleNoteHead
   | -- | @"none"@
     NoNoteHead
+  deriving Show
 
 deriving instance Eq Level
 

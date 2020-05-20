@@ -38,14 +38,17 @@ newtype NoteVal
     NoteVal {getNoteVal :: Rational}
 
 data NoteSize = SizeFull | SizeCue | SizeLarge
+  deriving Show
 
 newtype Beat
   = -- | Time nominator
     Beat {getBeat :: Int}
+  deriving Show
 
 newtype BeatType
   = -- | Time denominator
     BeatType {getBeatType :: Int}
+  deriving Show
 
 newtype Tempo
   = -- | Tempo in BPM
