@@ -378,7 +378,7 @@ defaultClef = trebleClef
 -- |
 -- Create a clef.
 clef :: ClefSign -> Line -> Music
-clef symbol line = Music . single $ MusicAttributes $ Clef symbol line
+clef symbol line = Music . single $ MusicAttributes $ single $ Clef symbol line
 
 defaultKey :: Music
 defaultKey = key 0 Major
@@ -386,7 +386,7 @@ defaultKey = key 0 Major
 -- |
 -- Create a key signature.
 key :: Fifths -> Mode -> Music
-key n m = Music . single $ MusicAttributes $ Key n m
+key n m = Music . single $ MusicAttributes [Key n m]
 
 -- Number of ticks per whole note (we use 768 per quarter like Sibelius).
 defaultDivisionsVal :: Divs
@@ -395,24 +395,24 @@ defaultDivisionsVal = 768 * 4
 -- |
 -- Set the tick division to the default value.
 defaultDivisions :: Music
-defaultDivisions = Music $ single $ MusicAttributes $ Divisions $ defaultDivisionsVal `div` 4
+defaultDivisions = Music $ single $ MusicAttributes $ single $ Divisions $ defaultDivisionsVal `div` 4
 
 -- |
 -- Define the number of ticks per quarter note.
 divisions :: Divs -> Music
-divisions n = Music . single $ MusicAttributes $ Divisions $ n
+divisions n = Music . single $ MusicAttributes $ single $ Divisions n
 
 commonTime, cutTime :: Music
-commonTime = Music . single $ MusicAttributes $ Time CommonTime
-cutTime = Music . single $ MusicAttributes $ Time CutTime
+commonTime = Music . single $ MusicAttributes $ single $ Time CommonTime
+cutTime = Music . single $ MusicAttributes $ single $ Time CutTime
 
 -- |
 -- Create a time signature.
 time :: Beat -> BeatType -> Music
-time a b = Music . single $ MusicAttributes $ Time $ DivTime a b
+time a b = Music . single $ MusicAttributes $ single $ Time $ DivTime a b
 
 staves :: Int -> Music
-staves n = Music $ single $ MusicAttributes $ Staves (fromIntegral n)
+staves n = Music $ single $ MusicAttributes $ single $ Staves (fromIntegral n)
 
 -- |
 -- Create a metronome mark.
@@ -893,20 +893,20 @@ mapNote fn fc fg = go
     go (GraceNote f t p) = let (f', t', p') = fg f t p in GraceNote f' t' p'
 
 mapMusic :: (Attributes -> Attributes) -> (Note -> Note) -> (Direction -> Direction) -> Music -> Music
-mapMusic fa fn fd = foldMusic (MusicAttributes . fa) (MusicNote . fn) (MusicDirection . fd) (Music . return)
+mapMusic fa fn fd = foldMusic (MusicAttributes . fmap fa) (MusicNote . fn) (MusicDirection . fd) (Music . return)
 
-foldMusic :: Monoid m => (Attributes -> r) -> (Note -> r) -> (Direction -> r) -> (r -> m) -> Music -> m
+foldMusic :: Monoid m => ([Attributes] -> r) -> (Note -> r) -> (Direction -> r) -> (r -> m) -> Music -> m
 foldMusic fa fn fd f = mconcat . fmap f . (foldMusic' $ fmap (foldMusicElem fa fn fd))
 
 foldMusic' :: ([MusicElem] -> r) -> Music -> r
 foldMusic' f (Music x) = f x
 
-foldMusicElem :: (Attributes -> r) -> (Note -> r) -> (Direction -> r) -> MusicElem -> r
+foldMusicElem :: ([Attributes] -> r) -> (Note -> r) -> (Direction -> r) -> MusicElem -> r
 foldMusicElem = go
   where
-    go fa fn fd (MusicAttributes x) = fa x
-    go fa fn fd (MusicNote x) = fn x
-    go fa fn fd (MusicDirection x) = fd x
+    go fa _ _ (MusicAttributes x) = fa x
+    go _ fn _ (MusicNote x) = fn x
+    go _ _ fd (MusicDirection x) = fd x
 
 -- ----------------------------------------------------------------------------------
 

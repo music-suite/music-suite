@@ -190,7 +190,7 @@ writeGroupBarlines :: GroupBarlines -> String
 -- ----------------------------------------------------------------------------------
 
 instance WriteMusicXml MusicElem where
-  write (MusicAttributes x) = single $ unode "attributes" $ write x
+  write (MusicAttributes x) = single $ unode "attributes" $ concatMap write x
   write (MusicNote x) = single $ unode "note" $ write x
   write (MusicDirection x) = single $ unode "direction" (unode "direction-type" $ write x)
   write (MusicBackup d) = single $ unode "backup" (unode "duration" $ show $ getDivs $ d)

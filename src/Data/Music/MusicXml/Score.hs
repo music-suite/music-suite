@@ -268,7 +268,7 @@ newtype Music = Music {getMusic :: [MusicElem]}
 
 data MusicElem
   = MusicAttributes
-      Attributes
+      [Attributes]
   | MusicBackup
       Duration
   | MusicForward
