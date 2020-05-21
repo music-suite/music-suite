@@ -105,6 +105,7 @@ module Data.Music.MusicXml
     -----------------------------------------------------------------------------
     toXml,
     showXml,
+    readXml
   )
 where
 
@@ -129,6 +130,11 @@ showXml = ppTopElement . toXml
 -- Render a score as MusicXML.
 toXml :: Score -> Element
 toXml = fromSingle . write
+
+-- |
+-- Parse a MusicXML string into a score.
+readXml :: String -> Maybe Score
+readXml source = parseXMLDoc source >>= parseScore
 
 -- --------------------------------------------------------------------------------
 
