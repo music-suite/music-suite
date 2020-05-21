@@ -32,34 +32,38 @@ cleanXML = mapMaybe $ \case
 parseScore :: Element -> Maybe Score
 parseScore top = case getName top of
   "score-partwise" -> do
-    scoreAttrs <- ScoreAttrs <$> mapM (readMaybe . attrVal) (elAttribs top)
+    let scoreAttrs =
+          fromMaybe [] $
+            attr "version" top >>= traverse readMaybe . wordsBy (== '.')
     scoreHeader <- parseHeader top
-    pure $ Partwise scoreAttrs scoreHeader []
+    Partwise (ScoreAttrs scoreAttrs) scoreHeader
+      <$> traverse parsePart (children ["part"] top)
+  "score-timewise" -> error "timewise not supported"
+  _ -> empty
 
 parseHeader :: Element -> Maybe ScoreHeader
 parseHeader top =
-  pure $ ScoreHeader title mvmNumber mvmTitle identification (fromMaybe (PartList []) partList)
+  pure $
+    ScoreHeader
+      title
+      movementNumber
+      movementTitle
+      identification
+      (fromMaybe (PartList []) partList)
   where
     title = child "work" top >>= child "work-title" >>= getText
-    mvmNumber = child "movement-number" top >>= getText >>= readMaybe
-    mvmTitle = child "movement-title" top >>= getText
-    identification = case child "identification" top of
-      Nothing -> Nothing
-      Just i -> do
-        let creators = children "creator" i
-        cTypes <- traverse (attr "type") creators
-        cNames <- traverse getText creators
-        pure $ Identification (zipWith Creator cTypes cNames)
-    partList = case child "part-list" top of
-      Nothing -> Nothing
-      Just parts -> PartList <$> traverse parsePart (children "score-part" parts)
-    parsePart scorePart = do
-      id <- attr "id" scorePart
-      name <- child "part-name" scorePart >>= getText
-      abbrev <- pure $ child "part-abbreviation" scorePart >>= getText
-      nameDisplay <- pure $ child "part-name-display" scorePart >>= getText
-      abbrevDisplay <- pure $ child "part-abbreviation-display" scorePart >>= getText
-      pure $ Part id name abbrev nameDisplay abbrevDisplay
+    movementNumber = child "movement-number" top >>= readText
+    movementTitle = child "movement-title" top >>= getText
+    identification = do
+      clist <- child "identification" top
+      Identification <$> traverse parseCreator (children ["creator"] clist)
+    parseCreator c = Creator <$> attr "type" c <*> getText c
+    partList = do
+      plist <- child "part-list" top
+      PartList
+        <$> traverse
+          (\p -> parsePartGroup p <|> parseScorePart p)
+          (children ["part-group", "score-part"] plist)
 
 getText :: Element -> Maybe String
 getText element = case elContent element of
