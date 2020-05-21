@@ -1,14 +1,11 @@
--------------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------------
 {-# LANGUAGE LambdaCase #-}
 
 -- |
--- Copyright   : (c) Hans Hoglund 2012
+-- Copyright   : (c) Joseph Morag 2020
 --
 -- License     : BSD-style
 --
--- Maintainer  : hans@hanshoglund.se
+-- Maintainer  : jm@josephmorag.com
 -- Stability   : experimental
 -- Portability : portable
 module Data.Music.MusicXml.Read
