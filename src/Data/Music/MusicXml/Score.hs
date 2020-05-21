@@ -563,7 +563,7 @@ data Direction
       StartStop
   | Bracket -- TODO
   | Pedal
-      StartStopChange
+      StartStopContinueChange
   | -- | noteVal isDotted bpm
     Metronome
       NoteVal
