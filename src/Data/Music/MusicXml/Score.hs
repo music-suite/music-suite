@@ -722,3 +722,22 @@ deriving instance Num Level
 type Max8 = Index N8
 
 notImplemented x = error $ "Not implemented: " ++ x
+
+-- ----------------------------------------------------------------------------------
+-- Default instances
+-- ----------------------------------------------------------------------------------
+
+instance Default ScoreAttrs where
+  def = ScoreAttrs []
+
+instance Default ScoreHeader where
+  def = ScoreHeader Nothing Nothing Nothing Nothing mempty
+
+instance Default Note where
+  def = Note def def [] def
+
+instance Default FullNote where
+  def = Rest noChord Nothing
+
+instance Default NoteProps where
+  def = NoteProps Nothing Nothing (Just (1 / 4, Nothing)) 0 Nothing Nothing Nothing Nothing Nothing Nothing Nothing [] []

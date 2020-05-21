@@ -911,24 +911,6 @@ foldMusicElem = go
 
 -- ----------------------------------------------------------------------------------
 
-instance Default ScoreAttrs where
-  def = ScoreAttrs []
-
-instance Default ScoreHeader where
-  def = ScoreHeader Nothing Nothing Nothing Nothing mempty
-
-instance Default Note where
-  def = Note def def [] def
-
-instance Default Divs where
-  def = defaultDivisionsVal
-
-instance Default FullNote where
-  def = Rest noChord Nothing
-
-instance Default NoteProps where
-  def = NoteProps Nothing Nothing (Just (1 / 4, Nothing)) 0 Nothing Nothing Nothing Nothing Nothing Nothing Nothing [] []
-
 -------------------------------------------------------------------------------------
 
 logBaseR :: forall a. (RealFloat a, Floating a) => Rational -> Rational -> a
