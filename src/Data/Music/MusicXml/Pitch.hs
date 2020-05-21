@@ -48,11 +48,13 @@ data Mode
   | Ionian
   | Locrian
   | NoMode
+  deriving (Read)
 
 data Accidental = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
   deriving Show
 
 data PitchClass = C | D | E | F | G | A | B
+  deriving (Read)
 
 newtype Semitones
   = -- | Semitones, i.e 100 cent
