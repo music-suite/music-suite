@@ -297,6 +297,18 @@ test-suite "music-suite-test-laws"
     hs-source-dirs:     test
     default-language:   Haskell2010
 
+test-suite "music-suite-test-xml-parser"
+    build-depends:      base,
+                        music-suite,
+                        tasty,
+                        tasty-hunit,
+                        directory,
+                        filepath
+    type:               exitcode-stdio-1.0
+    main-is:            MusicXmlParser.hs
+    hs-source-dirs:     test
+    default-language:   Haskell2010
+
 -- Examples:
 
 executable "music-suite-examples-analysis"
