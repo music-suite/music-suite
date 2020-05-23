@@ -1,4 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE RecordWildCards #-}
 
 -- |
 -- Copyright   : (c) Joseph Morag 2020
@@ -148,7 +150,7 @@ parseAttributes =
                   _ -> Nothing
            in Key <$> (Fifths <$> fifths) <*> mode
         parseTime time = do
-          symbol <- pure $ attr "symbol" time
+          let symbol = attr "symbol" time
           numerator <- child "beats" time >>= readText
           denomenator <- child "beat-type" time >>= readText
           pure $ case (symbol, numerator, denomenator) of
@@ -185,11 +187,12 @@ parseNote :: Element -> Maybe Note
 parseNote note = do
   fullNote <- parseFullNote note
   let ties = fromMaybe [] $ traverse parseStartStop (children ["tie"] note)
-  ((GraceNote fullNote ties def) <$ child "grace" note)
+  noteProps <- parseNoteProps note
+  ((GraceNote fullNote ties noteProps) <$ child "grace" note)
     <|> ( do
             duration <- parseDuration note
-            ((CueNote fullNote duration def) <$ child "cue" note)
-              <|> (pure (Note fullNote duration ties def))
+            ((CueNote fullNote duration noteProps) <$ child "cue" note)
+              <|> (pure (Note fullNote duration ties noteProps))
         )
 
 parseFullNote :: Element -> Maybe FullNote
@@ -212,6 +215,108 @@ parsePitch note = do
 
 isChord :: Element -> IsChord
 isChord note = isJust $ child "chord" note
+
+parseNoteProps :: Element -> Maybe NoteProps
+parseNoteProps note = do
+  let noteInstrument = child "instrument" note >>= attr "id"
+      noteVoice = child "voice" note >>= readText
+      noteType = child "type" note >>= parseNoteType
+      noteDots = fromIntegral $ length $ children ["dot"] note
+      noteAccidental = do
+        accidentalElem <- child "accidental" note
+        a <- parseAccidental accidentalElem
+        let cautionary = attr "cautionary" accidentalElem == Just "yes"
+            editorial = attr "editorial" accidentalElem == Just "yes"
+        pure (a, cautionary, editorial)
+      noteTimeMod = child "time-modification" note >>= \t ->
+        (,) <$> (child "actual-notes" t >>= readText)
+          <*> (child "normal-notes" note >>= readText)
+      noteStem = child "stem" note >>= getText >>= \case
+        "up" -> pure StemUp
+        "down" -> pure StemDown
+        "none" -> pure StemNone
+        "double" -> pure StemDouble
+        _ -> empty
+      noteNoteHead = do
+        noteheadElem <- child "notehead" note
+        n <- case getText noteheadElem of
+          Just "slash" -> pure SlashNoteHead
+          Just "triangle" -> pure TriangleNoteHead
+          Just "diamond" -> pure DiamondNoteHead
+          Just "square" -> pure SquareNoteHead
+          Just "cross" -> pure CrossNoteHead
+          Just "x" -> pure XNoteHead
+          Just "circle-x" -> pure CircleXNoteHead
+          Just "inverted triangle" -> pure InvertedTriangleNoteHead
+          Just "arrow down" -> pure ArrowDownNoteHead
+          Just "arrow up" -> pure ArrowUpNoteHead
+          Just "slashed" -> pure SlashedNoteHead
+          Just "back slashed" -> pure BackSlashedNoteHead
+          Just "normal" -> pure NormalNoteHead
+          Just "cluster" -> pure ClusterNoteHead
+          Just "circle dot" -> pure CircleDotNoteHead
+          Just "left triangle" -> pure LeftTriangleNoteHead
+          Just "rectangle" -> pure RectangleNoteHead
+          Just "none" -> pure NoNoteHead
+          _ -> empty
+        let filled = attr "filled" noteheadElem == Just "yes"
+            parentheses = attr "parentheses" noteheadElem == Just "yes"
+        pure (n, filled, parentheses)
+      noteNoteHeadText = do
+        n <- child "notehead-text" note
+        displayText <- child "display-text" n >>= getText
+        accidentalText <- child "accidental-text" n >>= parseAccidental
+        pure (displayText, accidentalText)
+      noteStaff = child "staff" note >>= readText
+      noteBeam = do
+        b <- child "beam" note
+        let level = parseLevel b
+        beamType <- case getText b of
+          Just "begin" -> pure BeginBeam
+          Just "continue" -> pure ContinueBeam
+          Just "end" -> pure EndBeam
+          Just "forward hook" -> pure ForwardHook
+          Just "backward hook" -> pure BackwardHook
+          _ -> empty
+        pure (level, beamType)
+      noteNotations = []
+      noteLyrics = []
+  pure $ NoteProps {..}
+
+parseNoteType :: Element -> Maybe NoteType
+parseNoteType typ = do
+  noteval <- case getText typ of
+    Just "1024th" -> pure (1 / 1024)
+    Just "512th" -> pure (1 / 512)
+    Just "256th" -> pure (1 / 256)
+    Just "128th" -> pure (1 / 128)
+    Just "64th" -> pure (1 / 64)
+    Just "32nd" -> pure (1 / 32)
+    Just "16th" -> pure (1 / 16)
+    Just "eighth" -> pure (1 / 8)
+    Just "quarter" -> pure (1 / 4)
+    Just "half" -> pure (1 / 2)
+    Just "whole" -> pure (1 / 1)
+    Just "breve" -> pure (2 / 1)
+    Just "long" -> pure (4 / 1)
+    Just "maxima" -> pure (8 / 1)
+    _ -> empty
+  let notesize = case attr "size" typ of
+        Just "full" -> pure SizeFull
+        Just "cue" -> pure SizeCue
+        Just "large" -> pure SizeLarge
+        _ -> empty
+  pure (noteval, notesize)
+
+parseAccidental :: Element -> Maybe Accidental
+parseAccidental = getText >=> \case
+  "flat-flat" -> pure DoubleFlat
+  "flat" -> pure Flat
+  "natural" -> pure Natural
+  "sharp" -> pure Sharp
+  "double-sharp" -> pure Sharp
+  -- TODO quarter tone accidentals
+  _ -> empty
 
 -- | Total, will default level to 1
 -- Subtracts 1 from "number" attribute in order to make musicxml level
