@@ -440,7 +440,7 @@ data Notation
   | -- | level start/stop
     Tuplet
       Level
-      StartStopContinue
+      StartStop
   | -- | level type start/stop text?
     Glissando
       Level
