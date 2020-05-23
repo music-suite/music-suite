@@ -118,7 +118,8 @@ module Data.Music.MusicXml.Score
     StemDirection (..),
     NoteHead (..),
     LineType (..),
-    Level (..),
+    Level,
+    mkLevel,
     getLevel,
     BeamType (..),
     StartStop,
@@ -653,11 +654,17 @@ data Lyric = Lyric -- TODO
 -- ----------------------------------------------------------------------------------
 
 newtype Level = Level Max8
--- Smart getter for Level. MusicXml constrains level to be in range [1..8] but
+-- MusicXml constrains level to be in range [1..8] but
 -- this type admits numbers in range [0..7]. See
 -- http://usermanuals.musicxml.com/MusicXML/MusicXML.htm#ST-MusicXML-beam-level.htm
+mkLevel :: Natural -> Level
+mkLevel n | n < 8 && n > 0 = Level (coerceToIndex (n - 1))
+          | otherwise = def
 getLevel :: Level -> Max8
 getLevel (Level n) = n + 1
+
+instance Default Level where
+  def = Level 0
 
 data BeamType
   = BeginBeam
