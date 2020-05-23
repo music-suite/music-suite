@@ -213,6 +213,16 @@ parsePitch note = do
 isChord :: Element -> IsChord
 isChord note = isJust $ child "chord" note
 
+-- | Total, will default level to 1
+-- Subtracts 1 from "number" attribute in order to make musicxml level
+-- fully representable by Max8 type. See
+-- http://usermanuals.musicxml.com/MusicXML/MusicXML.htm#ST-MusicXML-beam-level.htm
+parseLevel :: Element -> Level
+parseLevel e = Level . coerceToIndex @Int . pred $ case attr "number" e >>= readMaybe of
+  Nothing -> 0
+  Just n | n < 8 && n >= 0 -> n
+  _ -> 0
+
 parseDirection :: Element -> Maybe Direction
 parseDirection =
   child "direction-type"

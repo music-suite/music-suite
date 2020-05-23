@@ -119,6 +119,7 @@ module Data.Music.MusicXml.Score
     NoteHead (..),
     LineType (..),
     Level (..),
+    getLevel,
     BeamType (..),
     StartStop,
     StartStopChange,
@@ -651,7 +652,12 @@ data Lyric = Lyric -- TODO
 -- Basic types
 -- ----------------------------------------------------------------------------------
 
-newtype Level = Level {getLevel :: Max8}
+newtype Level = Level Max8
+-- Smart getter for Level. MusicXml constrains level to be in range [1..8] but
+-- this type admits numbers in range [0..7]. See
+-- http://usermanuals.musicxml.com/MusicXML/MusicXML.htm#ST-MusicXML-beam-level.htm
+getLevel :: Level -> Max8
+getLevel (Level n) = n + 1
 
 data BeamType
   = BeginBeam
