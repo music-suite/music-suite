@@ -225,7 +225,7 @@ instance Semigroup PartList where
       setIds = snd . List.mapAccumL setId partIds
       setId id (Part _ name abbr dname dabbrev) = (tail id, Part (head id) name abbr dname dabbrev)
       setId id x = (id, x)
-      partIds = ["P" ++ show n | n <- [1 ..]]
+      partIds = ["P" ++ show @Int n | n <- [1 ..]]
 
 instance Monoid PartList where
 
