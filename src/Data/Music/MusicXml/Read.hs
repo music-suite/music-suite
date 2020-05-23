@@ -64,32 +64,30 @@ parseScorePart :: Element -> Maybe PartListElem
 parseScorePart scorePart = do
   id <- attr "id" scorePart
   name <- child "part-name" scorePart >>= getText
-  abbrev <- pure $ child "part-abbreviation" scorePart >>= getText
-  nameDisplay <- pure $ child "part-name-display" scorePart >>= getText
-  abbrevDisplay <- pure $ child "part-abbreviation-display" scorePart >>= getText
+  let abbrev = child "part-abbreviation" scorePart >>= getText
+  let nameDisplay = child "part-name-display" scorePart >>= getText
+  let abbrevDisplay = child "part-abbreviation-display" scorePart >>= getText
   pure $ Part id name abbrev nameDisplay abbrevDisplay
 
 parsePartGroup :: Element -> Maybe PartListElem
 parsePartGroup partGroup = do
-  number <- attr "number" partGroup >>= readMaybe
+  let level = parseLevel partGroup
   startStop <- parseStartStop partGroup
-  name <- pure $ child "group-name" partGroup >>= getText
-  abbrev <- pure $ child "group-abbreviation" partGroup >>= getText
-  symbol <- pure $
-    child "group-symbol" partGroup >>= getText >>= \case
-      "brace" -> pure GroupBrace
-      "line" -> pure GroupLine
-      "bracket" -> pure GroupBracket
-      "square" -> pure GroupSquare
-      "none" -> pure NoGroupSymbol
-      _ -> empty
-  barline <- pure $
-    child "group-barline" partGroup >>= getText >>= \case
-      "yes" -> pure GroupBarLines
-      "no" -> pure GroupNoBarLines
-      "Mensurstrich" -> pure GroupMensurstrich
-      _ -> empty
-  pure $ Group (Level (coerceToIndex number)) startStop name abbrev symbol barline True
+  let name = child "group-name" partGroup >>= getText
+      abbrev = child "group-abbreviation" partGroup >>= getText
+      symbol = child "group-symbol" partGroup >>= getText >>= \case
+        "brace" -> pure GroupBrace
+        "line" -> pure GroupLine
+        "bracket" -> pure GroupBracket
+        "square" -> pure GroupSquare
+        "none" -> pure NoGroupSymbol
+        _ -> empty
+      barline = child "group-barline" partGroup >>= getText >>= \case
+        "yes" -> pure GroupBarLines
+        "no" -> pure GroupNoBarLines
+        "Mensurstrich" -> pure GroupMensurstrich
+        _ -> empty
+  pure $ Group level startStop name abbrev symbol barline True
 
 parsePart :: Element -> Maybe (PartAttrs, [(MeasureAttrs, Music)])
 parsePart part =
@@ -170,7 +168,7 @@ parseAttributes =
             -- in the middle of the staff
             Nothing -> pure 3
             Just l -> getText l >>= readMaybe
-          octaveChange <- pure $ child "clef-octave-change" clef >>= readText
+          let octaveChange = child "clef-octave-change" clef >>= readText
           if line <= 5 && line >= 1
             then pure $ Clef sign (Line line) (OctaveChange <$> octaveChange)
             else Nothing
@@ -225,10 +223,8 @@ parseDirection =
         fmap (const Coda) . (child "coda"),
         -- TODO crescendo/diminuendo
         fmap Dynamics . (child "dynamics" >=> (readMaybe . map toUpper . getName)),
-        child "dashes" >=> \dashes -> do
-          level <- pure $ attr "number" dashes >>= readMaybe
-          startStop <- parseStartStop dashes
-          pure $ Dashes (Level (coerceToIndex (fromMaybe 1 level))) startStop,
+        child "dashes" >=> \dashes ->
+          Dashes (parseLevel dashes) <$> (parseStartStop dashes),
         fmap Pedal
           . ( child "pedal" >=> attr "type" >=> \case
                 "start" -> pure Start
@@ -264,11 +260,10 @@ parseBarline barline = do
       Just "short" -> pure BSShort
       Just "none" -> pure BSNone
       _ -> empty
-  repeat <- pure $
-    child "repeat" barline >>= attr "direction" >>= \case
-      "backward" -> pure (Repeat RepeatBackward)
-      "forward" -> pure (Repeat RepeatForward)
-      _ -> empty
+  let repeat = child "repeat" barline >>= attr "direction" >>= \case
+        "backward" -> pure (Repeat RepeatBackward)
+        "forward" -> pure (Repeat RepeatForward)
+        _ -> empty
   pure $ Barline loc style repeat
 
 parseMusicElem :: Element -> Maybe MusicElem
