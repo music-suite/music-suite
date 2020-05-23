@@ -392,8 +392,8 @@ data NoteProps
         noteStem :: Maybe StemDirection,
         -- | notehead, filled, parentheses
         noteNoteHead :: Maybe (NoteHead, Bool, Bool),
-        -- | notehead-text
-        noteNoteHeadText :: Maybe String,
+        -- | display-text, accidental-text
+        noteNoteHeadText :: Maybe (String, Accidental),
         -- | staff
         noteStaff :: Maybe Natural,
         -- | beam-level, beam-type
