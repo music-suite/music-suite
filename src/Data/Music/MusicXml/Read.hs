@@ -62,12 +62,12 @@ parseHeader top =
 
 parseScorePart :: Element -> Maybe PartListElem
 parseScorePart scorePart = do
-  id <- attr "id" scorePart
+  partId <- attr "id" scorePart
   name <- child "part-name" scorePart >>= getText
   let abbrev = child "part-abbreviation" scorePart >>= getText
   let nameDisplay = child "part-name-display" scorePart >>= getText
   let abbrevDisplay = child "part-abbreviation-display" scorePart >>= getText
-  pure $ Part id name abbrev nameDisplay abbrevDisplay
+  pure $ Part partId name abbrev nameDisplay abbrevDisplay
 
 parsePartGroup :: Element -> Maybe PartListElem
 parsePartGroup partGroup = do
@@ -283,9 +283,10 @@ supportedNotations =
     ("tuplet", \tuplet -> Tuplet (parseLevel tuplet) <$> parseStartStop tuplet),
     ("glissando", shift Glissando),
     ("slide", shift Slide),
+    -- Ornaments TODO
     ("ornaments", const (pure $ Ornaments [])),
-    ("technical", const (pure $ Technical [])),
-    ("articulations", const (pure $ Articulations [])),
+    ("technical", fmap Technical . dispatch supportedTechniques),
+    ("articulations", fmap Articulations . dispatch supportedArticulations),
     ("dynamics", fmap DynamicNotation . parseDynamics),
     ( "fermata",
       fmap Fermata
@@ -318,27 +319,39 @@ supportedNotations =
 parseDynamics :: Element -> Maybe Dynamics
 parseDynamics = elChildren >>> headMay >=> getName >>> map toUpper >>> readMaybe
 
-parseNotation :: Element -> Maybe Notation
-parseNotation n =
-  fromMaybe
-    (const Nothing)
-    (lookup (getName n) supportedNotations)
-    $ n
+supportedTechniques :: [(String, Element -> Maybe Technical)]
+supportedTechniques =
+  [ ("up-bow", bare UpBow),
+    ("down-bow", bare DownBow),
+    ("harmonic", bare Harmonic),
+    ("open-string", bare OpenString),
+    ("thumb-position", bare ThumbPosition),
+    ("fingering", fmap Fingering . readText),
+    ("pluck", bare Pluck),
+    ("double-tongue", bare DoubleTongue),
+    ("triple-tongue", bare TripleTongue),
+    ("stopped", bare Stopped),
+    ("snap-pizzicato", bare SnapPizzicato),
+    ("fret", fmap Fret . readText),
+    ("string", fmap Data.Music.MusicXml.Score.String . readText),
+    ("hammer-on", bare HammerOn),
+    ("pull-off", bare PullOff),
+    ("bend", bare Bend),
+    ("tap", bare Tap),
+    ("heel", bare Heel),
+    ("toe", bare Toe),
+    ("fingernails", bare Fingernails),
+    ("hole", bare Hole),
+    ("arrow", bare Arrow),
+    ("handbell", bare Handbell),
+    ("other-technical", fmap OtherTechnical . getText)
+  ]
+  where bare = const . pure
 
-supportedOrnaments = []
+supportedArticulations :: [(String, Element -> Maybe Articulation)]
+supportedArticulations = map (\a -> (show a, const (pure a)))
+  [Accent .. OtherArticulation]
 
-supportedTechniques = []
-
-supportedArticulations = []
-
-parseTechnical :: Element -> Maybe Technical
-parseTechnical = const Nothing
-
-parseOrnament :: Element -> Maybe (Ornament, [Accidental])
-parseOrnament = const Nothing
-
-parseArticulation :: Element -> Maybe Articulation
-parseArticulation = const Nothing
 
 parseNoteType :: Element -> Maybe NoteType
 parseNoteType typ = do
@@ -426,11 +439,11 @@ parseBarline barline = do
       Just "short" -> pure BSShort
       Just "none" -> pure BSNone
       _ -> empty
-  let repeat = child "repeat" barline >>= attr "direction" >>= \case
+  let barRepeat = child "repeat" barline >>= attr "direction" >>= \case
         "backward" -> pure (Repeat RepeatBackward)
         "forward" -> pure (Repeat RepeatForward)
         _ -> empty
-  pure $ Barline loc style repeat
+  pure $ Barline loc style barRepeat
 
 parseStartStop :: Element -> Maybe StartStop
 parseStartStop = attr "type" >=> \case
@@ -444,10 +457,6 @@ parseStartStopContinue = attr "type" >=> \case
   "stop" -> pure Stop
   "continue" -> pure Continue
   _ -> empty
-
--- Run all parsers on a single element and return the successful parse
-tryAll :: (Alternative f, Foldable t) => t (a -> f b) -> a -> f b
-tryAll fs x = foldr (\fun acc -> acc <|> fun x) empty fs
 
 -- For elements with many children corresponding to a sum type. This parser
 -- is much more permissive than the other parsers in that it will simply
@@ -478,7 +487,6 @@ getText element = case elContent element of
 getName :: Element -> String
 getName = qName . elName
 
--- MusicXml names are always unqualified, as far as I can tell
 child :: String -> Element -> Maybe Element
 child str = filterChildName (\q -> qName q == str)
 
@@ -487,8 +495,3 @@ children str = filterChildrenName (\q -> qName q == str)
 
 attr :: String -> Element -> Maybe String
 attr str = findAttrBy (\q -> qName q == str)
-
--- >>> xml <- parseXMLDoc <$> readFile "/home/joseph/Projects/opensheetmusicdisplay/test/data/Dichterliebe01.xml"-- <interactive>:36914:2: warning: [-Wname-shadowing]
---     This binding for ‘xml’ shadows the existing binding
---       defined at <interactive>:36913:2
--- >>> xml >>= parseScore

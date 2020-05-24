@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE LambdaCase #-}
 
 -------------------------------------------------------------------------------------
 
@@ -490,7 +491,26 @@ data Articulation
   | Stress
   | Unstress
   | OtherArticulation
-  deriving Show
+  deriving (Bounded, Enum)
+
+instance Show Articulation where
+  show = \case
+    Accent -> "accent"
+    StrongAccent -> "strong-accent"
+    Staccato -> "staccato"
+    Tenuto -> "tenuto"
+    DetachedLegato -> "detached-legato"
+    Staccatissimo -> "staccatissimo"
+    Spiccato -> "spiccato"
+    Scoop -> "scoop"
+    Plop -> "plop"
+    Doit -> "doit"
+    Falloff -> "falloff"
+    BreathMark -> "breath-mark"
+    Caesura -> "caesura"
+    Stress -> "stress"
+    Unstress -> "unstress"
+    OtherArticulation -> "other-articulation"
 
 data Ornament
   = TrillMark
