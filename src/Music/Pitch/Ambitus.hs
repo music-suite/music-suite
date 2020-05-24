@@ -33,13 +33,13 @@ data Ambitus v p = Ambitus {low :: !p, high :: !p}
   deriving (Functor, Foldable, Traversable, Show)
 
 instance Bifunctor Ambitus where
-  bimap = undefined
+  bimap _ g (Ambitus x y) = Ambitus (g x) (g y)
 
 instance Bifoldable Ambitus where
-  bifoldMap = undefined
+  bifoldMap _ g (Ambitus x y) = g x <> g y
 
 instance Bitraversable Ambitus where
-  bitraverse = undefined
+  bitraverse _ g (Ambitus x y) = Ambitus <$> g x <*> g y
 
 ambitusInterval :: (AffinePair v p) => Ambitus v p -> v
 ambitusInterval (Ambitus x y) = x .-. y
