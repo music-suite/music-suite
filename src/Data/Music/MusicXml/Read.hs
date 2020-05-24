@@ -287,8 +287,8 @@ supportedNotations =
     ("tuplet", \tuplet -> Tuplet (parseLevel tuplet) <$> parseStartStop tuplet),
     ("glissando", shift Glissando),
     ("slide", shift Slide),
-    -- Ornaments TODO
-    ("ornaments", const (pure $ Ornaments [])),
+    -- TODO Accidentals on ornaments
+    ("ornaments", fmap Ornaments . dispatch supportedOrnaments),
     ("technical", fmap Technical . dispatch supportedTechniques),
     ("articulations", fmap Articulations . dispatch supportedArticulations),
     ("dynamics", fmap DynamicNotation . parseDynamics),
@@ -356,6 +356,23 @@ supportedArticulations :: [(String, Element -> Maybe Articulation)]
 supportedArticulations = map (\a -> (show a, const (pure a)))
   [Accent .. OtherArticulation]
 
+supportedOrnaments :: [(String, Element -> Maybe (Ornament, [Accidental]))]
+supportedOrnaments =
+  [("trill-mark", bare TrillMark),
+   ("turn", bare Turn),
+   ("delayed-turn", bare DelayedTurn),
+   ("inverted-turn", bare InvertedTurn),
+   ("delayed-inverted-turn", bare DelayedInvertedTurn),
+   ("vertical-turn", bare VerticalTurn),
+   ("shake", bare Shake),
+   ("wavy-line", bare WavyLine),
+   ("mordent", bare Mordent),
+   ("inverted-mordent", bare InvertedMordent),
+   ("schleifer", bare Schleifer),
+   ("tremolo", readText >=> \n -> pure (Tremolo n, [])),
+   ("other-ornament", getText >=> \s -> pure (OtherOrnament s, []))
+  ]
+  where bare ornament = const (pure (ornament, []))
 
 parseNoteType :: Element -> Maybe NoteType
 parseNoteType typ = do
