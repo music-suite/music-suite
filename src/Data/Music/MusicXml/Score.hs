@@ -163,6 +163,10 @@ data Score
       ]
   deriving Show
 
+-- |
+-- Encodes the <https://github.com/w3c/musicxml/blob/v3.1/schema/musicxml.xsd#L5991 score header> type.
+--
+-- We currently don't support the @defaults@ and @credits@ fields.
 data ScoreHeader
   = ScoreHeader
       { scoreTitle :: Maybe String,
