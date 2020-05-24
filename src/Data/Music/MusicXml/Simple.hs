@@ -335,7 +335,7 @@ bar :: [Music] -> Music
 bar = measure
 
 header :: String -> String -> PartList -> ScoreHeader
-header title composer partList = ScoreHeader Nothing Nothing (Just title) (Just (Identification [Creator "composer" composer])) partList
+header title composer partList = ScoreHeader Nothing Nothing (Just title) (Just (Identification [Composer composer])) partList
 
 setHeader :: ScoreHeader -> Score -> Score
 setHeader header (Partwise attrs _ music) = Partwise attrs header music

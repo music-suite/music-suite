@@ -184,11 +184,15 @@ data Identification
       [Creator] --  ^ creator
   deriving Show
 
+-- | MusicXML supports arbitrary types of creators. Standard values
+-- for @creatorType@ are @composer@, @lyricist@, and @arranger@.
 data Creator
-  = Creator
-      { creatorType :: String, -- (composer, lyricist, arranger etc)
-        creatorName :: String
-      }
+  = Composer String
+  | Lyricist String
+  | Arranger String
+  | OtherCreator
+    String -- ^ type
+    String -- ^ name
   deriving Show
 
 data Defaults

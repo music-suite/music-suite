@@ -54,7 +54,11 @@ parseHeader top =
     identification = do
       clist <- child "identification" top
       Identification <$> traverse parseCreator (children "creator" clist)
-    parseCreator c = Creator <$> attr "type" c <*> getText c
+    parseCreator c = attr "type" c >>= \case
+      "composer" -> Composer <$> getText c
+      "lyricist" -> Lyricist <$> getText c
+      "arranger" -> Arranger <$> getText c
+      other -> OtherCreator other <$> getText c
     partList = do
       plist <- child "part-list" top
       PartList

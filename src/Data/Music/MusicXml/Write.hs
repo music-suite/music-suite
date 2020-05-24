@@ -127,7 +127,10 @@ instance WriteMusicXml ScoreHeader where
 instance WriteMusicXml Identification where
   write (Identification creators) = map writeCreator creators
     where
-      writeCreator (Creator t n) = unode "creator" (uattr "type" t, n)
+      writeCreator (Composer n) = unode "creator" (uattr "type" "composer", n)
+      writeCreator (Lyricist n) = unode "creator" (uattr "type" "lyricist", n)
+      writeCreator (Arranger n) = unode "creator" (uattr "type" "arranger", n)
+      writeCreator (OtherCreator t n) = unode "creator" (uattr "type" t, n)
 
 -- ----------------------------------------------------------------------------------
 -- Part list
