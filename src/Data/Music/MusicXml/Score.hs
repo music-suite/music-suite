@@ -537,13 +537,14 @@ data Technical
   | OpenString
   | ThumbPosition
   | Fingering
-      Natural -- TODO restrict to (0..5)?
+      Natural
   | Pluck
   | DoubleTongue
   | TripleTongue
   | Stopped
   | SnapPizzicato
   | Fret
+      Natural
   | String
       Natural
   | HammerOn

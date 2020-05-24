@@ -482,7 +482,7 @@ instance WriteMusicXml Technical where
   write TripleTongue = single $ unode "triple-tongue" ()
   write Stopped = single $ unode "stopped" ()
   write SnapPizzicato = single $ unode "snap-pizzicato" ()
-  write Fret = single $ unode "fret" ()
+  write (Fret n) = single $ unode "fret" (show n)
   write (String s) = single $ unode "string" (show s)
   write HammerOn = single $ unode "hammer-on" ()
   write PullOff = single $ unode "pull-off" ()
