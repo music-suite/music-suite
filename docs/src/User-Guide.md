@@ -380,12 +380,9 @@ TODO refer back to previous table. For example `Music.Pitch.Common` distinguishe
 
 ### Interval names
 
-Interval names are overloaded in a manner similar to pitches, and are consequently referred to as *interval literals*. The corresponding class is called @[IsInterval].
-
 Here and elsewhere in Music Suite, the convention is to follow standard theoretical
 notation, so *minor* and *diminished* intervals are written in lower-case, while *major*
-and *perfect* intervals are written in upper-case. Unfortunately, Haskell does not support
-overloaded upper-case values, so we have to adopt an underscore prefix:
+and *perfect* intervals are written in upper-case.
 
 ```haskell
 (</>) :: (Semigroup a, HasParts a, HasSubpart p, p ~ Part a) => a -> a -> a
