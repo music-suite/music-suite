@@ -323,6 +323,9 @@ Consider switching to a decentralized issue tracker such as:
 
 - Multi-staff customization: The current state will gracefully handle overlapping notes in a single part, drawing them on separate staves, however it may not distribute things ideally across the staves. The final state should do better by default *and* allow customization.
 
+- [ ] Putting overlapping events in monophonic instruments (e.g. flute) should be a linting error,
+    similar to range etc.
+
 - [ ] Draw celesta/piano/organ on >1 staff by default
 
 - [ ] Rename Inspectable -> Exportable?
@@ -330,16 +333,6 @@ Consider switching to a decentralized issue tracker such as:
 - [ ] Make parts such as "Piano 0", "Piano (-1)", etc, unrepresentable
 
 - [ ] we should never see Music/StandardNote in the user guide (specific/nice-looking types instead). The only purpose of Music/StandardNote is to be defaults/final objects.
-
-
-- [ ] Never fail export on overlapping/simultaneously events
-  $needsTests
-  - What is the correct behavior if a score is exported where a some part has overlapping notes?
-  - Generally this should be fine, though currently the backend/export code does not handle it
-    correctly.
-  - Putting overlapping events in monophonic instruments (e.g. flute) should be a linting error,
-    similar to range etc.
-  - The general problem of breaking up a score: $voiceSeparation
 
 - [ ] Make parts such as "Piano 0", "Piano (-1)", etc, unrepresentable
 
