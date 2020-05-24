@@ -1379,13 +1379,26 @@ movementToPartwiseXml movement = music
 
         divisions_ :: [MusicXml.Music]
         divisions_ = MusicXml.defaultDivisions : repeat mempty
+
         keySignatures_ :: [MusicXml.Music]
-        keySignatures_ = fmap (expKS . view keySignature) $ (movement ^. systemStaff)
+        keySignatures_ = fmap (expKS . view keySignature) $
+            (movement ^. systemStaff)
           where
-            expKS (Music.Score.Meta.Key.KeySignature (Data.Monoid.First Nothing)) = (mempty :: MusicXml.Music)
+            expKS (Music.Score.Meta.Key.KeySignature (Data.Monoid.First Nothing)) =
+              mempty
             expKS (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just ks))) =
-              let (fifths, mode) = ks
-               in MusicXml.key (MusicXml.Fifths $ fromInteger $ Music.Score.Meta.Key.getFifths $ fromPitch fifths) (case mode of { Music.Pitch.MajorMode -> MusicXml.Major; Music.Pitch.MinorMode -> MusicXml.Minor })
+              let
+                (fifths, mode) = ks
+
+                fifths' = MusicXml.Fifths $ fromInteger $
+                  Music.Score.Meta.Key.getFifths $ fromPitch fifths
+
+                mode' = case mode of
+                  Music.Pitch.MajorMode -> MusicXml.Major
+                  Music.Pitch.MinorMode -> MusicXml.Minor
+
+               in MusicXml.key fifths' mode'
+
         timeSignatures_ :: [MusicXml.Music]
         timeSignatures_ = fmap (expTS . unOF) $ fmap (^. timeSignature) (movement ^. systemStaff)
           where
