@@ -12,9 +12,9 @@ where
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.List
-import Data.VectorSpace
 import Data.Stream.Infinite (Stream)
 import qualified Data.Stream.Infinite as Stream
+import Data.VectorSpace
 
 -- | Lay out a series of vectors from a given point. Return all intermediate points.
 --

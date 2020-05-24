@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedLists #-}
+
 -- | Scales and chords.
 --
 -- Semantically is little distinction between a Scale and a Chord. Thus the 'Chord' and 'Scale'
@@ -7,7 +8,6 @@
 -- Semantically @Chord p@ and @Scale p@ are countable subsets of some pitch space p.
 --
 -- A 'Mode' (or 'Function - TODO rename) is like a Chord/Scale that has forgotten its origin.
---
 module Music.Pitch.Scale
   ( -- * Modes and Chord types
     Mode,
@@ -37,8 +37,6 @@ module Music.Pitch.Scale
     invertChord,
     functionToChord,
     chordToList,
-
-
 
     -- * Common modes, scales and chords
 
@@ -92,22 +90,24 @@ module Music.Pitch.Scale
   )
 where
 
-import Data.Foldable
-import Data.Stream.Infinite (Stream)
-import qualified Data.Stream.Infinite as Stream
-import Data.List.NonEmpty (NonEmpty((:|)))
-import qualified Data.List.NonEmpty as NonEmpty
 import Control.Lens (Lens, Lens', coerced)
 import Data.AffineSpace
+import Data.AffineSpace.Point.Offsets
+  ( offsetPoints,
+    offsetPointsS,
+  )
+import Data.Foldable
+import Data.List.NonEmpty (NonEmpty ((:|)))
+import qualified Data.List.NonEmpty as NonEmpty
+import Data.Stream.Infinite (Stream)
+import qualified Data.Stream.Infinite as Stream
 import Data.VectorSpace
 import Music.Pitch.Common hiding (Mode)
 import Music.Pitch.Literal
 import Music.Pitch.Literal
-import Data.AffineSpace.Point.Offsets
-  ( offsetPoints, offsetPointsS )
 
 -- |  A mode is a list of intervals and a characteristic repeating interval.
-data Mode a = Mode { getMode :: NonEmpty (Diff a) }
+data Mode a = Mode {getMode :: NonEmpty (Diff a)}
 
 -- |
 -- @
@@ -138,7 +138,6 @@ scaleTonic f (Scale t xs) = fmap (\t -> Scale t xs) $ f t
 scaleMode :: Lens' (Scale a) (Mode a)
 scaleMode f (Scale t xs) = fmap (\xs -> Scale t xs) $ f xs
 
-
 -- |
 --
 -- >>> repeatingInterval majorScale
@@ -159,17 +158,19 @@ leadingInterval (Mode xs) = NonEmpty.last xs
 
 index :: AffineSpace p => Scale p -> Integer -> p
 index s n = case fromIntegral n of
-  n | n >  0 -> pos Stream.!! (n - 1)
+  n
+    | n > 0 -> pos Stream.!! (n - 1)
     | n == 0 -> z
-    | n <  0 -> neg Stream.!! negate (n + 1)
+    | n < 0 -> neg Stream.!! negate (n + 1)
   where
     (neg, z, pos) = scaleToSet s
 
 member :: (Ord p, AffineSpace p) => Scale p -> p -> Bool
 member s p = case p of
-  p | p >  z -> p `isHeadOf` Stream.dropWhile (< p) pos
+  p
+    | p > z -> p `isHeadOf` Stream.dropWhile (< p) pos
     | p == z -> True
-    | p <  z -> p `isHeadOf` Stream.dropWhile (> p) neg
+    | p < z -> p `isHeadOf` Stream.dropWhile (> p) neg
   where
     (neg, z, pos) = scaleToSet s
 
@@ -185,7 +186,7 @@ invertMode n = invertMode (n - 1) . invertMode1
 
 -- TODO move
 rotate :: NonEmpty a -> NonEmpty a
-rotate (x :| [])     = x :| []
+rotate (x :| []) = x :| []
 rotate (x :| y : rs) = y :| (rs ++ [x])
 
 -- TODO semantically suspect!
@@ -196,11 +197,10 @@ scaleToList (Scale tonic (Mode leaps)) = init $ offsetPoints tonic $ toList leap
 -- of "negative", "zero" and "positive" components.
 scaleToSet :: AffineSpace a => Scale a -> (Stream a, a, Stream a)
 scaleToSet (Scale tonic (Mode leaps)) =
-  ( Stream.tail $ offsetPointsS tonic $ fmap negateV $ Stream.cycle $ NonEmpty.reverse leaps
-  , tonic
-  , Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
+  ( Stream.tail $ offsetPointsS tonic $ fmap negateV $ Stream.cycle $ NonEmpty.reverse leaps,
+    tonic,
+    Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
   )
-
 
 -- TODO rename to ChordType or similar
 type Function a = Mode a
@@ -215,10 +215,8 @@ functionFromSteps = modeFromSteps
 functionIntervals :: Lens' (Function a) (NonEmpty (Diff a))
 functionIntervals = modeIntervals
 
-
-
 -- Note: The only difference between a chord and a Scale is the Inspectable instance
-newtype Chord a = Chord { getChord :: Scale a }
+newtype Chord a = Chord {getChord :: Scale a}
 
 functionToChord :: AffineSpace a => a -> Function a -> Chord a
 functionToChord x xs = Chord $ modeToScale x xs
@@ -250,10 +248,10 @@ invertChord :: AffineSpace a => Integer -> Function a -> Function a
 invertChord = invertMode
 
 {-# DEPRECATED chordToList "TODO alternative?" #-}
+
 -- | Returns a single inversion of the given chord (no repeats!).
 chordToList :: AffineSpace a => Chord a -> [a]
 chordToList = scaleToList . getChord
-
 
 -- Common scales
 
@@ -374,7 +372,6 @@ germanSixthChord = majorMinorSeventhChord
 frenchSixthChord :: Function Pitch
 frenchSixthChord = Mode [_M3, d3, _M3, _M2]
 
-
 -- TODO generalize this to "repeating"
 --
 -- repeating _m2 = chromaticCluster
@@ -384,7 +381,6 @@ frenchSixthChord = Mode [_M3, d3, _M3, _M2]
 repeating x = Mode (x NonEmpty.:| [])
 
 -- etc.
-
 
 quartal :: Function Pitch
 quartal = repeating _P4

@@ -55,25 +55,30 @@ textualNotations (TechniqueNotation xs) = xs
 notateTechnique :: Ctxt SomeTechnique -> TechniqueNotation
 notateTechnique t = TechniqueNotation $ case getCtxt t of
   (Just prev, cur, _) ->
-    if prev^.pizzicato /= cur^.pizzicato
-      then showPizz (cur^.pizzicato) else []
-    ++
-    if prev^.legno /= cur^.legno
-      then showLegno (cur^.legno) else []
-    ++
-    if prev^.stringPos /= cur^.stringPos
-      then showStringPos (cur^.stringPos) else []
-    ++
-    if prev^.stringMute /= cur^.stringMute
-      then showStringMute (cur^.stringMute) else []
+    if prev ^. pizzicato /= cur ^. pizzicato
+      then showPizz (cur ^. pizzicato)
+      else
+        []
+          ++ if prev ^. legno /= cur ^. legno
+            then showLegno (cur ^. legno)
+            else
+              []
+                ++ if prev ^. stringPos /= cur ^. stringPos
+                  then showStringPos (cur ^. stringPos)
+                  else
+                    []
+                      ++ if prev ^. stringMute /= cur ^. stringMute
+                        then showStringMute (cur ^. stringMute)
+                        else []
   (_, cur, _) ->
-       maybe [] showPizz (viewNotEmpty pizzicato cur)
-    ++ maybe [] showLegno (viewNotEmpty legno cur)
-    ++ maybe [] showStringPos (viewNotEmpty stringPos cur)
-    ++ maybe [] showStringMute (viewNotEmpty stringMute cur)
+    maybe [] showPizz (viewNotEmpty pizzicato cur)
+      ++ maybe [] showLegno (viewNotEmpty legno cur)
+      ++ maybe [] showStringPos (viewNotEmpty stringPos cur)
+      ++ maybe [] showStringMute (viewNotEmpty stringMute cur)
   where
     viewNotEmpty l x = if v == mempty then Nothing else Just v
-      where v = view l x
+      where
+        v = view l x
 
 showPizz :: PizzArco -> [String]
 showPizz Pizz = ["pizz."]
@@ -87,10 +92,10 @@ showLegno ColLegnoTratto = ["col legno tratto"]
 showStringPos :: StringPos -> [String]
 showStringPos PosNat = ["pos nat."]
 showStringPos MoltoSulTasto = ["molto sul tasto"]
-showStringPos MoltoSulPont  = ["molto sul pont."]
+showStringPos MoltoSulPont = ["molto sul pont."]
 showStringPos SulTasto = ["sul tasto"]
-showStringPos SulPont  = ["sul pont."]
+showStringPos SulPont = ["sul pont."]
 
 showStringMute :: StringMute -> [String]
 showStringMute NoStringMute = ["senza sord."]
-showStringMute StringMute   = ["con sord."]
+showStringMute StringMute = ["con sord."]
