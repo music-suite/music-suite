@@ -3,6 +3,7 @@
 
 module Main where
 
+import Control.Lens (_1, _2)
 import Music.Prelude
 import qualified Data.List
 import qualified Data.Ord
@@ -29,9 +30,10 @@ C) Possibly the best!
   Fixed set of 48 pitches! *Always* played tutti in different permutations!
 
 -}
+main = defaultMain music
 music = text "Hello!" c
 
-players = 
+players =
     [flutes1, flutes2, oboes1,oboes2,clarinets1,clarinets2,bassoons1,bassoons2]
     <> divide 4 horns <> divide 2 trumpets <> divide 2 trombones
     <> [tutti vibraphone] <> [tutti timpani]
@@ -44,22 +46,23 @@ players =
 
 
 
-playersByHighest = Data.List.sortBy (Data.Ord.comparing $ \p -> (instrumentRange (p^._instrument))^.from ambitus._2) players
-playersByLowest  = Data.List.sortBy (Data.Ord.comparing $ \p -> (instrumentRange (p^._instrument))^.from ambitus._1) players
+playersByHighest = Data.List.sortBy (Data.Ord.comparing $ \p -> (playableRange (p^.instrument))^.from ambitus._2) players
+playersByLowest  = Data.List.sortBy (Data.Ord.comparing $ \p -> (playableRange (p^.instrument))^.from ambitus._1) players
 
 -- Some example "chords"
+-
 unison1 = ppar $ zipWith (set parts') players (repeat c)
-unison2 = ppar $ zipWith (set parts') players (fmap fromPitch'' $ cycle $ enumChromaticFromTo c c')
-unison3 = ppar $ zipWith (set parts') playersByLowest (fmap fromPitch'' $ cycle $ enumChromaticFromTo c c')
-unison4 = ppar $ zipWith (set parts') playersByHighest (fmap fromPitch'' $ cycle $ enumChromaticFromTo c c')
+unison2 = ppar $ zipWith (set parts') players (fmap fromPitch $ cycle $ enumChromaticFromTo c c')
+unison3 = ppar $ zipWith (set parts') playersByLowest (fmap fromPitch $ cycle $ enumChromaticFromTo c c')
+unison4 = ppar $ zipWith (set parts') playersByHighest (fmap fromPitch $ cycle $ enumChromaticFromTo c c')
 
-unison2a = ppar $ zipWith (set parts') players (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
-unison3a = ppar $ zipWith (set parts') playersByLowest (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
-unison4a = ppar $ zipWith (set parts') playersByHighest (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
+unison2a = ppar $ zipWith (set parts') players (fmap fromPitch $ cycle $ enumDiatonicFromTo c c')
+unison3a = ppar $ zipWith (set parts') playersByLowest (fmap fromPitch $ cycle $ enumDiatonicFromTo c c')
+unison4a = ppar $ zipWith (set parts') playersByHighest (fmap fromPitch $ cycle $ enumDiatonicFromTo c c')
 
-unison2b = ppar $ zipWith (set parts') (reverse players) (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
-unison3b = ppar $ zipWith (set parts') (reverse playersByLowest) (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
-unison4b = ppar $ zipWith (set parts') (reverse playersByHighest) (fmap fromPitch'' $ cycle $ enumDiatonicFromTo c c')
+unison2b = ppar $ zipWith (set parts') (reverse players) (fmap fromPitch $ cycle $ enumDiatonicFromTo c c')
+unison3b = ppar $ zipWith (set parts') (reverse playersByLowest) (fmap fromPitch $ cycle $ enumDiatonicFromTo c c')
+unison4b = ppar $ zipWith (set parts') (reverse playersByHighest) (fmap fromPitch $ cycle $ enumDiatonicFromTo c c')
 
 -----
 {-
@@ -75,8 +78,8 @@ a pitch-instrument pair. Given an instrument, we can find a pitch inside the cho
 ambitus. As there are possibly many such matching pitches, let's try a logic monad! We also need
 state to keep track of the pitches already allocated!
 -}
-    
-    
+
+
 
 
 

@@ -13,6 +13,15 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------
 
@@ -38,6 +47,8 @@ module Music.Time.Internal.Transform
     whilstL,
     whilstLT,
     whilstLD,
+    whilstDelay,
+    whilstStretch,
     onSpan,
 
     -- * Specific transformations
@@ -47,6 +58,7 @@ module Music.Time.Internal.Transform
     undelaying,
     stretching,
     compressing,
+    conjugateS,
 
     -- ** Transforming values
     delay,
@@ -61,7 +73,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,
@@ -88,32 +99,17 @@ import Music.Time.Types
 -- |
 -- Class of values that can be transformed (i.e. scaled and moved) in time.
 --
--- Laws:
+-- ==== Laws
 --
--- @
--- transform mempty   = id
--- transform (s <> t) = transform s . transform t
--- @
+-- [/identity/]
 --
--- In other words 'Transformable' values are monoid actions of 'Span'.
+--    @'transform' mempty = id@
 --
--- Instances of Transformable and HasDuration should satisfy:
+-- [/compatibility/]
 --
--- @
--- _duration a = _duration (_era a)
--- @
+--    @'transform' (s <> t) = 'transform' s . 'transform' t@
 --
--- Instances of Transformable and HasPosition  should satisfy:
---
--- @
--- _position p (transform s a) = transform s (_position p a)
--- @
---
--- Lemmas
---
--- @
--- _duration (transform s a) = transform s (_duration a)
--- @
+-- In other words, 'transform' must be a left-action of 'Span' on @a@.
 class Transformable a where
   transform :: Span -> a -> a
 
@@ -326,10 +322,6 @@ whilstL id
 -}
 
 -- type LensLike (f :: * -> *) s t a b = (a -> f b) -> s -> f t
-
--- TODO rename
-dofoo :: Functor f => (x -> s -> a) -> (x -> b -> t) -> LensLike f (x, s) (x, t) a b
-dofoo v w = \f (s, a) -> (s,) <$> w s <$> f ((v s) a)
 
 -- :: Functor f => (x -> afb -> afb') -> (afb' -> s -> f t) -> afb -> (x, s) -> f (x, t)
 -- TODO rename

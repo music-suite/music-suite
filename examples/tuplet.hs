@@ -1,29 +1,25 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 
+-- This example shows tuplets of various ratios and durations.
 module Main where
 
 import Music.Prelude
-import Control.Lens (set)
-
-test 1  = group 5 g |> (g|*3)
-test 2  = group 3 fs |> (fs|*3)
-test 3  = group 3 f |> group 5 f |> group 3 f |> group 7 f
-test 4  = group 3 e |> group 5 e |> c |> group 7 e
-test 5  = ds |> group 5 ds |> ds |> group 7 ds
--- all above ok
-test 8 = times 5 d|/5 |> times 3 d|/3 -- ok
-test 9 = times 4 cs|/5 |> cs|*(1/5+1/3)    -- not ok, needs to be bound from last quintuplet note
-
-test 99 = group 5 c |> group 3 c |> c|*2
-
-
-group n x = times n x |/ fromIntegral n
 
 music :: Music
-music = {-fadeIn 1 $-} {-fadeOut 1 $-} catSep $ map test [1..5]
-
-catSep = ppar . zipWith (set parts') (divide 100 mempty)
+music = rcat
+  [ group 5 g |> (g|*3)
+  , group 3 fs |> (fs|*3)
+  , group 3 f |> group 5 f |> group 3 f |> group 7 f
+  , group 3 e |> group 5 e |> c |> group 7 e
+  , ds |> group 5 ds |> ds |> group 9 ds
+  , times 2 $ group 5 d |> group 3 d
+  , stretch 2 (group 5 d |> group 3 d)
+  , stretch 1.5 (group 5 d |> group 3 d)
+  , stretch 0.5 $ times 4 $ group 5 d |> group 3 d
+  , times 4 cs|/5 |> cs|*(1/5+1/3) |> d|*2
+  , group 5 c |> group 3 c |> c|*2
+  ]
 
 main :: IO ()
 main = defaultMain music

@@ -8,6 +8,15 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------
 
@@ -30,7 +39,7 @@ module Music.Time.Internal.Convert
 where
 
 import Control.Applicative
-import Control.Lens hiding (time, transform)
+import Control.Lens hiding (transform)
 import Control.Monad
 import Control.Monad.Plus
 import Data.AffineSpace
@@ -57,22 +66,3 @@ reactiveToVoice' (view onsetAndOffset -> (u, v)) r = (^. voice) $ fmap (^. note)
     times = 0 : filter (\t -> u < t && t < v) (occs r)
     durs = toRelativeTimeN' v times
 {-# DEPRECATED reactiveToVoice' "" #-}
--- -- |
--- -- Convert a score to a voice. Fails if the score contain overlapping events.
--- --
--- scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
--- scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests . (^. triples)
---     where
---        throwTime (t,d,x) = (d,x)
---        addRests = concat . snd . mapAccumL g 0
---            where
---                g u (t, d, x)
---                    | u == t    = (t .+^ d, [(t, d, Just x)])
---                    | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
---                    | otherwise = error "scoreToVoice: StonsetAndOffset prevTime"
--- {-# DEPRECATED scoreToVoice "" #-}
-
-{-
-voiceToScore :: Voice a -> Score a
-voiceToScore = renderAlignedVoice . aligned (0 :: Time) (0 :: LocalDuration)
--}

@@ -1,5 +1,13 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 module Music.Parts.Part
   ( Part,
@@ -58,15 +66,12 @@ instance Show Part where
 
 -- Semantics: Monoid (Option . First)
 instance Monoid Part where
-
   mempty = def
 
-  mappend x y
+instance Semigroup Part where
+  x <> y
     | x == mempty = y
     | otherwise = x
-
-instance Semigroup Part where
-  (<>) = mappend
 
 instance Default Part where
   def = Part def def def
@@ -100,6 +105,8 @@ smallestPart :: Part -> Part -> Part
 smallestPart p1@(Part _ _ sp1) p2@(Part _ _ sp2)
   | sp1 `smallestSubpart` sp2 == sp1 = p1
   | sp1 `smallestSubpart` sp2 == sp2 = p2
+  -- arbitrarily:
+  | otherwise = p1
 
 smallestSubpart :: Subpart -> Subpart -> Subpart
 smallestSubpart x y
@@ -112,6 +119,8 @@ largestPart :: Part -> Part -> Part
 largestPart p1@(Part _ _ sp1) p2@(Part _ _ sp2)
   | sp1 `largestSubpart` sp2 == sp1 = p1
   | sp1 `largestSubpart` sp2 == sp2 = p2
+  -- arbitrarily:
+  | otherwise = p1
 
 largestSubpart :: Subpart -> Subpart -> Subpart
 largestSubpart x y
@@ -161,8 +170,12 @@ instrument f (Part s i u) = fmap (\i -> Part s i u) $ f i
 
 -- | Divide a part into @n@ subparts.
 divide :: Int -> Part -> [Part]
-divide n (Part solo instr subp) = fmap (\x -> Part solo instr (subp <> Subpart (pure x))) $ divisions n
+divide n (Part solo instr _subp) = fmap (\x -> Part solo instr (Subpart (pure x))) $ divisions n
+  where
+    divisions n = take n [1 ..]
 
+solo :: Instrument -> Part
 solo instr = Part Solo instr def
 
+tutti :: Instrument -> Part
 tutti instr = Part Tutti instr def

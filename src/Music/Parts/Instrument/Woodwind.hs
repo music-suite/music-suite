@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
+
 module Music.Parts.Instrument.Woodwind
   ( WoodwindInstrument,
     woodwindInstrument,
@@ -6,7 +15,6 @@ module Music.Parts.Instrument.Woodwind
     Glissando,
     allowedGlissandi,
     effectiveGlissandi,
-    isAllowedGlissando,
   )
 where
 
@@ -31,16 +39,13 @@ isWoodwindInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
   Just i -> Data.List.isPrefixOf "wind" i
 
-type GlissandoRange = Ambitus Pitch
+type GlissandoRange = Ambitus Interval Pitch
 
-type Glissando = Ambitus Pitch
+type Glissando = Ambitus Interval Pitch
 
 allowedGlissandi :: Set GlissandoRange
 allowedGlissandi = error "No allowedGlissandi"
 
 effectiveGlissandi :: Set GlissandoRange
 effectiveGlissandi = error "No effectiveGlissandi"
-
-isAllowedGlissando :: WoodwindInstrument -> Glissando -> Bool
-isAllowedGlissando = error "No isAllowedGlissandi"
 -- TODO correspondance of range/sound/dynamic

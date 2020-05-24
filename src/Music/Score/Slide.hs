@@ -64,6 +64,8 @@ class HasSlide a where
 
 instance HasSlide a => HasSlide (b, a)
 
+instance HasSlide a => HasSlide (Maybe a)
+
 instance HasSlide a => HasSlide (Couple b a)
 
 instance HasSlide a => HasSlide [a]
@@ -76,7 +78,7 @@ instance HasSlide a => HasSlide (Note a)
 
 -- (eg,es,a,bg,bs)
 newtype SlideT a = SlideT {getSlideT :: Couple ((Any, Any), (Any, Any)) a}
-  deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
+  deriving (Eq, Show, Ord, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad)
 
 -- TODO export type other than () - see ColorT et al.
 runSlideT :: SlideT a -> ((), a)

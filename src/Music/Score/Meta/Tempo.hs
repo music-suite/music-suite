@@ -8,8 +8,17 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------
@@ -50,9 +59,6 @@ module Music.Score.Meta.Tempo
     adagio,
     largo,
     lento,
-
-    -- * Extracting tempo
-    renderTempo,
   )
 where
 
@@ -78,7 +84,7 @@ import Music.Score.Internal.Util
 import Music.Score.Meta
 import Music.Score.Part
 import Music.Score.Pitch
-import Music.Time hiding (time)
+import Music.Time
 
 type Bpm = Duration
 
@@ -117,7 +123,7 @@ instance Num Tempo where
 instance Show Tempo where
   show (getTempo -> (nv, bpm)) = "metronome " ++ showR nv ++ " " ++ showR bpm
     where
-      showR = showR' . realToFrac
+      showR = showR' . realToFrac @_ @Rational
       showR' ((unRatio -> (x, 1))) = show x
       showR' ((unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
 
@@ -127,16 +133,13 @@ instance Default Tempo where
 -}
 
 instance Semigroup Tempo where
-  (<>) = mappend
-
-instance Monoid Tempo where
-
-  mempty = metronome (1 / 4) 120
-
-  a `mappend` b
+  a <> b
     | a == mempty = b
     | b == mempty = a
     | otherwise = a
+
+instance Monoid Tempo where
+  mempty = metronome (1 / 4) 120
 
 -- | Create a tempo from a duration and a number of beats per minute.
 --
@@ -160,7 +163,7 @@ metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
 
 -- | Get the note value indicated by a tempo.
 tempoNoteValue :: Tempo -> Maybe NoteValue
-tempoNoteValue (Tempo n nv d) = nv
+tempoNoteValue (Tempo _n nv _d) = nv
 
 -- | Get the number of beats per minute indicated by a tempo.
 tempoBeatsPerMinute :: Tempo -> Bpm
@@ -184,21 +187,13 @@ tempoToDuration (Tempo _ _ x) = x
 
 -- | Set the tempo of the given score.
 tempo :: (HasMeta a, HasPosition a) => Tempo -> a -> a
-tempo c x = tempoDuring (_era x) c x
+tempo c x = case _era x of
+  Nothing -> x
+  Just e -> tempoDuring e c x
 
 -- | Set the tempo of the given part of a score.
 tempoDuring :: HasMeta a => Span -> Tempo -> a -> a
 tempoDuring s c = addMetaNote $ view event (s, c)
-
--- TODO move
-inSpan :: Span -> Time -> Bool
-inSpan (view onsetAndOffset -> (t, u)) x = t <= x && x <= u
-
--- | Extract all tempi from the given score, using the given default tempo.
--- withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a
--- withTempo f = withMeta (f . fromMaybe def . fmap getFirst . getOption)
-renderTempo :: Score a -> Score a
-renderTempo = error "renderTempo: Not implemented"
 
 {-
 inSpan' (view onsetAndOffset -> (t,u)) x = t <= x && x < u

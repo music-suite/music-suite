@@ -49,12 +49,12 @@ import Data.Semigroup
 import Data.VectorSpace hiding (Sum (..))
 import Music.Score.Part
 import Music.Time.Aligned
+import Music.Time.Duration
 import Music.Time.Event
 import Music.Time.Internal.Convert ()
 import Music.Time.Internal.Util
 import Music.Time.Note
 import Music.Time.Placed
-import Music.Time.Reverse
 import Music.Time.Score
 import Music.Time.Track
 import Music.Time.Voice
@@ -105,7 +105,7 @@ instance HasPhrases (PVoice a) (PVoice b) a b where
 
 -- | Traverses all phrases in each voice, using 'extracted'.
 -- TODO get rid of UndecidableInstances
-instance (HasPart' a, Ord (Part a), a ~ b) => HasPhrases (Score a) (Score b) a b where
+instance (HasParts' a, Ord (Part a), a ~ b) => HasPhrases (Score a) (Score b) a b where
   mvoices = extracted . each . singleMVoice
 
 {-

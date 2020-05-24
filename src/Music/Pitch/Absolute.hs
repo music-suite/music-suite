@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
+
 -- | Absolute pitch representation.
 module Music.Pitch.Absolute
   ( -- * Absolute pitch representation
@@ -8,12 +17,9 @@ module Music.Pitch.Absolute
 
     -- * HasFrequency class
     HasFrequency (..),
-    -- octaves,
+    octaves,
     fifths,
     cents,
-
-    -- * Spectral dissonance
-    diss,
   )
 where
 
@@ -32,7 +38,7 @@ import Music.Time.Transform (Transformable (..))
 -- |
 -- Absolute frequency in Hertz.
 newtype Hertz = Hertz {getHertz :: Double}
-  deriving (Read, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
 -- Number of pure octaves.
@@ -41,7 +47,7 @@ newtype Hertz = Hertz {getHertz :: Double}
 --
 -- > f * (2/1) = frequency (octaves f + 1)
 newtype Octaves = Octaves {getOctaves :: Hertz}
-  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
 -- Number of pure fifths.
@@ -50,7 +56,7 @@ newtype Octaves = Octaves {getOctaves :: Hertz}
 --
 -- > f * (3/2) = frequency (fifths f + 1)
 newtype Fifths = Fifths {getFifths :: Hertz}
-  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
 -- Number of cents.
@@ -59,9 +65,7 @@ newtype Fifths = Fifths {getFifths :: Hertz}
 --
 -- > f * (2/1) = frequency (cents f + 1200)
 newtype Cents = Cents {getCents :: Hertz}
-  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
-
-instance Show Hertz where show h = (show (getHertz h)) ++ " Hz"
+  deriving (Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 instance Semigroup Hertz where (<>) = (*)
 
@@ -71,13 +75,13 @@ instance Semigroup Fifths where (<>) = (+)
 
 instance Semigroup Cents where (<>) = (+)
 
-instance Monoid Hertz where mempty = 1; mappend = (*)
+instance Monoid Hertz where mempty = 1
 
-instance Monoid Octaves where mempty = 0; mappend = (+)
+instance Monoid Octaves where mempty = 0
 
-instance Monoid Fifths where mempty = 0; mappend = (+)
+instance Monoid Fifths where mempty = 0
 
-instance Monoid Cents where mempty = 0; mappend = (+)
+instance Monoid Cents where mempty = 0
 
 instance AffineSpace Hertz where
 
@@ -116,7 +120,7 @@ fifths a = Fifths $ logBase (3 / 2) (frequency a)
 -- |  Convert a frequency to cents.
 cents :: HasFrequency a => a -> Cents
 cents a = Cents $ logBase (2 / 1) (frequency a) * 1200
-
+{-
 -- Calculate spectral dissonance.
 -- Only works as exp for freqs > 1
 --
@@ -124,14 +128,12 @@ cents a = Cents $ logBase (2 / 1) (frequency a) * 1200
 diss :: RealFrac a => [a] -> a
 diss xs = lcms xs / minimum xs
 
-gcdG :: RealFrac a => a -> a -> a
+-- gcdG :: RealFrac a => a -> a -> a
+-- gcdG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (gcd a1 b1) / fromIntegral (lcm a2 b2)
 
 lcmG :: RealFrac a => a -> a -> a
 lcmG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (lcm a1 b1) / fromIntegral (gcd a2 b2)
 
-gcdG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (gcd a1 b1) / fromIntegral (lcm a2 b2)
-
 lcms :: RealFrac a => [a] -> a
 lcms = foldr lcmG 1
-
-unRatio x = (Data.Ratio.numerator x, Data.Ratio.denominator x)
+-}

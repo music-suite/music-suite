@@ -4,6 +4,7 @@ module Data.AffineSpace.Point.Offsets
     pointOffsets,
     offsetVs,
     distanceVs,
+    AffinePair,
   )
 where
 
@@ -16,11 +17,14 @@ import Data.Stream.Infinite (Stream)
 import qualified Data.Stream.Infinite as Stream
 import Data.VectorSpace
 
+-- TODO move to separate module
+type AffinePair v p = (VectorSpace v, AffineSpace p, Diff p ~ v)
+
 -- | Lay out a series of vectors from a given point. Return all intermediate points.
 --
 -- > lenght xs + 1 == length (offsetPoints p xs)
 --
--- >>> offsetPoints 0 [1,1,1] :: [Time]
+-- >>> offsetPoints 0 [1,1,1] :: [Integer]
 -- [0,1,2,3]
 offsetPoints :: AffineSpace p => p -> [Diff p] -> [p]
 offsetPoints = scanl (.+^)
@@ -33,7 +37,7 @@ offsetPointsS = Stream.scanl (.+^)
 --
 -- > lenght xs + 1 == length (offsetPoints p xs)
 --
--- >>> offsetPoints 0 [1,1,1] :: [Time]
+-- >>> offsetPoints 0 [1,1,1] :: [Integer]
 -- [0,1,2,3]
 pointOffsets :: AffineSpace p => p -> [p] -> [Diff p]
 pointOffsets or = (zeroV :) . snd . mapAccumL g or
@@ -41,6 +45,7 @@ pointOffsets or = (zeroV :) . snd . mapAccumL g or
     g prev p = (p, p .-. prev)
 
 -- How they should really have been defined
+-- See https://www.reddit.com/r/haskell/comments/f7h1xn/why_do_scanr_and_scanl_change_the_size_of_the_list/
 
 -- |
 -- For all p

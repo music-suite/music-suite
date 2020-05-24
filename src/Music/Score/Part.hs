@@ -9,6 +9,7 @@
   -Werror
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
+  -fno-warn-redundant-constraints
   -fno-warn-unused-imports #-}
 
 -- | Provides functions for manipulating parts.
@@ -52,6 +53,7 @@ import BasePrelude hiding ((<>), Dynamic, first, second)
 import Control.Comonad
 import Control.Lens hiding ((&), parts, transform)
 import Data.Functor.Couple
+import Data.Kind
 import qualified Data.List as List
 import qualified Data.Maybe
 import Data.Ord (comparing)
@@ -65,17 +67,16 @@ import Music.Time.Aligned
 import Music.Time.Event
 import Music.Time.Internal.Transform
 import Music.Time.Note
-import Music.Time.Reverse
 import Music.Time.Score
 import Music.Time.Voice
 
 -- |
 -- Parts type.
-type family Part (s :: *) :: * -- Part s   = a
+type family Part (s :: Type) :: Type -- Part s   = a
 
 -- |
 -- Part type.
-type family SetPart (b :: *) (s :: *) :: * -- Part b s = t
+type family SetPart (b :: Type) (s :: Type) :: Type -- Part b s = t
 
 -- |
 -- Class of types that provide a single part.
@@ -85,12 +86,7 @@ class (HasParts s t) => HasPart s t where
 
 -- |
 -- Class of types that provide a part traversal.
-class
-  ( Transformable (Part s),
-    Transformable (Part t)
-    -- , SetPart (Part t) s ~ t
-  ) =>
-  HasParts s t where
+class HasParts s t where
   -- | Part type.
   parts :: Traversal s t (Part s) (Part t)
 
@@ -112,30 +108,30 @@ type instance Part Bool = Bool
 
 type instance SetPart a Bool = a
 
-instance (b ~ Part b, Transformable b) => HasPart Bool b where
+instance (b ~ Part b) => HasPart Bool b where
   part = ($)
 
-instance (b ~ Part b, Transformable b) => HasParts Bool b where
+instance (b ~ Part b) => HasParts Bool b where
   parts = ($)
 
 type instance Part Ordering = Ordering
 
 type instance SetPart a Ordering = a
 
-instance (b ~ Part b, Transformable b) => HasPart Ordering b where
+instance (b ~ Part b) => HasPart Ordering b where
   part = ($)
 
-instance (b ~ Part b, Transformable b) => HasParts Ordering b where
+instance (b ~ Part b) => HasParts Ordering b where
   parts = ($)
 
 type instance Part () = ()
 
 type instance SetPart a () = a
 
-instance (b ~ Part b, Transformable b) => HasPart () b where
+instance (b ~ Part b) => HasPart () b where
   part = ($)
 
-instance (b ~ Part b, Transformable b) => HasParts () b where
+instance (b ~ Part b) => HasParts () b where
   parts = ($)
 
 type instance Part Int = Int
@@ -189,7 +185,7 @@ type instance Part (Aligned a) = Part a
 type instance SetPart b (Aligned a) = Aligned (SetPart b a)
 
 instance HasParts a b => HasParts (Aligned a) (Aligned b) where
-  parts = _Wrapped . parts
+  parts = traverse . parts
 
 instance HasPart a b => HasPart (c, a) (c, b) where
   part = _2 . part
@@ -211,20 +207,20 @@ type instance Part (Event a) = Part a
 type instance SetPart g (Event a) = Event (SetPart g a)
 
 instance (HasPart a b) => HasPart (Event a) (Event b) where
-  part = from event . whilstL part
+  part = from event . _2 . part
 
 instance (HasParts a b) => HasParts (Event a) (Event b) where
-  parts = from event . whilstL parts
+  parts = traverse . parts
 
 type instance Part (Note a) = Part a
 
 type instance SetPart g (Note a) = Note (SetPart g a)
 
 instance (HasPart a b) => HasPart (Note a) (Note b) where
-  part = from note . whilstLD part
+  part = from note . _2 . part
 
 instance (HasParts a b) => HasParts (Note a) (Note b) where
-  parts = from note . whilstLD parts
+  parts = traverse . parts
 
 -- |
 -- List all the parts
@@ -241,35 +237,36 @@ arrangeFor ps x = replaceParts (zip (allParts x) (cycle ps)) x
 
 -- |
 -- List all the parts
-extractPart :: (Eq (Part a), HasPart' a) => Part a -> Score a -> Score a
+extractPart :: (Eq (Part a), HasParts' a) => Part a -> Score a -> Score a
 extractPart = extractPartG
 
-extractPartG :: (Eq (Part a), MonadPlus f, HasPart' a) => Part a -> f a -> f a
+extractPartG :: (Eq (Part a), MonadPlus f, HasParts' a) => Part a -> f a -> f a
 extractPartG p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
 
 -- |
 -- List all the parts
-extractParts :: (Ord (Part a), HasPart' a) => Score a -> [Score a]
+extractParts :: (Ord (Part a), HasParts' a) => Score a -> [Score a]
 extractParts = extractPartsG
 
 extractPartsG ::
   ( MonadPlus f,
     HasParts' (f a),
-    HasPart' a,
+    HasParts' a,
     Part (f a) ~ Part a,
     Ord (Part a)
   ) =>
   f a ->
   [f a]
-extractPartsG x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
+extractPartsG x =
+  (\p s -> filterPart (== p) s) <$> allParts x <*> return x
 
-filterPart :: (MonadPlus f, HasPart a a) => (Part a -> Bool) -> f a -> f a
-filterPart p = mfilter (\x -> p (x ^. part))
+filterPart :: (MonadPlus f, HasParts' a) => (Part a -> Bool) -> f a -> f a
+filterPart p = mfilter (\x -> let ps = toListOf parts x in all p ps && not (null ps))
 
 extractPartsWithInfo :: (Ord (Part a), HasPart' a) => Score a -> [(Part a, Score a)]
 extractPartsWithInfo x = zip (allParts x) (extractParts x)
 
-extracted :: (Ord (Part a), HasPart' a {-, HasPart a b-}) => Iso (Score a) (Score b) [Score a] [Score b]
+extracted :: (Ord (Part a), HasParts' a {-, HasPart a b-}) => Iso (Score a) (Score b) [Score a] [Score b]
 extracted = iso extractParts mconcat
 
 extractedWithInfo :: (Ord (Part a), HasPart' a, HasPart' b) => Iso (Score a) (Score b) [(Part a, Score a)] [(Part b, Score b)]
@@ -282,6 +279,8 @@ newtype PartT n a = PartT {getPartT :: (n, a)}
       Show,
       Typeable,
       Functor,
+      Foldable,
+      Traversable,
       Applicative,
       Comonad,
       Monad,
@@ -300,10 +299,10 @@ type instance Part (PartT p a) = p
 
 type instance SetPart p' (PartT p a) = PartT p' a
 
-instance (Transformable p, Transformable p') => HasPart (PartT p a) (PartT p' a) where
+instance HasPart (PartT p a) (PartT p' a) where
   part = _Wrapped . _1
 
-instance (Transformable p, Transformable p') => HasParts (PartT p a) (PartT p' a) where
+instance HasParts (PartT p a) (PartT p' a) where
   parts = _Wrapped . _1
 
 instance (IsPitch a, Monoid n) => IsPitch (PartT n a) where
@@ -311,9 +310,6 @@ instance (IsPitch a, Monoid n) => IsPitch (PartT n a) where
 
 instance (IsDynamics a, Monoid n) => IsDynamics (PartT n a) where
   fromDynamics l = PartT (mempty, fromDynamics l)
-
-instance Reversible a => Reversible (PartT p a) where
-  rev = fmap rev
 
 instance Tiable a => Tiable (PartT n a) where
   toTied (PartT (v, a)) = (PartT (v, b), PartT (v, c)) where (b, c) = toTied a
@@ -333,23 +329,14 @@ type instance Part (Score a) = Part a
 type instance SetPart g (Score a) = Score (SetPart g a)
 
 instance (HasParts a b) => HasParts (Score a) (Score b) where
-  parts =
-    _Wrapped . _2 -- into NScore
-      . _Wrapped
-      . traverse
-      . from event -- this needed?
-      . whilstL parts
+  parts = traverse . parts
 
 type instance Part (Voice a) = Part a
 
 type instance SetPart g (Voice a) = Voice (SetPart g a)
 
 instance (HasParts a b) => HasParts (Voice a) (Voice b) where
-  parts =
-    _Wrapped
-      . traverse
-      . _Wrapped -- this needed?
-      . whilstLD parts
+  parts = traverse . parts
 
 infixl 5 </>
 

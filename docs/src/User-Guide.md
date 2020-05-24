@@ -1,12 +1,14 @@
-# First steps
+# Tutorial
 
 ## Installing
 
-TODO "easy" install options
+<!--
+TODO Docker or other "easy" install options
+-->
 
 ### Installing from source
 
-You'll need Git and Nix (2.3.2 or later).
+We'll need Git and Nix (2.3.2 or later).
 
 ```
 $ git clone https://github.com/hanshoglund/music-suite
@@ -18,17 +20,13 @@ Then follow the instructions in `README.md` to setup the environment and build M
 
 ## Writing music
 
-Music Suite is an [embedded language](https://en.wikipedia.org/wiki/Domain-specific_language#External_and_Embedded_Domain_Specific_Languages), based on Haskell. A piece of music is described by a *expressions*. Much as arithmetic expressions describes numbers or other mathematical objects, music expressions describe music.
+Music Suite is based on *expressions*. An expression may represent any piece of music, from a single note to a complex, multi-movement work.
 
-Here is a very simple expression:
+To use Music Suite, you will need to write expressions, which Music Suite will convert into *audio* or *graphics* (or both) on your behalf. We can ask Music Suite to do this in a couple of different ways. Choose one that works for you so that you can follow along with the examples in the tutorial.
 
-```haskell+haskell
-c <> e <> g
-```
-
-This consist of the notes C4, E4 and G4, played simultaneously. The `<>` symbol is an operator that means "compose this music in parallel".
-
-Generally we want to convert our expressions representing music into some audio or graphics, such as standard music notation. There are a couple of ways of doing this.
+<!--
+Note: While Music Suite was written with Western classical notation in mind and it is not restricted to these formats.
+-->
 
 
 ### Using files
@@ -40,26 +38,23 @@ import Music.Prelude
 main = defaultMain music
 
 music =
-  c <> d <> e
+c <> d <> e
 ```
 
 The first three lines here are standard boilerplate. The last line (`c <> d <> e`) contains the actual music expression.
 
 The purpose of the `import` line is to allow you to use Music Suite, as Haskell only imports its own standard libary by default. The `main` line turns whatever `music` is defined to be into a command line program which we can execute as follows:
 
-    $ cabal exec runhaskell -- Test.hs
+$ cabal exec runhaskell -- Test.hs
 
-You can copy-paste all examples from this file into the above template. Whatever value `music` is assigned to will be exported when you run the file.
+We can copy-paste all examples from this file into the above template. Whatever value `music` is assigned to will be exported when you run the file.
 
 
+<!--
 ### Using an interactive environment
 
-TODO shell, notebook or similar interactive backend. See TODO.md.
-
-
-# Basic concepts
-
-TODO explain link to Haskell concepts such as values, functions, type errors, lenses, etc?
+TODO "visual interpreter" docs
+-->
 
 <!--
 
@@ -84,9 +79,9 @@ XXX `lens` provides lots of combinators for working with these. Most importantly
 ## Semigroups, monoids, groups and vector spaces
 
 - A *semigroup* has an associative combination operator. Examples: non-empty lists, integers with (+).
-  - A *monoid* is a semigroup with an identity element. Examples: lists, integers with (+) and 0.
-    - A *group*  is a monoid with a negation element. Examples: integers with (+), 0 and `negate`.
-      - A *vector space* is a group whose elements can be multiplied by a  *scalar*. Example: 2D vectors with real numbers as scalars.
+- A *monoid* is a semigroup with an identity element. Examples: lists, integers with (+) and 0.
+- A *group*  is a monoid with a negation element. Examples: integers with (+), 0 and `negate`.
+- A *vector space* is a group whose elements can be multiplied by a  *scalar*. Example: 2D vectors with real numbers as scalars.
 
 Most standard musical aspects are vector spaces:
 
@@ -100,17 +95,34 @@ Music Suite takes inspiration from diagrams in *separating points and vectors*. 
 -->
 
 
-A single note can be entered by its name, e.g. `c`, `d` and so on.
 
-The expression `c` enters C4 (middle C) with a duration of a a whole note. Durations are measured in rational numbers: a duration of `1` is a whole note (or semibreve), a duration of `1/2` is a half note (minim), and so on.
+##  Our first score
+
+The first musical expression we write will be simple: it consists of a single letter:
 
 ```music+haskell
 c
 ```
 
+This of course represents the note C. Notice that there is more information in the score than what we entered. This is because most musical aspects have a *default value*. We will see how to override them later, but for now we can note:
+
+- The default *octave* is the octave containing "middle C", or *C4* in [scientific pitch notation](https://en.wikipedia.org/wiki/Scientific_pitch_notation).
+
+- The default *duration* is a whole note. Durations are measured in rational numbers: a duration of `1` is a whole note (or semibreve), a duration of `1/2` is a half note (or minim), and so on.
+
+- The default *dynamic value* is *mf* (meaning *mezzo-forte*, "medium loud").
+
+- The default *instrument* is *Piano*.
+
+
+> Note: In Haskell, numbers are *overloaded*. The syntax do not convey any type information: `0.25` and `1/4` are equivalent. In Music Suite, all time values are implemented using arbitrary-precision integers and rational numbers, so you do not have to worry about rounding errors.
+
+By default note have no *accidentals* or *articulation marks*. We will see how to add those later as well.
+
+
 ## Duration and onset
 
-All notes we enter have duration `1` by default. To change this, we use @[stretch] and @[compress]
+All notes we enter have duration `1` by default. To change this, we use @[stretch] and @[compress]:
 
 
 ```music+haskell
@@ -124,6 +136,8 @@ stretch 2 c
 ```music+haskell
 stretch (4+1/2) c
 ```
+
+> Note: In classical theory *stretch* and *compress* are known as augmentation and diminishion, respectively.
 
 
 We count positions from the first beat in the first bar, so in 4/4 time, `0` means the first beat, `1/4` (or `0.25`) means the second beat and so on.
@@ -140,43 +154,76 @@ Negative numbers work too:
 delay (-0.25) $ delay 1 $ c
 ```
 
-<!--
-Law: stretch/compress are related as follows:
-
-```haskell
-compress x = stretch (1/x)
-```
--->
-
-
-The `|*` and `|/` operators can be used as shorthands for `delay` and `compress`.
+The `|*` and `|/` operators can be used as shorthands for `stretch` and `compress`.
 
 ```music+haskell
-(c |> d |> e |> c |> d|*2 |> d|*2)|/16
+(c |> d |> e |> c |> d|*2 |> d|*2) |/ 16
 ```
 
-## Tuplets and ties
+> Note: The `|>` operator means "sequential composition". We will introduce this [properly](#composition-operators) later on.
 
-TODO these are added automatically
+## Let and where
+
+The `let ... in` construct introduces a temporary name for an expression.
+
 
 ```music+haskell
-c|*(9/8) |> d|*(7/8)
+let
+  x = c |> d
+  r = 1/3
+in
+x </> delay r x
 ```
 
-## A few examples
-
-Here is a more complex example using function composition. The dot operator `.` is used to compose the function `up _P8` (transpose the music up one octave), `compress 2` ("compress" or "diminish" the music by a factor of two) and `delay 3` (delay the music by the duration of three whole notes). The composition applies the in left to right order.
+The `where` construct is similar, but takes the bindings *after* the expression.
 
 ```music+haskell
-(up _P8 . compress 2 . delay 3) c
+x </> delay r x
+  where
+    x = c |> d
+    r = 1/3
 ```
 
+## Octaves and accidentals
+
+We can change octaves and accidentals:
+
+```music+haskell
+_8va c
+```
+
+```music+haskell
+sharpen c
+```
+
+> Note: We will lean many more ways of entering pitch in the [next chapter](#pitch).
+
+## Basic dynamics and articulations
+
+We can add articulations and change dynamics:
+
+```music+haskell
+accent c
+```
+
+```music+haskell
+level ppp c
+```
+
+
+We will see more examples of this later on as well.
+
+The `$` operator is pronounced "apply". `f $ g x` is the same as `f (g x)`, so the apply operator is an alternative to writing parentheses:
+
+```music+haskell
+staccato $ stretch (1/8) c
+```
 
 ## Composition operators
 
-TODO composition operators: central.
+So far we have worked with a single note, which is not particularly interesting from a musical point of view. To combine multiple notes into a larger score we need a form of *composition*.
 
-Music expressions can be composed @[<>]:
+The basic composition operator is @[<>], which combines two pieces of music *simultaneously*. For example, we can combine the expressions `c`, `e` and `g`.
 
 ```music+haskell
 c <> e <> g
@@ -200,36 +247,41 @@ c </> e </> g
 As a shorthand for `x |> y |> z ..`, we can write @[pseq] `[x, y, z, ...]`.
 
 ```music+haskell
-pseq [c,e..g] |* (1/4)
+pseq [c,e,g] |* (1/4)
 ```
 
 For `x <> y <> z ...`, we can write @[ppar] `[x, y, z, ...]` .
 
 ```music+haskell
-ppar [c,e..g] |/ 2
+ppar [c,e,g] |/ 2
 ```
 
 For `x </> y </> ...` the syntax is @[rcat] `[x, y, z ...]`.
 
 ```music+haskell
-rcat [c,e..g] |/ 2
+rcat [c,e,g] |/ 2
 ```
 
-Here is a more complex example using all forms of composition:
+## Comments
 
-```music+haskell
-let
-    scale = pseq [c,d,e,f,g,a,g,f]|/8
-    triad a = a <> up _M3 a <> up _P5 a
-in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2
+Comments are the same as in regular Haskell.
+
+```haskell
+-- This is a single-line comment
+
+{-
+ This is
+ a multi-line
+ comment!
+-}
 ```
 
-TODO understanding that `|>` and `</>` are based on `<>`.
 
+## Rests, tuplets and ties
 
-## Chords
+There is never any need to explicitly create rests, tuplets or ties in Music Suite. Instead, each note exists in a dedicated time span, which can be inspected and transformed. When we compose music expressions in parallel, all notes are interleaved without affecting their onset or duration.
 
-Note with the same onset and offset are rendered as chords by default. If you want to prevent this you must put them in separate parts.
+Notes with the same onset and offset are rendered as chords by default.
 
 ```music+haskell
 pseq [c,d,e,c] <> pseq [e,f,g,e] <> pseq [g,a,b,g]
@@ -241,124 +293,90 @@ Or, equivalently:
 ppar [c,e,g] |> ppar [d,f,a] |> ppar [e,g,b] |> ppar [c,e,g]
 ```
 
-TODO how part separation works w.r.t. division etc
+To prevents notes from being merged into chords we must *explicitly* put them in separate parts. The `</>` and `rcat` combinators is a simple way of doing this.
 
-@[simultaneous]
+To create space in our scores we can use `rest`. Rests are empty placeholders which take up space when using sequential composition but do not show up in the final score:
 
-
-## Rests
-
-Similar to chords, there is usually no need to handle rests explicitly.
-
-TODO show with examples how rests are added from delay/transform etc.
-
-It is possible to add rests explicitly as follows.
-
-@[mcatMaybes]
-
-```TODO
+```music+haskell
 times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
 ```
 
-You can also remove rests explicitly:
+Rests can be stretched and delayed just like notes.
 
-TODO explain how this works.
+Any note that crosses a barline will be notated using ties:
 
 ```music+haskell
-mcatMaybes $ times 4 (accentAll g|*2 |> rest |> pseq [d,d]|/2)|/8
+c |* (9/8) |> d |* (7/8)
 ```
 
-TODO round off basic intro.
+> Note: To change the position of a barline, see [time signatures](#time-signatures).
 
-## Working with Time and Duration
-
-TODO brief intro to adding time and duration? Introduce Time/Duration/Span/HasPosition properly later on?
-
-
-# Pitch
-
-## Pitches and intervals
-
-## Pitch names
-
-To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*.
-
-To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type @[IsPitch] `a => a`.
-
-For Western-style pitch types, the standard pitch names can be used:
+Similarly, durations that do not fit into standard note durations are notated using dots or tuplets:
 
 ```music+haskell
-pseq [c, d, e, f, g, a, b]
+compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
+```
+
+
+
+## Functions and types
+
+So far we have written our musical expressions in terms of pre-defined expressions and functions. However the real power of using a functional language is to be able to define our own functions.
+
+> Note: In Haskell, functions and operators are the same, apart from syntax.
+
+
+TODO basic functions
+
+### Function composition
+
+Analogously to composition of music seen above we can compose *functions*.
+
+Here is an example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
+
+```music+haskell
+(up _P8 . compress 2 . delay 3) c
+```
+
+## More examples
+
+Of course, the combinators we have seen so far such as `stretch`, `_8va` and so on work on arbitrarily complex scores, not just single notes. We can also nest most function within applications of the composition operators.
+
+```music+haskell
+_8va $ pseq [c, d]
+```
+
+```music+haskell
+let
+  x = pseq [c, d]
+in
+pseq [x, up m3 x]
+```
+
+Here is a more complex example using all forms of composition:
+
+```music+haskell
+let
+  scale = pseq [c, d, e, f, g, a, g, f] |/ 8
+  triad a = a <> up _M3 a <> up _P5 a
+in up _P8 scale </> (triad c) |/2 |> (triad g_) |/2
+```
+
+## Understanding composition types
+
+Looking at the type of the composition operators, it becomes clear that `|>` and `</>` are in fact based on `<>`:
+
+```haskell
+(<>)  :: Semigroup a => a -> a -> a
+```
+
+```haskell
+(|>)  :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 ```
 
 <!--
-Pitch names in other languages work as well, for example `ut, do, re, mi, fa, so, la, ti, si`.
-
-German names (using `h` and `b` instead of `b` and `bb`) can be approximated as follows:
-
-```haskell
-import Music.Preludes hiding (b)
-import qualified Music.Pitch.Literal as P
-
-h = P.b
-b = P.bb
-```
--->
-
-
-You can change octave using @[octavesUp] and @[octavesDown]:
-
-```music+haskell
-octavesUp 4 c
-    </>
-octavesUp (-1) c
-    </>
-octavesDown 2 c
-```
-
-There is also a shorthand for other octaves:
-
-```music+haskell
-c__ |> c_ |> c |> c' |> c''
-```
-
-Sharps and flats can be added using @[sharpen] and @[flatten].
-
-```music+haskell
-sharpen c
-    </>
-(sharpen . sharpen) c
-```
-
-As you might expect, there is also a shorthand for sharp and flat notes:
-
-```music+haskell
-(cs |> ds |> es)    -- sharp
-    </>
-(cb |> db |> eb)    -- flat
-```
-
-Here is an overview of all pitch notations:
-
-```haskell
-sharpen c             = cs
-flatten d             = db
-(sharpen . sharpen) c = css
-(flatten . flatten) d = dss
-```
-
-Note that `cs == db` may or may not hold depending on the pitch representation to understand this, read about *overloading* in the next section.
-
-
-### Overloading
-
-TODO overloading, explain why the following works:
-
-```haskell
-return (c::Note) == (c::Score Note)
-```
-
 TODO refer back to previous table. For example `Music.Pitch.Common` distinguishes between enharmonics, while `Integer` does not.
+-->
 
 ### Interval names
 
@@ -370,11 +388,144 @@ and *perfect* intervals are written in upper-case. Unfortunately, Haskell does n
 overloaded upper-case values, so we have to adopt an underscore prefix:
 
 ```haskell
-minor third      == m3
-major third      == _M3
-perfect fifth    == _P5
-diminished fifth == d5
-minor ninth      == m9
+(</>) :: (Semigroup a, HasParts a, HasSubpart p, p ~ Part a) => a -> a -> a
+```
+
+In fact the `<>` operator is used for almost all forms of composition in Music Suite. The other operators simply peform some kind of manipulation on their values before or after composing.
+
+### Musical aspects
+
+While music is often though to be concerned primarily with time and pitch, Music Suite also allow representation of other "dimensions", including:
+
+- Dynamics: the *loudness* of a sound
+- Articulation: the *attack* and *relative length* of a sound
+- Instruments, parts and playing techniques, all of which affect *timbre*
+
+We'll sometimes refer to these collectively as *aspects*. Each aspect comes with its own traversal class, which is named after it, `HasPitches`, `HasDynamics`, `HasArticulations`, `HasParts`, `HasTechniques`, and so on.
+
+## Wrapping up
+
+This concludes the first chapter of the manual. We have seen how to write simple pieces, using melody, harmony and voices. You should now know enough to start working on your own music. You will find many more examples of pieces in the [examples directory](https://github.com/hanshoglund/music-suite/tree/master/examples).
+
+The rest of this manual can be read as a *reference*. We will be looking at musical aspects such as pitch, dynamics, rhythm, form and orchestration in detail. In general these chapters can generally be read in any order.
+
+
+
+
+# Pitch
+
+## The Pitch type
+
+The @[Pitch] representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling. As we shall see later this is not the only way of representing pitch in Music Suite, but it is common enough to be the default.
+
+### Pitch names
+
+The following pitch names are used:
+
+```music+haskell
+pseq [c, d, e, f, g, a, b]
+```
+
+### Octaves
+
+We can change octave using @[octavesUp] and @[octavesDown]:
+
+```music+haskell
+octavesUp 4 c
+  </>
+octavesUp (-1) c
+  </>
+octavesDown 2 c
+```
+
+There are synonyms for the most common cases:
+
+```music+haskell
+_8va c <> c <> _8vb c
+```
+
+The following is also a shorthand for alternative octaves:
+
+```music+haskell
+c__ |> c_ |> c |> c' |> c''
+```
+
+### Sharps and flats
+
+Sharps and flats can be added using @[sharpen] and @[flatten].
+
+```music+haskell
+sharpen c
+  </>
+(sharpen . sharpen) c
+  </>
+flatten c
+  </>
+(flatten . flatten) c
+```
+
+The @[alter] function is an iterated version of @[sharpen]/@[flatten]:
+
+```music+haskell
+alter 1 $ pseq [c,d,e]
+```
+
+Double sharps/flats are supported:
+
+```music+haskell
+pseq $ fmap (`alter` c) [-2..2]
+```
+
+The pitch representation used in Music Suite does in fact allow for an *arbitrary* number of sharps or flats. As there are no symbols for these in standard notation, they are automatically re-spelled in the output. Here is the note `c` written with up to 4 flats and sharps.
+
+```music+haskell
+pseq $ fmap (`alter` c) [-4..4]
+```
+
+There is of course also a shorthand for sharps and flats:
+
+```music+haskell
+(cs |> ds |> es)    -- sharp
+  </>
+(cb |> db |> eb)    -- flat
+```
+
+> Note: Music Suite uses C major by default, so all altered pitches are rendered as accidentals. See [key signatures](#key-signatures) for how to change this.
+
+
+### Pitch overloading
+
+To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*.
+
+To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type @[IsPitch] `a => a`.
+
+The overloading is not limited to pitch types but also to containers types such as [scores](#scores) and [voices](#voices).
+
+```haskell
+return (c::Note) == (c::Score Note)
+```
+
+> Hint: Use [`-XTypeApplications`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-TypeApplications) to restrict the type of an pitch. For example: `id @Pitch c`
+
+> Hint: Use `fromPitch` to convert a concrete pitch to `IsPitch a => a`.
+
+## The Interval type
+
+The @[Interval] type represents common/Western classical *intervals*.
+
+As is common in music theory notation, *minor* and *diminished* intervals are
+written in lower-case, while *major* and *perfect* intervals are written in
+upper-case. Here are some examples:
+
+```music+haskell
+inspectableToMusic @[Interval] $
+[ m3
+, _M3
+, _P5
+, d5
+, m9
+, d12
+]
 ```
 
 Similar to @[sharpen] and @[flatten], the @[augment] and @[diminish] functions can be used
@@ -386,44 +537,194 @@ let
 in pseq $ fmap (`up` c) intervals
 ```
 
-You can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
-operators, think of pitches and points `.` and intervals as vectors `^`.
 
 
-### Where the literals are defined
+### Simple and compound intervals
 
-There is nothing special about the pitch and interval literals, they are simply values exported by the `Music.Pitch.Literal` module. While this module is reexported by the standard music preludes, you can also import it qualified. You can use this in combination with `hiding`.
-
+A simple interval is an interval spanning less than one octave. Intervals spanning octave or more are called compound intervals, as they can be obtained by adding one or more octaves to a simple interval.
 
 ```haskell
-Pitch.c |> Pitch.d .+^ Interval.m3
+>>> simple _P11
+_P4
+
+>>> octaves @Interval _P4
+0
+
+>>> octaves @Interval _P11
+1
 ```
 
-TODO NOTE: In this chapter, do go into details about HasPitches (see Traversals), just show example uses
+### Negative intervals
 
-@[HasPitch]
+A *negative* interval is a compound interval with a negative octave number.
 
-@[pitch]
+```haskell
+>>> octaves @Interval (-_P5)
+-1
+```
 
-@[pitch']
+```music+haskell
+inspectableToMusic @[Interval] $
+[ m3
+, -m3
+]
+```
 
-@[HasPitches]
+The *inversion* of an interval is defined as `simple . negate`:
 
-@[pitches]
+```haskell
+>>> invert _P4
+_P5
 
-@[pitches']
+>>> invert _P11
+_P5
+
+>>> invert m3
+_M6
+```
 
 
-## Transposing music
+### Number, quality, alteration
 
-@[Transposable]
+Intervals be understood as:
 
-NOTE Transposable is a synonym for the type expression `(HasPitches' a, AffinePair (Interval a) (Pitch a), PitchPair (Interval a) (Pitch a))`. We will explain what this means later.
+- A pair of diatonic and (total) chromatic steps, *or*
+- A pair of diatonic steps and alteration, *or*
+- A pair of @[number] and @[quality]
+
+Not all combinations of number and quality makes sense.
+
+For numbers, we follow traditional music theory conventions in counting from one. In other words, a second consists of one diatonic step, a third of two diatonic steps, and so on. We can convert between these using @[diatonicSteps]:
+
+```haskell
+>>> second^.diatonicSteps
+1
+
+>>> (2 :: Number)^.diatonicSteps
+1 :: DiatonicSteps
+
+>>> (3 :: DiatonicSteps)^.from diatonicSteps
+4 :: Number
+```
+
+> Warning: The number `0` is undefined.
+
+We can extract @[name], @[accidental] and @[octave] number from a pitch:
+
+```haskell
+>>> name c
+C :: Name
+
+>>> accidental c
+natural
+
+>>> accidental cs
+sharp
+```
+
+
+### Interval overloading
+
+Interval names are overloaded in a manner similar to pitches, and are consequently referred to as *interval literals*. The corresponding class is called @[IsInterval].
+
+> Hint: Use [`-XTypeApplications`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-TypeApplications) to restrict the type of an interval. For example: `id @Interval m3`
+
+
+## Converting between intervals and pitches
+
+We can add pitches and intervals using the @[.-.] and @[.+^] operators. This is because pitches form an @[AffineSpace], with interval as the underlying @[VectorSpace]. Later on we will see that many types in Music Suite conform to this pattern.
+
+```haskell
+>>> m3 ^+^ m3
+d5 :: Interval
+
+>>> c .+^ m3
+eb :: Pitch
+
+>>> eb .-. c
+m3 :: Interval
+```
+
+> Hint: The `.` points towards the pitches in the `AffineSpace` (pitches) while the caret `^` points towards the intervals in the `VectorSpace`.
+
+The @[relative] function lifts an interval function into pitch *relative* a given origin (hence the name).
+
+```haskell
+relative (c :: Pitch) (^* 2) :: Pitch -> Pitch
+```
+
+## Enharmonics
+
+The @[HasSemitones] class provides the enharmonic equivalence relation.
+
+You can use the `=:=` operator to compare for enharmonic equivalence.
+
+```haskell
+>>> id @Interval _A2 == m3
+False
+
+>>> id @Interval _A2 =:= m3
+True
+```
+
+### Pitch equality and ordering
+
+The `Pitch` type has instances for the `Eq` and `Ord` type classes, representing equality and ordering respectively.
+
+As we have already seen, equality of pitches takes spelling into account, so e.g. `cs /= db` holds. There are many ways of defining orderings on pitches: the default ordering compares diatonic steps first, alteration second.
+
+```haskell
+>>> sort [(cs :: Pitch), db, dbb]
+[cs, dbb, db]
+```
+
+To get compare or sort pitches enharmonically you can use `sortOn`:
+
+```haskell
+>>> sortOn (semitones . (.-. c)) [(cs :: Pitch), db, flatten db]
+[dbb, cs, db]
+```
+
+Semitones are also used to describe "non-diatonic" intervals such as @[tone], @[tritone], etc.
+
+### Spelling
+
+We can *respell* enharmonically equivalent pitches by using a @[Spelling].
+
+```haskell
+>>> spell usingSharps tritone
+_A4
+```
+
+
+```music+haskell
+pseq $ fmap (\x -> over pitches' (relative c $ spell x)  $ ppar [as,cs,ds,fs])
+[ usingSharps
+, usingFlats
+, modally
+]
+```
+
+<!-- TODO simpler short cut for `over pitches' (relative c $ spell ...)`: -->
+
+```music+haskell
+x </> over pitches' (relative c $ spell modally) x
+  where
+    x = pseq [cs,flatten db,bs]
+```
+
+
+## Transposing and inverting music
+
+The `VectorSpace` and `AffineSpace` allow us to apply *affine transformations* to pitches. Because pitch is (roughly) a one-dimensional space, this means scaling and transpotion. Let's look at some examples.
+
+> Warning: The musical term *transposition* is known as *translation* in maths (where *transposition* means something else entirely!).
+
+
 
 ### Basic transposition
 
-@[up]
-@[down]
+We can transpose a music expression using the @[up] and @[down] functions.
 
 ```music+haskell
 up m3 tune
@@ -437,12 +738,19 @@ down _A4 tune
     tune = pseq [c,c,g,g,a,a,g|*2] |/8
 ```
 
-Note that transposing will not automatically change the key signature. See [key signatures](#key-signatures) for how to do this explicitly.
+As you might expect `down` is the same as `up . negate` and vice versa.
+
+```music+haskell
+up (-m3) tune
+  where
+    tune = pseq [c,c,g,g,a,a,g|*2] |/8
+```
+
+> Note: transposing does *not* automatically change the key signature. See [key signatures](#key-signatures) for how to do this explicitly.
 
 ### Parallel motion
 
-@[above]
-@[below]
+The @[above] and @[below] functions are similar to @[up] and @[down], but also retain the original music.
 
 ```music+haskell
 above m3 tune |> below m3 tune
@@ -452,6 +760,9 @@ above m3 tune |> below m3 tune
 
 ### Diatonic transposition
 
+The @[up] and @[down] functions perform what is known as *chromatic transposition*, meaning they add *both* the diatonic and the alteration component of the given interval to all pitches in the given score.
+
+We can also perform *diatonic transposition*, which adds only the diatonic component. Diatonic transpotion only makes sense relative a given tonic, so we provide one:
 
 ```music+haskell
 let
@@ -459,66 +770,505 @@ let
 in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 ```
 
+Here is same example, using a different tonic (`fs` instead of `c`):
+
 ```music+haskell
 let
   ch x = ppar [x, upDiatonic fs 2 x, upDiatonic fs 5 x]
 in pseq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 ```
 
+### Scaling pitch
+
+As we have seen intervals form a *vector space* and pitches an associated *affine space*. This implies we can define a form of scalar multiplication.
+
+However pitches live in an affine space without a specific origin, so we have to pick one:
+
+```music+haskell
+m
+    </>
+(scale 2 c m)
+    </>
+(scale 2 e m)
+  where
+    scale n p = pitches %~ relative p (n *^)
+    m = pseq (fmap fromPitch [c,d,e,f,g]) |*(2/5)
+```
+
+Note how the origin stays the same under scaling.
+
 ### Inverting pitch
 
-@[invertPitches]
+The @[invertPitches] function is a shorthand for the special case of scaling by `-1`:
 
 ```music+haskell
-(pseq [c..g]|*(2/5))
+m
     </>
-(invertPitches c $ pseq [c..g]|*(2/5))
+(invertPitches c m)
     </>
-(invertPitches e $ pseq [c..g]|*(2/5))
+(invertPitches e m)
+    </>
+(invertPitches f m)
+  where
+    m = pseq (fmap fromPitch [c,d,e,f,g]) |*(2/5)
 ```
 
-### Qualities, numbers, names, accidentals
-
-
-
-@[number]
-@[quality]
-@[name]
-@[accidental]
-@[number]
-@[invert]
-@[simple]
-@[octaves]
-@[asPitch]
-@[asAccidental]
-
-TODO Ambitus, Chord and Scale
-
-Double sharps/flats are supported:
+As with transposition we can define a *diatonic* form of inversion. The function is @[invertDiatonic].
 
 ```music+haskell
-pseq $ fmap (`alter` c) [-2..2]
+m
+    </>
+(invertDiatonic c m)
+    </>
+(invertDiatonic e m)
+    </>
+(invertDiatonic f m)
+  where
+    m = pseq (fmap fromPitch [c,d,e,f,g]) |*(2/5)
 ```
 
-In fact we generalize the notion of double sharps/flats to an arbitrary number of alterations. As there are no symbols for these in standard notation, they are automatically re-spelled in exported music.
+In this case, the origin is also used as the tonic of the implied diatonic scale.
+
+## Listing and traversing pitches
+
+You can extract all the pitches from a piece of music like this:
 
 ```music+haskell
-pseq $ fmap (`alter` c) [-4..4]
+inspectableToMusic $
+  toListOf pitches' (pseq [c,d, ppar[e,g]] :: Music)
 ```
 
-TODO spell, usingSharps, usingFlats, simplifyPitches
-
-## Adding pitches and intervals
-
-TODO AdditiveGroup, VectorSpace, AffineSpace for pitch/interval.
-
-Show how this the first example of an affine space (more to come!)
+> Note: `pitches` is a example of a [traversal](#traversals). We'll learn more about these later on.
 
 
+## The Transposable class
 
-## Alternative pitch representations
+The type of the previous operations mention @[Transposable]:
 
-THe standard pitch representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling.
+```haskell
+    up :: Transposable a => Interval a -> a -> a
+
+    octavesDown :: (AffinePair v p, Transposable p) => Scalar (Interval a) -> a -> a
+
+    invertPitches :: Transposable a => Pitch a -> a -> a
+```
+
+@[Transposable] is in fact a synonym for the following set of constraints:
+
+- `HasPitches' a`, meaning that `a` is some type supporting pitch traversals
+- `AffinePair (Interval a) (Pitch a)`, meaing that the pitch type is an affine space and the interval its underlying vector space
+- `IsInterval` and `IsPitch`, meaning that We can lift standard pitch/interval
+  names into the pitch space, so expressions such as `cs` and `m3` makes sense
+- `Num (Scalar v)`, meaning that we can scale the intervals
+
+
+
+
+# Harmony
+
+While the `Pitch` and `Interval` types allow us to represent any pitch (the Western/classical framework), they do not tell us much about *harmony*. We need types to represent *collections* and *relationships* between pitches, including modes, chords and scales.
+
+While we can of course course use regular data structures like tuples, lists and maps for this, Music Sutie also defines some structures that makes particular sense from a musical point of view.
+
+## Ambitus
+
+The @[Ambitus] type represents a *range* of pitches. We can think of an ambitus as an interval with a starting point, or (equivalently) as a pair of pitches.
+
+> Note: For pitch, we use *ambitus* instead of the ambigous *range* or *interval*.
+
+```music+haskell
+inspectableToMusic @[Ambitus Interval Pitch] $
+
+[ Ambitus c g
+, Ambitus c_ c''
+]
+```
+
+Note that the `Ambitus` type constructor is parameterized on both the pitch and interval type. Like most pitch contrainers it is a [bifunctor](http://hackage.haskell.org/package/base-4.12.0.0/docs/Data-Bifunctor.html).
+
+```music+haskell
+inspectableToMusic @[Ambitus Interval Pitch] $
+
+[                  Ambitus c g
+, fmap (const c) $ Ambitus @Interval @Pitch c g
+]
+```
+
+It is also an instance of `Transposable`, so all the pitch operations from the previous section work for @[Ambitus] as well:
+
+```music+haskell
+inspectableToMusic @[Ambitus Interval Pitch] $
+
+[          Ambitus c g
+, up _P5 $ Ambitus c g
+]
+```
+
+You can extract the range of any piece of music using @[pitchRange]:
+
+```music+haskell
+pseq [c,d,fs,g,db,c,b_,c,g,c,e] |/ 8
+```
+
+```music+haskell
+inspectableToMusic @(Maybe (Ambitus Interval Pitch)) $
+
+pitchRange @Music $ pseq [c,d,fs,g,db,c,b_,c,g,c,e] |/ 8
+```
+
+## Scales and chords
+
+The @[Scale] and @[Chord] types represent infinite collections of pitches, anchored at some absolute pitch known as the *tonic*. Like @[Ambitus], @[Scale] and @[Chord] are type constructors taking two type parameters for interval and pitch respectively.
+
+```music+haskell
+inspectableToMusic @[Scale Interval Pitch] $
+
+[ scale c phrygian
+, scale d majorScale
+, scale e bluesMajor
+, scale f wholeTone
+, scale g octatonic
+, scale a thirdMode
+]
+```
+
+```music+haskell
+inspectableToMusic @[Chord Interval Pitch] $
+
+[ chord g majorTriad
+, chord c minorTriad
+, chord f augmentedChord
+, chord eb diminishedChord
+]
+```
+
+The @[scale] and @[chord] functions take two parameters: the *tonic* (e.g. the absolute pitch at which the chord is centered) and a *mode* or *chord type* describings the characteristics of the chord. Most common scale and chord types are pre-defined, but as will see later it is also possible to make up custom scales and chords.
+
+```music+haskell
+inspectableToMusic @[ChordType Interval Pitch] $
+
+[ majorTriad
+, minorTriad
+, augmentedChord
+, diminishedChord
+, halfDiminishedChord
+]
+```
+
+```music+haskell
+inspectableToMusic @[Mode Interval Pitch] $
+
+[ majorScale
+, lydian
+, wholeTone
+, octatonic
+]
+```
+
+### Scales versus Chords
+
+As musicians we tend to think of scales and chords as distinct entities. From a structural point there is very little difference: both represent a subset of some larger pitch space. The main difference is in how they are *used*: scales provide pitch material for melodies and chords, while chords are played in parallel, after applying textures, voicings and so on.
+
+We can convert freely between scales and chords:
+
+```haskell
+chordToScale (chord c majorTriad)
+  :: Chord Interval Pitch
+
+chordToScale (chord c majorScale)
+  :: Scale Interval Pitch
+
+chordToScale (chord c majorTriad)
+  :: Scale Interval Pitch
+```
+
+<!--
+TODO examples: Whole tone is a superset of augmented, octatonic a superset of dimimished and so on
+
+TODO example: generate a "scale" by the union of two "chords"
+
+Consider "scale-chord texture"
+-->
+
+### Chords are infinite
+
+It's imporant to  understand that while chords and scales are conceptually infinite, they are always generated by repetition of a finite set of intervals. We refer to this as the *generator* of the chord or scale. While most common scales and chords repeat at the octave, this is not always the case: for example diminished chords repeat at a smaller interval (minor third), and many chords used in jazz such as 9th, 11th and 13th chords repeat at intervals larger than an octave.
+
+We can extract the generating sequence of a chord or scale using @[generator]:
+
+```haskell
+>>> generator majorTriad
+_M3 :| [m3,_P4] :: List.NonEmpty Interval
+
+>>> generator minorTriad
+m3 :| [_M3,_P4] :: List.NonEmpty Interval
+```
+
+The repeating interval of the chord is the sum of the vectors in the generator sequence:
+
+We can inspect the *repeating interval* of a scale like this:
+
+```haskell
+>>> repeatingInterval majorScale
+_P8
+```
+
+All scales and chords we have seen so far repeat at the octave, but this is not a hard requirement. For example @[quartal] and @[quintal] chords can be seen as one-note scales repeating at the eponymous interval:
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Interval Pitch] $
+
+[ voiceIn 5 $ chord c quartal
+, voiceIn 4 $ chord c quintal
+]
+```
+
+Similarly *clusters* are one-note scales repeating at the second:
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Interval Pitch] $
+
+[ voiceIn 5 $ chord c chromaticCluster
+, voiceIn 7 $ chord c wholeToneCluster
+]
+```
+
+And we can repeat at arbitrary intervals:
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Pitch] $
+
+[ voiceIn 3 $ chord c $ repeating m7
+]
+```
+
+
+```haskell
+>>> repeatingInterval majorScale
+_P8 :: Interval
+```
+
+### Looking up pitches
+
+We can look up pitches in any chord or scale using the `index` function. This converts any chord into a total function of `Integer`. The tonic is mapped to zero, the positive numbers to all notes *above* the tonic and negative numbers to all notes *below* the tonic. You can use
+
+```haskell
+>>> index (chord c majorTriad) 0
+c
+
+>>> fmap (index $ chord c majorTriad)) [-1,0,1,2]
+[g_,c,e,g]
+
+>>> fmap (index $ chord g majorMinorSeventhChord)) [-2,-1,0,1]
+[d,f,g,b]
+```
+
+### Transforming chords
+
+Naturally, @[Scale] and @[Chord] are instances of `Transposable`:
+
+```music+haskell
+inspectableToMusic @[Scale Pitch] $
+
+[         scale c phrygian
+, up m3 $ scale c phrygian
+]
+```
+
+```music+haskell
+inspectableToMusic @[Chord Pitch] $
+
+[                     chord c majorTriad
+, invertDiatonic c  $ chord c majorTriad
+, invertDiatonic gb $ chord c halfDiminishedChord
+]
+```
+
+This is useful for building chord sequences:
+
+```music+haskell
+inspectableToMusic @[Chord Pitch] $
+mconcat [s1, up _M6 s1, _8vb $ up (_M6 ^* 2) s1]
+  where
+    s1 :: [Chord Pitch]
+    s1 = [maj, dim, up _M2 hdim, up _P5 dom]
+
+    maj = chord c majorTriad
+    dim = chord c diminishedChord
+    hdim = chord c halfDiminishedChord
+    dom = chord c majorMinorSeventhChord
+```
+
+
+
+This example shows the inversion of various chords. The inversion of a major triad is a minor triad, the inversion of a dominant 7th chord is half-diminished chord, and a minor seventh chord is its own inversion.
+
+```music+haskell
+compress 2 $ inspectableToMusic @[Chord Pitch] $
+[                       chord c majorTriad
+, over pitches (relative c negateV) $ chord c majorTriad
+
+,                       chord c majorMinorSeventhChord
+, over pitches (relative c negateV) $ chord c majorMinorSeventhChord
+
+,                       chord c majorMajorSeventhChord
+, over pitches (relative c negateV) $ chord c majorMajorSeventhChord
+
+,                       chord c minorMinorSeventhChord
+, over pitches (relative c negateV) $ chord c minorMinorSeventhChord
+
+,                       chord c minorMajorSeventhChord
+, over pitches (relative c negateV) $ chord c minorMajorSeventhChord
+]
+```
+
+### Custom scales and chords
+
+While Music Suite predefines all common practice modes, scales and chords, we can also create custom chords from any interval sequence.
+
+Here is a mode that repeat at the fourth:
+
+```music+haskell
+inspectableToMusic @[ChordType Interval Pitch] $
+
+[ Mode [_M2,_M2,m3]
+]
+```
+
+
+<!--
+### Non-repeating scales/chords
+
+Non-repeating/self-repeating scales (e.g. the overtone series). TODO create by unfold?
+-->
+
+
+### Modal inversions
+
+The @[chord] function converts a mode into a scale/chord in root position.
+
+```music+haskell
+inspectableToMusic @[Chord Pitch] $
+[ chord c majorTriad
+, chord g majorMinorSeventhChord
+, chord c majorTriad
+]
+```
+
+For chord inversions in the usual sense, see [the next section](#voicings).
+
+<!--
+TODO `chord` gives you the root position, define a version of `chord` that gives you 1st, 2nd, 3rd inversion etc. For example 4th inversion of a ninth chord
+
+TODO this is a rotation, what does it mean:
+
+```music+haskell
+inspectableToMusic @[Chord Pitch] $
+[ chord c $ majorTriad
+, chord g $ invertChord (-1) majorMinorSeventhChord
+, chord c $ invertChord 2    majorTriad
+]
+```
+-->
+
+
+<!--
+### Set operations
+
+TODO set operations on chords/scales (e.g. union/difference/intersection/isSubset/isPowerset etc).
+-->
+
+
+
+## Voicings
+
+Recall that chords are infinite sets. A @[Voicing] is a finite subset of that set. For a normal (octave-repeating) chord, it defines what pitches appear and in what octave.
+
+### Close voicing
+
+The `voiced` function voices a chord as closely as possible above the tonic. Formally the pitches of the generating interval sequence, originating at the tonic. For example:
+
+```music+haskell
+inspectableToMusic @(Voiced Chord Pitch) $
+  voiced (chord d majorTriad)
+```
+
+To generate a closed voicing with doubled notes, use `voiceIn`.
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Pitch] $
+[ voiceIn 4 $ chord c majorTriad
+, invertVoicing (-2) $ voiced $ chord g majorMinorSeventhChord
+, voiceIn 4 $ chord c majorTriad
+]
+```
+
+### Operations on voicings
+
+We extract the pitches from a voiced chord like this:
+
+```music+haskell
+pseq $ fmap fromPitch ps
+  where
+    ps :: [Pitch]
+    ps = Data.List.NonEmpty.toList $ getVoiced v
+
+    v :: Voiced Chord Pitch
+    v = voiceIn 4 $ chord c majorTriad
+```
+
+Voiced chords allow inversion:
+
+```music+haskell
+inspectableToMusic @[Voiced Chord Pitch] $
+  fmap (`invertVoicing` vs) [ -1..4 ]
+  where
+    vs = voiced (chord c majorTriad)
+```
+
+### Other voicings
+
+We can also create custom voicings, using any combination of integers. Recall that `0` stands for the origin, `1` for the first note above the origin, `2` for the next and so on. Negative numbers repeat the pattern below the origin.
+
+```music+haskell
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (chord d minorTriad) [0,1..6]
+```
+
+```music+haskell
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (chord d minorTriad) [0,2..6]
+```
+
+```music+haskell
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (chord d minorTriad) [-2,0,2,4]
+```
+
+
+
+
+<!--
+## Consonance and dissonance
+
+TODO relative dissonance of intervals, modes and chords
+
+TODO resolution and leading notes. "Solve" an n-part voicing problem
+
+Calculate dissonance of a chord (classical/"objective", by higest common fundamental)
+-->
+
+
+
+<!--
+# Absolute pitch
+
+In the previous chapters we worked exclusivey with Pitch/Interval. These restrict
+us to the Western/classical set of pitches and are relative (assuming, but not implying any particular tuning system). In this chapter we we will let go of these restrictions and look into working with both absolute pitch (arbitrary frequencies) and *alternative* pitch systems.
+
+We will also see how *tuning systems* relate structured pitch representations (such as `Pitch`) to unstructured ones (such as `Hertz`).
+
+## Tuning and intonation
 
 ### Absolute pitch
 
@@ -529,30 +1279,30 @@ Logarithmic scales:
 @[Fifths]
 @[Cents]
 
+## Alternative pitch representations
+
 ### Equal tempered scales
 
 TODO equal tempered scales of any size
 
+TODO 24TET ("quarter tones")
 
-### Consonance and dissonance
+## Beyond diatonic/chromatic
 
-See the [Harmony][x] chapter.
-
-
-
-
+TODO the Common.Pitch type has built-in support for chromatic/diatonic harmony. We can construct types that support other system instead.
+-->
 
 
 
 
+<!--
+## Spectral music
 
+TODO Working "backwards" from absolute to relative pitch
 
-
-
-
-
-
-
+TODO spectral dissonance using HCF
+(https://harmonicratio.blogspot.com/2018/10/pursuing-clarity-through-openness-part_80.html)
+-->
 
 
 
@@ -562,48 +1312,56 @@ See the [Harmony][x] chapter.
 
 
 
-# Dynamics and Articulation
 
-Dynamic values are overloaded in the same way as pitches. The dynamic literals are defined in `Music.Dynamics.Literal` and have type `IsDynamics a => a`.
 
-@[level]
 
-An overview of the dynamic values:
 
-```music+haskell
-over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
-```
 
-TODO other ways of applying level
 
-TODO should the phrase traversal version be the default? E.g. do we want `cresc a b = over phrases' (crescV a b)`.
 
-```music+haskell
-(over phrases' (cresc pp mf) $ pseq [c..c'] |/8)
-  </>
-(over phrases' (dim fff ff) $ pseq [c..c'] |/8)
-```
 
-You can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
 
-```TODOmusic+haskell
-(cresc pp mf $ pseq [c..c'] |/8)
-  </>
-(cresc ff pp $ pseq [c..c'] |/8)
-  </>
-(cresc mp mp $ pseq [c..c'] |/8)
-```
 
-TODO for long crescendo/diminuendos, render as text by default.
+
+
+
+
+
+# Articulation and dynamics
+
+## Adding dynamics
+
+Dynamics can me applied using @[level]:
 
 ```music+haskell
-(over phrases' (cresc pp mf) $ (times 8 $ pseq [c..g]) |/8)
+level ppp c
 ```
 
-### Understanding how dynamics are represented
+Here is an overview of the standard dynamic values:
 
-TODO value at each note. No need to explicitly draw indications or cresc./dim. lines.
-This means you can freely split/merge without having to worry about dynamics.
+```music+haskell
+over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] (fmap fromPitch [c..])
+```
+
+We can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
+
+```music+haskell
+(cresc pp mf $ pseq [c,d,e,f,g,a,b,c'] |/8)
+  </>
+(dim fff ff $ pseq [c,d,e,f,g,a,b,c'] |/8)
+```
+
+Long crescendos and diminuendos are supported as well.
+
+```music+haskell
+cresc pp mf $ (times 8 $ pseq [c,d,e,f,g]) |/8
+```
+
+### How dynamics are represented
+
+It is important to understand that dynamics are not stored as *marks and
+lines*, but rather as values attached to each note. This means you can freely
+split and merge without having to worry about dynamics.
 
 In general, a new dynamic mark is drawn at the start of each entry, that is after
 each period of rests per voice. However if the dynamic has not changed the mark is only
@@ -620,78 +1378,89 @@ repeated if the last entry was a few bars ago.
 [(0<->1, c)^.event, (3<->4, d)^.event]^.score
 ```
 
-## Working with articulations
+## Adding articulations
 
-Some basic articulation functions are @[legato], @[staccato], @[portato], @[tenuto], @[staccatissimo]:
+### Staccato and legato
 
-```music+haskell
-legato (pseq [c..g]|/8)
-    </>
-staccato (pseq [c..g]|/8)
-    </>
-portato (pseq [c..g]|/8)
-    </>
-tenuto (pseq [c..g]|/8)
-    </>
-staccatissimo (pseq [c..g]|/8)
-```
-
-@[accent]
-@[marcato]
+Standard articulations are supported:
 
 ```music+haskell
-accent (pseq [c..g]|/8)
+legato (pseq [c,d,e,f,g]|/8)
     </>
-marcato (pseq [c..g]|/8)
+staccato (pseq [c,d,e,f,g]|/8)
+    </>
+portato (pseq [c,d,e,f,g]|/8)
+    </>
+tenuto (pseq [c,d,e,f,g]|/8)
+    </>
+staccatissimo (pseq [c,d,e,f,g]|/8)
 ```
 
-By default, accents are only applied to the first note in each phrase. You can also explicitly specify the last note, or all the notes:
+### Accents
 
-@[accentLast]
-@[accentAll]
+Adding accents is similar to regular articulations:
 
 ```music+haskell
-accentLast (pseq [c..g]|/8)
+accent (pseq [c,d,e,f,g]|/8)
     </>
-accentAll (pseq [c..g]|/8)
+marcato (pseq [c,d,e,f,g]|/8)
 ```
 
-You can apply slurs and articulation marks to scores of arbitrary complexity. The library will traverse each phrase in the score and apply the articulations separately.
+One difference is that by default, accents are only applied to the first note in each phrase. We can also explicitly specify the last note, or all the notes:
+
+```music+haskell
+accentLast (pseq [c,d,e,f,g]|/8)
+    </>
+accentAll (pseq [c,d,e,f,g]|/8)
+```
+
+### Articulations and phrases
+
+We can apply slurs and articulation marks to scores of arbitrary complexity. The library will traverse each phrase in the score and apply the articulations separately.
 
 For example in this example we're building up a score consisting of three parts and then apply `accent . legato`:
 
 ```music+haskell
 let
-    p1 = pseq [c..c']|/4
-    p2 = delay (1/4) $ pseq [c..c']|/4
-    p3 = delay (3/4) $ pseq [c..c']|/4
+    ps = fmap fromPitch [c..c']
+    p1 = pseq ps |/4
+    p2 = delay (1/4) $ pseq ps |/4
+    p3 = delay (3/4) $ pseq ps |/4
 in (accent . legato) (p1 </> p2 </> p3)
 ```
 
 These kind of traversals are not limited to articulation. See [Phrase traversals](#phrase-traversals) for a more general overview.
 
-## Overloading of dynamics and artiulation
+<!--
+## Overloading of articulation and dynamics
 
-We've already seen how the expression `c` is overloaded to mean many things: the pitch C4, an event containing the pitch `c` with the default onset and offset, a score containing a single event, and so on. (TODO make sure we have)
+Dynamic values are overloaded in the same way as pitches. The dynamic literals have type `IsDynamics a => a`.
 
-Dynamics and articulations are overloaded too. The default articulation means "no particular separation or accentuation", and renders as a note without any markings Similarly the default dynamic renders as *mf* (mezzo-forte).
+TODO explain overloading of articulation
+-->
 
-TODO show how to override/add/multiply much as with pitch.
+## More examples
+
+A note with default articulation and dynamics:
 
 ```music+haskell
 c
 ```
 
+Setting dynamics:
+
 ```music+haskell
 set dynamics' pp c
 ```
+
+Setting the accentuation and separation components of articulation:
 
 ```music+haskell
 set articulations' (accentuation +~ 2 $ mempty) c
 ```
 
 ```music+haskell
-over (articulations' . accentuation) (+ 2) c
+over (articulations' . separation) (+ 2) c
 ```
 
 
@@ -713,123 +1482,249 @@ over (articulations' . accentuation) (+ 2) c
 
 # Instruments and Parts
 
-TODO Parts vs Instruments
+For working with multi-part scores, we first need to look at the distinction between parts and instruments:
 
-@[Part]
-@[Instrument]
+- The @[Part] type represent a *vocal or instrumental part in a composition* such as `Violin I.I`, `Trumpet II`, etc.
 
-By convention a name in singlular refers to the instrument, and plural to the part.
+- The @[Instrument] type represents a *class of instruments* such as `Violin`, `Guitar`, `Maracas`, etc. This includes vocals types and, electronics etc.
+
+
+A *part* is a record type consisting of (among other things) an *instrument* and a *subpart* such as `I.I`.
+
+
+There is no need to explicitly create staves, brackets or braces. These are created automatically based on the parts present in the score.
+
+To illustrate this, here is an example of a score with all the notes in the same part:
+
+```music+haskell
+ppar [c,d,fs]
+```
+Here is a score with instruments in different parts:
+
+```music+haskell
+ppar [c,parts' .~ violins $ d,fs]
+```
+
+The most common parts and instruments are predefined. By convention names in singlular refers to instruments, and names in plural to parts:
 
 ```haskell
-flute :: Instrument
+flute  :: Instrument
 flutes :: Part
 ```
 
 ## Basic use
 
-TODO the default part is `Piano I`.
+### The default part
+
+The default part is `Piano I`.
+
+There is never any need to select the default part, but it is availble as `piano` for consistency. Equivalently, you can use `mempty :: Part`.
+
+
+### Setting part and instrument
+
+To choose a *non-default* parts or instruments, we use the `set` operator, or its infix version `.~`.
+
+Setting just the part looks like this:
 
 ```music+haskell
-ppar [c,d,fs]
+parts' .~ trumpets $ ppar [c,d,fs]
 ```
 
-### Setting instrument and subpart
+Setting just the instrument:
 
 ```music+haskell
 (parts' . instrument) .~ trumpet $ ppar [c,d,fs]
 ```
 
+Setting just the subpart:
+
 ```music+haskell
 (parts' . subpart) .~ 2 $ (parts' . instrument) .~ trumpet $ ppar [c,d,fs]
 ```
 
-### Multi-staff parts
+## Subdivision
 
-TODO multi-staff part support (see TODO.md)
+A @[Subpart] is a list of *divisions*. For example in the subpart *Violin I.1.II* the instrument is *violin* and the *subpart* is *I.1.II*.
+
+Subparts are always non-empty lists. A consequence of this is that parts always have at least one subdivision: "Violin" is not a part, but "Violin I" is. When there's only one part per instrument, the subpart is hidden by default.
+
+<!--
+TODO Understand "overlapping" semantics, e.g. if notes overlap in "I" and "I.2" we have "overlapping events" (not OK in monophonic instruments, but see solo/altri below)
+-->
+
+<!--
+TODO show how to set explicitly VI.1, VI.2, VII etc.
+-->
+
+## Partwise composition
+
+We have already seen how the `</>` operator can be used to compose music "partwise". Now that we know about subparts we can see this works:
+
+When the given expressions have overlapping notes in some part, the subpart is incremented:
+
+```music+haskell
+c </> c
+```
+
+When this is not the case, `</>` behaves like `<>`:
+
+```music+haskell
+set parts' violins c </> set parts' violas c
+```
+
+The subpart of the left side is never changed, and the right side is always assigned to the next available subpart:
+
+```music+haskell
+set parts' p c </> set parts' p c
+  where
+    p = set subpart 2 $ violins
+```
+
+Note that as a consequence of this `</>` is not associative. Compare:
+
+```music+haskell
+c </> (e </> g)
+```
+
+versus
+
+```music+haskell
+(c </> e) </> g
+```
+
+This is normally not a problem, as `</>` associates to the left by default. Similarly with `rcat`:
+
+```music+haskell
+rcat [c,e,g]
+```
 
 
-### The part composition operator
+## Staves and parts
 
-TODO rcat, then replacing instrument
+It is important to understand the difference between *parts* and *staves*. While parts have a clear semantics in terms of perfomance, staves are a way of presenting this information visually. There is usually no need to worry about staves, they are automatically created depending on the parts present in the score.
 
-### Updating several parts at once
+```music+haskell
+set parts' flutes c
+```
 
-TODO updating and merging parts. Or should we write about this in cobination with pitch/dynamic etc (as they're all traversal-based).
+Most instruments are drawn on a single staff. Certain instruments are drawn on multiple staves by default, however:
 
-TODO `divide 2 violins` should yield `V1, V2`, not `VI.0, VI.1`
+```music+haskell
+set parts' (tutti celesta) c
+```
+
+## Updating several parts at once
+
+An *ensemble type* can be represented as a list of parts. We provide a few pre-defined ones such as string quartet, chamber orchestra, etc. We  can also define a custom ensemble type:
+
+```haskell
+someEnsemble = divide 2 violins ++ [trumpet, clarinet]
+```
+
+We can update several parts at once using the @[arrangeFor] function. This is useful in combination with @[rcat]:
 
 ```music+haskell
 arrangeFor stringOrchestra $ rcat [c',e,g_,c_]
-  where
-    stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
-
 ```
 
-### Solo parts
+## Soloists
 
-The solo/tutti component is useful when working with concertante scores.
-
-@[Solo]
+Each part has a @[solo] component, which is either `Solo` or `Tutti`. This is useful when working with concertante scores.
 
 ```music+haskell
 (parts' .~ solo violin $ pseq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16)
   <>
 arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
-  where
-    stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 ```
 
-### TODO further subdivision
+The default value is `Tutti`. In chamber music there is usually no need to override this with `Solo`, as the difference only make sense when you *need* to distinguish the solist.
 
-TODO "Violin I.1", Soprano IIa etc
+<!--
+TODO soloists *from* the orchestra/altri
+-->
 
+## Extracting parts
 
+We can also *extract parts* from a score. Note that if you're working with an external score writing program there is usually no need to do this explicitly in Music Suite: just export the entire score and use the part extraction mechanism in your editing application.
 
-## Extracting and modifying parts
-
-TODO extractPart extractPartNamed extractParts extractPartsWithInfo
+If you *need* to perform part extraction in Music Suite, this is easy:
 
 ```music+haskell
 extractPart violas fullScore
   where
-    fullScore :: Music
     fullScore =
       (parts' .~ solo violin $ pseq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16)
         <>
       arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
-        where
-          stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 ```
 
-## Playing techniques
+## More about instruments
+
+We support all instruments in the MusicXML sound set. See [the full list here](https://www.musicxml.com/for-developers/standard-sounds/).
+
+> Note: If you are working with the MIDI backend, only the General MIDI sound set is supported.
+
+### Transposing instruments
+
+We can obtain transposition infomation from instruments:
+
+```music+haskell
+inspectableToMusic @[Interval] $
+
+[ transposition violin
+, transposition clarinet
+, transposition doubleBass
+]
+```
+
+
+> Note: instruments that appear in many sizes are different instruments in Music Suite. The most common type of trumpet is Bb, so `trumpet` refers to this. For other instruments use `trumpetInC`, etc.
+
+
+### Range
+
+We can obtainin range information from instruments:
+
+```music+haskell
+inspectableToMusic @[Ambitus Interval Pitch] $
+
+[ playableRange violin
+, comfortableRange violin
+]
+```
+
+
+
+# Playing techniques
+
+All instruments come with a variety of playing techniques, many of which produce fundamentally different sound types. We treat playing technique as a separate aspect from part and pitch.
+
+
+## Non-instrument specific techniques
 
 ### Tremolo, trills and rolls
 
-TODO measured vs unmeasured
+A regular (measured) tremolo can be notated using the @[tremolo] function. Regular tremolo is is a shorthand for rapid iteration of a single note.
 
-@[tremolo]
 
-```TODOmusic+haskell
+```music+haskell
 tremolo 2 $ times 2 $ (c |> d)|/2
 ```
 
-@[fastTremolo]
+An unmeasured tremolo is notated using @[fastTremolo]. Unmeasured tremolo means "play individually, as fast as possible" and is a coloristic effet rather than a rhythmical shorthand.
+
+Note that in keeping with traditional notation, we notate unmeasured tremolo using three beans.
 
 ```TODOmusic+haskell
 fastTremolo $ times 2 $ (c |> d)|/2
 ```
 
-TODO repeat trem vs. alternation trem. The former is rare but happen e.g. when double-stopped strings play bow tremolo (without bariolage). The more common one is a rapid alteration among a set of notes. Logically we should treat both as an optional the property of a single chord. Alas in StandardNotation the latter is commonly written as two chords with half the duration (OR as a trill).
+### Repeating vs. alternating tremolo
 
-TODO realising tremolo/trills
+The former is rare but happen e.g. when double-stopped strings play bow tremolo (without bariolage). The more common one is a rapid alteration among a set of notes. Logically we should treat both as an optional the property of a single chord. Alas in standard notation the latter is commonly written as two chords with half the duration (or ins ome cases as a trill).
 
-### Slides and glissando
-
-@[slide]
-
-TODO
-
-@[glissando]
+### Slide and glissando
 
 ```music+haskell
 glissando $ pseq [c,d]|/2
@@ -837,7 +1732,7 @@ glissando $ pseq [c,d]|/2
 
 ### Harmonics
 
-Use the @[harmonic] function:
+Use the @[harmonic] function. The argument is the harmonic number, with zero being the fundamental, one the first overtone, and so on. Use sounding pitch, Music Suite will automatically figure out the correct notation.
 
 ```music+haskell
 (harmonic 1 $ c|/2)
@@ -847,10 +1742,13 @@ Use the @[harmonic] function:
 (harmonic 3 $ c|/2)
 ```
 
-TODO artificial harmonics
+For artificial harmonics, use @[artificial]:
 
-@[artificial]
+```music+haskell
+artificial c |/ 2
+```
 
+## Instrument-specific techniques
 
 ### String techniques
 
@@ -886,7 +1784,83 @@ set parts' violins $ pseq
   ] |* 2
 ```
 
-TODO mutes
+We can switch between bowed versus plucked strings using @[pizz] and @[arco]. The default is /arco/ (bowed). As in standard string notation this is indicated by text at the point of change:
+
+```music+haskell
+set parts' violins $
+  pseq [arco $ staccato $ times 4 c, times 4 $ pizz g_ ] |/ 4
+```
+
+The text "arco" is used to cancel a previous "pizz". This is also inserted automatically. In the following example the first note in the second bar is using arco by default.
+
+```music+haskell
+set parts' violins $
+  pseq [pizz $ pseq [c,c,c,c], d |* 2, pizz e |*2 ] |/ 4
+```
+
+Bow *position* on the string is indicated in a similar fashion. We support the following positions:
+
+- Sul tasto: Close to the fingerboard
+- Sul ponticello: Close to the stable
+- Naturale: Normal position (the default)
+
+As with pizz/arco, only changes are indicated:
+
+```music+haskell
+set parts' violins $
+  pseq [sulTasto $ pseq [c,c,c,c], posNat d |* 2] |/ 4
+```
+
+As with "arco, the text "nat" is used to cancel a previous position and inserted by default.
+
+```music+haskell
+set parts' violins $
+  pseq [posNat $ pseq [c,c,c,c], sulPont d |* 2] |/ 4
+```
+
+Bow *rotation* can be indated using one of the following:
+
+- Col legno (tratto): play with the bow rotated to use the wooden part of the bow
+- Col legno battuto: play with the wooden part of the bow only. This is normally only used for sharp attacks, hence the name.
+- Senza legno: play with the bow hair (the default)
+
+```music+haskell
+set parts' violins $ pseq
+  [ colLegno c
+  , colLegnoBatt c
+  , senzaLegno c
+  ] |* 2
+```
+
+Finally, string mutes are indicated using:
+
+- Con sordino: With mute
+- Senza sordino: Without mute (the default)
+
+```music+haskell
+set parts' violins $ pseq
+  [ conSord c
+  , senzaSord c
+  ]
+  |/ 4
+```
+
+Here is an example using a combination of the above techniques:
+
+```music+haskell
+set parts' violins $ pseq
+  [ conSord $ arco c
+  , pizz c
+  , pizz $ conSord $ pizz c
+  , conSord $ colLegno $ pizz c
+  ]
+  |* 1.5
+```
+
+<!--
+TODO chord tremolo
+-->
+
 
 ```music+haskell
 set parts' violins $ pseq
@@ -911,39 +1885,66 @@ TODO chord tremolo
 
 ### Wind techniques
 
+<!--
 TODO fingering, multiphonics
 
 TODO key sounds, percussive attacks ("pizz"), haromonics/whistle tones
+-->
 
 ### Brass techniques
 
-TODO hand stopping
+Mutes are indicated just like string mutes:
 
-TODO mutes
+- Con sordino: With mute
+- Senza sordino: Without mute (the default)
+
+```music+haskell
+set parts' trombones $ pseq
+  [ conSord g_
+  , senzaSord g_
+  ]
+  |* (3/2)
+```
+
+<!-- TODO alternative mutes -->
+
+<!-- TODO hand stopping -->
 
 ## Percussion
 
-TODO working with instruments for percussion (much like normal instruments, though pitch may be ignored)
+Working with percussion is much like working with normal instruments. The main difference of course is that:
 
-Note: for percussion we break the singular/plural naming convention and export a `Part` in the singular form. Note that the solo/tutti component is set to `Tutti` by default even though there might only be one performer in the group (the distinction would still make sense e.g. in a percussion concerto).
+- Some percussion instruments no notion of pitch, or a limited set of pitches they can play.
+
+- Percussion players tend to double on many different types of instruments than other musicians.
+
+We currently do not ruling out entering pitches for e.g. snare drum parts. However backends will ignore the pitch information, and the music will render on a single-line staff.
+
+As with other instruments we currently can not represent players doubling on multiple instrumentsexplicitly. You will have to manually enter the music in different parts and manually assure that there is no overlap in parts meant to be executed by the same performer.
+
+> Note: for percussion we break the singular/plural naming convention and export a `Part` in the singular form.
+
+The solo/tutti component is set to `Tutti` by default even though there might only be one performer in the group (the distinction would still make sense e.g. in a percussion concerto).
 
 ```music+haskell
 parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
   where
-    rh = stretchTo 1 . pseq -- TODO put this in the library?
+    rh = stretchTo 1 . pseq
 ```
 
 For rolls see [the previous section](tremolo-trills-and-rolls).
 
-TODO render e.g. snare drum parts correctly
 
-TODO render "drum kit" staff
 
+<!--
 # Lyrics and Vocals
 
 TODO adding lyrics (including syllables/word boundaries/melismas)
 
 TODO soloists/character name
+-->
+
+<!--
 
 
 # Non-note Actions
@@ -963,12 +1964,14 @@ TODO
 ## Cues
 
 TODO
+-->
 
+
+<!--
 # Text and Color
 
-TODO warning: free form text is semantically questionable, but we provide it for cases where no other suitable representation exists.
+> Warning: A core idea in Music Suite is that music expressions have clear *semantics*, based on how the sound or action they represent. Free text runs counter to this, and should be viewed as an "escape hatch". Try to use a more structured representation when possible.
 
-TODO e.g. expressive marks ("dolce")
 
 @[text]
 
@@ -976,8 +1979,10 @@ TODO e.g. expressive marks ("dolce")
 text "pizz." $ c|/2
 ```
 
-TODO color
+TODO e.g. expressive marks ("dolce")
 
+TODO color
+-->
 
 
 
@@ -1011,8 +2016,8 @@ TODO color
 
 # Meta-information
 
-TODO define this. Meta-information is presentational and not attached to a specific part. Shorten this intro. All presentational/extra info is meta, all *logical/semantic/sounding* information is not. We represent meta-information dynamically (Typeable).
 
+Meta-information is global, rather than attached to a specific part. It is *defined at every point in the score with explicit change points (per type)* and always has a sensible default value (e.g. one (Reactive m) per type). All meta types are monoidal. Examples: key signature, time signature.
 
 It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In Music Suite these are grouped together under the common label *meta-information*.
 
@@ -1021,7 +2026,7 @@ The notion of meta-data used in Music Suite is more extensive than just static v
 All time structures in Music Suite support an arbitrary number of meta-data fields, indexed by type. All meta-information is required to satisfy the `Typeable`, so that meta-data can be packed and unpacked dynamically), and `Monoid`, so that values can be created and composed without having to worry about meta-data. The `mempty` value is implicitly chosen if no meta-information of the given type has been entered: for example the default title is empty, the default time signature is `4/4`. If two values annotated with meta-data are composed, their associated meta-data maps are composed as well, using the `<>` operator on each of the types.
 
 The distinction between ordinary musical data and meta-data is not always clear-cut. As a rule of thumb, meta-events are any kind of event that does not directly affect how the represented music sounds when performed. However they might affect the appearance of the musical notation. For example, a *clef* is meta-information, while a *slur* is not. A notable exception to this rule is meta-events affecting tempo such as metronome marks and fermatas, which usually *do* affect the performance of the music.
-
+-->
 
 
 ## Title
@@ -1031,6 +2036,8 @@ Title, subtitle etc is grouped together as a single type `Title`, thus an arbitr
 ```music+haskell
 title "Frere Jaques" $ pseq [c,d,e,c]|/4
 ```
+
+Some backends may or may not render subtitles, depending on their configuration.
 
 ## Attribution
 
@@ -1044,29 +2051,45 @@ composer "Anonymous" $ pseq [c,d,e,c]
 composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ pseq [c,d,e,c]|/4
 ```
 
+Some backends may or may not render attribution information, depending on their configuration.
+
 ## Key signatures
 
+By default the key signature of C is used. We can override the *global* key signature using @[keySignature].
+
 ```music+haskell
-let major = True -- TODO!
-in
-keySignature (key db major) $ pseq [db,eb,f]
+keySignature (key db MajorMode) $ pseq [db,eb,f]
 ```
 
-@[keySignatureDuring]
+We can also set the key signature for a specific time span using @[keySignatureDuring].
 
-@[withKeySignature]
+```music+haskell
+keySignatureDuring (1 <-> 2) (key db MinorMode) $ pseq [db,eb,f]
+```
+
+A key signature change will always force a new bar.
+
+```music+haskell
+keySignatureDuring (1.5 <-> 2) (key db MajorMode) $ pseq [db,eb,f]
+```
+
+Part-specific key signatures are not supported, but transposing instruments will always use the correct relative key signature.
 
 ## Time signatures
+
+Time signatures are represented by the `TimeSignature` type. It is an instance of `Fractional`, meaning that you can use fractional literals to define it.
 
 ```haskell
 2/4 :: TimeSignature
 ```
 
+We also support compound time signatures:
+
 ```haskell
 (3+2)/8 :: TimeSignature
 ```
 
-Or equivalently:
+Equivalently, we can write:
 
 ```haskell
 time 4 4 :: TimeSignature
@@ -1076,15 +2099,18 @@ time 4 4 :: TimeSignature
 compoundTime [3,2] 8 :: TimeSignature
 ```
 
+The default time signature is `4/4` is used (written as *c*). We can override this globally using @[timeSignature].
+
 ```music+haskell
 timeSignature (3/8) $ pseq [db,eb,f]
 ```
 
-@[timeSignatureDuring]
+We can also set the time signature for a specific time span using  @[timeSignatureDuring]. Time signature changes will always force a new bar.
 
-@[withTimeSignature]
 
 ### Converting from one time signature to another
+
+Setting the time signature does *not* imply that the music is renotated. To accomplish this we'll need to use @[stretch] or @[compress]. For example, the following music is notated using a quarter note pulse.
 
 ```music+haskell
 let
@@ -1094,6 +2120,8 @@ in
 timeSignature (3/4) waltz
 ```
 
+To *renotate* this to eight notes, we stretch the music by `1/2` and apply the new time signature:
+
 ```music+haskell
 let
   ch = ppar [e,g,c']
@@ -1101,6 +2129,27 @@ let
 in
 timeSignature (3/8) $ compress 2 waltz
 ```
+
+This provide more flexibility for renotation. For example we can easily renotate a passage from `4/4` to `12/8` as follows:
+
+```music+haskell
+let
+  ch = ppar [e,g,c']
+  waltz = times 2 $ pseq [c,ch,ch,g_,ch,ch] |* (1/4)
+in
+timeSignature (4/4) $ compress 3 $ waltz
+```
+
+```music+haskell
+let
+  ch = ppar [e,g,c']
+  waltz = times 2 $ pseq [c,ch,ch,g_,ch,ch] |* (1/4)
+in
+timeSignature (12/8) $ compress 2 $ waltz
+```
+
+Polymetric notation is not supported: you must pick one global time signature for each section of the score.
+
 
 ## Tempo
 
@@ -1119,34 +2168,34 @@ tempo (metronome (1/4) 80) $ pseq [c,d,e,b,c] |/ (5*8) |> d |* (3/4)
 ```music+haskell
 (tempo adagio $ pseq [c,d,e,b,c] |/ (5*4) |> d |* (3/4))
   |>
-(tempo allegro $ pseq [c..g] |/ 4 )
+(tempo allegro $ pseq [c,d,e,f,g] |/ 4 )
 ```
 
-TODO rendering tempo
-@[renderTempo]
+Tempo changes will always force a new bar.
 
 ### Fermatas, caesuras and breathing marks
 
 Fermatas indicate a certain time point (usually a strong beat) should be prolonged.
 
+<!--
 TODO representation should be: meta-mark at the first strong beat *after* the fermata-signed notes (e.g. the one to break *before*). This means we can render fermata signs on all notes where whose span overlaps the break point (including offset, not including onset).
-
-
-@[fermata]
+-->
 
 ```music+haskell
 fermata StandardFermata (ppar [c,e,g])
 ```
 
-TODO overlapping events:
-```TODOmusic+haskell
-fermata StandardFermata (ppar [pseq[c,d] |/ 2,e,g]) |/ 4
+Note that a fermata attaches to a specific point known as the *sustain point* (the beginning of the given score is used by default). All notes overlapping the sustain point have a fermata drawn on them.
+
+```music+haskell
+fermata StandardFermata (ppar [pseq[c,d] |/ 2,e,g])
 ```
 
-TODO add fermata at specific position
+<!--
+A fermata usually implies a unison cutoff of the prolonged notes, followed by a short break before continouing to the next beat. This can be made explicit by addng caesuras or breathing marks (commas).
+-->
 
-A fermata usually implies a unison cutoff of the prolonged notes, followed by a short break before continouing to the next beat. This can be made explicit by addng caesuras or breathing marks (commas). TODO
-
+<!--
 ### Ritardando and accellerando
 
 ```TODOmusic+haskell
@@ -1156,8 +2205,7 @@ A fermata usually implies a unison cutoff of the prolonged notes, followed by a 
 ```TODOmusic+haskell
 (acc (pseq [c,d] |> e |* 2) |/ 4)
 ```
-
-TODO apply at specific position
+-->
 
 ## Barlines and repeats
 
@@ -1168,75 +2216,80 @@ There is generally no need to enter bars explicitly, as this information can be 
 * Tempo changes
 * Rehearsal marks
 
-However, the user may also enter explicit bar lines using the following functions:
 
-@[barline]
-
-@[doubleBarline]
-
-@[finalBarline]
-
-Whenever a bar line is created as a result of a meta-event, an shorted time signature may need to be inserted as in:
+Whenever a bar line is created as a result of a meta-event, an shorted time signature may need to be inserted before the change. For example here the change of time signature to 3/4 forces the insertion of a 2/4 bar.
 
 ```music+haskell
 compress 4 $ timeSignature (4/4) (pseq [c,d,e,c,d,e,f,d,g,d]) |> timeSignature (3/4) (pseq [a,g,f,g,f,e])
 ```
 
-TODO repeats
+We can force a new bar lines using @[barline].
+
+```music+haskell
+compress 4 $ pseq [c,d,e] |> barline DoubleBarline (pseq [d,e,f])
+```
 
 ## Clefs
 
-To set the clef for a whole passage, use @[clef]. The clef is used by most notation backends and ignored by audio backends.
+The standard for each instrument is used by default. There is currently no way of overriding it.
 
-TODO override the default clef selection
-
+<!--
 ## Multi-movement scores
 
 TODO
+-->
 
 ## Rehearsal marks
 
-@[rehearsalMark]
+Rehearsal marks are added to the beginning of the score by default:
 
 ```music+haskell
 rehearsalMark $ pseq [c,d,e,d,f,e,d,c] |/ 3
 ```
 
-@[rehearsalMarkAt]
+We can also add it to a specific position:
 
 ```music+haskell
 rehearsalMarkAt 2 $ pseq [c,d,e,d,f,e,d,c] |/3
 ```
 
+A rehearsal mark carry no specific meaning. Composing two scores will interleave their rehearsal marks.
 
+```music+haskell
+rehearsalMarkAt 1 (up m3 m) </> rehearsalMarkAt 2 m
+  where
+    m = pseq [c,d,e,c,d,f] |/ 2
+```
+
+Rehearsal marks will always force a new bar.
+
+<!--
 ## Annotations
 
 Annotations are simply textual values attached to a specific section of the score. In contrast to other types of meta-information annotations always apply to the whole score, not to a single part. To annotate a score use @[annotate], to annotate a specific span, use @[annotateSpan].
 
-Annotations are invisible by default. To show annotations in the generated output, use
+Annotations are *invisible by default*. To show annotations in the generated output, use
 @[showAnnotations].
 
-```music+haskell
+```TODOmusic+haskell
 showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 ```
-
-## Custom meta-information
-
-Meta-information is not restricted to the types described above. In fact, the user can add meta-information of any type that satisfies the @[AttributeClass] constraint, including user-defined types. Meta-information is required to implement `Monoid`. The `mempty` value is used as a default value for the type, while the `mappend` function is used to combine the default value and all values added by the user.
-
-Typically, you want to use a monoid similar to `Maybe`, `First` or `Last`, but not one derived from the list type. The reason for this is that meta-scores compose, so that `getMeta (x <> y) = getMeta x <> getMeta y`.
+-->
 
 <!--
-TODO unexpected results with filter and recompose, solve by using a good Monoid
-Acceptable Monoids are Maybe and Set/Map, but not lists (ordered sets/unique lists OK)
-See issue 103
--->
+## Custom meta-information
+
+TODO works for any `Typeable` `Monoid`.
+
+TODO Use more specicif wrappers to preserve `Transformable`
+
 
 @[HasMeta]
 
 @[setMetaAttr]
 
 @[setMetaTAttr]
+-->
 
 
 
@@ -1271,40 +2324,153 @@ See issue 103
 
 
 
-
-# Time and structure
+# Time, rhythm and form
 
 ## Basic time types
+
+### Time and Duration
 
 Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
 
 Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
 
-The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
+```haskell
+>>> 2 :: Time
+2
 
-TODO time/span/duration examples
+>>> (2 :: Time) .+^ (3 :: Duration)
+5 :: Time
+```
+
+### Time spans
+
+The @[Span] type represents a non-empty *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration.
+
+```haskell
+>>> (2 <-> 3)^.onset
+2
+
+>>> (2 <-> 3)^.offset
+3
+
+>>> (2 <-> 3)^.duration
+3
+
+```
+
+We can also enter a span using either its *onset and offset*, its *onset and duration*, or its *duration and offset*. The three literals are equivalent:
+
+```haskell
+>>> 2 <-> 3
+(2 <-> 3) :: Span
+
+>>> 2 >-> 1
+(2 <-> 3) :: Span
+
+>>> 1 <-< 3
+(2 <-> 3) :: Span
+```
+
+To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset].
 
 ### Spans as transformations
 
-TODO explain
+Here is an alternative view of span: as an *affine transformation*.
 
-@[Transformable]
+A span `a >-> b` represents the act of *stretching by b* followed by *delaying by a*. Spans form a group using *composition of transformations*. The identity transformation is `0 >-> 1` (scaling a by one and delaying by zero).
 
-TODO Transformable laws
+<!--
+For those familiar with linear algebra or computer graphics: Because time is one-dimensional a *linear transformation matrix* in time is a 1x1 matrix (e.g. a scalar). Its *affine transformation matrix* is a 2x2 matrix. We can understand the monoid instance for @[Span] as multiplication of 2x2 matrices.
+-->
+
+```haskell
+>>> mempty :: Span
+(0 <-> 1)
+
+>>> negateV (0 <-> 2)
+(0 <-> 0.5)
+
+>>> negateV (2 <-> 1)
+(0.5 >-> 1)
+
+>>> (0 >-> 3) <> (2 >-> 1)
+(2 >-> 3)
+```
+
+TODO examples of transforming points
+
+### The Transformable class
+
+The @[Transformable] class represent all things that can be transformed. All instance satisfy the following laws:
+
+- `transform mempty x = x`, e.g. applying the empty transformation changes nothing.
+- `transform (s <> t) x = transform s (transform t) x`, e.g. applying a composition of transfomrations is equivalent to applying them all in sequence.
+- `transform (s <> negateV s) x = x`, e.g. each transformation has an inverse.
+
+Formally `transform @a` is a left group action on some transformable type `a`. Intuitively, transforming  a value is equivalent to transforming *all the points in the value*.
+
+We have already seen how classical counterpoint and serial operations can be formoulated as transformations. For example *augmentation*, *diminishion* and *phasing* can be accomplished with `stretch`, `compress` and `delay`:
+
+```music+haskell
+delay 1 (stretch 2 c)
+  </>
+transform (1 >-> 2) c
+  </>
+transform (1 <-> 3) c
+```
+
+Stretching by `(-1)` is the *retrograde* operation:
+
+```music+haskell
+stretch (-1) $ pseq [c,d,e]
+```
+
+### Translation-invariant types
+
+We can think of our time types as coming in two shapes:
+
+- Translation-invariant types such as `Duration` are "floating" without being anchored to specific start/stop time (though they still have a duration)
+- Translation-variant types such as `Span` have both a specific duration and a specific point in which they "occur" relative to ther events.
+
+Note that this does *not* invalidate the laws.
+
+### Spans as time intervals
+
+The @[TimeInterval] type is similar to @[Span], but also allows for empty spans to be represented. It forms a monoid with the convex @[hull] operator.
+
 
 
 ## Position and duration
 
-@[HasDuration]
+The @[HasDuration] class represents values that have a duration. The most obvious example is `Duration` itself:
 
-Inspecting the duration
+```haskell
+>>> _duration (2 :: Duration)
+2
+```
 
+There are also instances for `Span` and, as we will see, most other time-based types:
 
-@[HasPosition]
+```haskell
+>>> _duration (1 <-> 3)
+2
+```
 
-Inspecting the position
+The @[HasPosition] class represent values that have an *absolute position* in time. The simplest example is `Span`:
 
-TODO instead of using Transformable, show how to set duration explicitly via lens
+```haskell
+>>> _era (1 <-> 3)
+Just (1 <-> 3)
+```
+
+Here `Maybe` is used to represent the "empty span". The class `HasPosition1` refines `HasPosition` by explicitly disallowing the empty span:
+
+```haskell
+>>> _era1 (1 <-> 3)
+1 <-> 3
+```
+
+Values with a position allow many useful combinators to be defined. For example here we use `during` to add a pedal note underneath a melody:
 
 ```music+haskell
 let
@@ -1313,35 +2479,94 @@ let
 in compress 4 $ melody </> pedal
 ```
 
+<!--
 TODO example with stretchRelative, stretchTo
+-->
 
-TODO HasPosition/HasDuration laws
+The laws for @[HasPosition] and @[HasPosition1] are not too exciting: they assure that transforming a value also transforms its position in the same manner, and that the duration of a value is exactly the duration between its onset and offset point.
+
+
 
 
 ## Times with values
 
 The Note and Event types are similar to Duration, Time and Span respectively, except they also contain a *payload* of an arbitrary type. This is expressed as a type parameter (often written using a lowercase letter, as in `Note a`).  In practice the payload will usually contain (possibly overloaded) *aspects* such as part, pitch, dynamics and so on.
 
-@[Note]
+A @[Note] represents a single value tagged with a *duration*:
 
 ```music+haskell
 inspectableToMusic @(Note Pitch) $
 
-  c
+c
 ```
 
+An @[Event] represents a single value tagged with a *time span*:
 
-@[Event]
+```music+haskell
+inspectableToMusic @(Event Pitch) $
+
+c
+```
+
+Note that we can enter a single note or event as `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
+
+Notes and events are very similar. The main difference is that notes are translation-invariant and events are not.
+
+```music+haskell
+inspectableToMusic @(Note Pitch) $
+
+delay 1 $ stretch 0.5 c
+```
+
+```music+haskell
+inspectableToMusic @(Event Pitch) $
+delay 1 $ stretch 0.5 c
+```
+
+Similarly, `Note` is an instance of `HasDuration`, but not `HasPosition`. Events have both duration and position:
+
+```haskell
+>>> (c :: Note)^.duration
+1
+
+>>> (c :: Event)^.duration
+1
+
+>>> (c :: Event)^.era
+0 <-> 1
+```
+
+Notes and events have instances for `Functor`, `Foldable` and `Traversable`, which all visit the single element the contain. There are also instances for `HasPitches`, `HasDynamics` and so on, meaning that we can use most combinators from the previous chapters on notes and events.
+
+```music+haskell
+inspectableToMusic @(Note StandardNote) $
+
+set parts' violins $ pizz $ level ff $ accentAll $ compress 4 c
+```
+
+You may wonder, what is the point of representing music with *just a single note*? The answer is that these types are used in combinations with other types. For example we can use `Note [Pitch]` to represent a melody where all notes have the same duration.
+
+
+
 
 ## Voices
 
-A @[Voice] represents a sequence of values, each tagged with duration.
+A @[Voice] represents a *sequential composition of values*, each tagged with *duration*.
+
+### Creating voices
+
+TODO
 
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
 
-stretch (1/4) $ [cs, bb, a |* 2]
+[cs, bb, a |* 2] |/ 4
 ```
+
+
+As with notes and events, we can enter a single voice using `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
+
+You can put a rest in a voice. Notice how this changes the type:
 
 ```music+haskell
 inspectableToMusic @(Voice (Maybe Pitch)) $
@@ -1349,71 +2574,7 @@ inspectableToMusic @(Voice (Maybe Pitch)) $
 (1/4) *| [c |* 2, rest, e]
 ```
 
-```music+haskell
-inspectableToMusic @(Voice Pitch) $
-
-stretch (1/4) $ do
-  x <- [c, d, e] |/ 2
-  y <- [c', b, bb] |/ 2
-  [x, g, y |*4 ]
-```
-
-
-```music+haskell
-inspectableToMusic @(Voice Pitch) $
-
-stretch (1/4) $ do
-  x <- [c, d, e] |/ 2
-  [x, b, c' |*4 ]
-```
-
-```music+haskell
-stretch (1/2) $ pseq [c..e]|/3 |> f |> g|*2
-```
-
-TODO monad comprehensions:
-
-```music+haskell
-inspectableToMusic @(Voice [Pitch]) $
-
-[ [x,y] | x <- [c], y <- [d,e] ]
-```
-
-```music+haskell
-inspectableToMusic @(Voice [Pitch]) $
-
-[ [x,y] | x <- [c] | y <- [d,e] ]
-```
-
-```music+haskell
-inspectableToMusic @(Voice [Pitch]) $
-
-[ [x,y,z] | x <- [c] | y <- [d,e] | z <- [f,g] ]
-```
-
-
-TODO we should never see Music/StandardNote in the user guide (specific/nice-looking types instead). The only purpose of Music/StandardNote is to be defaults/final objects.
-
-```music+haskell
-inspectableToMusic @(Voice [StandardNote]) $
-
-[ dynamics' .~ d $ p
-  | p <- [c, ab, fs, g]
-  | d <- [ppp, ff, mp, mf]
-  ]
-```
-
-TODO names of isMelodicConsonance/isConsonance is confusing
-
-```music+haskell
-inspectableToMusic @(Voice [Pitch]) $
-
-[ [x,y] | x <- view voice (fmap fromPitch $ enumChromaticFromTo c c''), y <- [d,e]
-  , isMelodicConsonance (x .-. y) && isConsonance (x .-. y) ]
-```
-
-
-It can be converted into a score by stretching each element and composing in sequence.
+This works because of [pitch overloading](TODO link).
 
 <!--
 ```music+haskellx
@@ -1451,34 +2612,112 @@ in trackToScore (1/8) y
 ```
 -->
 
-## Scores
+TODO create from rhythm
 
-@[Score]
+TODO create from list of notes
 
-TODO empty scores and rests (see (HasPosition Score) in TODO.md)
+TODO create from IsPitch
 
-TODO Behavior and Reactive, Sampling
+TODO create using (^.voice)
 
-TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
+### Traversing voices
 
-TODO Aligned, "floaters"
+TODO
 
-Natural way of modelling pickups/upbeats etc. Can be combined with "beat hierarchy" model
+### Transforming voices
+
+TODO Transformable, HasDuration
+
+Voices do not have a position, i.e. they are translation-invariant. In order to anchor a voice at a specific point in time use [`Aligned`](#alignment).
+
+TODO rotation
+
+TODO fusion and stretch
+
+TODO take/drop
+
+TODO filtering (MonadPlus!)
+
+### Combining voices
+
+TODO Monoid, Monad, Applicative, MonadZip + guard
+
+```music+haskell
+inspectableToMusic @(Voice Pitch) $
+
+stretch (1/4) $ do
+  x <- [c, d, e] |/ 2
+  y <- [c', b, bb] |/ 2
+  [x, g, y |*4 ]
+```
 
 
-Here is an example. Without upbeat:
+```music+haskell
+inspectableToMusic @(Voice Pitch) $
+
+stretch (1/4) $ do
+  x <- [c, d, e] |/ 2
+  [x, b, c' |*4 ]
+```
+
+
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y] | x <- [c], y <- [d,e] ]
+```
+
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y] | x <- [c] | y <- [d,e] ]
+```
+
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y,z] | x <- [c] | y <- [d,e] | z <- [f,g] ]
+```
+
+
+
+```music+haskell
+inspectableToMusic @(Voice [StandardNote]) $
+
+[ dynamics' .~ d $ p
+  | p <- [c, ab, fs, g]
+  | d <- [ppp, ff, mp, mf]
+  ]
+```
+
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y] | x <- view voice (fmap fromPitch $ enumChromaticFromTo c c''), y <- [d,e]
+  , isMelodicConsonance (x .-. y) && isConsonance (x .-. y) ]
+```
+
+
+
+## Alignment
+
+The @[Aligned] type adds position to anything with a duration. This is akin to alignment in computer graphis, hence the name. Alignment works by picking:
+
+- A time point to which the value is "anchored". By default this is time zero.
+- An alignment point in the duration of the value. By default this is the onset of the value.
+
+Aligned is natural way of modelling pickups and upbeats. Consider this melody:
 
 ```music+haskell
 (pseq [g_,a_,b_]|/2 |> pseq [c, c, d, d]) |/ 4
 ```
 
-
-With upbeat.
+With @[Aligned] we can represent the fact that the first three notes are "upbeat" notes, and that the main stress of the value should fall on the fourth note:
 
 ```music+haskell
 inspectableToMusic @[Aligned (Voice Pitch)] $
 
-delay 2 -- TODO lose, see wall of shame
+delay 2 -- TODO get rid of this, see wall of shame
 
 [ av |/ 2
 , av |/ 4
@@ -1488,51 +2727,132 @@ delay 2 -- TODO lose, see wall of shame
     av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
 ```
 
+The `||>` operator is similar to the normal sequential composition operator `|>`, but aligns the result to the point of composition.
+
+
+<!--
+TODO align and realign
+-->
+
+<!--
 TODO sequential composition of aligned voices "snap to next stressed beat":
 `snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]`
+-->
+
+
+## Scores
+
+A @[Score] represents a *parallel composition of values*, each tagged with *time span*.
+
+
+### Creating scores
+
+Using IsPitch
+Using pure
+Composition
+Monad comprehensions
+From a list of events
+
+### Traversing scores
+Score is Traversable, HasPitches etc
+
+Special traversals such as mapWithSpan
+
+Filtering with MonadPlus
+
+### Transforming scores
+Transformable, HasPosition
+
+### Nested scores
+join
+
+### Overlapping events
+TODO
+
+### Representing rests
+An empty scores has no duration, but we can represent rests using `Score (Maybe a)`.
+
+```music+haskell
+pseq [c,rest,d] |/ 4
+```
+
+
 
 
 ## Patterns
 
-TODO a Pattern can be throught of as a generalization of a rhythm or beat. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself, though the repetition frequence may be very long.
+A @[Pattern] can be throught of as a generalization of a *rhythm* or *beat*. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself (though the repeating duration may be long).
 
-TODO more idiomatic ways of buildings patterns
+### Creating patterns
 
+The basic way of buildings patterns are @[newPattern] and @[rhythmPattern].
 
-TODO use proper percussion here:
+TODO example
+
+### Composing patterns
+
+We can compose patterns in parallel using the regular composition operator @[<>].
 
 ```music+haskell
-renderPattern (a <> b) (0 <-> 4)
+fmap Just $ renderPattern (a <> b) (0 <-> 4)
   where
-    a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
-    b = newPattern $ fmap (const $ parts' .~ flutes $ c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
+    -- TODO use claves, maracas here
+```
+
+As patterns are infinite, we can compose patterns of different durations. Both patterns will just be repeated indefinately.
+
+```music+haskell
+fmap Just $ renderPattern (a <> b) (0 <-> 2)
+  where
+    a = parts' .~ trumpets  $ newPattern [c,d] |/ 8
+    b = parts' .~ trombones $ newPattern [c,d,e] |/ 8
+```
+
+### Transforming patterns
+
+Patterns are @[Transformable], @[Transposable], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns. For example we can set parts and dynamics, or transpose patterns.
+
+```music+haskell
+fmap Just $ renderPattern (a <> b) (0.5 <-> 1.5)
+  where
+    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
 ```
 
 ```music+haskell
-renderPattern (a <> b) (0.5 <-> 1.5)
+fmap Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
   where
-    a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
-    b = newPattern $ fmap (const $ parts' .~ flutes $ c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
 ```
 
-TODO Patterns are Transformable, Transposing, Attenuable and so on, so many expressions that work for scores and voices also work for patterns.
 
 ```music+haskell
-renderPattern (stretch 0.5 $ up m3 p) (0 <-> 2)
+fmap Just $ renderPattern (a <> b) (0 <-> 2)
   where
-    p = a <> b
-    a = newPattern $ fmap (const c) $ [3,3,4,2,4]^.durationsAsVoice |/ 8
-    b = newPattern $ fmap (const $ parts' .~ flutes $ c) $ (take 16 [1,1..])^.durationsAsVoice |/ 8
+    a = parts' .~ trumpets  $ newPattern [c,d,e] |* (3/15)
+    b = parts' .~ trombones $ newPattern [c,d,e] |* (3/8)
 ```
 
-TODO renderPatternsRel
+You can adjust the "phase" of a pattern using @[delay]. This is useful together with the composition operator:
 
-TODO renderPatternsAbs
+```music+haskell
+fmap Just $ renderPattern (a <> b <> delay (1/4) c <> delay (1/4) d) (0 <-> 2)
+  where
+    a = parts' .~ flutes    $ rhythmPattern [1/2,1/2]
+    b = parts' .~ oboes     $ rhythmPattern [1,1/2,1/2]
+    c = parts' .~ trumpets  $ rhythmPattern [1/2,1/2]
+    d = parts' .~ trombones $ rhythmPattern [1,1/2,1/2]
+```
 
+The @[renderPattern] function returns the events of the pattern within a given time span.
 
+<!--
 TODO finish/move to examples:
 
-```music+haskell
+```TODOmusic+haskell
 inspectableToMusic bachCMajChords
   where
     bachCMajChords :: Score [Pitch]
@@ -1562,10 +2882,48 @@ inspectableToMusic bachCMajChords
       35,[c__,c_,e,g,c'])^.event]^.score
 
 
-    bachCMajPattern :: (Reversible a, Num a) => Pattern a
+    bachCMajPattern :: (Num a) => Pattern a
     bachCMajPattern = newPattern $ stretchTo 1 $ (view voice) $ fmap pure [0,1,2,3,4,2,3,4]
 ```
+-->
 
+## Time-varying values
+
+The structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points* or *notes*. We will now look at an alternative time structure where this is not necessarily the case. @[Behavior] represents a *time-varying values*, or functions of time.
+
+TODO example
+
+Behaviours are continous, which implies that:
+
+- They are defined at *any point in time*. A behavior always has a value, unlike, e.g. aligned boices.
+
+- They can change at infinitely small intervals. Just like with vector graphics, behaviours allow us to zoom in arbitrarily close, and potentially discover new changes. Thus it is (in general) nonsensical to talk about *when* a behaviour changes.
+
+A @[Reactive] is a discrete behabior, e.g. a time-varing value that can only change at certain well-known locations. A @[Reactibe] value is similar to a @[Voice], but stretches out indefinately in both directions.
+
+TODO exampels of Reactives
+
+### Constant values
+### Switching
+### Predefined behaviors
+### Transforming Behaviors and Reactives
+
+IsPitch/Transposable
+Transformable
+Functor
+Applicative
+Monad
+
+### Conversions
+#### Reactive to Behavior
+#### Behavior to Reactive
+#### Score to Behavior
+<!--
+TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
+-->
+
+
+<!--
 ## Splitting and reversing
 
 @[Splittable]
@@ -1608,45 +2966,214 @@ music |> rev music
     music = (1/16) *| pseq [c|*3, legato $ pseq [accent eb, fs|*3, a, b|*3], gs, f|*3, d]
 ```
 
+-->
 
 
-## Repetition and variation
+
+
+## Building larger musical structures
+
+Let's now look at how to use the types and classes introduced in this chapter to organize larger musical forms.
+
+### Basic repetition
 
 @[times]
 
 ```music+haskell
 let
-    melody = legato $ pseq [c,d,e,c]|/16
+    melody = accent $ pseq [c,d,e]|/16
 in times 4 $ melody
 ```
 
+<!--
+- variation
 
+- Basic repeatition: @[times], @[replicate]
 
+- Lambdas and abstracting out common patterns
 
+- Infinite streams, take, drop, generative music
 
+- "Indexed loops", zips, zipWith [0..]
 
+- "Stateful" loops, `for`, `traverse` (state monad example)
+
+- Randomness
+
+- Logic programming
+  - Predicates
+  - Searching (MonadLogic)
+
+- Probabilistic programming
+  - Like logic programming, but not just "yes" or "no"
+  - E.g. we can express "it is better if": 1st species counterpoint example
+-->
 
 
 
 # Traversals
 
-TODO traverals are a powerful concept
+In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions. The most important tool for this in Music Suite is called a *traversal*.
 
-Can be used to:
+Traverals are a subtle and powerful concept. The basic ideas is simple: given some traverable "container" value, we have a way of visiting all of its element in some specific order. We can exploit this to:
 
-- Visit elements in a score
-- Querying/folding
-- Updating aspects
+- Accumulate computations over all the elements
+- Searching and querying the elements
+- Update the elements one at a time
 
-In the functional programming commonity, traverals have a powerful generalization known as optics, which also includes concepts such as lenses, prisms, folds and isomorphisms. Music Suite defines lenses and traversals compatible with `lens` and `microlens`.
+Of course Haskell is a pure language, so whenever we refer to "change" or "update" in the context of a data structure, we are actually creating new structures on the fly.
 
-TODO monomorphic and polymorphic traversals
+The most common traversal is known as `traverse`, and is defined for all types that are `Traversable`. The type signature of `traverse` is highly general:
 
-Folds: `toListOf`, `anyOf`, `allOf`
+```haskell
+traverse ::
+  (Traversable t, Applicative f) =>
+  (a -> f b) ->
+  t a -> f (t b)
+```
 
-Traversals: `over`, `traverseOf/forOf`, arbitrary effects (e.g. State, Writer, Maybe)
+This is easier to understand if we specify some of the type variables:
 
-## Traversing the notes in a voice
+```haskell
+traverse ::
+  Applicative f =>
+  (Bool -> f Bool) ->
+  [Bool] -> f [Bool]
+```
+
+The way to read this is that `traverse` transforms an effectful function operating on `Bool` to operate on `[Bool]` instead.
+
+Here is another example of a traversal:
+
+```haskell
+traversePitches ::
+  (Pitch -> f Pitch) ->
+  Score Pitch -> f (Score Pitch)
+```
+
+This means, given a score of pitches and a function operating on pitches, traverse the pitches in the score one by one using the function and return a *new* score containing the transformed pitches.
+
+To make this more readable we can use the following two type synonyms:
+
+
+```haskell
+type Traversal  s t a b = forall f . Applicative f => (a -> f b) -> s -> f t
+type Traversal' s a     = forall f . Applicative f => (a -> f a) -> s -> f s
+```
+
+We can now write:
+
+```haskell
+traverse        :: Traversable t => Traversal (t a) (t b) a b
+traverse        :: Traversal' [Bool] Bool
+traversePitches :: Traversal' (Score Pitch) Pitch
+```
+
+
+<!--
+A traversal that targets exactly one element is known as a *lens*. We've already seen examples of lenses and traversals in the chapters on [dynamics](TODO) and [articulation](TODO) in the form of `.~` (or `set`) operator.
+
+> Note: For those familiar lenses in Haskell: Music Suite defines lenses and traversals compatible with the `lens` and `microlens` packages.
+-->
+
+## Using traversals
+
+### Folding and accumulating
+
+@[toListOf]
+
+```haskell
+>>> toListOf pitches' (c <> d :: Score Pitch)
+[c,d] :: [Pitch]
+```
+
+@[anyOf], @[allOf]
+
+```haskell
+anyOf pitches' (> c) (b_ <> c :: Score Pitch)
+False
+```
+
+@[allOf]
+
+### Mapping and setting
+
+@[over]
+
+### Applicative side-effects
+
+@[State]
+@[Maybe]
+@[Either A]
+
+
+## Aspect traversals
+
+TODO We have already seen these : pitches, parts, dynamics, articulation, techniques.
+
+Music Suite defines traversals and lenses for pitch, dynamic, articulation, parts and playing technique. If you've been following the previous chapters, you might have seen examples of these already: expressions such as `pitches .~ c`, `dynamics .~ ff` or `over dynamics (+ 1)` make use of traversals to *update* all pitches, dynamics and so on, in a given piece of music.
+
+
+<!--
+### Traversals vs. Lenses (singular vs plural)
+
+TODO
+-->
+
+## Polymorphic updates
+
+TODO polymorphic update example (e.g. `Common.Pitch` vs `Hertz`)
+
+TODO explain the type families: Pitch, SetPitch etc.
+
+
+## Phrase traversals
+
+*Phrase traversals* visit all the *phrases* in a score one at at time. They work in two steps: first they traverse each part in the score separately, and then each *consequtive* sequence of notes inside each part. Notes separated by rests are non-consequently, in other words, phrases are separated by rests.
+
+Here is a phrase traversal applied to a single-part score:
+
+```music+haskell
+over (phrases' . Control.Lens._head) (up _P8) $ bar <> delay 1 bar <> delay 2 bar
+  where
+    bar = pseq [c,c,c] |/ 4
+```
+
+This multi-part score is traversed partwise:
+
+```music+haskell
+over (phrases' . Control.Lens._head) (up _P8) $ bar </> delay (3/4) bar </> delay (5/8) bar
+  where
+    bar = pseq [c,c,c] |/ 4
+```
+
+Any overlapping notes *within a single part* are ignored by phrase traversals:
+
+```music+haskell
+over (phrases' . Control.Lens._head) (up _P8) $
+  bar <> delay (1/8) bar
+  where
+    bar = pseq [c,c,c] |/ 4
+```
+
+## Filtered traversals
+
+Filtered traversals operate on the elements selected by another traversals if they match a specific predicate. This is similar to where clauses in SQL:
+
+This example transposes all notes with a duration less than `2`:
+
+```music+haskell
+inspectableToMusic @(Voice [StandardNote]) $
+
+over t (up _P8) [d,d,d |* 2,d] |/ 4
+  where
+    t = notes . each . filtered (\x -> x^.duration < 2)
+```
+
+
+## More examples
+
+### Traversing the notes in a voice
 
 ```music+haskell
 inspectableToMusic @(Voice [StandardNote]) $
@@ -1665,7 +3192,7 @@ traverseOf t _ [d,d,d |* 2,d]
 ```
 
 
-## Traversing all the events in a score
+### Traversing all the events in a score
 
 ```music+haskell
 canon </> renderAlignedVoice rh
@@ -1685,168 +3212,20 @@ canon </> renderAlignedVoice rh
     theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
 ```
 
-## Traversing pitches
-
-TODO
-
-## Traversing dynamics and articulation
-
-TODO
-
-## Traversing parts
-
-TODO
-
-## Phrase traversals
-
-TODO explain how they work
-
-
-Any consequtive sequence of notes will be trated as a phrase. Rests separate phrases:
-
-```music+haskell
-over (phrases' . Control.Lens._head) (up m2) $ bar <> delay 1 bar <> delay 2 bar
-  where
-    bar = pseq [c,c,c] |/ 4
-```
-
-In a multi-part score phrases are traversed per part, so this works:
-
-```music+haskell
-over (phrases' . Control.Lens._head) (up m2) $ bar </> delay (3/4) bar </> delay (5/8) bar
-  where
-    bar = pseq [c,c,c] |/ 4
-```
-
-TODO phrase traversals currently fail at runtime if there are overlapping notes in a single part.
-
-```TODOmusic+haskell
-over (phrases' . Control.Lens._head) (up m2) $ bar <> delay (1/8) bar
-  where
-    bar = pseq [c,c,c] |/ 4
-```
-
-## Filtered traversals
-
-```music+haskell
-inspectableToMusic @(Voice [StandardNote]) $
-
-over t (up m2) [d,d,d |* 2,d] |/ 4
-  where
-    t = notes . each . filtered (\x -> x^.duration < 2)
-```
 
 
 
 
-# Harmony
-
-## Scales and modes
-
-TODO we've seen several examples of affine spaces with notions of *points* and *distances*: time points and durations, pitches and intervals, spans and transformations, and so on.
-
-Another example is the notion of scales and chords. These are (conceptually) infinite collections of points, forming a subset of a larger pitch space. By forgetting the *root* or *fundamental* of a scale/chord we obtain what is known as a mode (for scales) or a chord type (for chords).
-
-TODO rename (Function -> ChordType or similar). Function implies context/direction and is confusing for other reasons too.
-
-```music+haskell
-inspectableToMusic @[Mode Pitch] $
-
-[ phrygian
-, majorScale
-, bluesMajor
-, bluesMinor
-, wholeTone
-, octatonic
-, thirdMode
-]
-```
-
-```music+haskell
-inspectableToMusic @[Scale Pitch] $
-
-[ modeToScale c phrygian
-, modeToScale d majorScale
-, modeToScale e bluesMajor
-, modeToScale f wholeTone
-, modeToScale g octatonic
-, modeToScale a thirdMode
-]
-```
-
-## Chords
-
-
-```music+haskell
-inspectableToMusic @[Function Pitch] $
-
-[ majorTriad
-, minorTriad
-, augmentedChord
-, diminishedChord
-, halfDiminishedChord
-]
-```
-
-```music+haskell
-inspectableToMusic @[Chord Pitch] $
-
-[ functionToChord g majorTriad
-, functionToChord c minorTriad
-, functionToChord f augmentedChord
-, functionToChord eb diminishedChord
-]
-```
-
-TODO all types above are also *voiced*, in other words:
-
-  - Conceptually infinite/extensible
-  - Focused down on a subset of the space (e.g. the pitches [c,e,g]): the voicing
-  - We can "un-voice" the chord to forget the focused pitches
-  - We can "re-voice" the chord. TODO formalize this.
-    - Equivalence relations?
-    - Note this is *not* the same as inversion. `[c,e,g]` and `[e,g,c']` are related by inversion, but `[c,e,g]` and `[c,g,e']` are related by revoicing.
-
-
-TODO looking up notes in a scale/chord (infinitely, Integer ->, 0 being the tonic)
-
-TODO getting exactly the "voiced" notes
-
-TODO type-level sepration of voiced/unvoiced (currently this is muddled). New type for voiced chords (this does not seem to appy to scales).
-  "Free X" for building sets of pitches?
-
-Calculate dissonance of a chord (classical/"objective", by higest common fundamental)
-
-Non-repeating/self-repeating scales (e.g. the overtone series)
-
-### Triadic harmony
-
-Basic triads, seventh and ninth chords
-
-### Quartal and quintal
-
-TODO
-
-### Scales as chords
-
-TODO scale-chord texture, e.g. whole tone extending augmented,
-
-### Non-diatonic scales
-
-TODO the Common.Pitch type has built-in support for chromatic/diatonic harmony. We can construct types that support other system instead.
-
-## Tuning and intonation
-
-TODO Hertz, absolute representation
-
-TODO tuning systems
-
-TODO spectral dissonance using HCF
-(https://harmonicratio.blogspot.com/2018/10/pursuing-clarity-through-openness-part_80.html)
 
 
 
 
+
+
+
+
+
+<!--
 # Constraints
 
 
@@ -1905,7 +3284,9 @@ TODO dovetailing (e.g. for winds), with 1 note overlap
 
 TODO wind slurs vs string legato
 
+-->
 
+<!--
 # Randomness
 
 TODO Reader monad of seed/Random generator state
@@ -1914,7 +3295,7 @@ TODO Reader monad of seed/Random generator state
 # Space
 
 TODO very simple space representation (e.g. Angle), minimal example using Ambisonics?
-
+-->
 
 
 
@@ -1922,143 +3303,66 @@ TODO very simple space representation (e.g. Angle), minimal example using Ambiso
 
 # Import and Export
 
-TODO basic structure/aproach to import and export
-
-## Native format/Serialization
-
-TODO
-
 ## Prelude/Inspectable
 
-TODO point here is to fix a "default" type for rendering/export purposes. This is used to monomorphize expressions written in the polymorphic combinators of the library. The default type is knonw as `Music`.
+The @[Inspectable] class represents types that can be converted into a standard musical representation and exported via an *output backend*. The top-level music expression in a file needs to be inspectable.
 
-Inspectable renders a type by converting it into an exportable type. See TODO.md re: defaulting.
+In some cases, the generality of the Music Suite library leads to ambiguity when selecting the type of the top-level expression. The `Music` type defined in `Music.Prelude` can be used as a default.
 
+```haskell
+main = defaultMain $ inspectableToMusic (c :: Music)
+```
 
-## Overview of formats
+You can write the the above to `test.hs` and invoke:
+
+```bash
+$ cabal exec runhaskell test.hs
+Usage: <executable> -f [xml|ly|mid] -o PATH
+```
+
+To select e.g. the Lilypond backend:
+
+```bash
+$ cabal exec runhaskell test.hs -- -f ly -o hello.ly
+```
+
+<!-- TODO API to select backend rather than CLI -->
+
+## Overview of backends
 
 ### MIDI
 
-TODO how to export
+The MIDI output backend generates type 1 (multi-track) Standard MIDI files Standard MIDI files.
 
-Beware that MIDI input may contain time and pitch values that yield a non-readable notation, you need an sophisticated piece of analysis software to convert raw MIDI input to quantized input.
+The MIDI format is suitable for generating sound using a software synthesizer such as [TiMidity++](https://en.wikipedia.org/wiki/TiMidity%2B%2B) or [Fluidsynth](https://en.wikipedia.org/wiki/FluidSynth), or for exporting music to a Digital Audio Workstation (DAW) software. It is not suitable for exporting to score writing software (use MusicXML).
 
 ### Lilypond
 
-TODO how to export
+The Lilypond output backend generates Lilypond markup code compatible with Lilypond 2.18.2 or later.
 
-TODO re-add toLilypondString?
+Lilypond is a text-only music type setting program and produces very high-quality scores. The Lilypond backend is suitable if you want to generate an entire score using Music Suite. It is also suitable for small examples and is the backend used for all examples in the Music Suite documentation.
 
-```haskell
-toLilypondString $ asScore $ pseq [c,d,e]
-```
-
-    <<
-        \new Staff { <c'>1 <d'>1 <e'>1 }
-    >>
-
+> Note: There is no need to edit the Lilypond code generated by Music Suite and you should not attempt this unless you are an experienced Lilypond user.
 
 ### MusicXML
 
-TODO export MusicXML 3.0
+The MusicXML output backend generates XML compatible with the MusicXML 3.0.
 
-There are no plans to support input at the moment.
+MusicXML files can be imported by most music typesetting programs, including
+Sibelius, Finale and MuseScore.
 
-TODO re-add toMusicXmlString?
-
-```haskell
-toMusicXmlString $ asScore $ pseq [c,d,e]
-```
-
-    <?xml version='1.0' ?>
-    <score-partwise>
-      <movement-title>Title</movement-title>
-      <identification>
-        <creator type="composer">Composer</creator>
-      </identification>
-      <part-list>
-        <score-part id="P1">
-          <part-name></part-name>
-        </score-part>
-      </part-list>
-      <part id="P1">
-        <measure number="1">
-          <attributes>
-            <key>
-              <fifths>0</fifths>
-              <mode>major</mode>
-            </key>
-          </attributes>
-          <attributes>
-            <divisions>768</divisions>
-          </attributes>
-          <direction>
-            <direction-type>
-              <metronome>
-                <beat-unit>quarter</beat-unit>
-                <per-minute>60</per-minute>
-              </metronome>
-            </direction-type>
-          </direction>
-          <attributes>
-            <time symbol="common">
-              <beats>4</beats>
-              <beat-type>4</beat-type>
-            </time>
-          </attributes>
-          <note>
-            <pitch>
-              <step>C</step>
-              <alter>0.0</alter>
-              <octave>4</octave>
-            </pitch>
-            <duration>3072</duration>
-            <voice>1</voice>
-            <type>whole</type>
-          </note>
-        </measure>
-        <measure number="2">
-          <note>
-            <pitch>
-              <step>D</step>
-              <alter>0.0</alter>
-              <octave>4</octave>
-            </pitch>
-            <duration>3072</duration>
-            <voice>1</voice>
-            <type>whole</type>
-          </note>
-        </measure>
-        <measure number="3">
-          <note>
-            <pitch>
-              <step>E</step>
-              <alter>0.0</alter>
-              <octave>4</octave>
-            </pitch>
-            <duration>3072</duration>
-            <voice>1</voice>
-            <type>whole</type>
-          </note>
-        </measure>
-      </part>
-    </score-partwise>
+The MusicXML backend is suitable if you want to use Music Suite for generating
+parts of a score, but perform manual editing on the output result.
 
 
-### ABC Notation
-
-TODO ABC notation (for use with [abcjs](https://github.com/paulrosen/abcjs) or similar engines) is still experimental.
-
-## Sibelius
-
-TODO
 
 
+<!--
 # Tips and tricks
 
 ### Lists and streams
 
-TODO
+TODO use `[]` for finite, `Stream` for infinite
 
 
 ### Complex rhythms
@@ -2077,6 +3381,7 @@ pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
 ```music+haskell
 pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 ```
+-->
 
 
 # Wall of Shame
@@ -2085,7 +3390,7 @@ TODO this is not documentation, move to some other location. Listing all "bad re
 
 ### Quantization
 
-```music+haskell
+```TODOmusic+haskell
 (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
   where
     rh = stretchTo 1 . pseq
@@ -2101,7 +3406,7 @@ rcat
     theme = pseq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
 ```
 
-TODO this should use nested tuplets:
+This should use nested tuplets:
 
 ```music+haskell
 pseq [pseq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
@@ -2112,7 +3417,17 @@ pseq [pseq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 ```
 
 ```music+haskell
-stretch (1/2) $ pseq [c..e]|/3 |> f |> g|*2
+stretch (1/2) $ pseq [c,d,e]|/3 |> f |> g|*2
+```
+
+Should render >1 tuplet:
+
+```music+haskell
+let
+  ch = ppar [e,g,c']
+  waltz = times 2 $ pseq [c,ch,ch,g_,ch,ch] |* (1/4)
+in
+timeSignature (4/4) $ compress 3 $ waltz
 ```
 
 ### Alignment/pickups
@@ -2139,20 +3454,17 @@ rcat $ fmap renderAlignedVoice $ delay 1
 In other words, scores with events before time 0 should be treated as pickups and rendered in the same time signature as the first bar (starting at 0).
 
 
-### Staves
-
-### Misc
 
 
 # Acknowledgements
 
 ## Contributors
 
-TODO thanks
+Music Suite was made possible by [all the contributors](https://github.com/music-suite/music-score/graphs/contributors).
 
 ## Previous work
 
-The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [PWGL][pwgl], [nyquist][nyquist], [music21][music21], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
+Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [PWGL][pwgl], [nyquist][nyquist], [music21][music21], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
 
 The work of Paul Hudak and the the Yale Haskell group, including [Haskore][haskore], [Euterpea][euterpea] is a major influence. The  and [temporal-media][temporal-media] package is a similar take on these ideas. The [TidalCycles][tidal] library provided the pattern structure.
 
@@ -2198,6 +3510,6 @@ The temporal structures, their instances and more general design philosophy come
 
 ----
 
-*Copyright Hans Jacob Höglund 2012–2015*
+*Copyright Hans Jacob Hoeglund and others 2012–2020*
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This documentation is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.

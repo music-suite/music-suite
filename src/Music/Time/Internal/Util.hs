@@ -1,6 +1,17 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-unused-top-binds
+  -fno-warn-unused-matches
+  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------
 
@@ -100,8 +111,7 @@ breakList n z = Data.Monoid.mconcat . Data.List.intersperse z . divideList n
 mapIndexed :: (Int -> a -> b) -> [a] -> [b]
 mapIndexed f as = map (uncurry f) (zip is as)
   where
-    n = length as - 1
-    is = [0 .. n]
+    is = [0 ..]
 
 -- test
 
@@ -268,9 +278,9 @@ unRatio x = (Data.Ratio.numerator x, Data.Ratio.denominator x)
 -- | Nicer printing of ratio as ordinary fractions.
 -- > category: Math
 -- > depends: base
-showRatio :: (Integral a, Show a) => Data.Ratio.Ratio a -> String
-showRatio (realToFrac -> (unRatio -> (x, 1))) = show x
-showRatio (realToFrac -> (unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
+showRatio :: Rational -> String
+showRatio (unRatio -> (x, 1)) = show x
+showRatio (unRatio -> (x, y)) = "(" ++ show x ++ "/" ++ show y ++ ")"
 
 -- Replace all contigous ranges of equal values with [Just x, Nothing, Nothing ...]
 -- > category: List
@@ -378,7 +388,7 @@ tripped = iso tripl untripl
 {-# INLINE tripped #-}
 
 floor' :: RealFrac a => a -> a
-floor' = fromIntegral . floor
+floor' = fromInteger . floor
 
 -- Like Data.Ord.comparing
 -- (Are both variants of contramap?)

@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
+
 module Music.Time.Reactive
   ( -- * Reactive type
     Reactive,
@@ -47,7 +56,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,
@@ -94,11 +102,15 @@ newtype Reactive a = Reactive {getReactive :: ([Time], Behavior a)}
       discrete/atTime/continous - Forces implementation to choose arbitrary value at switchpoint
 -}
 
+instance Eq a => Eq (Reactive a) where
+  a == b =
+    initial a == initial b && updates a == updates b
+
+instance Show a => Show (Reactive a) where
+  showsPrec n a = showsPrec n (initial a, updates a)
+
 instance Transformable (Reactive a) where
   transform s (Reactive (t, r)) = Reactive (transform s t, transform s r)
-
-instance Reversible (Reactive a) where
-  rev = stretch (-1)
 
 instance Wrapped (Reactive a) where
 
@@ -154,6 +166,7 @@ initial r = r `atTime` minB (occs r)
 updates :: Reactive a -> [(Time, a)]
 updates r = (\t -> (t, r `atTime` t)) <$> (List.sort . List.nub) (occs r)
 
+-- | Get the time of all updates.
 occs :: Reactive a -> [Time]
 occs = fst . (^. _Wrapped')
 
@@ -181,6 +194,11 @@ splitReactive r = case updates r of
         go [x] = [(x, Nothing)]
         go (x : y : rs) = (x, Just y) : withNext (y : rs)
 
+-- | Sample a reactive at the given time.
+--
+-- @
+-- x `atTime` t = discrete x ! t
+-- @
 atTime :: Reactive a -> Time -> a
 atTime = (!) . snd . (^. _Wrapped')
 
@@ -189,7 +207,7 @@ atTime = (!) . snd . (^. _Wrapped')
 final :: Reactive a -> a
 final x = case (initial x, updates x) of
   (i, []) -> i
-  (i, xs) -> snd $ last xs
+  (_i, xs) -> snd $ last xs
 
 -- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
 switchR :: Time -> Reactive a -> Reactive a -> Reactive a
@@ -199,6 +217,7 @@ switchR t (Reactive (tx, bx)) (Reactive (ty, by)) =
       (filter (< t) tx <> [t] <> filter (> t) ty)
       (switch t bx by)
 
+-- | Replace everything outside the given span by mempty.
 trimR :: Monoid a => Span -> Reactive a -> Reactive a
 trimR (view onsetAndOffset -> (t, u)) x = switchR t mempty (switchR u x mempty)
 
@@ -215,6 +234,7 @@ intermediate (updates -> xs) = fmap (\((t1, x), (t2, _)) -> (t1 <-> t2, x) ^. ev
 discrete :: Reactive a -> Behavior a
 discrete = continous . fmap pure
 
+-- | A behavior only defined on the unit span ('mempty' for 'Span').
 type Segment a = Behavior a
 
 -- | Realize a 'Reactive' value as an continous behavior.

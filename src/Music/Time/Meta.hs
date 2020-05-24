@@ -1,6 +1,14 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 -- |
 -- Provides a way to annotate data-types with 'Transformable' meta-data.
@@ -71,7 +79,7 @@ type AttributeClass a = (Typeable a, Monoid a, Semigroup a)
 type TAttributeClass a = (Transformable a, AttributeClass a)
 
 -- | An existential wrapper type to hold attributes.
-data Attribute :: * where
+data Attribute where
   Attribute :: AttributeClass a => a -> Attribute
   TAttribute :: TAttributeClass a => a -> Attribute
 
@@ -101,12 +109,9 @@ instance Transformable Attribute where
   transform _ (Attribute a) = Attribute a
   transform s (TAttribute a) = TAttribute (transform s a)
 
-instance Reversible Attribute where
-  rev = id
-
 -- Meta is Transformable because the contents of the map is transformable
 newtype Meta = Meta {_getMeta :: Map String Attribute}
-  deriving (Transformable, Reversible)
+  deriving (Transformable)
 
 instance Semigroup Meta where
   Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
@@ -144,7 +149,12 @@ wrapMeta a = Meta $ Map.singleton key $ wrapAttr a
 
 -- | Type class for things which have meta-data.
 --
--- Laws: 'meta'
+-- Laws: 'meta' is a lens, e.g.
+-- @
+-- view meta (set meta v s) ≡ v
+-- set meta (view meta s) s ≡ s
+-- set meta v' (set meta v s) ≡ set meta v' s
+-- @
 class HasMeta a where
   -- | Access the meta-data.
   meta :: Lens' a Meta
@@ -265,9 +275,6 @@ instance Traversable AddMeta where
 instance Transformable a => Transformable (AddMeta a) where
   transform t = over meta (transform t) . over annotated (transform t)
 
-instance Reversible a => Reversible (AddMeta a) where
-  rev = over meta rev . over annotated rev
-
 instance Splittable a => Splittable (AddMeta a) where
   split t = unzipR . fmap (split t)
     where
@@ -275,10 +282,7 @@ instance Splittable a => Splittable (AddMeta a) where
       unzipR x = (fmap fst x, fmap snd x)
 
 instance HasPosition a => HasPosition (AddMeta a) where
-
   _era = _era . extract
-
-  _position = _position . extract
 
 instance HasDuration a => HasDuration (AddMeta a) where
   _duration = _duration . extract

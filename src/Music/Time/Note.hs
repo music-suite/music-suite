@@ -1,3 +1,13 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-deprecations
+  -fno-warn-redundant-constraints #-}
+
 module Music.Time.Note
   ( -- * Note type
     Note,
@@ -17,7 +27,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,
@@ -60,7 +69,7 @@ newtype Note a = Note {getNote :: Duration `Couple` a}
       RealFrac
     )
 
-instance (Show a, Transformable a) => Show (Note a) where
+instance (Show a) => Show (Note a) where
   show x = show (x ^. from note) ++ "^.note"
 
 instance Wrapped (Note a) where
@@ -135,10 +144,10 @@ instance HasDuration (Note a) where
             , (0.4,(3.5,mempty)^.note)^.note            -- db*xb
 
 -}
-instance (Splittable a, Transformable a) => Splittable (Note a) where
+instance (HasDuration a, Splittable a, Transformable a) => Splittable (Note a) where
   split t ((^. from note) -> (d, x)) = over both (^. note) $ split' t d x
 
-split' :: (Transformable a, Splittable a) => Duration -> Duration -> a -> ((Duration, a), (Duration, a))
+split' :: (Transformable a, HasDuration a, Splittable a) => Duration -> Duration -> a -> ((Duration, a), (Duration, a))
 split' t d x = ((da, compress p xa_p), (db, compress q xb_q))
   where
     -- We are really returning ((da, xa), (db, xb))
@@ -203,14 +212,7 @@ notee = _Wrapped `dependingOn` (transformed . stretching)
 -- (2,())^.note
 durationNote :: Iso' Duration (Note ())
 durationNote = iso (\d -> (d, ()) ^. note) (^. duration)
-
 -- >>> (pure ())^.from durationNote
 -- 1
 -- >>> (pure () :: Note ())^.duration
 -- 1
-
--- TODO could also be an iso...
-noteComplement :: Note a -> Note a
-noteComplement (Note (Couple (d, x))) = Note $ Couple (negateV d, x)
--- FIXME negateV is negate not recip
--- The negateV method should follow (^+^), which is (*) for durations (is this bad?)

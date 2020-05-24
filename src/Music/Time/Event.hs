@@ -1,3 +1,11 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-redundant-constraints #-}
+
 module Music.Time.Event
   ( -- * Event type
     Event,
@@ -6,7 +14,6 @@ module Music.Time.Event
     event,
     eventee,
     spanEvent,
-    triple,
   )
 where
 
@@ -16,8 +23,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
-    below,
     index,
     inside,
     parts,
@@ -25,24 +30,15 @@ import Control.Lens hiding
     transform,
     (|>),
   )
-import Control.Monad (join, mapM)
-import Control.Monad.Compose
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson as JSON
-import Data.Foldable (Foldable)
-import qualified Data.Foldable as Foldable
-import Data.Functor.Classes
-import Data.Functor.Compose
 import Data.Functor.Couple
-import Data.Semigroup
 import Data.String
 import Data.Typeable
-import Data.VectorSpace
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
-import Music.Time.Internal.Util (dependingOn, through, tripped)
+import Music.Time.Internal.Util (dependingOn)
 import Music.Time.Juxtapose
-import Music.Time.Meta
 
 -- |
 -- A 'Event' is a value transformed to appear in some 'Span'. Like 'Span', it is an instance of 'Transformable'.
@@ -64,22 +60,17 @@ newtype Event a = Event {getEvent :: Span `Couple` a}
       RealFrac
     )
 
-instance Wrapped (Event a) where
-
-  type Unwrapped (Event a) = (Span, a)
-
-  _Wrapped' = iso (getCouple . getEvent) (Event . Couple)
-
-instance Rewrapped (Event a) (Event b)
-
 instance Transformable (Event a) where
   transform t = over eventSpan (transform t)
 
 instance HasDuration (Event a) where
-  _duration = _duration . _era
+  _duration = _duration . view eventSpan
 
 instance HasPosition (Event a) where
-  _era = view eventSpan
+  _era = Just . view eventSpan
+
+instance HasPosition1 (Event a) where
+  _era1 = view eventSpan
 
 instance IsString a => IsString (Event a) where
   fromString = pure . fromString
@@ -93,7 +84,7 @@ instance IsInterval a => IsInterval (Event a) where
 instance IsDynamics a => IsDynamics (Event a) where
   fromDynamics = pure . fromDynamics
 
-instance (Show a, Transformable a) => Show (Event a) where
+instance (Show a) => Show (Event a) where
   show x = show (x ^. from event) ++ "^.event"
 
 instance ToJSON a => ToJSON (Event a) where
@@ -111,13 +102,10 @@ instance FromJSON a => FromJSON (Event a) where
 
 -- | View a event as a pair of the original value and the transformation (and vice versa).
 event :: Iso (Span, a) (Span, b) (Event a) (Event b)
-event = from _Wrapped
+event = iso (Event . Couple) (getCouple . getEvent)
 
 eventSpan :: Lens' (Event a) Span
 eventSpan = from event . _1
-
-eventValue :: Lens (Event a) (Event b) a b
-eventValue = from event . _2
 
 -- | View the value in the event.
 eventee :: (Transformable a, Transformable b) => Lens (Event a) (Event b) a b
@@ -126,7 +114,3 @@ eventee = from event `dependingOn` (transformed)
 -- | Event as a span with a trivial value.
 spanEvent :: Iso' Span (Event ())
 spanEvent = iso (\s -> (s, ()) ^. event) (^. era)
-
--- | View a event as a @(time, duration, value)@ triple.
-triple :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
-triple = from event . bimapping onsetAndDuration id . tripped

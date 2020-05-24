@@ -50,12 +50,22 @@ import Music.Score.Text
 import Music.Score.Ties
 import Music.Time
 
+-- |
+-- Class of types with a notion of tremolo.
+--
+-- ==== Laws
+--
+-- [/set-set/]
+--
+--    @'setTrem' n ('setTrem' n x) = 'setTrem' n x@
 class HasTremolo a where
 
   setTrem :: Int -> a -> a
 
   default setTrem :: forall f b. (a ~ f b, Functor f, HasTremolo b) => Int -> a -> a
   setTrem s = fmap (setTrem s)
+
+instance HasTremolo a => HasTremolo (Maybe a)
 
 instance HasTremolo a => HasTremolo (b, a)
 
@@ -71,7 +81,7 @@ tremolo :: HasTremolo a => Int -> a -> a
 tremolo = setTrem
 
 newtype TremoloT a = TremoloT {getTremoloT :: Couple (Max Word) a}
-  deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
+  deriving (Eq, Show, Ord, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad)
 
 --
 -- We use Word instead of Int to get (mempty = Max 0), as (Max.mempty = Max minBound)
@@ -119,8 +129,6 @@ deriving instance HasText a => HasText (TremoloT a)
 
 deriving instance Transformable a => Transformable (TremoloT a)
 
-deriving instance Reversible a => Reversible (TremoloT a)
-
 deriving instance Alterable a => Alterable (TremoloT a)
 
 deriving instance Augmentable a => Augmentable (TremoloT a)
@@ -129,7 +137,7 @@ type instance Pitch (TremoloT a) = Pitch a
 
 type instance SetPitch g (TremoloT a) = TremoloT (SetPitch g a)
 
-type instance Dynamic (TremoloT a) = Dynamic a
+type instance GetDynamic (TremoloT a) = GetDynamic a
 
 type instance SetDynamic g (TremoloT a) = TremoloT (SetDynamic g a)
 

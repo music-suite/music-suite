@@ -3,12 +3,11 @@
 body {
         margin-left: 350px;
         margin-right: 40px;
-        max-width: 690px;
         line-height: 160%;
-        color: #202027;     
+        color: #202027;
         background: #fcfefe;
-        font-size: 12.5px;
-        font-family: Geneva, Arial;
+        font-size: 16px;
+        font-family: Palatino;
 }
 a:link, a:active, a:visited {
         color: #3050a7;
@@ -23,16 +22,15 @@ h1,
 h2,
 h3
 {
-        font-family: Palatino;
         color: black;
         text-decoration:none;
         text-shadow: 0px 0px 2px #eef;
 }
 code {
         line-height:140%;
-}   
+}
 pre {
-/*        font-size: 13px;*/
+font-size: 15px;
 }
 
 h1 { font-size: 1.9em }
@@ -53,14 +51,16 @@ h3 {
 
 
 div.haskell-music {
-        padding:                20px;
-        margin-bottom:          5px;
-        background:             #faffff;
-        border-radius:          12px;
-        border:                 1px solid LightGrey;
-        box-shadow:             3px 3px 5px #eee;
+        padding:                10px;
+        padding-left:           20px;
+        margin-bottom:          10px;
 /*        opacity:                0.95;*/
         overflow:               auto;
+
+        background:             #fdffff;
+        border:                 1px solid LightGrey;
+        border-left:            5px solid LightBlue;
+        box-shadow:             3px 3px 5px #eee;
 }
 div.haskell-music img {
         padding-bottom:         10px;
@@ -69,31 +69,26 @@ body > pre {
         padding:                20px;
         margin-top:             15px;
         margin-bottom:          15px;
-        background:             #faffff;
-        border-radius:          12px;
-        border:                 1px solid LightGrey;
-        box-shadow:             3px 3px 5px #eee;
 /*        opacity:                0.95;*/
         overflow:               auto;
-        
+
 }
 
 @media screen {
-        div#TOC {       
+        div#TOC {
                 position:               fixed;
                 overflow-y:             auto;
                 top:                    0px;
                 left:                   0px;
                 width:                  310px;
-        
+
                 border-right:           1px solid LightGrey;
-           
+
         /*        background-color:       #3050a7;*/
         	height:                 100%;
-  
+
         /*        font-family: Arial, sans-serif; */
                 font-family: Palatino;
-                font-size:              14px;
                 padding :               5px;
                 padding-bottom :        15px;
                 line-height:            170%;
@@ -103,10 +98,10 @@ body > pre {
 
         div#TOC > ul {
                 margin-top:             40px;
-        
+
         }
         div#TOC > ul > li {
-                margin-top:             10px;        
+                margin-top:             10px;
         }
 
         div#TOC > ul, div > ul > li > ul {

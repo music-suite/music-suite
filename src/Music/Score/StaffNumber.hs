@@ -51,6 +51,14 @@ import Music.Score.Ties
 import Music.Time
 import Numeric.Natural
 
+-- |
+-- Class of types with a notion of staff number.
+--
+-- ==== Laws
+--
+-- [/set-set/]
+--
+--    @'setStaffNumber' n ('setStaffNumber' n x) = 'setStaffNumber' n x@
 class HasStaffNumber a where
 
   setStaffNumber :: Natural -> a -> a
@@ -70,7 +78,7 @@ staffNumber :: HasStaffNumber a => Natural -> a -> a
 staffNumber = setStaffNumber
 
 newtype StaffNumberT a = StaffNumberT {getStaffNumberT :: Couple (First Natural) a}
-  deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
+  deriving (Eq, Show, Ord, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad)
 
 --
 -- We use Word instead of Int to get (mempty = Max 0), as (Max.mempty = Max minBound)
@@ -119,8 +127,6 @@ deriving instance HasText a => HasText (StaffNumberT a)
 
 deriving instance Transformable a => Transformable (StaffNumberT a)
 
-deriving instance Reversible a => Reversible (StaffNumberT a)
-
 deriving instance Alterable a => Alterable (StaffNumberT a)
 
 deriving instance Augmentable a => Augmentable (StaffNumberT a)
@@ -129,7 +135,7 @@ type instance Pitch (StaffNumberT a) = Pitch a
 
 type instance SetPitch g (StaffNumberT a) = StaffNumberT (SetPitch g a)
 
-type instance Dynamic (StaffNumberT a) = Dynamic a
+type instance GetDynamic (StaffNumberT a) = GetDynamic a
 
 type instance SetDynamic g (StaffNumberT a) = StaffNumberT (SetDynamic g a)
 

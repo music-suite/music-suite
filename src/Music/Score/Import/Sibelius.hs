@@ -414,7 +414,7 @@ type IsSibelius a =
     HasArticulation' a,
     S.Articulation a ~ Articulation,
     HasDynamic' a,
-    S.Dynamic a ~ Dynamics,
+    GetDynamic a ~ Dynamics,
     HasHarmonic a,
     HasText a,
     HasTremolo a,

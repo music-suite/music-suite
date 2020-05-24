@@ -1,4 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 -- | A type to represent (recursive) subdivisions of a part.
 module Music.Parts.Subpart
@@ -13,7 +21,7 @@ module Music.Parts.Subpart
 where
 
 import Control.Applicative
-import Control.Lens (Lens', Rewrapped (..), Wrapped (..), iso, toListOf)
+import Control.Lens (Lens', Rewrapped, Wrapped (..), iso, toListOf)
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson
 import Data.Default

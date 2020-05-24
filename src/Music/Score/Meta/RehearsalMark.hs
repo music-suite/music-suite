@@ -9,6 +9,14 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------
@@ -34,9 +42,6 @@ module Music.Score.Meta.RehearsalMark
     -- * Adding rehearsal marks to scores
     rehearsalMark,
     rehearsalMarkAt,
-
-    -- * Extracting rehearsal marks
-    withRehearsalMark,
   )
 where
 
@@ -87,10 +92,9 @@ instance Monoid RehearsalMark where
 -- metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
 
 rehearsalMark :: (HasMeta a, HasPosition a, Transformable a) => a -> a
-rehearsalMark x = rehearsalMarkAt (_onset x) x
+rehearsalMark x = case _era x of
+  Nothing -> x
+  Just e -> rehearsalMarkAt (view onset e) x
 
 rehearsalMarkAt :: HasMeta a => Time -> a -> a
 rehearsalMarkAt t = addMetaNote $ view event (t <-> t, RehearsalMark)
-
-withRehearsalMark :: (RehearsalMark -> Score a -> Score a) -> Score a -> Score a
-withRehearsalMark = withMeta

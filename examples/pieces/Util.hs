@@ -1,5 +1,5 @@
 
-{-# LANGUAGE TypeFamilies, ConstraintKinds, FlexibleContexts, FlexibleInstances, TypeFamilies, DeriveFunctor,
+{-# LANGUAGE TypeApplications, TypeFamilies, OverloadedStrings, ConstraintKinds, FlexibleContexts, FlexibleInstances, TypeFamilies, DeriveFunctor,
   GeneralizedNewtypeDeriving, ViewPatterns, MultiParamTypeClasses, RankNTypes, ConstraintKinds, StandaloneDeriving,
   DeriveTraversable, DeriveDataTypeable, TupleSections #-}
 
@@ -15,7 +15,7 @@ import Data.Traversable (sequenceA)
 import Data.Functor.Adjunction (unzipR)
 import Numeric.Natural (Natural)
 import Data.Map (Map)
-import qualified Database.Stash
+-- import qualified Database.Stash
 import qualified Data.Char
 import qualified Data.Text
 import qualified Data.Monoid.Average
@@ -40,94 +40,96 @@ import qualified System.IO.Unsafe
 import qualified Codec.Midi as Midi
 import qualified Data.Map as Map
 import qualified Data.Aeson
-import qualified Text.Regex.Posix
+-- import qualified Text.Regex.Posix
 import Data.Typeable
 import Data.Aeson (ToJSON(..), FromJSON(..))
 
 
-import Music.Prelude
+import Control.Lens (both, to, iso, Iso', Iso, Getter, over, under, set)
+import Music.Prelude hiding (chord)
 import Music.Parts.Division
 import Music.Pitch.Common.Types (ChromaticSteps, DiatonicSteps) -- TODO export
 import Music.Score.Internal.Util (rotated)
 import qualified Music.Score.Import.Sibelius
 import qualified Music.Score
 import qualified Music.Time.Internal.Convert
-import qualified Diagrams.Prelude as D
-import qualified Diagrams.Backend.SVG as DS
+-- import qualified Diagrams.Prelude as D
+-- import qualified Diagrams.Backend.SVG as DS
 -- import qualified Text.Blaze.Svg.Renderer.Utf8 as SVG
 import qualified Data.ByteString.Lazy as ByteString
 
 
+type Melody = Voice Pitch
 
 
-openDiagram :: (
-  Transformable a,
-  HasPart' a, PartOf a ~ Part,
-  HasPitch' a, Music.Score.Pitch a ~ Pitch
-  )
-  => Score a -> IO ()
-openDiagram x = do
-  writeDiagram x
-  System.Process.system "open -a 'Google Chrome' test.svg"
-  return ()
-
--- Other hack to work with StandardNote
-openDiagram' :: (
-  Transformable a,
-  HasPart' a, PartOf a ~ Part,
-  HasPitches' a, Music.Score.Pitch a ~ Pitch
-  )
-  => Score a -> IO ()
-openDiagram' x = openDiagram$ fmap(\x -> PartT (x^.part,x^?!pitches))$ x
-
-writeDiagram :: (
-  Transformable a,
-  HasPart' a, PartOf a ~ Part,
-  HasPitch' a, Music.Score.Pitch a ~ Pitch
-  )
-  => Score a -> IO ()
-writeDiagram x = do
-  writeRawDiagram "test.svg" $ toDiagram x
-  return ()
-
-toDiagram :: (
-  Transformable a,
-  HasPart' a, PartOf a ~ Part,
-  HasPitch' a, Music.Score.Pitch a ~ Pitch
-  -- TODO use dynamics, parts, articulation
-  )
-  => Score a -> D.Diagram DS.SVG
-toDiagram s = D.scaleY 10 $ addOctaveLines $ mconcat $ reverse $ flip map es $ \ev ->
-    move2 ev $
-    move ev $
-    sca ev $ 
-    D.alignL $
-    transpLC $ addColor ev $
-    D.square 1
-  where
-    addColor ev
-      | isStringInstr   (ev^.eventee.part._instrument) = redFC
-      | isBrassInstr    (ev^.eventee.part._instrument) = greenFC
-      | isWoodwindInstr (ev^.eventee.part._instrument) = blueFC
-      | otherwise                                      = brownFC
-
-    addOctaveLines x = (x <> manyLines 0 (oneLine x) <> manyLines 6 (oneLine' x))
-    oneLine  x = (transpLC $ blueFC $ D.alignL $ D.rect (D.width x) 0.1)
-    oneLine' x = (transpLC $ greenFC $ D.alignL $ D.rect (D.width x) 0.1)
-
-    brownFC  = D.fillColor (D.brown :: D.Colour Double)
-    greenFC  = D.fillColor (D.green :: D.Colour Double)
-    blueFC   = D.fillColor (D.blue :: D.Colour Double)
-    redFC    = D.fillColor (D.red :: (D.Colour Double))
-    transpLC = D.lineColor (D.transparent :: (D.AlphaColour Double))
-    manyLines m x = mconcat $ fmap (\n -> D.translateY (n*12+m) x) [-3..3]
-    move2 ev = D.translateY (realToFrac $ semitones $ (ev^.eventee.pitch') .-. (asPitch c))
-    move ev = D.translateX (realToFrac $ ev^.onset)
-    sca ev = D.scaleX (realToFrac $ ev^.duration)
-    es = s2^..events.each
-    s2 = stretch 8 s -- Arbitrarily make an 1/8 note have the same size as a semitone
-writeRawDiagram path dia = DS.renderSVG path (D.mkHeight 200) dia
-
+-- openDiagram :: (
+--   Transformable a,
+--   HasPart' a, PartOf a ~ Part,
+--   HasPitch' a, Music.Score.Pitch a ~ Pitch
+--   )
+--   => Score a -> IO ()
+-- openDiagram x = do
+--   writeDiagram x
+--   System.Process.system "open -a 'Google Chrome' test.svg"
+--   return ()
+--
+-- -- Other hack to work with StandardNote
+-- openDiagram' :: (
+--   Transformable a,
+--   HasPart' a, PartOf a ~ Part,
+--   HasPitches' a, Music.Score.Pitch a ~ Pitch
+--   )
+--   => Score a -> IO ()
+-- openDiagram' x = openDiagram$ fmap(\x -> PartT (x^.part,x^?!pitches))$ x
+--
+-- writeDiagram :: (
+--   Transformable a,
+--   HasPart' a, PartOf a ~ Part,
+--   HasPitch' a, Music.Score.Pitch a ~ Pitch
+--   )
+--   => Score a -> IO ()
+-- writeDiagram x = do
+--   writeRawDiagram "test.svg" $ toDiagram x
+--   return ()
+--
+-- toDiagram :: (
+--   Transformable a,
+--   HasPart' a, PartOf a ~ Part,
+--   HasPitch' a, Music.Score.Pitch a ~ Pitch
+--   -- TODO use dynamics, parts, articulation
+--   )
+--   => Score a -> D.Diagram DS.SVG
+-- toDiagram s = D.scaleY 10 $ addOctaveLines $ mconcat $ reverse $ flip map es $ \ev ->
+--     move2 ev $
+--     move ev $
+--     sca ev $ 
+--     D.alignL $
+--     transpLC $ addColor ev $
+--     D.square 1
+--   where
+--     addColor ev
+--       | isStringInstr   (ev^.eventee.part.instrument) = redFC
+--       | isBrassInstr    (ev^.eventee.part.instrument) = greenFC
+--       | isWoodwindInstr (ev^.eventee.part.instrument) = blueFC
+--       | otherwise                                      = brownFC
+--
+--     addOctaveLines x = (x <> manyLines 0 (oneLine x) <> manyLines 6 (oneLine' x))
+--     oneLine  x = (transpLC $ blueFC $ D.alignL $ D.rect (D.width x) 0.1)
+--     oneLine' x = (transpLC $ greenFC $ D.alignL $ D.rect (D.width x) 0.1)
+--
+--     brownFC  = D.fillColor (D.brown :: D.Colour Double)
+--     greenFC  = D.fillColor (D.green :: D.Colour Double)
+--     blueFC   = D.fillColor (D.blue :: D.Colour Double)
+--     redFC    = D.fillColor (D.red :: (D.Colour Double))
+--     transpLC = D.lineColor (D.transparent :: (D.AlphaColour Double))
+--     manyLines m x = mconcat $ fmap (\n -> D.translateY (n*12+m) x) [-3..3]
+--     move2 ev = D.translateY (realToFrac $ semitones $ (ev^.eventee.pitch') .-. (asPitch c))
+--     move ev = D.translateX (realToFrac $ ev^.onset)
+--     sca ev = D.scaleX (realToFrac $ ev^.duration)
+--     es = s2^..events.each
+--     s2 = stretch 8 s -- Arbitrarily make an 1/8 note have the same size as a semitone
+-- writeRawDiagram path dia = DS.renderSVG path (D.mkHeight 200) dia
+--
 
 
 -- isBrassInstr x = case toMusicXmlSoundId x of
@@ -186,7 +188,7 @@ applyPedal = over (events.each.filtered (\x->x^.part == mempty)) (stretchRelativ
 --     scoreToVoice2 :: Transformable a => Score a -> [Either Duration (Voice a)]
 --     scoreToVoice2 = view mVoicePVoice . Music.Time.Internal.Convert.scoreToVoice
 
-openBook = openLilypond' LyScoreFormat . asScore
+-- openBook = openLilypond' LyScoreFormat . asScore
 
 openAudacity :: Score StandardNote -> IO ()
 openAudacity x = do
@@ -246,42 +248,42 @@ dropV n = over notes (drop n)
 
 -- fromPitch'' :: IsPitch a => Music.Prelude.Pitch -> a
 -- fromPitch'' x = let i = x .-. c in
---   fromPitch $ PitchL ((fromIntegral $ i^._steps) `mod` 7, Just (fromIntegral (i^._alteration)), fromIntegral $ octaves i)
+--   fromPitch $ PitchL ((fromIntegral $ i^.steps) `mod` 7, Just (fromIntegral (i^._alteration)), fromIntegral $ octaves i)
 
 
-captureSibelius = do
-  s <- fmap asScore $ captureSibelius'
-  -- Ignore all but pitches for now as it doesn't print correctly yet
-  return $ fmap ((^?!pitches)) $ s
-
-captureSibelius' :: IO (Score StandardNote)
-captureSibelius' = Music.Score.Import.Sibelius.readSibelius "/Users/hans/Desktop/test.sib_json"
-
-captureSibeliusVoice :: IO Melody
-captureSibeliusVoice = fmap2 (^?pitches) $ captureSibeliusVoice'
-
-captureSibeliusVoice' :: IO (Voice StandardNote)
-captureSibeliusVoice' = do
-  s <- captureSibelius'
-  return $ (s::Score StandardNote)^?!phrases
-
-captureSibeliusRhythm :: IO Rhythm
-captureSibeliusRhythm = fmap2 (const ()) $ captureSibeliusVoice
-
--- TODO capture whole sequence
-captureSibeliusChord :: IO [Pitch]
-captureSibeliusChord = fmap (reverse . (^..pitches)) $ captureSibelius'
-
-captureSibeliusChords = fmap (
-  fmap Data.List.sort . fmap (view (from event._2)) . (^.events) . simultaneous . fmap (:[])) $ captureSibelius
-
-interactSibelius :: (Score Pitch -> Score Pitch) -> IO ()
-interactSibelius f = captureSibelius >>= (openMusicXml . inspectableToMusic . f)
-
-interactSibelius' :: (Music -> Music) -> IO ()
-interactSibelius' f = captureSibelius' >>= (openMusicXml . f)
-
-
+-- captureSibelius = do
+--   s <- fmap asScore $ captureSibelius'
+--   -- Ignore all but pitches for now as it doesn't print correctly yet
+--   return $ fmap ((^?!pitches)) $ s
+--
+-- captureSibelius' :: IO (Score StandardNote)
+-- captureSibelius' = Music.Score.Import.Sibelius.readSibelius "/Users/hans/Desktop/test.sib_json"
+--
+-- captureSibeliusVoice :: IO Melody
+-- captureSibeliusVoice = fmap2 (^?pitches) $ captureSibeliusVoice'
+--
+-- captureSibeliusVoice' :: IO (Voice StandardNote)
+-- captureSibeliusVoice' = do
+--   s <- captureSibelius'
+--   return $ (s::Score StandardNote)^?!phrases
+--
+-- captureSibeliusRhythm :: IO Rhythm
+-- captureSibeliusRhythm = fmap2 (const ()) $ captureSibeliusVoice
+--
+-- -- TODO capture whole sequence
+-- captureSibeliusChord :: IO [Pitch]
+-- captureSibeliusChord = fmap (reverse . (^..pitches)) $ captureSibelius'
+--
+-- captureSibeliusChords = fmap (
+--   fmap Data.List.sort . fmap (view (from event._2)) . (^.events) . simultaneous . fmap (:[])) $ captureSibelius
+--
+-- interactSibelius :: (Score Pitch -> Score Pitch) -> IO ()
+-- interactSibelius f = captureSibelius >>= (openMusicXml . inspectableToMusic . f)
+--
+-- interactSibelius' :: (Music -> Music) -> IO ()
+-- interactSibelius' f = captureSibelius' >>= (openMusicXml . f)
+--
+--
 
 
 -- TODO can't fix with rendered as we can not update the initial...
@@ -301,7 +303,7 @@ mapWithTimeR :: (Maybe Time -> a -> b) -> Reactive a -> Reactive b
 mapWithTimeR f' = let f = uncurry f' in over rendered (bimap (\x -> f (Nothing,x)) (over (mapped) (\(t,a) -> (t, f (Just t,a)))))
 
 
-widenAmbitus :: (Ord a, Num a) => a -> Ambitus a -> Ambitus a
+widenAmbitus :: (Ord a, Num a) => a -> Ambitus v a -> Ambitus v a
 widenAmbitus p = under ambitus (\(m,n) -> (m `min` p, n `max` p))
 
 
@@ -341,11 +343,6 @@ newtype Floater a = Floater { getFloater :: [Aligned (Note a)] }
   deriving (Eq, Ord, Show, Functor, Semigroup, Monoid, Transformable, Alignable)
 -- Delay-invariant Transformable
 
-instance Wrapped (Floater a) where
-  type Unwrapped (Floater a) = [Aligned (Note a)]
-  _Wrapped' = iso getFloater Floater
-
-instance Rewrapped (Floater a) (Floater b)
 
 instance IsPitch a => IsPitch (Floater a) where
   fromPitch x = Floater [aligned 0 0 (fromPitch x)]
@@ -362,15 +359,15 @@ instance Splittable (Floater a) where
 
 -- TODO move
 instance Inspectable (Floater Pitch) where
-  inspectableToMusic = inspectableToMusic . asScore . renderFloater . fmap fromPitch''
+  inspectableToMusic = inspectableToMusic . id @Music . renderFloater . fmap fromPitch
 instance Inspectable (Floater StandardNote) where
-  inspectableToMusic = inspectableToMusic  . asScore . renderFloater
+  inspectableToMusic = inspectableToMusic  . id @Music . renderFloater
 
 type instance Music.Score.Pitch (Floater a) = PitchOf a
 type instance SetPitch b (Floater a) = Floater (SetPitch b a)
 
 instance HasPitches a b => HasPitches (Floater a) (Floater b) where
-  pitches = _Wrapped.pitches
+  pitches = traverse . pitches
 
 type instance Music.Score.Part (Floater a) = PartOf a
 type instance SetPart b (Floater a) = Floater (SetPart b a)
@@ -415,10 +412,6 @@ Don't forget the basic ones such as (const (repeat 0, repeat 0))
 -}
 newtype Shape = Shape { getShape :: Int -> ([Alignment],[Duration]) } -- both lists infinite!
 
-instance Wrapped Shape where
-  type Unwrapped Shape = Int -> ([Alignment],[Duration])
-  _Wrapped' = iso getShape Shape
-
 -- Delay-invariant
 instance Transformable Shape where
   transform s = over (_Wrapped'.mapped._2) (transform s)
@@ -447,15 +440,15 @@ interpShape (Shape f) (Shape g) x = Shape (\n -> let (afn,dfn) = f n; (agn,dgn) 
 makeFloater :: Shape -> Chord Pitch -> Floater StandardNote
 makeFloater (Shape shape) (view (from chord) -> pitches) = makeFloater' (shape (length pitches)) pitches
   where
-    makeFloater' (as,ds) ps = set (mapped.parts'._instrument) violin $
-      mconcat $ zipWith3 (\a d p -> align a $ stretch d $ fromPitch'' p) as ds ps
+    makeFloater' (as,ds) ps = set (mapped.parts'.instrument) violin $
+      mconcat $ zipWith3 (\a d p -> align a $ stretch d $ fromPitch p) as ds ps
 
 -- | Combine shape and pitches into a floater.
 makeFloater' :: Shape -> Chord Pitch -> [Part] -> Floater StandardNote
 makeFloater' (Shape shape) (view (from chord) -> pitches) = makeFloater' (shape (length pitches)) pitches
   where
     makeFloater' (as,ds) ps rs =
-      mconcat $ Data.List.zipWith4 (\a d p r -> set (mapped.parts') r $ align a $ stretch d $ fromPitch'' p) as ds ps rs
+      mconcat $ Data.List.zipWith4 (\a d p r -> set (mapped.parts') r $ align a $ stretch d $ fromPitch p) as ds ps rs
 
 
 -- >>> overtone 6
@@ -480,8 +473,8 @@ harmonicPitch i n o = stringPitch i n .+^ (overtone o .-. overtone 0)
 printNotesOutOfRange :: Score StandardNote -> IO ()
 printNotesOutOfRange x = do
   forM_ (x^.events) $ \e -> do
-    if (not $ inAmbitus (playableRange $ e^.part._instrument) (e^?!pitches)) then
-      putStrLn $ "Out of onsetAndOffset for " ++ red (show (e^.part._instrument)) ++ "\n\t" ++ yellow (show (e^?!pitches))
+    if (not $ inAmbitus (playableRange $ e^.part.instrument) (e^?!pitches)) then
+      putStrLn $ "Out of onsetAndOffset for " ++ red (show (e^.part.instrument)) ++ "\n\t" ++ yellow (show (e^?!pitches))
       else
       return ()
   return ()
@@ -520,7 +513,7 @@ printNotesOutOfRange x = do
 --    trombone,trombone,bassTrombone,
 --    tuba,
 --    piano,
---    harp^._instrument,
+--    harp^.instrument,
 --    celesta,
 --    vibraphone,
 --    timpani,
@@ -538,14 +531,15 @@ printNotesOutOfRange x = do
 What the Show for instuments should eventually generate...
 -}
 showPartE :: Part -> String
-showPartE p
-  | p == mempty = "mempty"
-  | otherwise = showSubpartE (showInstrumentE (p^._instrument)) (p^._subpart)
+showPartE = show
+-- showPartE p
+--   | p == mempty = "mempty"
+--   | otherwise = showSubpartE (showInstrumentE (p^.instrument)) (p^.subpart)
 
-showSubpartE e (Subpart [])    = e++"s"
-showSubpartE e (Subpart (d:_)) = "(divide "++show n++" "++e++"s !! "++show m++")"
-  where
-    (m,n) = getDivision d
+-- showSubpartE e (Subpart [])    = e++"s"
+-- showSubpartE e (Subpart (d:_)) = "(divide "++show n++" "++e++"s !! "++show m++")"
+--   where
+--     (m,n) = getDivision d
 showInstrumentE i
   | i == cello = "cello"
   | i == horn = "horn"
@@ -571,8 +565,8 @@ type ArticulationOf a = Music.Score.Articulation a
 type A a = Music.Score.Articulation a
 
 
-showAmbitus :: (IsPitch a, HasColor a) => Ambitus Pitch -> Score a
-showAmbitus a = let (m,n) = a^.from ambitus in ppar $ fmap (pure . colorBlue . fromPitch'') [m, n]
+showAmbitus :: (IsPitch a, HasColor a) => Ambitus Interval Pitch -> Score a
+showAmbitus a = let (m,n) = a^.from ambitus in ppar $ fmap (pure . colorBlue . fromPitch) [m, n]
 
 -- -- | The number of whole octaves in an ambitus.
 -- ambitusOctaves :: Ambitus Pitch -> Int
@@ -606,20 +600,6 @@ showAmbitus a = let (m,n) = a^.from ambitus in ppar $ fmap (pure . colorBlue . f
 
 ----
 
-data Permutation
-  = Perm4 Int -- Index into Data.List.permutations [1..4], mod 24
-  | Perm5 Int -- Index into Data.List.permutations [1..5], mod 120
-
-permutationLength :: Permutation -> Int
-permutationLength (Perm4 _) = 4
-permutationLength (Perm5 _) = 5
-
-indexPermutation :: Permutation -> [Int]
-indexPermutation (Perm4 n) = Data.List.permutations [0..3] !! (n `mod` 24)
-indexPermutation (Perm5 n) = Data.List.permutations [0..4] !! (n `mod` 120)
-
-showPermutation :: (Enum a, IsPitch a) => Permutation -> Score a
-showPermutation p = stretchTo 1 $ pseq . fmap ([c..] !!) $ indexPermutation p
 
 --------
 
@@ -711,7 +691,7 @@ durationsAsVoice' = to $ \ds -> (^.voice) $ zipWith (curry (^.note)) ds (cycle 
 
 voiceAsDurations = from durationsAsVoice
 
-showOrigin = (<> (set parts' (tutti timpani) $ c^/4))
+-- showOrigin = (<> (set parts' (tutti timpani) $ c^/4))
 
 --
 -- -- Useful natural transformations
@@ -743,7 +723,7 @@ quantizeSpan d = over (onsetAndOffset . both) (snapToGridBackward d)
 -- -3
 snapToGridBackward :: Duration -> Time -> Time
 snapToGridBackward d t = 0 .+^ (d^*fromIntegral n)
- Querying and traversing scores  where
+ where
      (n,rho) = cycleAndPhase t d
 
 
@@ -759,13 +739,13 @@ hull (view onsetAndOffset -> (a,b)) (view onsetAndOffset -> (c,d)) = (minimum[a,
 
 ----------------------------------------------------------------------------------------------------
 
-rcat :: (Monoid a, Semigroup a, HasParts a a, PartOf a ~ Part) => [a] -> a
-rcat xs = if allDistinct ps
-    then ppar xs
-    else ppar $ zipWith (set parts') (divide (length xs) p) xs
-  where
-    ps = concatMap (toListOf parts') xs
-    p  = foldr1 largestPart ps
+-- rcat :: (Monoid a, Semigroup a, HasParts a a, PartOf a ~ Part) => [a] -> a
+-- rcat xs = if allDistinct ps
+--     then ppar xs
+--     else ppar $ zipWith (set parts') (divide (length xs) p) xs
+--   where
+--     ps = concatMap (toListOf parts') xs
+--     p  = foldr1 largestPart ps
 
 ----------------------------------------------------------------------------------------------------
 -- Pitch maps
@@ -781,19 +761,19 @@ type PartialPitchMap = Pitch -> Maybe Pitch
 chordToPitchMap :: [Pitch] -> PitchMap
 chordToPitchMap chord p = chord !! (n `mod` length chord)
   where
-    n = fromIntegral ((p.-.c)^._steps)
+    n = fromIntegral ((p.-.c)^.steps)
 
 chordToPitchMapWithOctaves :: [Pitch] -> PitchMap
 chordToPitchMapWithOctaves chord p = octavesUp (fromIntegral o) $ chord !! (fromIntegral r `mod` length chord)
   where
-    (o,r) = ((p.-.c)^._steps) `divMod` 7
+    (o,r) = ((p.-.c)^.steps) `divMod` 7
 
 -- TODO
 chordToPartialPitchMapWithOctaves :: [Pitch] -> PartialPitchMap
 chordToPartialPitchMapWithOctaves chord p = if length chord > fromIntegral r then Just p2 else Nothing
   where
     p2    = octavesUp (fromIntegral o) $ chord !! (fromIntegral r `mod` length chord)
-    (o,r) = ((p.-.c)^._steps) `divMod` 7
+    (o,r) = ((p.-.c)^.steps) `divMod` 7
 
 applyPitchMap :: (HasPitches' a, PitchOf a ~ Pitch) => PitchMap -> Pattern a -> Pattern a
 applyPitchMap pitchMap = fmap (over pitches' pitchMap)
@@ -897,9 +877,9 @@ divModDur x v = (n,r)
 -- >>> (-2::Time) `cycleAndPhase` 3
 -- (-1,1)                             -- The point in time -1 happens in the (-1)-th 3-cycle at phase 1
 --
-cycleAndPhase :: Time -> Duration -> (Integer, Duration)
-cycleAndPhase t d = (t .-. 0) `divModDur` d
-{-# INLINE cycleAndPhase #-}
+-- cycleAndPhase :: Time -> Duration -> (Integer, Duration)
+-- cycleAndPhase t d = (t .-. 0) `divModDur` d
+-- {-# INLINE cycleAndPhase #-}
 
 
 -- >>> divBy 2 4
@@ -912,7 +892,7 @@ divBy :: RealFrac a => a -> a -> Bool
 divBy x a = floor (a / x) == ceiling (a / x)
 
 fromChords :: Score [Pitch] -> Music
-fromChords = join . fmap ppar . (fmap.fmap) fromPitch''
+fromChords = join . fmap ppar . (fmap.fmap) fromPitch
 
 toChords :: Music -> Score [Pitch]
 toChords = fmap (^..pitches)
@@ -1118,14 +1098,14 @@ type ChanMap = Map Int Time
 
 readMidi' pa = do
   Right m <- Midi.importFile pa
-  let s = asScore $ fromMidi' m
+  let s = id @Music $ fromMidi' m
   return s
 
 -- |
 -- Convert a score from a Midi representation.
 --
 fromMidi' :: (HasParts' a, PartOf a ~ Part, DynamicOf a ~ Dynamics, IsPitch a) => Midi.Midi -> Score a
-fromMidi' = fmap (\(r,p,d) -> set parts' r $ {-level d $-} fromPitch'' p) . (^.score) . toAspectsMidi . getMidi
+fromMidi' = fmap (\(r,p,d) -> set parts' r $ {-level d $-} fromPitch p) . (^.score) . toAspectsMidi . getMidi
   where
 
 
@@ -1203,8 +1183,8 @@ asPitch = id
 sys  = System.Process.system
 bm x = sys "date" >> x >> sys "date" >> return ()
 
-timesN' :: Monoid a => Int -> a -> a
-timesN' x = timesN (fromIntegral (abs x) :: Natural)
+-- timesN' :: Monoid a => Int -> a -> a
+-- timesN' x = timesN (fromIntegral (abs x) :: Natural)
 
 
 type Aspects a =
@@ -1261,31 +1241,31 @@ justT' i = 2**(fromIntegral o) * go (spell usingSharps s)
 
 
 -- Util: play freqs in SuperCollider (with correct intonation)
-playP :: [Hertz] -> IO ()
-play2P :: [Hertz] -> IO ()
-playS :: [Hertz] -> IO ()
-playP = (\x -> openSuperCollider (x::Score (PartT Part {-Cents-}Double))) . rcat . fmap (pure . pure . toMidiP)
-playS = (\x -> openSuperCollider (x::Score (PartT Part {-Cents-}Double))) . compress 12 . pseq . fmap (pure . pure . toMidiP)
-toMidiP = \f -> toDouble $ cents (f/440)/100 + 9
-play2P xs = playUsingTim $ ppar $ map fromPitch'' $ map (^.from pitchHertz) $ xs
+-- playP :: [Hertz] -> IO ()
+-- play2P :: [Hertz] -> IO ()
+-- playS :: [Hertz] -> IO ()
+-- playP = (\x -> openSuperCollider (x::Score (PartT Part {-Cents-}Double))) . rcat . fmap (pure . pure . toMidiP)
+-- playS = (\x -> openSuperCollider (x::Score (PartT Part {-Cents-}Double))) . compress 12 . pseq . fmap (pure . pure . toMidiP)
+-- toMidiP = \f -> toDouble $ cents (f/440)/100 + 9
+-- play2P xs = playUsingTim $ ppar $ map fromPitch'' $ map (^.from pitchHertz) $ xs
 
-playUsingTim x = do
-  writeMidi "/Users/hans/Desktop/test.mid" $ asScore x
-  System.Process.system "timidity /Users/hans/Desktop/test.mid 2>/dev/null >/dev/null"
-  return ()
+-- playUsingTim x = do
+--   writeMidi "/Users/hans/Desktop/test.mid" $ id @Music x
+--   System.Process.system "timidity /Users/hans/Desktop/test.mid 2>/dev/null >/dev/null"
+--   return ()
 
 -- Sort a chord based on dissonance, in C major just intonation
 -- Higher value means more dissonant
-chordDiss :: [Pitch] -> Hertz
-chordDiss = diss . fmap inton
-  where
-    inton = (getIntonation $ intone (c,264) justT)
+-- chordDiss :: [Pitch] -> Hertz
+-- chordDiss = diss . fmap inton
+--   where
+--     inton = (getIntonation $ intone (c,264) justT)
     -- inton = standardIntonation
 
 -- Calculate spectral dissonance.
 -- Only works as exp for freqs > 1
-diss :: RealFrac a => [a] -> a
-diss xs = lcms xs / minimum xs
+-- diss :: RealFrac a => [a] -> a
+-- diss xs = lcms xs / minimum xs
 
 
 fromJust (Just x) = x
@@ -1311,33 +1291,33 @@ interpPitch a b x = (^.from pitchDouble) $ alerp (a^.pitchDouble) (b^.pitchDoubl
     pitchDouble = iso (\x -> fromIntegral (semitones (x.-.c))) (\x -> c .+^ spell usingSharps (round x::Semitones))
 
 
-chordFromList :: (IsInterval (Diff p), AffineSpace p) => [p] -> Chord p
-chordFromList []     = error "chordFromList: Empty list"
-chordFromList (p:ps) = functionToChord p (functionFromSteps (p `po` ps) _P8)
-  where
-    po p = tail.pointOffsets p
-
-scaleFromList :: (IsInterval (Diff p), AffineSpace p) => [p] -> Scale p
-scaleFromList []     = error "scaleFromList: Empty list"
-scaleFromList (p:ps) = modeToScale p (modeFromSteps (p `po` ps) _P8)
-  where
-    po p = tail.pointOffsets p
-
--- TODO a better iso would be ([a],Diff a)
-chord :: (IsInterval (Diff a), AffineSpace a) => Iso' [a] (Chord a)
-chord = iso chordFromList chordToList
-
--- TODO a better iso would be ([a],Diff a)
-scale :: (IsInterval (Diff a), AffineSpace a) => Iso' [a] (Scale a)
-scale = iso scaleFromList scaleToList
-
--- Problematic for the same reason as the isos
-instance (a ~ Pitch) => Monoid (Chord a) where
-  mempty = []^.chord
-  a `mappend` b = (Data.List.sort $ a^.from chord <> b^.from chord)^.chord
-instance (a ~ Pitch) => Semigroup (Chord a) where
-  (<>) = mappend
-
+-- chordFromList :: (IsInterval (Diff p), AffineSpace p) => [p] -> Chord p
+-- chordFromList []     = error "chordFromList: Empty list"
+-- chordFromList (p:ps) = functionToChord p (functionFromSteps (p `po` ps) _P8)
+--   where
+--     po p = tail.pointOffsets p
+--
+-- scaleFromList :: (IsInterval (Diff p), AffineSpace p) => [p] -> Scale p
+-- scaleFromList []     = error "scaleFromList: Empty list"
+-- scaleFromList (p:ps) = modeToScale p (modeFromSteps (p `po` ps) _P8)
+--   where
+--     po p = tail.pointOffsets p
+--
+-- -- TODO a better iso would be ([a],Diff a)
+-- chord :: (IsInterval (Diff a), AffineSpace a) => Iso' [a] (Chord a)
+-- chord = iso chordFromList chordToList
+--
+-- -- TODO a better iso would be ([a],Diff a)
+-- scale :: (IsInterval (Diff a), AffineSpace a) => Iso' [a] (Scale a)
+-- scale = iso scaleFromList scaleToList
+--
+-- -- Problematic for the same reason as the isos
+-- instance (a ~ Pitch) => Monoid (Chord a) where
+--   mempty = []^.chord
+--   a `mappend` b = (Data.List.sort $ a^.from chord <> b^.from chord)^.chord
+-- instance (a ~ Pitch) => Semigroup (Chord a) where
+--   (<>) = mappend
+--
 
 
 
@@ -1352,11 +1332,11 @@ zipNotesWith f as bs = (^.voice) $ zipWith g (as^.notes) (bs^.notes)
 
 
 
-trimChord :: (IsInterval (Diff a), AffineSpace a, Ord a, Num a) => Ambitus a -> Chord a -> Chord a
-trimChord a x = under chord (filter $ inAmbitus $ a) x
+-- trimChord :: (IsInterval v, v ~ Diff a, AffineSpace a, Ord a, Num a) => Ambitus v a -> Chord a -> Chord a
+-- trimChord a x = under chord (filter $ inAmbitus $ a) x
 
-instance (Show a, a ~ Pitch) => Show (Chord a) where
-  show x = show (x^.from chord) ++ "^.chord"
+-- instance (Show a, a ~ Pitch) => Show (Chord a) where
+--   show x = show (x^.from chord) ++ "^.chord"
 
 
 
@@ -1430,10 +1410,10 @@ instance VectorSpace (Note a) where
 instance (HasDuration a) => HasDuration (Maybe a) where
   _duration Nothing = 0
   _duration (Just x) = _duration x
-instance (Splittable a) => Splittable (Maybe a) where
-  split d = unzipR . fmap (split d)
-    where
-      unzipR x = (fmap fst x, fmap snd x)
+-- instance (Splittable a) => Splittable (Maybe a) where
+--   split d = unzipR . fmap (split d)
+--     where
+--       unzipR x = (fmap fst x, fmap snd x)
 ----------------------------------------------------------------------
 
 
@@ -1448,20 +1428,20 @@ instance ToJSON Dynamics where
   toJSON = toJSON . Data.Monoid.Average.maybeAverage
 
 
-instance HasTremolo a => HasTremolo (Maybe a) where
-  setTrem n = fmap (setTrem n)
+-- instance HasTremolo a => HasTremolo (Maybe a) where
+--   setTrem n = fmap (setTrem n)
 
 -- TODO remove
-instance AffineSpace Int where
-  type Diff Int = Int
-  (.+^) = (+)
-  (.-.) = (-)
+-- instance AffineSpace Int where
+--   type Diff Int = Int
+--   (.+^) = (+)
+--   (.-.) = (-)
 
-type instance Music.Score.Pitch (Ambitus a) = PitchOf a
-type instance SetPitch b (Ambitus a) = Ambitus (SetPitch b a)
-
-instance (HasPitches a b, Ord b, Num b, a ~ b, b ~ PitchOf (Ambitus b)) => HasPitches (Ambitus a) (Ambitus b) where
-  pitches = from ambitus.both
+-- type instance Music.Score.Pitch (Ambitus a) = PitchOf a
+-- type instance SetPitch b (Ambitus a) = Ambitus (SetPitch b a)
+--
+-- instance (HasPitches a b, Ord b, Num b, a ~ b, b ~ PitchOf (Ambitus b)) => HasPitches (Ambitus a) (Ambitus b) where
+--   pitches = from ambitus.both
 
 instance (ToJSON a, ToJSON b) => ToJSON (DynamicT b a) where
   toJSON (DynamicT (b,a)) = mergeJSON (Data.Aeson.object [("dynamics", toJSON b)]) (toJSON_NoArray a)
@@ -1548,7 +1528,7 @@ mergeJSON x                     y@(Data.Aeson.Object _) = mergeJSON (toObject x)
 
 
 
-
+{-
 {-
 Extra stash ops:
 -}
@@ -1612,67 +1592,68 @@ putAsp :: Database.Stash.Key -> Music -> IO ()
 putAsp k = Database.Stash.put k . toAspects
 getAsp :: Database.Stash.Key -> IO (Maybe Music)
 getAsp k = fmap2 aspectsToMusic $ Database.Stash.get k
+-}
 
-type Asp1 = (PartT Part (ArticulationT Articulation (DynamicT Dynamics Pitch)))
-type Asp = Score Asp1
-toAspects :: (HasArticulation' a, HasDynamic' a, HasPart' a, HasPitches' a,
-  ArticulationOf a ~ (Average Double, Average Double),
-  DynamicOf a ~ Average Double,
-  PartOf a ~ Part, PitchOf a ~ Pitch) => Score a -> Asp
-toAspects = fmap g
-  where
-    g x = set part' r $ set articulation' a $ set dynamic' d $ fromPitch'' p
-      where
-        p = x^?!pitches
-        d = x^.dynamic
-        a = x^.articulation
-        r = x^.part
-
-aspectsToMusic :: Asp -> Music
-aspectsToMusic = fmap g
-  where
-    g x = set part' r $ set articulation' a $ set dynamic' d $ fromPitch'' p
-      where
-        p = x^?!pitches
-        d = x^.dynamic
-        a = x^.articulation
-        r = x^.part
-
-instance Inspectable Asp where
-  inspectableToMusic = aspectsToMusic
-instance Inspectable (Voice (Maybe Pitch)) where
-  inspectableToMusic = inspectableToMusic . renderAlignedVoice . aligned 0 0
-instance Inspectable (Score (Maybe Pitch)) where
-  inspectableToMusic = inspectableToMusic . mcatMaybes
-instance Inspectable (Score (DynamicT Dynamics Pitch)) where
-  inspectableToMusic = inspectableToMusic . toAspects . fmap (PartT . pure . ArticulationT . pure)
-
-
-
--- >>> get "full" :: S (Score Pitch)
-type S a = IO (Maybe a)
-
-type Rhythm = Voice ()
-type Melody = Voice (Maybe Pitch)
-type Put a = Database.Stash.Key -> a -> IO ()
-type Get a = Database.Stash.Key -> IO (Maybe a)
-type Accompaniment = Score Pitch
-listRhythms        = listR "^rh"
-listMelodies       = listR "^mel"
-listAccompaniments = listR "^accomp"
-listExamples       = listR "^ex"
-listRhythms'       = openLilypond' LyScoreFormat =<< (fmap rcat $ withStashR (\k -> (fmap (text (show k)) . get_) $ fst k) "^rh")
-listMelodies'      = display =<< (fmap rcat $ withStashR (\k -> (fmap (text (show k)) . get_) $ fst k) "^mel")
-listAccompaniments'= display =<< (fmap rcat $ withStashR (\k -> (fmap (text (show k)) . get_) $ fst k) "^accomp")
-getExample         = getAsp             :: Get Music
-getRhythm          = Database.Stash.get :: Get Rhythm
-getMelody          = Database.Stash.get :: Get Melody
-getAccompaniment   = Database.Stash.get :: Get Accompaniment
-
-putExample         = putAsp             :: Put Music
-putRhythm          = Database.Stash.put :: Put Rhythm
-putMelody          = Database.Stash.put :: Put Melody
-putAccompaniment   = Database.Stash.put :: Put Accompaniment
+-- type Asp1 = (PartT Part (ArticulationT Articulation (DynamicT Dynamics Pitch)))
+-- type Asp = Score Asp1
+-- toAspects :: (HasArticulation' a, HasDynamic' a, HasPart' a, HasPitches' a,
+--   ArticulationOf a ~ (Average Double, Average Double),
+--   DynamicOf a ~ Average Double,
+--   PartOf a ~ Part, PitchOf a ~ Pitch) => Score a -> Asp
+-- toAspects = fmap g
+--   where
+--     g x = set part' r $ set articulation' a $ set dynamic' d $ fromPitch p
+--       where
+--         p = x^?!pitches
+--         d = x^.dynamic
+--         a = x^.articulation
+--         r = x^.part
+--
+-- aspectsToMusic :: Asp -> Music
+-- aspectsToMusic = fmap g
+--   where
+--     g x = set part' r $ set articulation' a $ set dynamic' d $ fromPitch p
+--       where
+--         p = x^?!pitches
+--         d = x^.dynamic
+--         a = x^.articulation
+--         r = x^.part
+--
+-- instance Inspectable Asp where
+--   inspectableToMusic = aspectsToMusic
+-- instance Inspectable (Voice (Maybe Pitch)) where
+--   inspectableToMusic = inspectableToMusic . renderAlignedVoice . aligned 0 0
+-- instance Inspectable (Score (Maybe Pitch)) where
+--   inspectableToMusic = inspectableToMusic . mcatMaybes
+-- instance Inspectable (Score (DynamicT Dynamics Pitch)) where
+--   inspectableToMusic = inspectableToMusic . toAspects . fmap (PartT . pure . ArticulationT . pure)
+--
+--
+--
+-- -- >>> get "full" :: S (Score Pitch)
+-- type S a = IO (Maybe a)
+--
+-- type Rhythm = Voice ()
+-- type Melody = Voice (Maybe Pitch)
+-- type Put a = Database.Stash.Key -> a -> IO ()
+-- type Get a = Database.Stash.Key -> IO (Maybe a)
+-- type Accompaniment = Score Pitch
+-- listRhythms        = listR "^rh"
+-- listMelodies       = listR "^mel"
+-- listAccompaniments = listR "^accomp"
+-- listExamples       = listR "^ex"
+-- listRhythms'       = openLilypond' LyScoreFormat =<< (fmap rcat $ withStashR (\k -> (fmap (text (show k)) . get_) $ fst k) "^rh")
+-- listMelodies'      = display =<< (fmap rcat $ withStashR (\k -> (fmap (text (show k)) . get_) $ fst k) "^mel")
+-- listAccompaniments'= display =<< (fmap rcat $ withStashR (\k -> (fmap (text (show k)) . get_) $ fst k) "^accomp")
+-- getExample         = getAsp             :: Get Music
+-- getRhythm          = Database.Stash.get :: Get Rhythm
+-- getMelody          = Database.Stash.get :: Get Melody
+-- getAccompaniment   = Database.Stash.get :: Get Accompaniment
+--
+-- putExample         = putAsp             :: Put Music
+-- putRhythm          = Database.Stash.put :: Put Rhythm
+-- putMelody          = Database.Stash.put :: Put Melody
+-- putAccompaniment   = Database.Stash.put :: Put Accompaniment
 
 {-
 Heuristic voice-separation
@@ -1754,28 +1735,25 @@ hvs c x = undefined
 
 -- goldenRatio = 1.61803398875
 
-doveTail2 :: Pitch -> Pitch -> Music
-doveTail2 x y = replacePitches [(g,x),(b,y)] (System.IO.Unsafe.unsafePerformIO (get_ "ex/orchestration/dt3-4"))
+-- doveTail2 :: Pitch -> Pitch -> Music
+-- doveTail2 x y = replacePitches [(g,x),(b,y)] (System.IO.Unsafe.unsafePerformIO (get_ "ex/orchestration/dt3-4"))
+--
+-- doveTail3 :: Pitch -> Pitch -> Pitch -> Music
+-- doveTail3 x y z = replacePitches [(g,x),(b,y),(d',z)] (System.IO.Unsafe.unsafePerformIO (get_ "ex/orchestration/dt3-4"))
+--
 
-doveTail3 :: Pitch -> Pitch -> Pitch -> Music
-doveTail3 x y z = replacePitches [(g,x),(b,y),(d',z)] (System.IO.Unsafe.unsafePerformIO (get_ "ex/orchestration/dt3-4"))
-
-
--- TODO move
-deriving instance Typeable ChromaticSteps
-deriving instance Typeable DiatonicSteps
-
-copy :: Database.Stash.Stashable dummy => dummy -> Database.Stash.Key -> Database.Stash.Key  -> IO ()
-copy typeEx src dst = Database.Stash.get src >>= Database.Stash.put dst . fmap (`asTypeOf` typeEx)
-
-update :: Database.Stash.Stashable a => (a -> a) -> Database.Stash.Key -> IO ()
-update f k = do
-  v <- Database.Stash.get k
-  case v of
-    Nothing -> return ()
-    Just x  -> Database.Stash.put k (f x)
-
-
+--
+-- copy :: Database.Stash.Stashable dummy => dummy -> Database.Stash.Key -> Database.Stash.Key  -> IO ()
+-- copy typeEx src dst = Database.Stash.get src >>= Database.Stash.put dst . fmap (`asTypeOf` typeEx)
+--
+-- update :: Database.Stash.Stashable a => (a -> a) -> Database.Stash.Key -> IO ()
+-- update f k = do
+--   v <- Database.Stash.get k
+--   case v of
+--     Nothing -> return ()
+--     Just x  -> Database.Stash.put k (f x)
+--
+--
 
 
 
@@ -1822,16 +1800,16 @@ newtype Choose a = Choose { runChoose :: [a] } deriving (Functor, Applicative, M
 choose = Choose
 type BusyMap = Map Label Time
 
-separateVoices_test = do
-  let n = 2
-  choices <- runChoose <$> separateVoices n <$> captureSibelius
-  forM_ choices $ \choice -> do
-    putStr "display $ fmap asScore $ ["
-    mapM_ (putStr.("  "++).(++",").show) $ {-fmap (toListOf pitches')-} choice
-    putStr "  mempty]\n\n"
-
-  putStrLn ("Number of voices: "++ show n)
-  putStrLn (("Number of alternatives: "++) $ show $ length $ choices)
+-- separateVoices_test = do
+--   let n = 2
+--   choices <- runChoose <$> separateVoices n <$> captureSibelius
+--   forM_ choices $ \choice -> do
+--     putStr "display $ fmap asScore $ ["
+--     mapM_ (putStr.("  "++).(++",").show) $ {-fmap (toListOf pitches')-} choice
+--     putStr "  mempty]\n\n"
+--
+--   putStrLn ("Number of voices: "++ show n)
+--   putStrLn (("Number of alternatives: "++) $ show $ length $ choices)
 
   -- mapM_ print . fmap (toListOf pitches') . firstChoice =<< f6 [1,2] <$> captureSibelius
 

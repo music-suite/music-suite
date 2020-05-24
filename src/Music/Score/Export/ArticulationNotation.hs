@@ -15,6 +15,14 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 -------------------------------------------------------------------------------------
 
@@ -144,8 +152,7 @@ instance Monoid ArticulationNotation where
 
 instance Semigroup ArticulationNotation where
   ArticulationNotation ([], []) <> y = y
-  x <> ArticulationNotation ([], []) = x
-  x <> y = x
+  x <> _ = x
 
 slurs :: Lens' ArticulationNotation [Slur]
 slurs = _Wrapped' . _1

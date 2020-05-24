@@ -50,6 +50,14 @@ import Music.Score.Tremolo
 import Music.Time
 import Music.Time.Internal.Transform
 
+-- |
+-- Class of types with a notion of tremolo.
+--
+-- ==== Laws
+--
+-- [/set-set/]
+--
+--    @'setColor' n ('setColor' n x) = 'setColor' n x@
 class HasColor a where
 
   setColor :: Colour Double -> a -> a
@@ -63,6 +71,8 @@ deriving instance HasColor a => HasColor (Couple b a)
 
 instance HasColor a => HasColor [a]
 
+instance HasColor a => HasColor (Maybe a)
+
 instance HasColor a => HasColor (Score a)
 
 instance HasColor a => HasColor (Voice a)
@@ -74,7 +84,7 @@ instance HasColor a => HasColor (PartT n a)
 instance HasColor a => HasColor (TieT a)
 
 newtype ColorT a = ColorT {getColorT :: Couple (Option (Last (Colour Double))) a}
-  deriving (Eq {-Ord,-}, Show, Functor, Foldable {-Typeable,-}, Applicative, Monad, Comonad)
+  deriving (Eq {-Ord,-}, Show, Functor, Foldable, Traversable {-Typeable,-}, Applicative, Monad, Comonad)
 
 runColorT :: ColorT a -> (Colour Double, a)
 runColorT (ColorT (Couple (_, a))) = (error "TODO color export", a)

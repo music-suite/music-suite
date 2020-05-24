@@ -11,14 +11,10 @@ let
   };
 
   pkgs = import (builtins.fetchTarball {
-    url = https://github.com/nixos/nixpkgs/archive/4c810e70efa185b814b843119a9b332ce3bb55d4.tar.gz;
+    url = https://github.com/nixos/nixpkgs/archive/f74f2f354866c828248a419ef9a2cbddc793b7f9.tar.gz;
     # Hash obtained using `nix-prefetch-url --unpack <url>`
-    sha256 = "1x4ivhrdfp93hhrns32gw9ns83pfzj80wqv4sadn4wz891hl78ww";
+    sha256 = "1jxb2kb83mrmzg06l7c1zw9pikk2l1lpg8dl0rvni65bgmlxf7xy";
   }) { config = opts; };
-
-  # TODO try adding HIE or ghcide
-  # https://github.com/hercules-ci/ghcide-nix/tarball/master"
-  # https://github.com/Infinisil/all-hies
 in
 
 pkgs.stdenv.mkDerivation {
@@ -26,6 +22,7 @@ pkgs.stdenv.mkDerivation {
   buildInputs = [
 
     pkgs.lilypond
+    pkgs.timidity
     (
     pkgs.haskellPackages.ghcWithPackages (pkgs:
         [ pkgs.cabal-install
@@ -34,6 +31,6 @@ pkgs.stdenv.mkDerivation {
     )
    ];
   shellHook = ''
-  export PS1="music-suite-build> "
+  export PS1="m> "
   '';
 }

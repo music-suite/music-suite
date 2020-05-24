@@ -1,15 +1,17 @@
 
 reject-unconstrained-dependencies: all
-index-state: 2020-01-02T22:25:18Z
+index-state: 2020-04-24T15:14:00Z
 
 
--- No repos listed, so hackage.haskell.org with the default -- root keys is used.
+-- No repos listed, so hackage.haskell.org with the default root keys are used.
 --
 -- See https://github.com/haskell/cabal/blob/a07ef25229217a289433087c241d89e1c08e65e0/cabal-install/Distribution/Client/Config.hs#L654
 
 packages: ./music-suite.cabal
           ./doc-tools/transf/transf.cabal
           ./doc-tools/hslinks/hslinks.cabal
+          ./doc-tools/doctester/doctester.cabal
 
 package music-suite
   optimization: False
+  haddock-hyperlink-source: True

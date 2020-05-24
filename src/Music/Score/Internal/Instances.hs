@@ -9,6 +9,15 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints
+  -fno-warn-orphans #-}
 
 -------------------------------------------------------------------------------------
 
@@ -31,7 +40,7 @@ where
 
 import Control.Applicative
 import Control.Comonad
-import Control.Lens hiding (part, transform)
+import Control.Lens hiding (transform)
 import Control.Monad
 import Data.AffineSpace
 import Data.Foldable
@@ -87,7 +96,7 @@ instance Semigroup a => Semigroup (TextT a) where
   (<>) = liftA2 (<>)
 
 instance Semigroup a => Semigroup (PartT n a) where
-  PartT (v1, x1) <> PartT (v2, x2) = PartT (v1, x1 <> x2)
+  PartT (v1, x1) <> PartT (_v2, x2) = PartT (v1, x1 <> x2)
 
 -- -------------------------------------------------------------------------------------
 
@@ -105,7 +114,7 @@ instance HasPitch a b => HasPitch (TechniqueT p a) (TechniqueT p b) where
 instance HasPitches a b => HasPitches (TechniqueT p a) (TechniqueT p b) where
   pitches = _Wrapped . pitches
 
-type instance Dynamic (TechniqueT p a) = Dynamic a
+type instance GetDynamic (TechniqueT p a) = GetDynamic a
 
 type instance SetDynamic b (TechniqueT p a) = TechniqueT p (SetDynamic b a)
 
@@ -155,7 +164,7 @@ instance HasPitch a b => HasPitch (ArticulationT p a) (ArticulationT p b) where
 instance HasPitches a b => HasPitches (ArticulationT p a) (ArticulationT p b) where
   pitches = _Wrapped . _2 . pitches
 
-type instance Dynamic (PartT p a) = Dynamic a
+type instance GetDynamic (PartT p a) = GetDynamic a
 
 type instance SetDynamic b (PartT p a) = PartT p (SetDynamic b a)
 
@@ -165,7 +174,7 @@ instance HasDynamic a b => HasDynamic (PartT p a) (PartT p b) where
 instance HasDynamics a b => HasDynamics (PartT p a) (PartT p b) where
   dynamics = _Wrapped . _2 . dynamics
 
-type instance Dynamic (ArticulationT p a) = Dynamic a
+type instance GetDynamic (ArticulationT p a) = GetDynamic a
 
 type instance SetDynamic b (ArticulationT p a) = ArticulationT p (SetDynamic b a)
 
@@ -196,7 +205,7 @@ instance (HasPitches a b) => HasPitches (ColorT a) (ColorT b) where
 instance (HasPitch a b) => HasPitch (ColorT a) (ColorT b) where
   pitch = _Wrapped . pitch
 
-type instance Dynamic (ColorT a) = Dynamic a
+type instance GetDynamic (ColorT a) = GetDynamic a
 
 type instance SetDynamic g (ColorT a) = ColorT (SetDynamic g a)
 
@@ -222,6 +231,8 @@ deriving instance HasColor a => HasColor (TremoloT a)
 deriving instance HasColor a => HasColor (StaffNumberT a)
 
 deriving instance HasTremolo a => HasTremolo (PartT n a)
+
+deriving instance HasTremolo a => HasTremolo (StaffNumberT a)
 
 deriving instance HasHarmonic a => HasHarmonic (PartT n a)
 
@@ -297,8 +308,6 @@ deriving instance IsDynamics a => IsDynamics (ColorT a)
 
 deriving instance Transformable a => Transformable (ColorT a)
 
-deriving instance Reversible a => Reversible (ColorT a)
-
 deriving instance Alterable a => Alterable (ColorT a)
 
 deriving instance Augmentable a => Augmentable (ColorT a)
@@ -316,12 +325,6 @@ deriving instance Transformable a => Transformable (SlideT a)
 deriving instance Transformable a => Transformable (HarmonicT a)
 
 deriving instance Transformable a => Transformable (TextT a)
-
-deriving instance Reversible a => Reversible (SlideT a)
-
-deriving instance Reversible a => Reversible (HarmonicT a)
-
-deriving instance Reversible a => Reversible (TextT a)
 
 deriving instance Alterable a => Alterable (SlideT a)
 
@@ -395,7 +398,7 @@ instance (Monoid v, Enum a) => Enum (PartT v a) where
 
   toEnum a = PartT (mempty, toEnum a)
 
-  fromEnum (PartT (v, a)) = fromEnum a
+  fromEnum (PartT (_v, a)) = fromEnum a
 
 instance (Monoid v, Bounded a) => Bounded (PartT v a) where
 
@@ -427,7 +430,7 @@ instance (Monoid v, Bounded a) => Bounded (PartT v a) where
 --   maxBound = [maxBound]
 
 -- TODO use wrapper type and replace withContext
-type instance Dynamic (a, b, c) = (a, b, c)
+type instance GetDynamic (a, b, c) = (a, b, c)
 
 type instance SetDynamic g (a, b, c) = g
 
@@ -549,12 +552,6 @@ instance Splittable a => Splittable (DynamicT b a) where
 
 instance Splittable a => Splittable (TieT a) where
   split t = unzipR . fmap (split t)
-
-instance Reversible Common.Pitch where
-  rev = id
-
-instance Reversible (Score a) where
-  rev = revDefault
 
 unzipR :: Functor f => f (a, b) -> (f a, f b)
 unzipR x = (fmap fst x, fmap snd x)

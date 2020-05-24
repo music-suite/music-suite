@@ -1,15 +1,28 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
+
 module Music.Time.Behavior
   ( -- * Behavior type
     Behavior,
 
-    -- ** Examples
+    -- * Construction
     behavior,
+    sampled,
+
+    -- * Lookup
+    (!),
 
     -- * Combinators
     switch,
     switch',
     -- splice,
-    trimB,
+    trim,
     trimBefore,
     trimAfter,
     concatB,
@@ -27,7 +40,6 @@ module Music.Time.Behavior
     impulse,
     turnOn,
     turnOff,
-    (!),
   )
 where
 
@@ -52,7 +64,7 @@ import Music.Time.Score
 -- > localRep (/ t) = stretch t
 
 -- |
--- A 'Behavior' is a value varying over time.
+-- A time-dependent value.
 newtype Behavior a = Behavior {getBehavior :: Time -> a}
   deriving (Functor, Applicative, Monad, Typeable)
 
@@ -103,13 +115,6 @@ instance Transformable (Behavior a) where
   transform s (Behavior a) = Behavior (a `whilst` s)
     where
       f `whilst` s = f . transform (negateV s)
-
-instance Reversible (Behavior a) where
-  rev = stretch (-1)
-
--- Or: alternative
--- rev = (stretch (-1) `whilst` undelaying 0.5)
--- (i.e. revDefault pretending that Behaviors have era (0 <-> 1))
 
 deriving instance Semigroup a => Semigroup (Behavior a)
 
@@ -204,17 +209,18 @@ behavior = iso Behavior getBehavior
 -- View a time function as a behavior.
 --
 -- @
--- unbehavior    = from behavior
--- x^.unbehavior = (x !)
+-- sampled    = from behavior
+-- x^.sampled = (x !)
 -- @
-unbehavior :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
-unbehavior = from behavior
+sampled :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
+sampled = from behavior
 
 -- |
 -- A behavior that gives the current time.
 --
--- Should really have the type 'Behavior' 'Time', but is provided in a more general form
--- for convenience.
+-- @
+-- (line !) = id
+-- @
 line :: Fractional a => Behavior a
 line = realToFrac ^. behavior
 
@@ -232,10 +238,12 @@ unit = switch 0 0 (switch 1 line 1)
 -- >     | t > 1     = 1
 -- >     | otherwise = t
 
+{-
 -- |
 -- A behavior that
 interval :: (Fractional a, Transformable a) => Time -> Time -> Event (Behavior a)
 interval t u = (t <-> u, line) ^. event
+-}
 
 -- |
 -- A behavior that
@@ -299,24 +307,35 @@ switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
   EQ -> ry ! u
   GT -> rz ! u
 
--- TODO restore to public API?
+-- | Sample the given behavior at the given time.
 (!) :: Behavior a -> Time -> a
 b ! t = getBehavior b t
 
-trimB :: Monoid a => Span -> Behavior a -> Behavior a
-trimB (view onsetAndOffset -> (on, off)) x = (\t -> if on <= t && t <= off then x ! t else mempty) ^. behavior
+-- | Replace everything outside the given span by 'mempty'.
+trim :: Monoid a => Span -> Behavior a -> Behavior a
+trim (view onsetAndOffset -> (on, off)) x = (\t -> if on <= t && t <= off then x ! t else mempty) ^. behavior
 
 -- Treat each event as a segment in the range (0<->1) and compose.
+
+-- | Flatten a score of behaviors. The behavior for each note is sampled in the units span @0 <-> 1@. Overlapping notes are merged using the monoid instance.
+--
+-- 'concatB' is a monoid homomorphism, that is:
+--
+-- @
+-- concatB mempty   = mempty
+-- concatB (a <> b) = concatB a <> concatB b
+-- @
 concatB :: Monoid a => Score (Behavior a) -> Behavior a
-concatB = mconcat . toListOf traverse . mapWithSpan transform . fmap (trimB mempty)
+concatB = mconcat . toListOf traverse . mapWithSpan transform . fmap (trim mempty)
 
 -- Internal
 
 tau :: Floating a => a
 tau = 2 * pi
 
+-- TODO use Internal.Util version
 floor' :: RealFrac a => a -> a
-floor' = fromIntegral . floor
+floor' = fromInteger . floor
 
 turnOn :: Num a => Behavior a
 

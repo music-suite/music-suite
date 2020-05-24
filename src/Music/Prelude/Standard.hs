@@ -2,6 +2,15 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE LambdaCase #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 ------------------------------------------------------------------------------------
 
@@ -25,6 +34,7 @@ module Music.Prelude.Standard
     module Music.Score,
     Music,
     StandardNote,
+    Asp1a,
     defaultMain,
 
     -- * Lens re-exports
@@ -40,12 +50,6 @@ module Music.Prelude.Standard
     doubleParts,
     doublePartsF,
     doublePartsInOctave,
-    -- TODO remove the below:
-    asScore,
-    asVoice,
-    asTrack,
-    asNote,
-    fromPitch'',
   )
 where
 
@@ -57,23 +61,12 @@ import Music.Articulation
 import Music.Dynamics
 import Music.Parts
 import Music.Pitch
-import Music.Score hiding (Articulation, Clef (..), Dynamics, Fifths, Interval, Part, Pitch)
-import Music.Score.Export.StandardNotation (Asp1, LilypondLayout (..), LilypondOptions (..), defaultLilypondOptions, fromAspects, runIOExportM, toLy, toMidi, toXml)
+import Music.Score hiding (Articulation, Clef (..), Fifths, Interval, Part, Pitch, view)
+import Music.Score.Export.StandardNotation (Asp1, Asp1a, LilypondLayout (..), LilypondOptions (..), defaultLilypondOptions, runIOExportM, toLy, toMidi, toStandardNotation, toXml)
 import qualified Music.Score.Part
 import qualified System.Environment
 import qualified Text.Pretty
-
-asNote :: StandardNote -> StandardNote
-asNote = id
-
-asScore :: Score StandardNote -> Score StandardNote
-asScore = id
-
-asVoice :: Voice StandardNote -> Voice StandardNote
-asVoice = id
-
-asTrack :: Track StandardNote -> Track StandardNote
-asTrack = id
+import qualified Options.Applicative as O
 
 type StandardNote = Asp1
 
@@ -81,51 +74,87 @@ type Music = Score StandardNote
 
 -- TODO set logging level
 -- TODO more options?
+data ExportBackend = ToXml | ToLy | ToMidi | ToLyAndMidi
 data CommandLineOptions
-  = ToXml FilePath
-  | ToLy LilypondOptions FilePath
-  | ToMidi FilePath
-  | Help
+  = CommandLineOptions
+      { -- | Backend to use.
+        backend :: ExportBackend,
+        -- | Lilypond options, ignored when `backend` is not `ToLy`.
+        lilypondOptions :: LilypondOptions,
+        -- | Path to generated file.
+        output :: FilePath
+      }
 
--- TOOD Proper parser using optparse-applicative or optparse-generic
-parse :: Applicative m => [String] -> m CommandLineOptions
-parse ("-f" : "xml" : "-o" : path : _) = pure $ ToXml path
-parse ("-f" : "ly" : "-o" : path : _) = pure $ ToLy defaultLilypondOptions path
-parse ("-f" : "ly" : "--layout=inline" : "-o" : path : _) = pure $ ToLy (defaultLilypondOptions {layout = LilypondInline}) path
-parse ("-f" : "mid" : "-o" : path : _) = pure $ ToMidi path
-parse _ = pure Help
+parseOpts :: O.Parser CommandLineOptions
+parseOpts =
+  CommandLineOptions
+    <$> O.option
+      (O.eitherReader readBackend)
+      (O.long "filetype" <> O.short 'f' <> O.metavar "[xml|ly|mid|ly+mid]")
+    <*> parseLyOpts
+    <*> (O.strOption (O.long "out" <> O.short 'o' <> O.metavar "PATH"))
+  where
+    readBackend = \case
+      "xml" -> Right ToXml
+      "mid" -> Right ToMidi
+      "ly" -> Right ToLy
+      "ly+mid" -> Right ToLyAndMidi
+      "mid+ly" -> Right ToLyAndMidi
+      s -> Left ("Backend must be one of [xml|ly|mid|ly+mid], not " <> s)
+
+parseLyOpts :: O.Parser LilypondOptions
+parseLyOpts =
+  LilypondOptions
+    <$> O.option
+      (O.eitherReader readLayout)
+      (O.long "layout" <> O.metavar "[inline|score|big-score] (default big-score)")
+    <|> pure defaultLilypondOptions
+  where
+    readLayout = \case
+      "inline" -> Right LilypondInline
+      "score" -> Right LilypondScore
+      "big-score" -> Right LilypondBigScore
+      _ -> Left "Lilypond layout must be one of [inline|score|big-score]"
+
+
 
 defaultMain :: Music -> IO ()
 defaultMain music = do
-  args <- System.Environment.getArgs
-  opts <- parse args
-  case opts of
-    Help ->
-      putStrLn
-        "Usage: <executable> -f [xml|ly|mid] -o PATH"
-    ToMidi path -> do
-      midi <- runIOExportM $ toMidi music
-      Codec.Midi.exportFile path midi
-    ToLy opts path -> do
-      work <- runIOExportM $ fromAspects music
-      (h, ly) <- runIOExportM $ toLy opts work
-      let ly' = h ++ show (Text.Pretty.pretty ly)
-      -- TODO use ByteString/builders, not String?
-      writeFile path ly'
-    ToXml path -> do
-      work <- runIOExportM $ fromAspects music
-      work' <- runIOExportM $ toXml work
-      -- TODO use ByteString/builders, not String?
-      writeFile path $ Data.Music.MusicXml.showXml work'
+  opts <- O.execParser $ O.info (parseOpts <**> O.helper) O.fullDesc
+  handle opts
+  where
+    handle opts = case backend opts of
+      ToLyAndMidi -> do
+        -- TODO run in parallel?
+        handle $ opts {backend = ToMidi, output = stripSuffix (output opts) ++ ".mid"}
+        handle $ opts {backend = ToLy}
+      ToMidi -> do
+        midi <- runIOExportM $ toMidi music
+        Codec.Midi.exportFile (output opts) midi
+      ToLy -> do
+        work <- runIOExportM $ toStandardNotation music
+        (h, ly) <- runIOExportM $ toLy (lilypondOptions opts) work
+        let ly' = h ++ show (Text.Pretty.pretty ly)
+        -- TODO use ByteString/builders, not String?
+        writeFile (output opts) ly'
+      ToXml -> do
+        work <- runIOExportM $ toStandardNotation music
+        work' <- runIOExportM $ toXml work
+        -- TODO use ByteString/builders, not String?
+        writeFile (output opts) $ Data.Music.MusicXml.showXml work'
 
--- TODO remove!
-fromPitch'' :: IsPitch a => Pitch -> a
-fromPitch'' = fromPitch
-{-# DEPRECATED fromPitch'' "Use fromPitch (no primes!)" #-}
+stripSuffix :: String -> String
+stripSuffix xs
+  | '.' `elem` xs = reverse $ drop 1 $ dropWhile (/= '.') $ reverse xs
+  | otherwise = xs
+
+-- TODO move
 
 -- | Orchestrate in the given parts.
-singleParts :: (Monoid a, Semigroup a, HasParts' a) => [Music.Score.Part.Part a] -> [a] -> a
+singleParts :: (Monoid a, Semigroup a, HasPosition a, Transformable a, HasParts' a) => [Music.Score.Part.Part a] -> [a] -> a
 singleParts ens = ppar . zipWith (set parts') (reverse $ ens)
+
+-- TODO move
 
 -- | Orchestrate by doubling the given music in all given parts.
 --
@@ -133,14 +162,14 @@ singleParts ens = ppar . zipWith (set parts') (reverse $ ens)
 doubleParts :: (Monoid a, HasParts' a) => [Music.Score.Part.Part a] -> a -> a
 doubleParts ps x = mconcat $ fmap (\p -> set parts' p x) ps
 
+-- TODO move
 doublePartsF :: (Monoid (f a), HasParts' a, Functor f) => [Music.Score.Part.Part a] -> f a -> f a
 doublePartsF ps x = mconcat $ fmap (\p -> set (mapped . parts') p x) ps
+
+-- TODO move
 
 -- | Orchestrate by doubling in all given parts.
 --
 -- >>> doublePartsInOctave [(violins,0),(flutes,1)] $ pseq[c,d,e]
 doublePartsInOctave :: (Monoid a, Transposable a, HasParts' a) => [(Music.Score.Part.Part a, Int)] -> a -> a
 doublePartsInOctave ps x = mconcat $ fmap (\(p, n) -> set parts' p $ octavesUp (fromIntegral n) x) ps
-
-doublePartsInOctaveF :: (Monoid (f a), Transposable a, HasParts' a, Functor f) => [(Music.Score.Part.Part a, Int)] -> f a -> f a
-doublePartsInOctaveF ps x = mconcat $ fmap (\(p, n) -> set (mapped . parts') p $ fmap (octavesUp (fromIntegral n)) x) ps

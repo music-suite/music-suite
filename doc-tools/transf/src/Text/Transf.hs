@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TupleSections #-}
 
@@ -389,6 +390,7 @@ header =
   -}
   import Music.Prelude
   import qualified Data.List
+  import qualified Data.List.NonEmpty
   import qualified Control.Lens
   main :: IO ()
   main = defaultMain $ id @Music $

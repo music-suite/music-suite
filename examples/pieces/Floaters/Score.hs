@@ -16,7 +16,7 @@ TODO make a 10-15 minute piece:
   - Orchestrate in strings/winds and various combinations
   - Also work with dynamics
   - Use sequencing and overlapping
-  
+
   - Everything is quantized to 1/4-notes to keep things simple
 -}
 testFloater :: Floater StandardNote -> IO ()
@@ -30,15 +30,16 @@ floater1 :: IsPitch a => Floater a
 floater1 = Floater $ zipWith (aligned 0) [0,0.5,0.75] [c,d,e,f,g,a,b,c']
 
 floater2 :: IsPitch a => Floater a
-floater2 = Floater $ zipWith (aligned 0) 
+floater2 = Floater $ zipWith (aligned 0)
   (fmap (/ 8) [1,2,5,6,1,7,2,3])
   [c,d,e,f,g,a,b,c']
 
 floater3 :: IsPitch a => Floater a
-floater3 = Floater $ zipWith (aligned 0) 
+floater3 = Floater $ zipWith (aligned 0)
   (fmap (/ 8) [6,1,2,5,1,7,2,3])
   (cycle [gs,ds,as])
 
 
 
 music = text "Hello!" c
+main = defaultMain music

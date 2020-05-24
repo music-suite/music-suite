@@ -29,7 +29,7 @@ tintin' melInterval
     | isNegative melInterval = error "tintin: Negative interval"
     | otherwise              = last $ takeWhile (< melInterval) $ tintinStandardNotes
     where
-        tintinStandardNotes = concat $ iterate (fmap (+ _P8)) minorTriad
+        tintinStandardNotes = concat $ iterate (fmap (^+^ _P8)) minorTriad
         minorTriad = [_P1,m3,_P5]
 
 fallingScale :: IsPitch a => [Score a]
@@ -64,16 +64,15 @@ strings = ppar [
 
 -- music :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
 music :: Music
-music = meta $ stretch (3/2) $ bell <> delay 6 strings
+music = filterWithTime (\t _ _ -> t < 50) $ meta $ stretch (3/2) $ bell <> delay 6 strings
     where
         meta = id
           . title "Cantus in Memoriam Benjamin Britten"
-          . composer "Arvo" -- TODO why does Unicode break? Pärt"
+          . composer "Arvo Part"
           . timeSignature (6/4)
           . tempo (metronome (1/4) 120)
 
--- openBook :: Score StandardNote -> IO ()
--- openBook = openLilypond' LyScoreFormat
---
+-- FIXME shell gets stuck in TypesettingMusic stage, likely because it doesn't handle
+-- multi-page output!
 main :: IO ()
 main = defaultMain music

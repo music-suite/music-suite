@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
+
 -------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
@@ -24,4 +33,4 @@ import Data.Maybe
 import Data.Monoid.Average
 import Data.Semigroup
 
-type Dynamics = Average Double
+type Dynamics = Average Rational

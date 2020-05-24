@@ -31,11 +31,11 @@ music = let
       |> (level mp . legato)
          (pseq [g,f,e,d] |> c |> (d |> e)|/2 |> f |> e |> d|*8)
 
-  in meta $ compress 8 $ left <> set parts' cellos (down _P8 right)
+  in meta $ compress 8 $ left <> set parts' piano2 (down _P8 right)
+
+[_,piano2] = divide 2 $ tutti piano
 
 crescX :: Dynamics -> Dynamics -> Music -> Music
 crescX a b = over phrases' (cresc a b)
-
--- TODO this makes Lilypond segfault, see TODO.md
 
 main = defaultMain music

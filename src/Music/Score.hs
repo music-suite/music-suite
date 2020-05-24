@@ -23,9 +23,6 @@ module Music.Score
     module Music.Score.Meta.Time,
     module Music.Score.Meta.Tempo,
     module Music.Score.Meta.Annotations,
-    module Music.Score.Import.Abc,
-    module Music.Score.Import.Lilypond,
-    module Music.Score.Import.Midi,
     module Music.Time,
     module Control.Lens.Operators,
     module Control.Applicative,
@@ -43,7 +40,7 @@ where
 
 import Control.Applicative
 import Control.Lens (from, toListOf, view)
-import Control.Lens.Operators hiding ((<.>), (<|), (|>))
+import Control.Lens.Operators ((%~), (.~), (^.), (^?), (^?!))
 import Control.Monad hiding (mapM)
 import Control.Monad.Plus
 import Data.AffineSpace

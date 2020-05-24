@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
+
 module Music.Parts.Group where
 
 import Control.Applicative
@@ -94,8 +103,11 @@ import Text.Numeral.Roman (toRoman)
 
 -}
 
-type BarLines = Bool
+-- | How to draw to barlines between staff groups.
+data BarLines = HideBarlines | ShowBarlines
+  deriving (Eq, Ord, Show, Enum, Bounded)
 
+-- | Staff group types.
 data GroupType
   = Invisible
   | Bracket -- ly: StaffGroup,  xml: GroupSymbol=bracket
@@ -104,22 +116,24 @@ data GroupType
   | GrandStaff -- ly: GrandStaff,  xml: GroupSymbol=brace
   deriving (Eq, Ord, Show)
 
-data Group a
+-- | A tree of values with instruments and bracketing.
+data ScoreLayout a
   = Single (Instrument, a)
-  | Many GroupType BarLines [Group a]
-  deriving (Eq, Ord, Show, Functor)
+  | Many GroupType BarLines [ScoreLayout a]
+  deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
-groupDefault :: [(Instrument, a)] -> Group a
+-- | Default score layout with woodwinds at the top, strings at the bottom.
+groupDefault :: [(Instrument, a)] -> ScoreLayout a
 groupDefault xs =
   Many
     Invisible
-    False
-    [ Many Bracket True $ fmap Single ww,
-      Many Bracket True $ fmap Single br,
-      Many Bracket True $ fmap Single pc,
-      Many Invisible True $ fmap Single kb,
-      Many Bracket False $ fmap Single voc,
-      Many Bracket True $ fmap Single str
+    HideBarlines
+    [ Many Bracket ShowBarlines $ fmap Single ww,
+      Many Bracket ShowBarlines $ fmap Single br,
+      Many Bracket ShowBarlines $ fmap Single pc,
+      Many Invisible ShowBarlines $ fmap Single kb,
+      Many Bracket HideBarlines $ fmap Single voc,
+      Many Bracket ShowBarlines $ fmap Single str
     ]
   where
     ww = filter (isWoodwindInstrument . fst) xs

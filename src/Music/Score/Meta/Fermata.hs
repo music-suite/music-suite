@@ -9,6 +9,14 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------
@@ -32,9 +40,6 @@ module Music.Score.Meta.Fermata
     -- ** Adding fermatas to scores
     fermata,
     fermataAt,
-
-    -- ** Extracting fermatas
-    withFermata,
   )
 where
 
@@ -67,12 +72,10 @@ data Fermata = StandardFermata | LongFermata | VeryLongFermata
 
 -- | Add a fermata over the whole score.
 fermata :: (HasMeta a, HasPosition a, Transformable a) => Fermata -> a -> a
-fermata c x = fermataAt (_onset x) c x
+fermata c x = case _era x of
+  Nothing -> x
+  Just e -> fermataAt (view onset e) c x
 
 -- | Add a fermata to the given score.
 fermataAt :: HasMeta a => Time -> Fermata -> a -> a
 fermataAt s c = addMetaNote $ view event (s <-> s, (Option $ Just $ Last c))
-
--- | Extract fermatas in from the given score, using the given default fermata.
-withFermata :: (Fermata -> Score a -> Score a) -> Score a -> Score a
-withFermata f = withMeta (maybe id f . fmap getLast . getOption)

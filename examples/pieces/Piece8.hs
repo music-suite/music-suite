@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Werror #-}
 {-# LANGUAGE TypeFamilies, ScopedTypeVariables, ConstraintKinds, FlexibleContexts, FlexibleInstances, TypeFamilies, DeriveFunctor,
   GeneralizedNewtypeDeriving, ViewPatterns, MultiParamTypeClasses, RankNTypes, ConstraintKinds, StandaloneDeriving,
   DeriveTraversable, DeriveDataTypeable, TupleSections #-}
@@ -47,7 +48,7 @@ silentBass = [((3/4),Just c_)^.note,((3/4),Just c_)^.note,((3/4),Just g_)^.note,
 -- Example of why melodies as sequences doesn't really make sense (we can't just move the pickup to the position of the final tonic)
 fs1 = beginning 20 $ mconcat $ stitchTogether fiskeskar
 -- Split off part at beginning, transform before stitching back together
-fs2 = (rev $ beginning 2.5 $ fiskeskar) `stitch` fiskeskar
+fs2 = (retr $ beginning 2.5 $ fiskeskar) `stitch` fiskeskar
 -- Expand chunks, gradually increasing
 fs3 = simplifyPitches $ beginning 40 $ mconcat $ zipWith (\n -> over pitches (relative d  (^*n))) [1..] (chunks 4.25 $ cycleV fiskeskar)
 fs4 = simplifyPitches $ beginning 40 $ mconcat $ zipWith (\n -> over pitches (relative a  (^*n))) [1..] (chunks 4.25 $ cycleV fiskeskar)
@@ -61,14 +62,23 @@ fs9  = expandInto (2+1/4) fiskeskar (between (2/4) (5/4) fiskeskar)
 fs10 = expandInto (5+1/4) fiskeskar (between (0/4) (3/4) fiskeskar)
 
 music :: Music
-music = (error "TODO")
-  [ fs1, fs2, fs3, fs7, fs8, fs9, fs10 ]
+music =
+  (silentNight |* (4/3)) |> fiskeskarChorale
+  where
+  silentNight = fmap (fmap fromPitch) $
+    renderAlignedVoice (aligned 0 0 silent)
+    <>
+    renderAlignedVoice (aligned 0 0 silentBass)
+  fiskeskarChorale = rcat $ fmap (fmap $ fmap fromPitch)
+    $ fmap (renderAlignedVoice . aligned 0 0) [ fs1, fs2, fs3, fs4, fs5, fs6, fs7, fs8, fs9, fs10 ]
 
 -- TODO FIXME add?
 -- See $splitSemantics in TODO.md
-instance HasDuration a => HasDuration (Maybe a)
--- TODO FIXME add?
-instance Splittable a => Splittable (Maybe a)
+
+-- TODO bad?
+instance HasDuration a => HasDuration (Maybe a) where
+  _duration Nothing = error "No duration"
+  _duration (Just x) = _duration x
 
 {-
 All rather chaotic! Stitch is interesting, but not that intuitive!
@@ -194,10 +204,10 @@ I.e. it becomes possible to cut out notes.
 
 
 -- Melody as vector
-melodicAmbitus :: (HasPitch' a, Music.Score.Pitch.Pitch a ~ Pitch) => Voice a -> Ambitus Pitch
+melodicAmbitus :: (HasPitch' a, Music.Score.Pitch.Pitch a ~ Pitch) => Voice a -> Ambitus Interval Pitch
 melodicAmbitus ys =
   let xs = fmap (^.pitch) ys in case (headV xs, lastV xs) of
-  (Just a, Just b) -> (a `min` b, a `max` b)^.ambitus
+  (Just a, Just b) -> Ambitus (a `min` b) (a `max` b)
   _                -> error "melodicAmbitus: Empty voice"
 
 
@@ -223,11 +233,11 @@ llPitches3 = [c',db',c',db',c',db']
 -- Repeat twice
 ll :: Melody
 ll =  mconcat $ fmap (\(a,b,c) -> mel a b c) [
-  (llRh1, llPat1, llPitches1), --  I smell women / Smell 'em in the air
-  (llRh2, llPat2, llPitches1), --  Think I'll drop my anchor / In that harbor over there
-  (llRh1, llPat1, llPitches2), --  Lovely ladies / Smell 'em through the smoke
-  (llRh2, llPat2, llPitches2), --  Seven months at sea / And now I'm hungry for a poke
-  (llRh1, llPat1, llPitches3)  --  Even stokers need a little stoke!
+  (llRh1, llPat1, llPitches1),
+  (llRh2, llPat2, llPitches1),
+  (llRh1, llPat1, llPitches2),
+  (llRh2, llPat2, llPitches2),
+  (llRh1, llPat1, llPitches3)
   ]
 
 
@@ -256,36 +266,7 @@ stitchItself v = stitch v (stitchItself v)
 
 
 
-{-
-  Note: stitch should really have the constraint (HasPitch' a, Transposable a) and be implemented using ^.pitch instead of ^?!pitches
-  Not practical as long as [] is in StandardNote!
--}
--- Join two voices together so that one note overlaps. The second voice is transposed to achieve this.
--- Duration is taken from the first voice.
-stitch :: (HasPitches' a, Transposable a) => Voice a -> Voice a -> Voice a
-stitch = stitchWith (\a b -> [a]^.voice)
-
--- Join two voices together so that one note overlaps. The second voice is transposed to achieve this.
--- Duration is taken from the second voice.
-stitchLast :: (HasPitches' a, Transposable a) => Voice a -> Voice a -> Voice a
-stitchLast = stitchWith (\a b -> [b]^.voice)
-
 main = defaultMain music
-
-stitchWith :: forall a . (HasPitches' a, Transposable a) => (Note a -> Note a -> Voice a) -> Voice a -> Voice a -> Voice a
-stitchWith f a b
-  | nullOf notes a = b
-  | nullOf notes b = a
-  -- | otherwise      = a <> up diff b
-  | otherwise      = initV a <> f (lastV a) (headV (up diff b)) <> tailV (up diff b)
-  where
-    headV = (^?!notes._head)
-    lastV = (^?!notes._last)
-    initV = over notes init
-    tailV = over notes tail
-    lastPitch a = lastV a^?!pitches
-    headPitch b = headV b^?!pitches
-    diff = (lastPitch a .-. headPitch b)
 
 
 type VS a = [Placed (Voice a)]
@@ -330,6 +311,8 @@ rotateRhythm n = over melodyAsRhythm (rotateR n)
 transposeSingleNote :: Int -> Interval -> Melody -> Melody
 transposeSingleNote n i = over (notes . element n) (up i)
 
+retr :: Voice a -> Voice a
+retr = over notes reverse
 
 {-
 Surprisingly effective for a "stupid" combinator.
@@ -345,7 +328,7 @@ addLeadingD i = over notes (>>= \n -> [0.75*|n,0.25*|downDiatonic c (fromIntegra
 -}
 
 -- Expand notes/adjacent notes to longer sequences
-expandInto :: (HasPitches' a, Transposable a, Splittable a, Transformable a) => Duration -> Voice a -> Voice a -> Voice a
+expandInto :: (HasPitches' a, HasDuration a, Transposable a, Splittable a, Transformable a) => Duration -> Voice a -> Voice a -> Voice a
 expandInto d v w = va `stitch` w `stitch` vb
   where
     (va,vb) = split d v

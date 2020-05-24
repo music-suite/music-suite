@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
+
 -- |
 -- Provides a way to query a value for its 'position'.
 module Music.Time.Position
@@ -5,10 +14,14 @@ module Music.Time.Position
 
     -- * The HasPosition class
     HasPosition (..),
+    HasPosition1 (..),
+    _position,
+    _position1,
 
     -- * Position and Era
     position,
     era,
+    setEra,
 
     -- ** Specific positions
     onset,
@@ -16,12 +29,14 @@ module Music.Time.Position
     offset,
     preOnset,
     postOffset,
-    postOnset,
 
     -- * Moving
     startAt,
     stopAt,
     placeAt,
+
+    -- * Transforming
+    stretchTo,
 
     -- * Transforming relative a position
     stretchRelative,
@@ -32,10 +47,6 @@ module Music.Time.Position
     transformRelativeOnset,
     transformRelativeMidpoint,
     transformRelativeOffset,
-
-    -- * Legacy
-    _onset,
-    _offset,
   )
 where
 
@@ -43,7 +54,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,
@@ -63,95 +73,118 @@ import Data.VectorSpace hiding (Sum)
 import Music.Time.Duration
 import Music.Time.Internal.Util
 
--- |
--- Class of values that have a position in time.
+-- TODO: resture _position to HasPosition, then restore this comment:
 --
 -- Many values such as notes, envelopes etc can in fact have many positions such as onset,
 -- attack point, offset, decay point time etc. Rather than having separate methods for a
 -- fixed set of cases, this class provides an interpolation from a /local/ position to
 -- a /global/ position. While the local position goes from zero to one, the global position
 -- goes from the 'onset' to the 'offset' of the value.
---
--- Instances should satisfy:
---
--- @
--- x ^. 'duration'   = x ^. 'era' . 'duration'
--- x ^. 'position' n = x ^. 'era' . 'position' n
--- ('transform' s x) ^. 'era' = 'transform' s (x ^. 'era')
--- @
-class HasDuration a => HasPosition a where
 
-  -- | Map a local time in value to global time.
-  _position :: a -> Duration -> Time
-  _position x = alerp a b where (a, b) = (_era x) ^. onsetAndOffset
-
+-- |
+-- Class of values that have a position in time.
+--
+-- ==== Laws
+--
+-- [/duration-position/]
+--
+-- For 'HasDuration' instances:
+--
+--    @fmap '_duration' . '_era' = Just . '_duration'@
+--
+-- [/transform-position/]
+--
+-- For 'Transformable' instances:
+--
+--    @'_era' ('transform' s x) = fmap ('transform' s) ('_era' x)@
+class HasPosition a where
   -- | Return the conventional bounds of a value (local time zero and one).
-  _era :: HasPosition a => a -> Span
-  _era x = x `_position` 0 <-> x `_position` 1
-
-  {-# MINIMAL (_position | _era) #-}
+  _era :: a -> Maybe Span
 
 instance HasPosition Span where
-  _era = id
+  _era = Just
 
-instance (HasPosition a, Transformable a) => HasDuration [a] where
-  _duration x = _offset x .-. _onset x
+-- |
+-- Class of values that have a position in time.
+--
+-- ==== Laws
+--
+-- [/duration-position/]
+--
+-- For 'HasDuration' instances:
+--
+--    @'_duration' . '_era1' = '_duration'@
+--
+-- [/transform-position/]
+--
+-- For 'Transformable' instances:
+--
+--    @'_era1' ('transform' s x) = 'transform' s ('_era1' x)@
+class HasPosition a => HasPosition1 a where
+  _era1 :: a -> Span
 
-instance (HasPosition a, Transformable a) => HasPosition [a] where
-  _era x = (f x, g x) ^. from onsetAndOffset
-    where
-      f = foldr min 0 . fmap _onset
-      g = foldr max 0 . fmap _offset
+instance HasPosition1 Span where
+  _era1 = id
+
+-- | Map a local time in value to global time.
+_position :: HasPosition a => a -> Duration -> Maybe Time
+_position x d = do
+  e <- _era x
+  let (a, b) = e ^. onsetAndOffset
+  pure $ alerp a b d
+
+-- | Map a local time in value to global time.
+_position1 :: HasPosition1 a => a -> Duration -> Time
+_position1 x d =
+  let e = _era1 x
+      (a, b) = e ^. onsetAndOffset
+   in alerp a b d
 
 -- |
 -- Position of the given value.
-position :: (HasPosition a, Transformable a) => Duration -> Lens' a Time
-position d = lens (`_position` d) (flip $ placeAt d)
-{-# INLINE position #-}
+position :: (HasPosition1 a, Transformable a) => Duration -> Lens' a Time
+position d = lens (`_position1` d) (flip $ placeAt d)
+{-# INLINEABLE position #-}
 
 -- |
--- Onset of the given value.
-onset :: (HasPosition a, Transformable a) => Lens' a Time
+-- Onset of the given value, corresponding to alignment @0@.
+onset :: (HasPosition1 a, Transformable a) => Lens' a Time
 onset = position 0
-{-# INLINE onset #-}
+{-# INLINEABLE onset #-}
 
 -- |
--- Onset of the given value.
-offset :: (HasPosition a, Transformable a) => Lens' a Time
+-- Offset of the given value, corresponding to alignment @1@.
+offset :: (HasPosition1 a, Transformable a) => Lens' a Time
 offset = position 1
-{-# INLINE offset #-}
+{-# INLINEABLE offset #-}
 
 -- |
 -- Pre-onset of the given value, or the value right before the attack phase.
-preOnset :: (HasPosition a, Transformable a) => Lens' a Time
+preOnset :: (HasPosition1 a, Transformable a) => Lens' a Time
 preOnset = position (-0.5)
-{-# INLINE preOnset #-}
+{-# INLINEABLE preOnset #-}
 
 -- |
 -- Midpoint of the given value, or the value between the decay and sustain phases.
-midpoint :: (HasPosition a, Transformable a) => Lens' a Time
+midpoint :: (HasPosition1 a, Transformable a) => Lens' a Time
 midpoint = position 0.5
-{-# INLINE midpoint #-}
-
-postOnset :: (HasPosition a, Transformable a) => Lens' a Time
-postOnset = position 0.5
-{-# DEPRECATED postOnset "Use midpoint" #-}
+{-# INLINEABLE midpoint #-}
 
 -- |
 -- Post-offset of the given value, or the value right after the release phase.
-postOffset :: (HasPosition a, Transformable a) => Lens' a Time
+postOffset :: (HasPosition1 a, Transformable a) => Lens' a Time
 postOffset = position 1.5
-{-# INLINE postOffset #-}
+{-# INLINEABLE postOffset #-}
 
 -- |
 -- Move a value forward in time.
 startAt :: (Transformable a, HasPosition a) => Time -> a -> a
-startAt t x = (t .-. x ^. onset) `delay` x
+startAt = placeAt 0
 
 -- |
 -- Move a value forward in time.
 stopAt :: (Transformable a, HasPosition a) => Time -> a -> a
-stopAt t x = (t .-. x ^. offset) `delay` x
+stopAt = placeAt 1
 
 -- |
 -- Align a value to a given position.
@@ -162,34 +195,51 @@ stopAt t x = (t .-. x ^. offset) `delay` x
 -- 'placeAt' 0 = 'startAt'
 -- 'placeAt' 1 = 'stopAt'
 -- @
-placeAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
-placeAt p t x = (t .-. x `_position` p) `delay` x
+placeAt :: (Transformable a, HasPosition a) => Alignment -> Time -> a -> a
+placeAt p t x = case x `_position` p of
+  Nothing -> x
+  Just xp -> (t .-. xp) `delay` x
 
+-- |
+-- Stretch a value to have the given duration.
+stretchTo :: (Transformable a, HasPosition a) => Duration -> a -> a
+stretchTo d x = case _era x of
+  Nothing -> x
+  Just e -> (d ^/ _duration e) `stretch` x
+{-# INLINE stretchTo #-}
+
+{-
 _onset, _offset :: (HasPosition a, Transformable a) => a -> Time
 _onset = (`_position` 0)
 _offset = (`_position` 1.0)
+
+-}
 
 -- |
 -- Place a value over the given span.
 --
 -- @placeAt s t@ places the given thing so that @x^.place = s@
-_setEra :: (HasPosition a, Transformable a) => Span -> a -> a
-_setEra s x = transform (s ^-^ view era x) x
+setEra :: (HasPosition a, Transformable a) => Span -> a -> a
+setEra s x = case _era x of
+  Nothing -> x
+  Just e ->
+    transform (s ^-^ e) x
+
+era :: (HasPosition1 a, Transformable a) => Lens' a Span
+era = lens _era1 $ flip setEra
 
 -- |
--- A lens to the position
-era :: (HasPosition a, Transformable a) => Lens' a Span
-era = lens _era (flip _setEra)
-{-# INLINE era #-}
-
--- |
+-- Stretch a value relative to its local origin.
+--
 -- @
 -- stretchRelativeOnset    = stretchRelative 0
 -- stretchRelativeMidpoint = stretchRelative 0.5
 -- stretchRelativeOffset   = stretchRelative 1
 -- @
-stretchRelative :: (HasPosition a, Transformable a) => Duration -> Duration -> a -> a
-stretchRelative p n x = over (transformed $ undelaying (realToFrac $ x ^. position p)) (stretch n) x
+stretchRelative :: (HasPosition a, Transformable a) => Alignment -> Duration -> a -> a
+stretchRelative p n x = case _era x of
+  Nothing -> x
+  Just e -> over (transformed $ undelaying (realToFrac $ e ^. position p)) (stretch n) x
 
 -- |
 -- Stretch a value relative to its onset.
@@ -215,14 +265,30 @@ stretchRelativeMidpoint = stretchRelative 0.5
 stretchRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
 stretchRelativeOffset = stretchRelative 1
 
-transformRelative :: (HasPosition a, Transformable a) => Duration -> Span -> a -> a
-transformRelative p n x = over (transformed $ undelaying (realToFrac $ x ^. position p)) (transform n) x
+-- |
+-- Transform a value relative to its local origin.
+--
+-- @
+-- stretchRelativeOnset    = stretchRelative 0
+-- stretchRelativeMidpoint = stretchRelative 0.5
+-- stretchRelativeOffset   = stretchRelative 1
+-- @
+transformRelative :: (HasPosition a, Transformable a) => Alignment -> Span -> a -> a
+transformRelative p n x = case _era x of
+  Nothing -> x
+  Just e -> over (transformed $ undelaying (realToFrac $ e ^. position p)) (transform n) x
 
+-- |
+-- Transform a value relative to its onset.
 transformRelativeOnset :: (HasPosition a, Transformable a) => Span -> a -> a
 transformRelativeOnset = transformRelative 0
 
+-- |
+-- Transform a value relative to its midpoint.
 transformRelativeMidpoint :: (HasPosition a, Transformable a) => Span -> a -> a
 transformRelativeMidpoint = transformRelative 0.5
 
+-- |
+-- Transform a value relative to its offset.
 transformRelativeOffset :: (HasPosition a, Transformable a) => Span -> a -> a
 transformRelativeOffset = transformRelative 1

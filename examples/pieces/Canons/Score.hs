@@ -6,6 +6,8 @@ module Main where
 import Music.Prelude
 import Util
 
+main = defaultMain music
+
 {-
 48 (or 64) canons for 2 or 2-4 voices.
 

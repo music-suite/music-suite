@@ -17,7 +17,7 @@ How to categorize:
     - Phased or random patterns
     - Tremolo between 2 chords (in one instrument or several)
 
-    
+
     ...
 -}
 arp, arpUD
@@ -63,20 +63,20 @@ chords = [[c,e,g,b,d'],[db,fb,ab,c',eb'],[g_,b_,d,fs,a],[ab_,as_,eb,g,bb],[c,e,g
 --   , [fs_,a_, cs ]
 --   , [g_ ,a_, b_ ]^*1.5
 --   , [fs_,a_, cs ]
--- 
+--
 --   , [fs_,as_,d ]
 --   , [g_,bb_,eb  ]
 --   , [gs_,b_,e   ]
--- 
+--
 --   ]
 
 getHomophonic :: Transformable a => Score a -> [Chord a]
 getHomophonic s = toListOf traverse $ simultaneous $ fmap (\x -> [x])s
 
-
+{-
 instance Reversible a => Reversible (Score a) where
   rev = fmap rev . stretch (-1)
 instance Reversible Pitch where
   rev = id
-
-  
+-}
+main = defaultMain music

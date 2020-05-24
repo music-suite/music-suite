@@ -1,5 +1,13 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 ------------------------------------------------------------------------------------
 
@@ -26,9 +34,11 @@ import Data.Ratio
 -- |
 -- Class of things that can be altered.
 --
--- > accidental (sharpen a) = sharpen (accidental a)
--- > accidental (flatten a) = flatten (accidental a)
--- > sharpen . flatten      = id
+-- ==== Laws
+--
+-- [/inverse/]
+--
+--    @sharpen . flatten = id = flatten . sharpen@
 class Alterable a where
 
   -- |
@@ -40,6 +50,12 @@ class Alterable a where
   flatten :: a -> a
 
 instance Alterable a => Alterable (b -> a) where
+
+  sharpen = fmap sharpen
+
+  flatten = fmap flatten
+
+instance Alterable a => Alterable (Maybe a) where
 
   sharpen = fmap sharpen
 
@@ -90,3 +106,4 @@ alter n x
   | n < 0 = iterate flatten x !! (abs n)
   | n == 0 = x
   | n > 0 = iterate sharpen x !! n
+  | otherwise = error "impossible"

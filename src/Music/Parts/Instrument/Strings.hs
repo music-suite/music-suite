@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
+
 module Music.Parts.Instrument.Strings
   ( StringInstrument,
     stringInstrument,
@@ -5,9 +14,6 @@ module Music.Parts.Instrument.Strings
     StringTuning,
     standardTuning,
     allowedTunings,
-    isAllowedTuning,
-    isStandardTuning,
-    isNonStandardTuning,
     HarmonicPosition,
     naturalHarmonicPositions,
   )
@@ -41,15 +47,6 @@ standardTuning = error "No standardTuning"
 
 allowedTunings :: StringInstrument -> Set StringTuning
 allowedTunings = error "No allowedTunings"
-
-isAllowedTuning :: StringInstrument -> StringTuning -> Bool
-isAllowedTuning = error "No isAllowedTuning"
-
-isStandardTuning :: StringInstrument -> StringTuning -> Bool
-isStandardTuning = error "No isStandardTuning"
-
-isNonStandardTuning :: StringInstrument -> StringTuning -> Bool
-isNonStandardTuning = error "No isNonStandardTuning"
 
 type HarmonicPosition = Integer
 

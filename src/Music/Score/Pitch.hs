@@ -2,11 +2,16 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wall
+{-# OPTIONS_GHC -Weverything
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
+  -fno-warn-missing-local-signatures
+  -fno-warn-unsafe
+  -fno-warn-unused-type-patterns
+  -fno-warn-identities
+  -fno-warn-missing-import-lists
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
@@ -31,8 +36,6 @@ module Music.Score.Pitch
     _15vb,
     upDiatonic,
     downDiatonic,
-    upChromatic,
-    downChromatic,
 
     -- ** Inversion
     invertPitches,
@@ -40,6 +43,7 @@ module Music.Score.Pitch
     invertChromatic,
 
     -- ** Ambitus
+    pitchRange,
     highestPitch,
     lowestPitch,
     averagePitch,
@@ -47,6 +51,11 @@ module Music.Score.Pitch
     ambitusLowestOctave,
     interpolateAmbitus,
     interpolateAmbitus',
+
+    -- ** Voices
+    stitch,
+    stitchLast,
+    stitchWith,
 
     -- ** Spelling
     simplifyPitches,
@@ -84,7 +93,9 @@ import BasePrelude hiding ((<>))
 import Control.Lens hiding (below, transform)
 import Data.AffineSpace
 import Data.AffineSpace.Point
+import Data.AffineSpace.Point.Offsets (AffinePair)
 import Data.Functor.Couple
+import Data.Kind
 import qualified Data.List
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -95,7 +106,7 @@ import qualified Data.Sequence as Seq
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.VectorSpace hiding (Sum)
-import Music.Pitch.Absolute
+import Music.Pitch.Absolute hiding (octaves)
 import Music.Pitch.Ambitus
 import Music.Pitch.Common hiding (Interval, Pitch)
 import qualified Music.Pitch.Common as Common
@@ -120,12 +131,12 @@ import Music.Time.Voice
 --
 -- For simple types this is identity (they are their own pitch).
 --
--- > PitchOf Pitch = Pitch
+-- > GetPitch Pitch = Pitch
 --
 -- For containers this is a morhism
 --
--- > PitchOf (Voice Pitch) = PitchOf Pitch = Pitch
-type family Pitch (s :: *) :: *
+-- > GetPitch (Voice Pitch) = PitchOf Pitch = Pitch
+type family Pitch (s :: Type) :: Type
 
 -- |
 -- A type function to change the pitch type associate with a given type, where the first argument is the new pitch type,
@@ -138,7 +149,7 @@ type family Pitch (s :: *) :: *
 -- For containers this is a morhism
 --
 -- > SetPitch Hertz (Voice Pitch) = Voice Hertz
-type family SetPitch (b :: *) (s :: *) :: *
+type family SetPitch (b :: Type) (s :: Type) :: Type
 
 -- | Types which has a single pitch (i.e notes, events, the pitches themselves).
 class HasPitches s t => HasPitch s t where
@@ -147,9 +158,7 @@ class HasPitches s t => HasPitch s t where
 
 -- | Types which has multiple pitches (i.e. voices, scores).
 class
-  ( Transformable (Pitch s),
-    Transformable (Pitch t),
-    SetPitch (Pitch t) s ~ t
+  ( SetPitch (Pitch t) s ~ t
   ) =>
   HasPitches s t where
   -- | Access all pitches.
@@ -173,9 +182,9 @@ type instance Pitch () = ()
 
 type instance SetPitch a () = a
 
-instance (Transformable a, a ~ Pitch a) => HasPitch () a where pitch = ($)
+instance (a ~ Pitch a) => HasPitch () a where pitch = ($)
 
-instance (Transformable a, a ~ Pitch a) => HasPitches () a where pitches = ($)
+instance (a ~ Pitch a) => HasPitches () a where pitches = ($)
 
 type instance Pitch (c, a) = Pitch a
 
@@ -230,7 +239,7 @@ type instance Pitch (Aligned a) = Pitch a
 type instance SetPitch b (Aligned a) = Aligned (SetPitch b a)
 
 instance HasPitches a b => HasPitches (Aligned a) (Aligned b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance HasPitch a b => HasPitch (c, a) (c, b) where
   pitch = _2 . pitch
@@ -239,22 +248,22 @@ instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
 instance (HasPitches a b) => HasPitches (Event a) (Event b) where
-  pitches = from event . whilstL pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (Event a) (Event b) where
-  pitch = from event . whilstL pitch
+  pitch = from event . _2 . pitch
 
 instance (HasPitches a b) => HasPitches (Placed a) (Placed b) where
-  pitches = _Wrapped . whilstLT pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (Placed a) (Placed b) where
-  pitch = _Wrapped . whilstLT pitch
+  pitch = _Wrapped . _2 . pitch
 
 instance (HasPitches a b) => HasPitches (Note a) (Note b) where
-  pitches = _Wrapped . whilstLD pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (Note a) (Note b) where
-  pitch = _Wrapped . whilstLD pitch
+  pitch = _Wrapped . _2 . pitch
 
 instance HasPitches a b => HasPitches [a] [b] where
   pitches = traverse . pitches
@@ -277,6 +286,13 @@ instance HasPitches a b => HasPitches (Voice a) (Voice b) where
 instance HasPitches a b => HasPitches (Track a) (Track b) where
   pitches = traverse . pitches
 
+type instance Pitch (NonEmpty a) = Pitch a
+
+type instance SetPitch b (NonEmpty a) = NonEmpty (SetPitch b a)
+
+instance HasPitches a b => HasPitches (NonEmpty a) (NonEmpty b) where
+  pitches = traverse . pitches
+
 {-
 type instance Pitch (Chord a)       = Pitch a
 type instance SetPitch b (Chord a)  = Chord (SetPitch b a)
@@ -285,28 +301,23 @@ instance HasPitches a b => HasPitches (Chord a) (Chord b) where
 -}
 
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
-  pitches =
-    _Wrapped . _2 -- into NScore
-      . _Wrapped
-      . traverse
-      . from event -- this needed?
-      . whilstL pitches
+  pitches = traverse . pitches
 
 type instance Pitch (Sum a) = Pitch a
 
 type instance SetPitch b (Sum a) = Sum (SetPitch b a)
 
 instance HasPitches a b => HasPitches (Sum a) (Sum b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 type instance Pitch (Behavior a) = Behavior a
 
 type instance SetPitch b (Behavior a) = b
 
-instance (Transformable b, b ~ Pitch b) => HasPitches (Behavior a) b where
+instance (b ~ Pitch b) => HasPitches (Behavior a) b where
   pitches = ($)
 
-instance (Transformable b, b ~ Pitch b) => HasPitch (Behavior a) b where
+instance (b ~ Pitch b) => HasPitch (Behavior a) b where
   pitch = ($)
 
 type instance Pitch (Couple c a) = Pitch a
@@ -329,43 +340,48 @@ type instance Pitch (SlideT a) = Pitch a
 
 type instance SetPitch g (SlideT a) = SlideT (SetPitch g a)
 
+type instance Pitch (Ambitus v a) = Pitch a
+
+type instance SetPitch g (Ambitus v a) = Ambitus v (SetPitch g a)
+
 instance (HasPitches a b) => HasPitches (Couple c a) (Couple c b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (Couple c a) (Couple c b) where
   pitch = _Wrapped . pitch
 
 instance (HasPitches a b) => HasPitches (TextT a) (TextT b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (TextT a) (TextT b) where
   pitch = _Wrapped . pitch
 
 instance (HasPitches a b) => HasPitches (HarmonicT a) (HarmonicT b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (HarmonicT a) (HarmonicT b) where
   pitch = _Wrapped . pitch
 
 instance (HasPitches a b) => HasPitches (TieT a) (TieT b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (TieT a) (TieT b) where
   pitch = _Wrapped . pitch
 
 instance (HasPitches a b) => HasPitches (SlideT a) (SlideT b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (SlideT a) (SlideT b) where
   pitch = _Wrapped . pitch
+
+instance (HasPitches a b) => HasPitches (Ambitus v a) (Ambitus v b) where
+  pitches = traverse . pitches
 
 -- |
 -- Associated interval type.
 type Interval a = Diff (Pitch a)
 
 type PitchPair v w = (Num (Scalar v), IsInterval v, IsPitch w)
-
-type AffinePair v w = (VectorSpace v, AffineSpace w)
 
 -- |
 -- Class of types that can be transposed, inverted and so on.
@@ -479,6 +495,12 @@ highestPitch = maximumOf pitches'
 lowestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
 lowestPitch = minimumOf pitches'
 
+pitchRange :: (HasPitches' a, Ord p, p ~ Pitch a) => a -> Maybe (Ambitus v p)
+pitchRange x = do
+  lo <- lowestPitch x
+  hi <- highestPitch x
+  pure $ Ambitus lo hi
+
 -- | Extract the average pitch. Returns @Nothing@ if there are none.
 --
 -- >>> averagePitch (Data.Map.fromList [(True,440::Hertz),(False,445)])
@@ -487,24 +509,26 @@ averagePitch :: (HasPitches' a, Fractional (Pitch a)) => a -> Maybe (Pitch a)
 averagePitch = maybeAverage . Average . toListOf pitches'
 
 -- | The number of whole octaves in an ambitus.
-ambitusOctaves :: Ambitus Common.Pitch -> Int
+ambitusOctaves :: Ambitus Common.Interval Common.Pitch -> Int
 ambitusOctaves = fromIntegral . octaves . ambitusInterval
 
 -- | The lowest octave (relative middle C) in present a given ambitus.
-ambitusLowestOctave :: Ambitus Common.Pitch -> Int
-ambitusLowestOctave = fromIntegral . octaves . (.-. c) . ambitusLowest
+ambitusLowestOctave :: Ambitus Common.Interval Common.Pitch -> Int
+ambitusLowestOctave = fromIntegral . octaves . (.-. c) . Music.Pitch.Ambitus.low
 
 -- |  Interpolate between the highest and lowest points in an ambitus.
 --
 --  Can be used as a primitive contour-based melody generator.
-interpolateAmbitus :: (Ord a, Num a, AffinePair (Diff a) a) => Ambitus a -> Scalar (Diff a) -> a
-interpolateAmbitus a = let (m, n) = a ^. from ambitus in alerp m n
+interpolateAmbitus :: AffinePair v p => Ambitus v p -> Scalar v -> p
+interpolateAmbitus a = let Ambitus m n = a in alerp m n
+
+-- TODO move to Pitch.Ambitus!
 
 -- |
 -- Same as @interpolateAmbitus@ but allow continous interpolation of standard pitch
 -- (as @Scalar (Diff Pitch) ~ Integer@).
-interpolateAmbitus' :: Ambitus Common.Pitch -> Double -> Common.Pitch
-interpolateAmbitus' a x = (^. from pitchDouble) $ interpolateAmbitus (mapAmbitus (^. pitchDouble) a) x
+interpolateAmbitus' :: Ambitus Double Common.Pitch -> Double -> Common.Pitch
+interpolateAmbitus' a x = (^. from pitchDouble) $ interpolateAmbitus (fmap (^. pitchDouble) a) x
   where
     -- We can't interpolate an (Ambitus Pitch) using fractions because of music-pitch/issues/16
     -- Work around by converting pitches into doubles and back
@@ -660,24 +684,69 @@ upChromaticP' _ n p
 simplifyPitches :: (HasPitches' a, Pitch a ~ Common.Pitch) => a -> a
 simplifyPitches = over pitches' simplifyPitch
   where
-    simplifyPitch p = if (accidental p < doubleFlat || accidental p > doubleSharp) then relative c (spell usingSharps) p else p
+    simplifyPitch p
+      | accidental p < doubleFlat = relative c (spell usingFlats) p
+      | accidental p > doubleSharp = relative c (spell usingSharps) p
+      | otherwise = p
+
+-- |
+-- Join two voices together so that one note overlaps. The second voice is
+-- transposed to achieve this.
+--
+-- At the join point the note from the first voice is used. If @a ~ Pitch@,
+-- then 'stitch' and 'stitchLast' are equivalent.
+--
+-- >>> stitch ([c :: Note Pitch,d,e]^.voice) ([c,g]^.voice)
+-- [(1,c)^.note,(1,d)^.note,(1,e)^.note,(1,b)^.note]^.voice
+stitch :: (Transposable a) => Voice a -> Voice a -> Voice a
+stitch = stitchWith (\a b -> [a] ^. voice)
+
+-- Join two voices together so that one note overlaps. The second voice is
+-- transposed to achieve this.
+--
+-- At the join point the note from the first voice is used. If @a ~ Pitch@,
+-- then 'stitch' and 'stitchLast' are equivalent.
+--
+-- At the join point the note from the second voice is used.
+stitchLast :: (Transposable a) => Voice a -> Voice a -> Voice a
+stitchLast = stitchWith (\a b -> [b] ^. voice)
+
+stitchWith ::
+  forall a.
+  (Transposable a) =>
+  (Note a -> Note a -> Voice a) ->
+  Voice a ->
+  Voice a ->
+  Voice a
+stitchWith f a b
+  | nullOf notes a = b
+  | nullOf notes b = a
+  | otherwise = initV a <> f (lastV a) (headV (up diff b)) <> tailV (up diff b)
+  where
+    headV = (^?! notes . _head)
+    lastV = (^?! notes . _last)
+    initV = over notes init
+    tailV = over notes tail
+    lastPitch a = lastV a ^?! pitches
+    headPitch b = headV b ^?! pitches
+    diff = (lastPitch a .-. headPitch b)
 
 type instance Pitch Common.Pitch = Common.Pitch
 
 type instance SetPitch a Common.Pitch = a
 
-instance (Transformable a, a ~ Pitch a) => HasPitch Common.Pitch a where
+instance (a ~ Pitch a) => HasPitch Common.Pitch a where
   pitch = ($)
 
-instance (Transformable a, a ~ Pitch a) => HasPitches Common.Pitch a where
+instance (a ~ Pitch a) => HasPitches Common.Pitch a where
   pitches = ($)
 
 type instance Pitch Hertz = Hertz
 
 type instance SetPitch a Hertz = a
 
-instance (Transformable a, a ~ Pitch a) => HasPitch Hertz a where
+instance (a ~ Pitch a) => HasPitch Hertz a where
   pitch = ($)
 
-instance (Transformable a, a ~ Pitch a) => HasPitches Hertz a where
+instance (a ~ Pitch a) => HasPitches Hertz a where
   pitches = ($)

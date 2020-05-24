@@ -1,5 +1,13 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 ------------------------------------------------------------------------------------
 
@@ -24,11 +32,13 @@ import Data.Functor.Couple
 import Data.Ratio
 
 -- |
--- Class of types that can be augmented.
+-- Class of things that can be augmented.
 --
--- > quality (augment a)  = augment (quality a)
--- > quality (diminish a) = diminish (quality a)
--- > augment . diminish   = id
+-- ==== Laws
+--
+-- [/inverse/]
+--
+--    @augment . diminish = id = diminish . augment@
 class Augmentable a where
 
   -- |
@@ -81,3 +91,4 @@ augmentN n x
   | n < 0 = iterate diminish x !! n
   | n == 0 = x
   | n > 0 = iterate augment x !! n
+  | otherwise = error "impossible"

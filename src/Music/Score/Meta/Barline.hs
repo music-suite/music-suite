@@ -9,6 +9,14 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------
@@ -34,9 +42,6 @@ module Music.Score.Meta.Barline
     -- ** Adding barlines to scores
     barline,
     barlineDuring,
-
-    -- ** Extracting barlines
-    withBarline,
   )
 where
 
@@ -64,17 +69,15 @@ import Music.Time
 import Music.Time.Reactive
 
 -- | Represents an explicitly added barline.
-data Barline = StandardBarline | DoubleBarline | FinalBarline
+data Barline = StandardBarline | DoubleBarline
   deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a barline over the whole score.
 barline :: (HasMeta a, HasPosition a) => Barline -> a -> a
-barline c x = barlineDuring (_era x) c x
+barline c x = case _era x of
+  Nothing -> x
+  Just e -> barlineDuring e c x
 
 -- | Add a barline to the given score.
 barlineDuring :: HasMeta a => Span -> Barline -> a -> a
 barlineDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
-
--- | Extract barlines in from the given score, using the given default barline.
-withBarline :: (Barline -> Score a -> Score a) -> Score a -> Score a
-withBarline f = withMeta (maybe id f . fmap getLast . getOption)

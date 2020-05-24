@@ -1,7 +1,7 @@
-
+{-# LANGUAGE NoMonomorphismRestriction #-}
 module Main where
 
-import Music.Prelude
+import Music.Prelude hiding (snareDrum)
 import Util
 {-
 Encoding of standard popular-music rhythms
@@ -14,8 +14,8 @@ Sources:
 music = fmap toNote basic1
 
 -- TODO proper percussion support
-openHiHat = up d2
-closeHiHat = down d2
+openHiHat = d'
+closeHiHat = d
 hiHat = g'
 bassDrum = f
 snareDrum = c'
@@ -35,12 +35,8 @@ toPattern patterns = compress (fromIntegral $ maximum $ fmap length patterns) $ 
     g 'x' = hiHat
     g 'b' = bassDrum
     g 's' = snareDrum
-    
-
-
-toNote = fromPitch''
 
 
 
-
-
+toNote = fromPitch
+main = defaultMain music

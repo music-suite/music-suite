@@ -39,11 +39,23 @@ import Music.Time.Note
 import Music.Time.Score
 import Music.Time.Voice
 
+-- |
+-- Class of types which allow setting text.
+--
+-- ==== Laws
+--
+-- [/identity/]
+--
+--    @'addText' mempty x = x@
+--
+-- [/composition/]
+--
+--    @'addText' (m <> n) x = 'addText' m ('addText' n x)@
 class HasText a where
 
-  addText :: String -> a -> a
+  addText :: [String] -> a -> a
 
-  default addText :: forall f b. (a ~ f b, Functor f, HasText b) => String -> a -> a
+  default addText :: forall f b. (a ~ f b, Functor f, HasText b) => [String] -> a -> a
   addText s = fmap (addText s)
 
 newtype TextT a = TextT {getTextT :: Couple [String] a}
@@ -53,6 +65,7 @@ newtype TextT a = TextT {getTextT :: Couple [String] a}
       Ord,
       Functor,
       Foldable,
+      Traversable,
       Typeable,
       Applicative,
       Monad,
@@ -63,6 +76,8 @@ runTextT :: TextT a -> ([String], a)
 runTextT (TextT (Couple (ts, x))) = (ts, x)
 
 instance HasText a => HasText (b, a)
+
+instance HasText a => HasText (Maybe a)
 
 instance HasText a => HasText (Couple b a)
 
@@ -83,7 +98,7 @@ instance Wrapped (TextT a) where
 instance Rewrapped (TextT a) (TextT b)
 
 instance HasText (TextT a) where
-  addText s (TextT (Couple (t, x))) = TextT (Couple (t ++ [s], x))
+  addText s (TextT (Couple (t, x))) = TextT (Couple (t ++ s, x))
 
 deriving instance Num a => Num (TextT a)
 
@@ -102,9 +117,9 @@ deriving instance (Real a, Enum a, Integral a) => Integral (TextT a)
 -- |
 -- Attach the given text to the first note.
 text :: (HasPhrases' s a, HasText a) => String -> s -> s
-text s = over (phrases' . _head) (addText s)
+text s = over (phrases' . _head) (addText [s])
 
 -- |
 -- Attach the given text to the last note.
 textLast :: (HasPhrases' s a, HasText a) => String -> s -> s
-textLast s = over (phrases' . _last) (addText s)
+textLast s = over (phrases' . _last) (addText [s])

@@ -10,6 +10,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 -------------------------------------------------------------------------------------
 
@@ -27,26 +35,18 @@
 -- Provides time signatures and related meta-data.
 module Music.Score.Meta.Time
   ( -- * Time signature type
-    TimeSignature,
+    TimeSignature (..),
     time,
     compoundTime,
     isSimpleTime,
     isCompoundTime,
     toSimpleTime,
-    getTimeSignature,
 
     -- * Adding time signature to scores
     timeSignature,
     timeSignatureDuring,
 
-    -- * Extracting time signatures
-    withTimeSignature,
-    getTimeSignatures,
-    getTimeSignatureChanges,
-
     -- * Utility
-    getBarDurations,
-    getBarTimeSignatures,
     standardTimeSignature,
   )
 where
@@ -54,6 +54,7 @@ where
 import Control.Lens ((^.), view)
 import Control.Monad.Plus
 import Data.Bifunctor
+import Data.Bits ((.&.))
 import Data.Foldable (Foldable)
 import qualified Data.Foldable as F
 import qualified Data.List as List
@@ -73,7 +74,7 @@ import Music.Score.Internal.Util
 import Music.Score.Meta
 import Music.Score.Part
 import Music.Score.Pitch
-import Music.Time hiding (time)
+import Music.Time
 
 -- |
 -- A time signature is a sequence of beat numbers and a note value (i.e. an expression on the
@@ -85,7 +86,7 @@ import Music.Time hiding (time)
 -- > timeSignature (4/4)
 -- > timeSignature (6/8)
 -- > timeSignature ((3+2)/4)
-newtype TimeSignature = TimeSignature ([Integer], Integer)
+newtype TimeSignature = TimeSignature {getTimeSignature :: ([Integer], Integer)}
   deriving (Eq, Ord, Typeable)
 
 mapNums f (TimeSignature (m, n)) = TimeSignature (f m, n)
@@ -161,17 +162,11 @@ isCompoundTime = not . isSimpleTime
 toSimpleTime :: TimeSignature -> TimeSignature
 toSimpleTime = fromRational . toRational
 
--- | Extract the components of a time signature. Semantic function.
---
--- Typically used with the @ViewPatterns@ extension, as in
---
--- > foo (getTimeSignature -> (beats, noteValue)) = ...
-getTimeSignature :: TimeSignature -> ([Integer], Integer)
-getTimeSignature (TimeSignature x) = x
-
 -- | Set the time signature of the given score.
 timeSignature :: (HasMeta a, HasPosition a, Transformable a) => TimeSignature -> a -> a
-timeSignature c x = timeSignatureDuring (0 <-> x ^. offset) c x
+timeSignature c x = case _era x of
+  Nothing -> x
+  Just e -> timeSignatureDuring e c x
 
 -- use (x^.onset <-> x^.offset) instead of (0 <-> x^.offset)
 -- timeSignature' c x = timeSignatureDuring (era x) c x
@@ -180,70 +175,48 @@ timeSignature c x = timeSignatureDuring (0 <-> x ^. offset) c x
 timeSignatureDuring :: HasMeta a => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addMetaNote $ view event (s, optionLast c)
 
-getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
-getTimeSignatures def = fmap (fromMaybe def . unOptionLast) . fromMetaReactive . (view meta)
-
-getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
-getTimeSignatureChanges def = updates . getTimeSignatures def
-
--- | Extract the time signature from the given score, using the given default time signature.
-withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
-withTimeSignature def f = withMeta (f . fromMaybe def . unOptionLast)
-
--- | Given a list of time signatures and the duration between them (TODO use voice), return a list of appropriate
---   bar durations.
-getBarDurations :: [(TimeSignature, Duration)] -> [Duration]
-getBarDurations = fmap realToFrac . getBarTimeSignatures
-
--- | Given a list of time signatures and the duration between them (TODO use voice), return a list of appropriate
---   time signatures for each bar.
-getBarTimeSignatures :: [(TimeSignature, Duration)] -> [TimeSignature]
-getBarTimeSignatures = concatMap $ uncurry getBarTimeSignatures1
-
-getBarTimeSignatures1 :: TimeSignature -> Duration -> [TimeSignature]
-getBarTimeSignatures1 ts d =
-  let (n, r) = numWholeBars ts d
-   in -- Repeat the chosen time signature as long as possible
-      -- If there is a rest duration, add a bar of that duration choosing an appropriate time signature
-      replic n ts ++ if r > 0 then [standardTimeSignature r] else []
-
--- | Return the number of whole bars needed to notate the given duration, as well as the remainder duration.
-numWholeBars :: TimeSignature -> Duration -> (Integer, Duration)
-numWholeBars ts dur = second (* barDur) $ properFraction (dur / barDur) where barDur = realToFrac ts
-
 -- | Time signature typically used for the given duration.
-standardTimeSignature :: Duration -> TimeSignature
+--
+-- Returns Nothing if the denominator of the canonical form of given duration is not a power of two.
+--
+-- TODO partial
+standardTimeSignature :: Duration -> Maybe TimeSignature
 standardTimeSignature x = case unRatio (toRational x) of
   -- (1,2) -> time 1 2
-  (2, 2) -> time 2 2
-  (3, 2) -> time 3 2
-  (2, 1) -> time 4 2
-  (5, 2) -> time 5 2
-  (3, 1) -> time 6 2
-  (7, 2) -> time 7 2
-  (1, 4) -> time 1 4
-  (1, 2) -> time 2 4
-  (3, 4) -> time 3 4
-  (1, 1) -> time 4 4
-  (5, 4) -> time 5 4
-  -- (3,2) -> time 6 4
-  (7, 4) -> time 7 4
-  (1, 8) -> time 1 8
-  -- (1,4) -> time 2 8
-  (3, 8) -> time 3 8
-  -- (1,2) -> time 4 8
-  (5, 8) -> time 5 8
-  -- (3,4) -> time 6 8
-  (7, 8) -> time 7 8
+  (2, 2) -> pure $ time 2 2
+  (3, 2) -> pure $ time 3 2
+  (2, 1) -> pure $ time 4 2
+  (5, 2) -> pure $ time 5 2
+  (3, 1) -> pure $ time 6 2
+  (7, 2) -> pure $ time 7 2
+  (1, 4) -> pure $ time 1 4
+  (1, 2) -> pure $ time 2 4
+  (3, 4) -> pure $ time 3 4
+  (1, 1) -> pure $ time 4 4
+  (5, 4) -> pure $ time 5 4
+  -- (3,2) -> pure $ time 6 4
+  (7, 4) -> pure $ time 7 4
+  (1, 8) -> pure $ time 1 8
+  -- (1,4) -> pure $ time 2 8
+  (3, 8) -> pure $ time 3 8
+  -- (1,2) -> pure $ time 4 8
+  (5, 8) -> pure $ time 5 8
+  -- (3,4) -> pure $ time 6 8
+  (7, 8) -> pure $ time 7 8
   -- TODO check divisible by 8 etc
-  _ -> time 4 4
+  (m, n)
+    | isPowerOfTwo n -> pure $ time m n
+    | otherwise -> Nothing
 
--- _     -> error "standardTimeSignature: Stange value"
+isPowerOfTwo :: Integer -> Bool
+isPowerOfTwo 0 = True
+isPowerOfTwo 1 = False
+isPowerOfTwo n = (n .&. (n -1)) == 0
+{-# INLINE isPowerOfTwo #-}
 
 -- TODO consolidate
+optionLast :: a -> Option (Last a)
 optionLast = Option . Just . Last
-
-unOptionLast = fmap getLast . getOption
 
 mapNums :: ([Integer] -> [Integer]) -> TimeSignature -> TimeSignature
 
@@ -256,7 +229,3 @@ getSimple :: TimeSignature -> Integer
 liftRational :: (Fractional c, Real a) => (Rational -> Rational) -> a -> c
 
 liftRational2 :: (Fractional a, Real a1, Real a2) => (Rational -> Rational -> Rational) -> a1 -> a2 -> a
-
-optionLast :: a -> Option (Last a)
-
-unOptionLast :: Option (Last b) -> Maybe b

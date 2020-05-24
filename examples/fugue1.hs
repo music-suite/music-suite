@@ -2,7 +2,7 @@
 import Music.Prelude
 import Control.Lens (set)
 
-main = defaultMain $ fugue1a |> fugueX
+main = defaultMain $ fugue1a -- |> fugueX
 
 {-
 Develop tools for basic counterpoint techniques.
@@ -32,17 +32,17 @@ fugue1 = fugue
   , (p1, 9+0*4, _P8)
   , (p2, 9+1*4, _P5)
   , (p3, 9+3*4, _P1)
-  , (p4, 9+4*4, -_P8)
+  -- , (p4, 9+4*4, -_P8)
 
-  , (p1, 14+0*4, _P8)
-  , (p2, 14+2*4, -_P8)
-  , (p3, 14+3*4, _P5)
-  , (p4, 14+4*4, _P1)
+  -- , (p1, 14+0*4, _P8)
+  -- , (p2, 14+2*4, -_P8)
+  -- , (p3, 14+3*4, _P5)
+  -- , (p4, 14+4*4, _P1)
 
-  , (p1, 20+0*4, _P5)
-  , (p2, 20+2*4, _P8)
-  , (p3, 20+3*4, _P8+_P5)
-  , (p4, 20+4*4, _P1)
+  -- , (p1, 20+0*4, _P5)
+  -- , (p2, 20+2*4, _P8)
+  -- , (p3, 20+3*4, _P8+_P5)
+  -- , (p4, 20+4*4, _P1)
   ]
   where [p1,p2,p3,p4] = divide 2 violins ++ [violas, cellos]
 
@@ -55,7 +55,8 @@ TODO
     - Or: just enumerate the permutations to allow for manual checking
 -}
 
-fugue1a  = fugue1 $ pseq [c,cs] |> compress 4 (pseq [d,b,bb,a] |> pseq [gs,cs,d,ds])
+fugue1a  = fugue1 $
+  pseq [c,cs] |> compress 4 (pseq [d,b,bb,a] |> pseq [gs,cs,d,ds])
 fugue1a' = fugue1 $ pseq [c,cs] |> compress 4 (pseq [d,b,bb,b] |> pseq [gs,cs,d,ds])
 
 

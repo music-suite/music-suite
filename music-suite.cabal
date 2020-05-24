@@ -2,7 +2,7 @@
 name:                   music-suite
 version:                2.0.0
 author:                 Hans Hoglund
-maintainer:             Hans Hoglund <music-suite-discuss@googlegroups.com>
+maintainer:             Hans Hoglund <info@hanshoglund.com>
 license:                BSD3
 license-file:           COPYING
 synopsis:               A set of libraries for composition, analysis and manipulation of music.
@@ -17,6 +17,7 @@ description:
 extra-source-files:     README.md,
                         examples/*.hs,
                         examples/*.scm
+                        data/*.ly
 
 source-repository head
     type:             	git
@@ -31,7 +32,6 @@ library
                         comonad,
                         streams,
                         vector-space,
-                        vector-space-points,
                         process,
                         filepath,
                         optparse-applicative,
@@ -53,6 +53,7 @@ library
                         NumInstances,
                         MonadRandom,
                         colour,
+                        iso-deriving,
                         logict,
                         parsec,
                         directory,
@@ -64,6 +65,7 @@ library
                         xml,
                         random,
                         neat-interpolation,
+                        modular-arithmetic,
                         random-shuffle
     if !os(windows)
       build-depends:    unix
@@ -76,7 +78,6 @@ library
                         Music.Dynamics.Literal
                         Data.Semigroup.Option.Instances
                         Music.Parts
-                        Music.Parts.Voices
                         Music.Parts.Division
                         Music.Parts.Subpart
                         Music.Parts.Solo
@@ -108,6 +109,7 @@ library
                         Music.Pitch.Equal
                         Music.Pitch.Common
                         Music.Pitch.Common.Types
+                        Music.Pitch.Common.Internal
                         Music.Pitch.Common.Quality
                         Music.Pitch.Common.Number
                         Music.Pitch.Common.Interval
@@ -137,7 +139,6 @@ library
                         Music.Time.Duration
                         Music.Time.Position
                         Music.Time.Split
-                        Music.Time.Reverse
                         Music.Time.Juxtapose
                         Music.Time.Rest
                         Music.Time.Aligned
@@ -193,13 +194,13 @@ library
                         Music.Score.Internal.Util
                         Music.Score.Internal.Export
                         Music.Time.Internal.Preliminaries
-                        Music.Pitch.Tokawa
                         Data.Music.Sibelius
+                        Data.AffineSpace.Point
                         Music.Score.Import.Sibelius
                         Music.Prelude
                         Music.Prelude.Standard
                         Music.Prelude.Inspectable
-    hs-source-dirs:     src
+    hs-source-dirs:     src, vendor
     default-language:   Haskell2010
     default-extensions: ConstraintKinds,
                         DeriveDataTypeable,
@@ -214,6 +215,7 @@ library
                         TupleSections,
                         TypeFamilies,
                         TypeOperators,
+                        TypeApplications,
                         ViewPatterns,
                         OverloadedStrings
   ghc-options:
@@ -228,15 +230,50 @@ library
 
 test-suite "music-suite-test-umts"
     build-depends:      base,
+                        aeson,
+                        average,
+                        base-orphans,
+                        base-prelude,
+                        bytestring,
+                        cassava,
+                        colour,
+                        comonad,
+                        containers,
+                        contravariant,
+                        data-default,
+                        data-interval,
+                        directory,
+                        file-embed,
+                        filepath,
+                        HCodecs,
+                        lens,
+                        logict,
+                        modular-arithmetic,
+                        monadplus,
+                        MonadRandom,
+                        mtl,
+                        neat-interpolation,
+                        NumInstances,
+                        optparse-applicative,
+                        parsec,
+                        positive,
+                        prettify,
+                        process,
+                        QuickCheck,
+                        random,
+                        roman-numerals,
+                        semigroups,
+                        split,
+                        streams,
                         tasty,
                         tasty-golden,
-                        process,
-                        average,
-                        containers,
                         tasty-quickcheck,
-                        QuickCheck,
-                        semigroups,
-                        comonad,
+                        text,
+                        transformers,
+                        type-unary,
+                        unordered-containers,
+                        vector-space,
+                        xml,
                         music-suite
     main-is:            UMTS.hs
     type:               exitcode-stdio-1.0
@@ -247,6 +284,7 @@ test-suite "music-suite-test-laws"
     build-depends:      base,
                         tasty,
                         tasty-golden,
+                        tasty-quickcheck-laws,
                         process,
                         average,
                         containers,
@@ -267,20 +305,31 @@ executable "music-suite-examples-analysis"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            analysis.hs
 
-executable "music-suite-examples-analysis_durations"
+executable "music-suite-examples-analysis-durations"
     build-depends:      base,
                         lens,
                         music-suite
     hs-source-dirs:     examples
-    main-is:            analysis_durations.hs
+    ghc-options:        -fno-code
+    main-is:            AnalysisDurations.hs
+
+executable "music-suite-examples-annotations"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    ghc-options:        -fno-code
+    main-is:            annotations.hs
 
 executable "music-suite-examples-bartok"
     build-depends:      base,
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            bartok.hs
 
 executable "music-suite-examples-behavior"
@@ -288,6 +337,7 @@ executable "music-suite-examples-behavior"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            behavior.hs
 
 executable "music-suite-examples-canon"
@@ -295,6 +345,7 @@ executable "music-suite-examples-canon"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            canon.hs
 
 executable "music-suite-examples-chopin"
@@ -302,20 +353,23 @@ executable "music-suite-examples-chopin"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            chopin.hs
 
--- executable "music-suite-examples-dynamics"
---     build-depends:      base,
---                         lens,
---                         music-suite
---     hs-source-dirs:     examples
---     main-is:            dynamics.hs
+executable "music-suite-examples-duo"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    ghc-options:        -fno-code
+    main-is:            duo.hs
 
 executable "music-suite-examples-chords"
     build-depends:      base,
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            chords.hs
 
 executable "music-suite-examples-fugue1"
@@ -323,18 +377,21 @@ executable "music-suite-examples-fugue1"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            fugue1.hs
 
 executable "music-suite-examples-mozart"
     build-depends:      base,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            mozart.hs
 
 executable "music-suite-examples-part"
     build-depends:      base,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            part.hs
 
 executable "music-suite-examples-phrases"
@@ -342,26 +399,47 @@ executable "music-suite-examples-phrases"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            phrases.hs
 
 executable "music-suite-examples-hello"
     build-depends:      base,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            hello.hs
 
-executable "music-suite-examples-time_signatures"
+executable "music-suite-examples-study-for-harp"
+    build-depends:      base,
+                        lens,
+                        containers,
+                        music-suite
+    hs-source-dirs:     examples
+    ghc-options:        -fno-code
+    main-is:            StudyForHarp.hs
+
+executable "music-suite-examples-time-signatures"
     build-depends:      base,
                         lens,
                         music-suite
     hs-source-dirs:     examples
-    main-is:            time_signatures.hs
+    ghc-options:        -fno-code
+    main-is:            TimeSignatures.hs
+
+executable "music-suite-examples-dynamics"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    ghc-options:        -fno-code
+    main-is:            dynamics.hs
 
 executable "music-suite-examples-trio"
     build-depends:      base,
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            trio.hs
 
 executable "music-suite-examples-tuplet"
@@ -369,14 +447,46 @@ executable "music-suite-examples-tuplet"
                         lens,
                         music-suite
     hs-source-dirs:     examples
+    ghc-options:        -fno-code
     main-is:            tuplet.hs
 
-executable "music-suite-examples-voices"
+executable "music-suite-examples-klangfarben"
     build-depends:      base,
                         lens,
                         music-suite
     hs-source-dirs:     examples
-    main-is:            voices.hs
+    ghc-options:        -fno-code
+    main-is:            klangfarben.hs
+
+executable "music-suite-examples-chorale"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    ghc-options:        -fno-code
+    main-is:            chorale.hs
+
+executable "music-suite-examples-piano1"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    ghc-options:        -fno-code
+    main-is:            piano1.hs
+executable "music-suite-examples-piano2"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    ghc-options:        -fno-code
+    main-is:            piano2.hs
+executable "music-suite-examples-harp-string-texture"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples
+    ghc-options:        -fno-code
+    main-is:            HarpStringTexture.hs
 
 -- executable "music-suite-examples-piece1"
 --     build-depends:      base,
@@ -390,13 +500,23 @@ executable "music-suite-examples-piece3"
                         lens,
                         music-suite
     hs-source-dirs:     examples/pieces
+    ghc-options:        -fno-code
     main-is:            Piece3.hs
+
+executable "music-suite-examples-ambitus"
+    build-depends:      base,
+                        lens,
+                        music-suite
+    hs-source-dirs:     examples/pieces/Ambitus
+    ghc-options:        -fno-code
+    main-is:            Score.hs
 
 executable "music-suite-examples-winds-phrasing"
     build-depends:      base,
                         lens,
                         music-suite
     hs-source-dirs:     examples/pieces/WindsPhrasing
+    ghc-options:        -fno-code
     main-is:            Score.hs
 
 executable "music-suite-examples-sustain-punctuated"
@@ -404,6 +524,7 @@ executable "music-suite-examples-sustain-punctuated"
                         lens,
                         music-suite
     hs-source-dirs:     examples/pieces/SustainPunctuated
+    ghc-options:        -fno-code
     main-is:            Score.hs
 
 executable "music-suite-examples-piece8"
@@ -413,14 +534,8 @@ executable "music-suite-examples-piece8"
                         vector-space,
                         music-suite
     hs-source-dirs:     examples/pieces
+    ghc-options:        -fno-code
     main-is:            Piece8.hs
-
--- executable "music-suite-examples-ambitus"
---     build-depends:      base,
---                         lens,
---                         music-suite
---     hs-source-dirs:     examples/pieces/Ambitus
---     main-is:            Score.hs
 
 executable "music-suite-examples-brass-large-ensemble"
     build-depends:      base,
@@ -429,7 +544,19 @@ executable "music-suite-examples-brass-large-ensemble"
                         random,
                         music-suite
     hs-source-dirs:     examples/pieces/BrassLargeEnsemble
+    ghc-options:        -fno-code
     main-is:            Score.hs
+
+executable "music-suite-examples-salient-melodic-transformations"
+    build-depends:      base,
+                        lens,
+                        containers,
+                        random,
+                        music-suite
+    hs-source-dirs:     examples/pieces/SalientMelodicTransformations
+    ghc-options:        -fno-code
+    main-is:            Score.hs
+
 
 -- TODO CrawfordSeeger
 -- TODO Floaters
@@ -438,6 +565,3 @@ executable "music-suite-examples-brass-large-ensemble"
 -- TODO HarmPhasing
 -- TODO PianoChords
 -- TODO PopRhythms
--- TODO SalientMelodicTransformations
--- TODO SustainPunctuated
--- TODO KlangFarben

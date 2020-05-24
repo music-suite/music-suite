@@ -4,8 +4,17 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 ------------------------------------------------------------------------------------
 
@@ -23,10 +32,12 @@
 -- Provides miscellaneous instances.
 module Music.Prelude.Inspectable
   ( Inspectable (..),
+    InspectableNote (..),
   )
 where
 
-import Music.Prelude.Standard hiding (open, play)
+import Data.Foldable (toList)
+import Music.Prelude.Standard
 import Music.Score ()
 import qualified Music.Time
 import qualified System.Info
@@ -45,11 +56,8 @@ class InspectableNote a where
 --   inspectableToMusic = id
 
 -- TODO not just Pitch
-instance Inspectable (Pattern Pitch) where
-  inspectableToMusic = fmap fromPitch'' . flip renderPattern (0 <-> 1)
-
-instance (IsPitch a, Reversible a) => IsPitch (Pattern a) where
-  fromPitch = pureP . fromPitch
+instance InspectableNote a => Inspectable (Pattern a) where
+  inspectableToMusic = inspectableToMusic . flip renderPattern (0 <-> 1)
 
 instance Inspectable a => Inspectable (Maybe a) where
   inspectableToMusic = maybe mempty id . fmap inspectableToMusic
@@ -60,8 +68,8 @@ instance InspectableNote a => Inspectable (Score a) where
 instance InspectableNote Pitch where
   inspectableToMusicNote = pure . fromPitch
 
-instance InspectableNote StandardNote where
-  inspectableToMusicNote = pure
+instance InspectableNote Asp1a where
+  inspectableToMusicNote = pure . pure
 
 instance InspectableNote a => InspectableNote (Maybe a) where
   inspectableToMusicNote = maybe mempty id . fmap inspectableToMusicNote
@@ -86,36 +94,51 @@ instance InspectableNote a => Inspectable [Aligned (Voice a)] where
 instance InspectableNote a => Inspectable (Note a) where
   inspectableToMusic x = inspectableToMusic $ [x] ^. voice
 
+instance InspectableNote a => Inspectable (Event a) where
+  inspectableToMusic x = inspectableToMusic $ [x] ^. score
+
 -- instance Inspectable (Voice ()) where
 -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
-instance Inspectable (Ambitus Pitch) where
-  inspectableToMusic x = let (m, n) = x ^. from ambitus in glissando $ fromPitch m |> fromPitch n
+instance Inspectable (Ambitus Interval Pitch) where
+  inspectableToMusic x = stretch 0.5 $ let Ambitus m n = x in glissando $ fromPitch m |> fromPitch n
 
--- instance Inspectable (Mode Pitch) where
---  inspectableToMusic = inspectableToMusic . modeToScale c
+-- instance Inspectable (Mode Interval Pitch) where
+--  inspectableToMusic = inspectableToMusic . scale c
 
-instance Inspectable (Scale Pitch) where
-  inspectableToMusic = fmap fromPitch . pseq . map (\x -> pure x :: Score Pitch) . scaleToList
+instance Inspectable (ChordType Interval Pitch) where
+  inspectableToMusic = inspectableToMusic . chord c
 
-instance Inspectable (Function Pitch) where
-  inspectableToMusic = inspectableToMusic . functionToChord c
+instance Inspectable (Scale Interval Pitch) where
+  inspectableToMusic = pseq . fmap fromPitch . toList . getVoiced . voiced . scaleToChord
 
-instance Inspectable (Chord Pitch) where
-  inspectableToMusic = fmap fromPitch . ppar . map (\x -> pure x :: Score Pitch) . chordToList
+instance Inspectable (Chord Interval Pitch) where
+  inspectableToMusic = inspectableToMusic . voiced
+
+instance Inspectable (Voiced Chord Interval Pitch) where
+  inspectableToMusic = fmap fromPitch . ppar . map (\x -> pure x :: Score Pitch) . toList . getVoiced
 
 -- TODO should be on separate staves, but without left binding (implying simultanuety)
--- instance Inspectable [Mode Pitch] where
---   inspectableToMusic = rcat . fmap inspectableToMusic
+instance Inspectable [Mode Interval Pitch] where
+   inspectableToMusic = inspectableToMusic . fmap (scale c)
 
 -- TODO should be on separate staves, but without left binding (implying simultanuety)
-instance Inspectable [Scale Pitch] where
+instance Inspectable [Scale Interval Pitch] where
   inspectableToMusic = rcat . fmap inspectableToMusic
 
-instance Inspectable [Function Pitch] where
+instance Inspectable [ChordType Interval Pitch] where
   inspectableToMusic = pseq . fmap inspectableToMusic
 
-instance Inspectable [Chord Pitch] where
+instance Inspectable [Chord Interval Pitch] where
   inspectableToMusic = pseq . fmap inspectableToMusic
+
+instance Inspectable [Voiced Chord Interval Pitch] where
+  inspectableToMusic = pseq . fmap inspectableToMusic
+
+instance Inspectable [Interval] where
+  inspectableToMusic = rcat . fmap inspectableToMusic
+
+instance Inspectable [Ambitus Interval Pitch] where
+  inspectableToMusic = rcat . fmap inspectableToMusic
 
 -- instance Inspectable [Hertz] where
 --   inspectableToMusic xs = ppar $ map fromPitch $ map (^.from pitchHertz) xs
@@ -130,7 +153,7 @@ instance Inspectable Pitch where
   inspectableToMusic = inspectableToMusic . (: [])
 
 instance Inspectable Interval where
-  inspectableToMusic v = stretch 8 $ inspectableToMusic [c :: Pitch, c .+^ v]
+  inspectableToMusic v = stretch 4 $ inspectableToMusic [c :: Pitch, c .+^ v]
 
 instance Inspectable Span where
   inspectableToMusic s = transform s c
@@ -146,7 +169,7 @@ instance Inspectable [Span] where
   inspectableToMusic xs = rcat $ fmap inspectableToMusic xs
 
 instance Inspectable [Voice Pitch] where
-  inspectableToMusic = asScore . rcat . fmap (fmap fromPitch) . fmap (renderAlignedVoice . aligned 0 0)
+  inspectableToMusic = rcat @Music . fmap (fmap fromPitch) . fmap (renderAlignedVoice . aligned 0 0)
 
 instance Inspectable [Note Pitch] where
   inspectableToMusic = inspectableToMusic . fmap ((^. voice) . pure)

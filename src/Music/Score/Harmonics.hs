@@ -40,14 +40,14 @@ import Music.Score.Phrases
 import Music.Time.Score
 import Numeric.Natural
 
--- 0 for none, positive for natural, negative for artificial
 class HasHarmonic a where
 
   setNatural :: Bool -> a -> a
 
+  -- 0 for none, positive for natural, negative for artificial
+  -- (isNatural, overtone series index where 0 is fundamental)
   setHarmonic :: Int -> a -> a
 
-  -- (isNatural, overtone series index where 0 is fundamental)
   default setNatural :: forall f b. (a ~ f b, Functor f, HasHarmonic b) => Bool -> a -> a
   setNatural s = fmap (setNatural s)
 
@@ -61,6 +61,7 @@ newtype HarmonicT a = HarmonicT {getHarmonicT :: Couple (Any, Sum Int) a}
       Ord,
       Functor,
       Foldable,
+      Traversable,
       Typeable,
       Applicative,
       Monad,
@@ -78,6 +79,8 @@ runHarmonicT (HarmonicT (Couple (hs, x))) = (,x) $ case hs of
   (Any True, Sum n) -> NaturalHarmonic (fromIntegral n)
 
 instance HasHarmonic a => HasHarmonic (b, a)
+
+instance HasHarmonic a => HasHarmonic (Maybe a)
 
 instance HasHarmonic a => HasHarmonic (Couple b a)
 

@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
@@ -12,7 +14,6 @@ module Music.Time.Types
     Time,
     Duration,
     Alignment,
-    LocalDuration,
 
     -- ** Convert between time and duration
     -- $convert
@@ -28,9 +29,6 @@ module Music.Time.Types
     (<->),
     (>->),
     (<-<),
-    delta,
-    range,
-    codelta,
     onsetAndOffset,
     onsetAndDuration,
     durationAndOffset,
@@ -45,49 +43,51 @@ module Music.Time.Types
     reflectSpan,
 
     -- ** Properties
-    isEmptySpan,
+    isDegenerateSpan,
     isForwardSpan,
     isBackwardSpan,
     -- delayComponent,
     -- stretchComponent,
+
+    -- ** Combine
+    hull,
+    TimeInterval (..),
 
     -- ** Points in spans
     inside,
     strictlyInside,
     closestPointInside,
 
-    -- ** Partial orders
+    -- ** Predicates
     encloses,
     properlyEncloses,
     overlaps,
-
-    -- *** etc.
     isBefore,
-    afterOnset,
-    strictlyAfterOnset,
-    beforeOnset,
-    strictlyBeforeOnset,
-    afterOffset,
-    strictlyAfterOffset,
-    beforeOffset,
-    strictlyBeforeOffset,
-    startsWhenStarts,
-    startsWhenStops,
-    stopsWhenStops,
-    stopsWhenStarts,
-    startsBefore,
-    startsLater,
-    stopsAtTheSameTime,
-    stopsBefore,
-    stopsLater,
-    -- union
+    -- afterOnset,
+    -- strictlyAfterOnset,
+    -- beforeOnset,
+    -- strictlyBeforeOnset,
+    -- afterOffset,
+    -- strictlyAfterOffset,
+    -- beforeOffset,
+    -- strictlyBeforeOffset,
+    -- startsWhenStarts,
+    -- startsWhenStops,
+    -- stopsWhenStops,
+    -- stopsWhenStarts,
+    -- startsBefore,
+    -- startsLater,
+    -- stopsAtTheSameTime,
+    -- stopsBefore,
+    -- stopsLater,
+    -- union/hull
     -- intersection (alt name 'overlap')
     -- difference (would actually become a split)
 
     -- ** Read/Show
-    showRange,
-    showDelta,
-    showCodelta,
+    showOnsetAndOffset,
+    showOnsetAndDuration,
+    showDurationAndOffset,
   )
 where
 
@@ -116,6 +116,7 @@ import Data.Ratio
 import Data.Semigroup
 import Data.Typeable
 import Data.VectorSpace
+import GHC.Generics (Generic)
 import Music.Score.Internal.Util (unRatio)
 import Music.Time.Internal.Util (showRatio)
 
@@ -145,17 +146,20 @@ deriving instance Floating Time
 deriving instance Floating Duration
 -}
 
+-- | 'Alignment' is a synonym for 'Duration'.
+--
+-- See "Music.Time.Aligned" for its intended use.
 type Alignment = Duration
-
-type LocalDuration = Alignment
-
-{-# DEPRECATED LocalDuration "Use 'Alignment'" #-}
 
 -- |
 -- Duration, corresponding to note values in standard notation.
 -- The standard names can be used: @1\/2@ for half note @1\/4@ for a quarter note and so on.
+--
+-- 'Duration' is isomorphic to 'Rational'. You can use 'toRational' and 'fromRational'
+-- to convert it. To convert between 'Time' and 'Duration', use the 'AffineSpace'
+-- instance.
 newtype Duration = Duration {_getDuration :: TimeBase}
-  deriving (Eq, Ord, Typeable, Enum, Num, Fractional, Real, RealFrac)
+  deriving (Eq, Ord, Generic, Typeable, Enum, Num, Fractional, Real, RealFrac)
 
 -- Duration is a one-dimensional 'VectorSpace', and is the associated vector space of time points.
 -- It is a also an 'AdditiveGroup' (and hence also 'Monoid' and 'Semigroup') under addition.
@@ -205,8 +209,12 @@ instance InnerSpace Duration where
 -- Time has an origin (zero) which usually represents the beginning of the musical
 -- performance, but this may not always be the case, as the modelled music may be
 -- infinite, or contain a musical pickup. Hence 'Time' values can be negative.
+--
+-- 'Duration' is isomorphic to 'Rational'. You can use 'toRational' and 'fromRational'
+-- to convert it. To convert between 'Time' and 'Duration', use the 'AffineSpace'
+-- instance.
 newtype Time = Time {_getTime :: TimeBase}
-  deriving (Eq, Ord, Typeable, Enum, Num, Fractional, Real, RealFrac)
+  deriving (Eq, Ord, Generic, Typeable, Enum, Num, Fractional, Real, RealFrac)
 
 -- Time forms an affine space with durations as the underlying vector space, that is, we
 -- can add a time to a duration to get a new time using '.+^', take the difference of two
@@ -238,13 +246,13 @@ instance AdditiveGroup Time where
 
 instance VectorSpace Time where
 
-  type Scalar Time = LocalDuration
+  type Scalar Time = Duration
 
   Duration x *^ Time y = Time (x * y)
 
 instance AffineSpace Time where
 
-  type Diff Time = LocalDuration
+  type Diff Time = Duration
 
   Time x .-. Time y = Duration (x - y)
 
@@ -288,12 +296,13 @@ toRelativeTimeN [] = []
 toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 
 -- |
--- A 'Span' represents a specific time interval.
+-- A 'Span' represents a /time interval/. It has a starting point called 'onset' and
+-- an ending point called 'offset'.
 --
 -- Another way of looking at 'Span' is that it represents a time transformation where
 -- onset is translation and duration is scaling.
 --
--- This type is known as 'Arc' in Tidal and as 'Era' in the active package.
+-- This type is sometimes known as /arc/ or /era/.
 newtype Span = Span {getSpan :: (Time, Duration)}
   deriving (Eq, Ord, Typeable)
 
@@ -329,7 +338,7 @@ newtype Span = Span {getSpan :: (Time, Duration)}
 -- (10,5)
 
 instance Show Span where
-  show = showRange
+  show = showOnsetAndOffset
 
 -- Which form should we use?
 
@@ -407,37 +416,19 @@ durationAndOffset :: Iso' Span (Duration, Time)
 durationAndOffset = iso (\x -> let (t, d) = getSpan x in (d, t .+^ d)) (uncurry (<-<))
 
 -- |
--- View a span as pair of onset and offset.
-range :: Iso' Span (Time, Time)
-range = onsetAndOffset
-{-# DEPRECATED range "Use onsetAndOffset" #-}
+-- Show a span as a pair of onset and offset, i.e. @t1 \<-\> t2@.
+showOnsetAndOffset :: Span -> String
+showOnsetAndOffset (view onsetAndOffset -> (t, u)) = show t ++ " <-> " ++ show u
 
 -- |
--- View a span as a pair of onset and duration.
-delta :: Iso' Span (Time, Duration)
-delta = onsetAndDuration
-{-# DEPRECATED delta "Use onsetAndDuration" #-}
+-- Show a span as a pair of onset and duration, i.e. @t >-> d@.
+showOnsetAndDuration :: Span -> String
+showOnsetAndDuration (view onsetAndDuration -> (t, d)) = show t ++ " >-> " ++ show d
 
 -- |
--- View a span as a pair of duration and offset.
-codelta :: Iso' Span (Duration, Time)
-codelta = durationAndOffset
-{-# DEPRECATED codelta "Use durationAndOffset" #-}
-
--- |
--- Show a span in range notation, i.e. @t1 \<-\> t2@.
-showRange :: Span -> String
-showRange (view onsetAndOffset -> (t, u)) = show t ++ " <-> " ++ show u
-
--- |
--- Show a span in delta notation, i.e. @t >-> d@.
-showDelta :: Span -> String
-showDelta (view onsetAndDuration -> (t, d)) = show t ++ " >-> " ++ show d
-
--- |
--- Show a span in codelta notation, i.e. @t <-< d@.
-showCodelta :: Span -> String
-showCodelta (view durationAndOffset -> (d, u)) = show d ++ " <-< " ++ show u
+-- Show a span as a pair of duration and offset, i.e. @t <-< d@.
+showDurationAndOffset :: Span -> String
+showDurationAndOffset (view durationAndOffset -> (d, u)) = show d ++ " <-< " ++ show u
 
 -- |
 -- Access the delay component in a span.
@@ -469,8 +460,8 @@ fixedOnsetSpan = prism' (\d -> view (from onsetAndDuration) (0, d)) $ \x -> case
 --
 -- A span is either /forward/, /backward/ or /empty/.
 --
--- @any id [isForwardSpan x, isBackwardSpan x, isEmptySpan x] == True@
--- @all not [isForwardSpan x, isBackwardSpan x, isEmptySpan x] == False@
+-- @any id [isForwardSpan x, isBackwardSpan x, isDegenerateSpan x] == True@
+-- @all not [isForwardSpan x, isBackwardSpan x, isDegenerateSpan x] == False@
 
 -- |
 -- Whether the given span has a positive duration, i.e. whether its 'onset' is before its 'offset'.
@@ -484,8 +475,8 @@ isBackwardSpan = (< 0) . signum . _durationS
 
 -- |
 -- Whether the given span is empty, i.e. whether its 'onset' and 'offset' are equivalent.
-isEmptySpan :: Span -> Bool
-isEmptySpan = (== 0) . signum . _durationS
+isDegenerateSpan :: Span -> Bool
+isDegenerateSpan = (== 0) . signum . _durationS
 
 -- |
 -- Reflect a span through its midpoint.
@@ -518,7 +509,7 @@ infixl 5 `properlyEncloses`
 infixl 5 `overlaps`
 
 -- |
--- Whether the given point falls inside the given span (inclusively).
+-- Whether the given point falls inside the given span.
 --
 -- Designed to be used infix, for example
 --
@@ -530,9 +521,15 @@ infixl 5 `overlaps`
 --
 -- >>> 1 `inside` 1 <-> 2
 -- True
+--
+-- >>> 2 `inside` 1 <-> 2
+-- True
 inside :: Time -> Span -> Bool
 inside x (view onsetAndOffset -> (t, u)) = t <= x && x <= u
 
+-- |
+-- Whether the given point falls inside the given span.
+--
 -- >>> 2 `inside` (3<->4)
 -- False
 -- >>> 3 `inside` (3<->4)
@@ -544,7 +541,6 @@ inside x (view onsetAndOffset -> (t, u)) = t <= x && x <= u
 -- False
 -- >>> 3.5 `strictlyInside` (3<->4)
 -- True
---
 strictlyInside :: Time -> Span -> Bool
 strictlyInside x (view onsetAndOffset -> (t, u)) = t < x && x < u
 
@@ -597,8 +593,28 @@ a `encloses` b = _onsetS b `inside` a && _offsetS b `inside` a
 properlyEncloses :: Span -> Span -> Bool
 a `properlyEncloses` b = a `encloses` b && a /= b
 
+-- | Return the convex hull of two spans.
+--
+-- This is associative. Its identity would be the empty span, but this
+-- 'Span' represents non-empty time spans only.
+hull :: Span -> Span -> Span
+hull (view onsetAndOffset -> (s, e)) (view onsetAndOffset -> (s', e')) = view (from onsetAndOffset) (min s s', max e e')
+
+data TimeInterval = EmptyInterval | NonEmptyInterval Span
+
+-- | Semigroup with 'hull' and 'EmptyInterval'.
+instance Semigroup TimeInterval where
+  NonEmptyInterval x <> NonEmptyInterval y = NonEmptyInterval $ hull x y
+  EmptyInterval <> y = y
+  x <> EmptyInterval = x
+
+-- | Monoid with 'hull' and 'EmptyInterval'.
+instance Monoid TimeInterval where
+  mempty = EmptyInterval
+
 -- TODO more intuitive param order
 
+{-
 afterOnset :: Time -> Span -> Bool
 t `afterOnset` s = t >= _onsetS s
 
@@ -622,9 +638,10 @@ t `beforeOffset` s = t <= _offsetS s
 
 strictlyBeforeOffset :: Time -> Span -> Bool
 t `strictlyBeforeOffset` s = t < _offsetS s
-
+-}
 -- Param order OK
 
+{-
 -- Name?
 startsWhenStarts :: Span -> Span -> Bool
 a `startsWhenStarts` b = _onsetS a == _onsetS b
@@ -655,7 +672,7 @@ a `stopsBefore` b = _offsetS a < _offsetS b
 
 stopsLater :: Span -> Span -> Bool
 a `stopsLater` b = _offsetS a > _offsetS b
-
+-}
 {-
 contains
 curtails
@@ -727,4 +744,4 @@ _offsetS :: Span -> Time
 
 _midpointS :: Span -> Time
 
-_durationS :: Span -> LocalDuration
+_durationS :: Span -> Duration

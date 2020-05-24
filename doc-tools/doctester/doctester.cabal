@@ -1,0 +1,26 @@
+
+name:               doctester
+version:            0.1.1
+cabal-version:      >= 1.6
+author:             Hans Hoglund
+maintainer:         Hans Hoglund <hans@hanshoglund.se>
+license:            BSD3
+license-file:       COPYING
+synopsis:           Wrapper for the doctest package
+tested-with:        GHC
+build-type:         Simple
+
+description:
+    Just a wrapper.
+
+source-repository head
+  type:             git
+  location:         git://github.com/hanshoglund/transf.git
+
+executable "transf"
+    ghc-options: -O3 -threaded
+    build-depends:
+      base,
+      doctest
+    hs-source-dirs: src
+    main-is: Main.hs

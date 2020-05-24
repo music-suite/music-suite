@@ -1,12 +1,15 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wall
   -Wcompat
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+  -fno-warn-deprecations
+  -fno-warn-unused-matches #-}
 
 module Music.Time.Voice
   ( -- * Voice type
@@ -19,13 +22,10 @@ module Music.Time.Voice
     pairs,
     durationsAsVoice,
 
-    -- * Conversion
-    noteToVoice,
-
-    -- * Maps
+    -- * Map
     mapWithOnsetRelative,
     mapWithOffsetRelative,
-    mapWithEraRelative,
+    mapWithSpanRelative,
 
     -- * Points in a voice
     onsetsRelative,
@@ -33,26 +33,35 @@ module Music.Time.Voice
     midpointsRelative,
     erasRelative,
 
-    -- * Fusion
+    -- * Transformations
+
+    -- ** Rotation
+    rotateDurations,
+    rotateValues,
+
+    -- ** Fusion
     fuse,
     fuseBy,
 
-    -- ** Fuse rests
+    -- *** Fuse rests
     fuseRests,
     coverRests,
-
-    -- * Homophonic/Polyphonic texture
+    {- TODO: Move here from Music.Score.Pitch when we can refer to HasPitches from here
+    -- * Combining voices
+    stitch,
+    stitchLast,
+    stitchWith,
+    -}
 
     -- ** Zips and unzip
     zipVoiceScale,
     zipVoiceNoScale,
-    -- FIXME compose with (lens assoc unassoc) for the 3 and 4 versions
     zipVoiceScaleWith,
     zipVoiceWithNoScale,
     zipVoiceWith',
     unzipVoice,
 
-    -- ** Merge
+    -- ** Merging
     sameDurations,
     mergeIfSameDuration,
     mergeIfSameDurationWith,
@@ -61,6 +70,9 @@ module Music.Time.Voice
     -- * Context
     -- TODO clean
     withContext,
+
+    -- * Conversion
+    noteToVoice,
   )
 where
 
@@ -83,18 +95,13 @@ import Control.Monad.Zip
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson as JSON
 import Data.AffineSpace
-import Data.AffineSpace.Point
+import Data.Coerce (coerce)
 import qualified Data.Either
-import Data.Foldable (Foldable)
 import qualified Data.Foldable
 import Data.Functor.Context
 import qualified Data.List
-import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe
-import Data.Semigroup
-import Data.Sequence (Seq)
 import Data.String
-import Data.Traversable (Traversable)
 import Data.Typeable (Typeable)
 import GHC.Exts (IsList (..))
 import Music.Dynamics.Literal
@@ -103,9 +110,6 @@ import Music.Time.Internal.Util
 import Music.Time.Juxtapose
 import Music.Time.Note
 
--- |
--- A 'Voice' is a sequential composition of non-overlapping note values.
---
 -- Both 'Voice' and 'Note' have duration but no position. The difference
 -- is that 'Note' sustains a single value throughout its duration, while
 -- a voice may contain multiple values. It is called voice because it is
@@ -113,10 +117,13 @@ import Music.Time.Note
 --
 -- It may be useful to think about 'Voice' and 'Note' as vectors in time space
 -- (i.e. 'Duration'), that also happens to carry around other values, such as pitches.
+
+-- |
+-- A sequential composition of values with associated durations.
 newtype Voice a = Voice {getVoice :: [Note a]}
   deriving (Eq, Ord, Typeable, Foldable, Traversable, Functor, Semigroup, Monoid)
 
-instance (Show a, Transformable a) => Show (Voice a) where
+instance Show a => Show (Voice a) where
   show x = show (x ^. notes) ++ "^.voice"
 
 -- A voice is a list of events with explicit duration. Events can not overlap.
@@ -145,9 +152,10 @@ instance Alternative Voice where
 
 instance Monad Voice where
 
-  return = view _Unwrapped . return . return
+  return = Voice . return . return
 
-  xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
+  (>>=) :: forall a b. Voice a -> (a -> Voice b) -> Voice b
+  xs >>= f = coerce @[Note b] @(Voice b) $ (coerce @(Voice b) @[Note b] . f) `mbind` coerce xs
 
 instance MonadPlus Voice where
 
@@ -163,14 +171,6 @@ instance IsList (Voice a) where
   toList = view notesIgnoringMeta
 
   fromList = view (re notesIgnoringMeta)
-
-instance Wrapped (Voice a) where
-
-  type Unwrapped (Voice a) = [Note a]
-
-  _Wrapped' = iso getVoice Voice
-
-instance Rewrapped (Voice a) (Voice b)
 
 instance Cons (Voice a) (Voice b) (Note a) (Note b) where
   _Cons = prism (\(s, v) -> (view voice . return $ s) <> v) $ \v -> case view notes v of
@@ -203,16 +203,13 @@ instance Transformable (Voice a) where
 instance HasDuration (Voice a) where
   _duration = sumOf (notes . each . duration)
 
-instance Reversible a => Reversible (Voice a) where
-  rev = over notes reverse . fmap rev
-
-instance (Transformable a, Splittable a) => Splittable (Voice a) where
+instance (Transformable a, HasDuration a, Splittable a) => Splittable (Voice a) where
   -- TODO meta
   split d v = case splitNotes d (v ^. notes) of
     (as, Nothing, cs) -> (as ^. voice, cs ^. voice)
     (as, Just (b1, b2), cs) -> (as ^. voice `snoc` b1, b2 `cons` cs ^. voice)
 
-splitNotes :: (Transformable a, Splittable a) => Duration -> [a] -> ([a], Maybe (a, a), [a])
+splitNotes :: (Transformable a, HasDuration a, Splittable a) => Duration -> [a] -> ([a], Maybe (a, a), [a])
 splitNotes d xs = case (durAndNumNotesToFirst, needSplit) of
   (Just (_, 0), _) -> ([], Nothing, xs)
   (Nothing, False) -> (xs, Nothing, [])
@@ -280,16 +277,16 @@ instance Num a => Num (Voice a) where
 
 -- | Create a 'Voice' from a list of 'Note's.
 voice :: Iso' [Note a] (Voice a)
-voice = from notesIgnoringMeta
+voice = coerced
 {-# INLINE voice #-}
 
--- | Create a single-note score.
+-- | Convert a note to a singleton voice.
 noteToVoice :: Note a -> Voice a
 noteToVoice = view voice . pure
 
 -- | View a 'Voice' as a list of 'Note' values.
 notes :: Iso (Voice a) (Voice b) [Note a] [Note b]
-notes = notesIgnoringMeta
+notes = coerced
 
 -- $smartConstructors
 --
@@ -331,7 +328,7 @@ pairs = pairsIgnoringMeta
 -- | A voice is a list of notes up to meta-data. To preserve meta-data, use the more
 -- restricted 'voice' and 'notes'.
 notesIgnoringMeta :: Iso (Voice a) (Voice b) [Note a] [Note b]
-notesIgnoringMeta = _Wrapped
+notesIgnoringMeta = iso getVoice Voice
 
 -- | A score is a list of (duration-value pairs) up to meta-data.
 -- To preserve meta-data, use the more restricted 'pairs'.
@@ -342,15 +339,15 @@ durationsAsVoice :: Iso' [Duration] (Voice ())
 durationsAsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
 
 mapWithOffsetRelative :: Time -> (Time -> a -> b) -> Voice a -> Voice b
-mapWithOffsetRelative t f = mapWithEraRelative t (\s x -> f (s ^. offset) x)
+mapWithOffsetRelative t f = mapWithSpanRelative t (\s x -> f (s ^. offset) x)
 
 mapWithOnsetRelative :: Time -> (Time -> a -> b) -> Voice a -> Voice b
-mapWithOnsetRelative t f = mapWithEraRelative t (\s x -> f (s ^. onset) x)
+mapWithOnsetRelative t f = mapWithSpanRelative t (\s x -> f (s ^. onset) x)
 
--- >>> mapWithEraRelative 0 (\s x -> s) $ asVoice $ mconcat [c,d^*2,e]
+-- >>> mapWithSpanRelative 0 (\s x -> s) $ asVoice $ mconcat [c,d^*2,e]
 -- [(1,0 <-> 1)^.note,(2,1 <-> 3)^.note,(1,3 <-> 4)^.note]^.voice
-mapWithEraRelative :: Time -> (Span -> a -> b) -> Voice a -> Voice b
-mapWithEraRelative t f v = set valuesV newValues v
+mapWithSpanRelative :: Time -> (Span -> a -> b) -> Voice a -> Voice b
+mapWithSpanRelative t f v = set valuesV newValues v
   where
     newValues = zipWith f (erasRelative t v) (v ^. valuesV)
 
@@ -845,6 +842,7 @@ midpointsRelative o v = zipWith between (onsetsRelative o v) (offsetsRelative o 
 -- | Returns the eras of all notes in a voice given the onset of the first note.
 erasRelative :: Time -> Voice a -> [Span]
 erasRelative o v = zipWith (<->) (onsetsRelative o v) (offsetsRelative o v)
+
 {-
 onsetMap  :: Score a -> Map Time a
 onsetMap = fmap (view onset) . eraMap
@@ -861,3 +859,21 @@ eraMap = error "No eraMap"
 durations :: Voice a -> [Duration]
 durations = view durationsV
 -}
+
+-- | Rotate the durations of a voice.
+--
+-- >>> rotateDurations 1 [(1,'c'), (2, 'd'), (1, 'e')]
+-- [(2,'c'), (1, 'd'), (1, 'e')]
+rotateDurations :: Int -> Voice a -> Voice a
+rotateDurations n x = view voice $ fmap (view note) $ zip (rotate n ds) vs
+  where
+    (ds, vs) = unzip $ fmap (view $ from note) $ view notes x
+
+-- | Rotate the values of a voice.
+--
+-- >>> rotateValues 1 [(1,'c'), (2, 'd'), (1, 'e')]
+-- [(1,'d'), (2, 'e'), (1, 'c')]
+rotateValues :: Int -> Voice a -> Voice a
+rotateValues n x = view voice $ fmap (view note) $ zip ds (rotate n vs)
+  where
+    (ds, vs) = unzip $ fmap (view $ from note) $ view notes x

@@ -14,6 +14,7 @@ module Music.Pitch
     module Music.Pitch.Literal,
     module Music.Pitch.Ambitus,
     module Music.Pitch.Scale,
+    MajorMinor (MajorMode, MinorMode),
   )
 where
 
@@ -21,7 +22,7 @@ import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.Semigroup
 import Data.VectorSpace hiding (Sum, getSum)
-import Music.Pitch.Absolute
+import Music.Pitch.Absolute hiding (octaves)
 import Music.Pitch.Alterable
 import Music.Pitch.Ambitus
 import Music.Pitch.Augmentable

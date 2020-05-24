@@ -1,6 +1,6 @@
 %%% WARNING: GENERATED FILE. DO NOT EDIT. %%%
 
-% \version "2.18.2"
+\version "2.20.0"
 
 \paper {
     #(define fonts
@@ -22,8 +22,7 @@
     % Horizontal space taken up by music
     line-width      = 210\mm - 2.0 * 0.4\in
 
-    % TODO top marigin
-
+    page-breaking = #ly:one-page-breaking
 }
 
 \header {

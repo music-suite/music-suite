@@ -4,7 +4,6 @@ module Music.Time
     module Music.Time.Duration,
     module Music.Time.Position,
     module Music.Time.Split,
-    module Music.Time.Reverse,
     module Music.Time.Juxtapose,
     module Music.Time.Aligned,
     module Music.Time.Rest,
@@ -33,7 +32,6 @@ import Music.Time.Placed
 import Music.Time.Position
 import Music.Time.Reactive
 import Music.Time.Rest
-import Music.Time.Reverse
 import Music.Time.Score
 import Music.Time.Split
 import Music.Time.Track

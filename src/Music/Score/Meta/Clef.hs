@@ -9,6 +9,14 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------
@@ -34,9 +42,6 @@ module Music.Score.Meta.Clef
     -- ** Adding clefs to scores
     clef,
     clefDuring,
-
-    -- ** Extracting clefs
-    withClef,
   )
 where
 
@@ -74,12 +79,10 @@ instance IsPitch Clef where
 
 -- | Set clef of the given score.
 clef :: (HasMeta a, HasPosition a) => Clef -> a -> a
-clef c x = clefDuring (_era x) c x
+clef c x = case _era x of
+  Nothing -> x
+  Just e -> clefDuring e c x
 
 -- | Set clef of the given part of a score.
 clefDuring :: HasMeta a => Span -> Clef -> a -> a
 clefDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
-
--- | Extract the clef in from the given score, using the given default clef.
-withClef :: Clef -> (Clef -> Score a -> Score a) -> Score a -> Score a
-withClef def f = withMeta (f . fromMaybe def . fmap getLast . getOption)

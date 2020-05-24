@@ -2,6 +2,10 @@
 
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE ConstraintKinds #-}
@@ -14,15 +18,18 @@
 
 import Prelude hiding ((**))
 
+import Data.Void (Void)
 import Data.Monoid.Average
 import Data.Ord (comparing)
 import Music.Prelude hiding (defaultMain, elements)
+import Music.Pitch.Common.Internal (Interval(..), ChromaticSteps(..), DiatonicSteps(..))
 
 import Test.Tasty
 import Test.Tasty.QuickCheck (testProperty)
 import Test.QuickCheck
 import Test.QuickCheck.Function
 import Test.QuickCheck.Gen
+import Test.Tasty.QuickCheck.Laws( testEqLaws, testMonadLaws, testApplicativeLaws )
 
 import Data.Typeable
 import Data.Maybe
@@ -122,9 +129,9 @@ unass = \((a, b), c) -> (a, (b, c))
 _Transformable :: (Checkable a, Transformable a) => a -> Property
 _Transformable t = te .&&. tc .&&. tn
   where
-    te x     = True                               ==> transform mempty x === x .: t
-    tc s t x = isForwardSpan s && isForwardSpan t ==> transform (s <> t) x === transform s (transform t $ x .: t)
-    tn s x   = isForwardSpan s                    ==> transform (s <> negateV s) x === x .: t
+    te x     = True                          ==> transform mempty x === x .: t
+    tc s t x = True ==> transform (s <> t) x === transform s (transform t $ x .: t)
+    tn s x   = _duration s /= 0              ==> transform (s <> negateV s) x === x .: t
 
 {-
   Duration vs. onset and offset
@@ -156,16 +163,27 @@ _HasDuration t = property cd
     -- cd n a  = n /= 0 ==> _duration (stretch (n) (a .: t)) === (n) * _duration a
     cd n a  = n >= 0 ==> _duration (stretch (n) (a .: t)) === (n) * _duration a
 
-_HasPosition :: (Checkable a, Transformable a, HasPosition a) => a -> Property
-_HasPosition t = eqd .&&. ond .&&. ofd .&&. sd .&&. ass
-  where
-    eqd a   = True   ==> _duration a                        === _offset a .-. _onset (a .: t)
-    ond n a = n /= 0 ==> _onset (delay n $ a .: t)          === _onset a  .+^ n
-    ofd n a = n /= 0 ==> _offset (delay n $ a .: t)         === _offset a .+^ n
-    sd n a  = n /= 0 ==> _duration (stretch n $ a .: t)     === n * _duration a
-    ass s a p = True ==> (s `transform` (a .: t)) `_position` p === s `transform` (a `_position` p)
-    -- TODO more general
+-- TODO FIXME replace use of (.:)/asTypeOf with TypeApplications!
 
+-- TODO tests HasPosition/HasDuration/Transformable instances
+-- We should also test types that are not instances of all these classes at once
+_HasDurationHasPosition :: (Checkable a, Transformable a, HasDuration a, HasPosition a) => a -> Property
+_HasDurationHasPosition t = property sd -- .&&. ass
+  where
+    sd x =
+      True ==>
+        fmap _duration (_era $ x .: t) === Just (_duration x)
+
+_HasPositionTransformable:: (Checkable a, Transformable a, HasPosition a) => a -> Property
+_HasPositionTransformable t = property ass -- .&&. ass
+  where
+    ass s x =
+      isForwardSpan s  ==>
+        _era (transform s x) === fmap (transform s) (_era (x .: t))
+
+_onset, _offset :: (HasPosition1 a, Transformable a) => a -> Time
+_onset = view onset
+_offset = view offset
 
 {-
   _duration (beginning t x) + _duration (ending t x) = _duration x
@@ -174,10 +192,9 @@ _HasPosition t = eqd .&&. ond .&&. ofd .&&. sd .&&. ass
     iff t >= 0
 -}
 _Splittable :: (Checkable a, Transformable a, Splittable a, HasDuration a) => a -> Property
-_Splittable t = sameDur .&&. minBegin
+_Splittable t = property sameDur
   where
     sameDur t a  = True   ==> _duration (beginning t a) ^+^ _duration (ending t a) === _duration (a .: t)
-    minBegin     = True   ==> 1 === (1::Int)
 
     -- ond n a = n /= 0 ==> _onset (delay n $ a .: t)       === _onset a  .+^ n
     -- ofd n a = n /= 0 ==> _offset (delay n $ a .: t)      === _offset a .+^ n
@@ -222,6 +239,29 @@ sameType1 _ x = x
 
 
 
+instance CoArbitrary Time
+
+instance Arbitrary DiatonicSteps where
+  arbitrary = DiatonicSteps <$> arbitrary
+
+instance Arbitrary ChromaticSteps where
+  arbitrary = ChromaticSteps <$> arbitrary
+
+instance Arbitrary Instrument where
+  -- TODO can only select GM instruments!
+  arbitrary = fromMidiProgram . (`mod` 128) <$> arbitrary
+
+instance Arbitrary Interval where
+  arbitrary = Interval <$> arbitrary
+
+instance Arbitrary Pitch where
+  arbitrary = (c .+^) <$> arbitrary
+
+instance Arbitrary Part where
+  arbitrary = do
+    x <- arbitrary
+    -- TODO also set subpart, division
+    pure $ set instrument x mempty
 
 instance Arbitrary Time where
   arbitrary = fmap toTime (arbitrary::Gen Double)
@@ -233,16 +273,24 @@ instance Arbitrary Duration where
     where
       toDuration :: Real a => a -> Duration
       toDuration = realToFrac
+
 instance Arbitrary Span where
   arbitrary = liftA2 (<->) arbitrary arbitrary
+
 instance Arbitrary a => Arbitrary (Placed a) where
   arbitrary = fmap (view placed) arbitrary
+
 instance Arbitrary a => Arbitrary (Note a) where
   arbitrary = fmap (view note) arbitrary
+
 instance Arbitrary a => Arbitrary (Event a) where
   arbitrary = fmap (view event) arbitrary
+
 instance Arbitrary a => Arbitrary (AddMeta a) where
   arbitrary = fmap pure arbitrary
+
+instance Arbitrary a => Arbitrary (Aligned a) where
+  arbitrary = aligned <$> arbitrary <*> arbitrary <*> arbitrary
 
 {-
 instance (Ord a, Arbitrary a) => Arbitrary (Set.Set a) where
@@ -253,24 +301,25 @@ instance (Ord k, Arbitrary k, Ord a, Arbitrary a) => Arbitrary (Map.Map k a) whe
 -}
 
 instance Arbitrary a => Arbitrary (Voice a) where
-  arbitrary = fmap (view voice) arbitrary
--- instance Arbitrary a => Arbitrary (Chord a) where
-  -- arbitrary = fmap (view chord) arbitrary
+  arbitrary = fmap (view voice . take 3) arbitrary
+
 instance Arbitrary a => Arbitrary (Score a) where
-  arbitrary = fmap (view score) arbitrary
+  arbitrary = fmap (view score . take 3) arbitrary
+
 instance Arbitrary a => Arbitrary (Track a) where
-  arbitrary = fmap (view track) arbitrary
+  arbitrary = fmap (view track . take 3) arbitrary
 
--- instance Arbitrary a => Arbitrary (Reactive a) where
-  -- arbitrary = liftA2 zip arbitrary arbitrary
+instance Arbitrary a => Arbitrary (After a) where
+  arbitrary = fmap After arbitrary
 
-
--- instance Arbitrary a => Arbitrary (Sum a) where
---   arbitrary = fmap Sum arbitrary
--- instance Arbitrary a => Arbitrary (Product a) where
---   arbitrary = fmap Product arbitrary
 instance Arbitrary a => Arbitrary (Average a) where
   arbitrary = fmap Average arbitrary
+
+instance Arbitrary a => Arbitrary (Behavior a) where
+  arbitrary = view behavior <$> arbitrary
+
+instance Arbitrary a => Arbitrary (Reactive a) where
+  arbitrary = Music.Prelude.sample <$> arbitrary <*> arbitrary
 
 
 -- TODO move
@@ -291,14 +340,6 @@ instance Monoid a => Monoid (Event a) where
   mappend = liftA2 mappend
 
 
--- instance Ord a => Ord (Event a) where
---   x `compare` y = (x^.from note) `compare` (y^.from note)
-instance Eq a => Eq (Score a) where
-  x == y = Data.List.sortBy (comparing (^.era)) (x^.events) == Data.List.sortBy (comparing (^.era)) (y^.events)
--- instance Splittable Integer where
-  -- split _ x = (x,x)
-instance (Transformable a, HasPosition a, Splittable a) => Splittable [a] where
-  split t = unzipR . fmap (split t)
 
 unzipR f = (fmap fst f, fmap snd f)
 
@@ -312,14 +353,64 @@ unzipR f = (fmap fst f, fmap snd f)
   )
 
 
-main = defaultMain $ testGroup "Instances" $ [
-  -- I_TEST2("Moinoid BadMonoid", _Monoid, BadMonoid),
+main = defaultMain $ testGroup "all" [newTests, oldTests]
+
+data TProxy (a :: k) where
+  TP :: Typeable a => TProxy a
+
+unT :: TProxy a -> Proxy a
+unT _ = Proxy
+
+applicative :: ( Applicative m
+  , forall x . Eq x => Eq (m x)
+  , forall x . Show x => Show (m x)
+  , forall x . Arbitrary x => Arbitrary (m x)
+  ) => TProxy m -> TestTree
+applicative p@TP = testApplicativeLaws
+    (unT p)
+    (Proxy @())
+    (Proxy @())
+    (Proxy @Int)
+    (Proxy @[Int])
+    (\() -> (==))
+
+monad :: (Monad m
+  , forall x . Eq x => Eq (m x)
+  , forall x . Show x => Show (m x)
+  , forall x . Arbitrary x => Arbitrary (m x)
+  ) => TProxy m -> TestTree
+monad p@TP = testMonadLaws
+    (unT p)
+    (Proxy @())
+    (Proxy @())
+    (Proxy @Int)
+    (Proxy @[Int])
+    (\() -> (==))
+
+newTests = testGroup "Instances (new tests)"
+  [ testEqLaws (Proxy @(Reactive ()))
+  , testEqLaws (Proxy @(Reactive Int))
+  , applicative (TP @Maybe)
+  , applicative (TP @Note)
+  , applicative (TP @Event)
+  , applicative (TP @Reactive)
+  , applicative (TP @Voice)
+  , applicative (TP @Score)
+  , monad (TP @Maybe)
+  , monad (TP @Note)
+  , monad (TP @Event)
+  , monad (TP @Voice)
+  , monad (TP @Score)
+  ]
+
+oldTests =
+  testGroup "Instances (old tests)" [
 
   I_TEST2("Monoid ()", _Monoid, ()),
   I_TEST2("Monoid Sum Int", _Monoid, Sum Int),
   I_TEST2("Monoid [Int]", _Monoid, [Int]),
 
-  -- SLOW I_TEST(_Monoid, Average Rational)
+  I_TEST2("Monoid Average Rational", _Monoid, Average Rational),
   I_TEST2("Monoid Average Double", _Monoid, Average Double),
 
   I_TEST2("Monoid Time", _Monoid, Time),
@@ -331,10 +422,17 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("Monoid Note ()", _Monoid, Note ()),
 
   I_TEST2("Monoid Voice Int", _Monoid, Voice Int),
-  -- I_TEST2("Monoid Chord Int", _Monoid, Chord Int),
   I_TEST2("Monoid Score Int", _Monoid, Score Int),
 
+  -- TODO lawless!
+  -- I_TEST2("Monoid (After (Score ()))", _Monoid, After (Score ())),
+  -- TODO lawless!
+  -- I_TEST2("Monoid (After (Score Int))", _Monoid, After (Score Int)),
 
+  I_TEST2("Transformable ()", _Transformable, ()),
+  I_TEST2("Transformable Bool", _Transformable, Bool),
+  I_TEST2("Transformable Pitch", _Transformable, Pitch),
+  I_TEST2("Transformable Part", _Transformable, Part),
 
   I_TEST2("Transformable Time", _Transformable, Time),
   I_TEST2("Transformable Duration", _Transformable, Duration),
@@ -363,111 +461,43 @@ main = defaultMain $ testGroup "Instances" $ [
   I_TEST2("Transformable Placed Double", _Transformable, Placed Double),
   I_TEST2("Transformable AddMeta (Placed Double)", _Transformable, AddMeta (Placed Double)),
 
-  -- TODO how to test "pointwise" for Segment and Behavior
-  -- I_TEST2("Transformable Reactive Int", _Transformable, Reactive Int),
+  I_TEST2("Transformable Reactive Int", _Transformable, Reactive Int),
+  I_TEST2("Transformable Aligned Int", _Transformable, Aligned Int),
+  I_TEST2("Transformable Aligned (Voice Int)", _Transformable, Aligned (Voice Int)),
+  I_TEST2("HasPosition/Transformable (Aligned (Voice Int))",
+    _HasPositionTransformable, Aligned (Voice Int)),
+  I_TEST2("HasPosition/HasDuration (Aligned (Voice Int))",
+    _HasDurationHasPosition, Aligned (Voice Int)),
 
   I_TEST2("Transformable Voice Int", _Transformable, Voice Int),
-  -- I_TEST2("Transformable Chord Int", _Transformable, Chord Int),
   I_TEST2("Transformable Score Int", _Transformable, Score Int),
   I_TEST2("Transformable Track Int", _Transformable, Track Int),
-  -- SLOW I_TEST2("Transformable [Voice Int]", _Transformable, [Voice Int]),
-  -- SLOW I_TEST2("Transformable [Chord Int]", _Transformable, [Chord Int]),
-  -- SLOW I_TEST2("Transformable [Score Int]", _Transformable, [Score Int]),
+  I_TEST2("Transformable [Voice Int]", _Transformable, [Voice Int]),
 
-  -- I_TEST2("HasDuration Time", _HasDuration, Time),
+  -- TODO requires comparison of rendered form
+  -- Use newtype wrapper for Eq instance!
+  -- Similarly for Behavior
+  --  I_TEST2("Transformable Pattern Int", _Transformable, Pattern Int),
+
   I_TEST2("HasDuration Span", _HasDuration, Span),
   I_TEST2("HasDuration Event Int", _HasDuration, Event Int),
   I_TEST2("HasDuration Event Double", _HasDuration, Event Double),
-  -- I_TEST2("HasDuration Placed Int", _HasDuration, Placed Int),
-  -- I_TEST2("HasDuration Placed Double", _HasDuration, Placed Double),
 
-  I_TEST2("HasDuration Score Int", _HasDuration, Score Int),
-  -- I_TEST2("HasDuration Chord Int", _HasDuration, Chord Int),
-  -- TODO remove instance I_TEST2("HasDuration [Score Int]", _HasDuration, [Score Int]),
-  -- TODO remove instance I_TEST2("HasDuration [Chord Int]", _HasDuration, [Chord Int]),
+  I_TEST2("HasPosition/HasDuration Span", _HasDurationHasPosition, Span),
+  I_TEST2("HasPosition/HasDuration Event Int", _HasDurationHasPosition, Event Int),
+  I_TEST2("HasPosition/HasDuration Event Double", _HasDurationHasPosition, Event Double),
+  I_TEST2("HasPosition/Transformable Score Int", _HasPositionTransformable, Score Int),
+  I_TEST2("HasPosition/HasDuration Event (Event Int)", _HasDurationHasPosition, Event (Event Int)),
+  I_TEST2("HasPosition/HasDuration Event (Score Int)", _HasDurationHasPosition, Event (Score Int)),
 
-
-  -- I_TEST2("HasPosition Time", _HasPosition, Time),
-  I_TEST2("HasPosition Span", _HasPosition, Span),
-  I_TEST2("HasPosition Event Int", _HasPosition, Event Int),
-  I_TEST2("HasPosition Event Double", _HasPosition, Event Double),
-  -- I_TEST2("HasPosition Placed Int", _HasPosition, Placed Int),
-  -- I_TEST2("HasPosition Placed Double", _HasPosition, Placed Double),
-  -- I_TEST2("HasPosition Score Int", _HasPosition, Score Int),
-  I_TEST2("HasPosition Event (Event Int)", _HasPosition, Event (Event Int)),
-  I_TEST2("HasPosition Event (Score Int)", _HasPosition, Event (Score Int)),
-  -- I_TEST2("HasPosition Score (Placed Int)", _HasPosition, Score (Placed Int)),
-
-  -- I_TEST2("HasPosition AddMeta (Placed Duration)", _HasPosition, AddMeta (Placed Duration)),
-  -- I_TEST2("HasPosition Chord Int", _HasPosition, Chord Int),
-  -- TODO remove instance I_TEST2("HasPosition [Score Int]", _HasPosition, [Score Int]),
-  -- TODO remove instance I_TEST2("HasPosition [Chord Int]", _HasPosition, [Chord Int]),
-
-
-
-
-
-
-
-
-
-
-  -- Test meaningless... I_TEST2("Splittable ()", _Splittable, ()),
   I_TEST2("Splittable Duration", _Splittable, Duration),
-  -- I_TEST2("Splittable Span", _Splittable, Span),
-  -- TODO arbitrary I_TEST2("Splittable Meta", _Splittable, Meta),
-  -- TODO arbitrary I_TEST2("Splittable Attribute", _Splittable, Attribute),
   I_TEST2("Splittable AddMeta Duration", _Splittable, AddMeta Duration),
-
-  -- TODO remove instance I_TEST2("Splittable [Duration]", _Splittable, [Duration]),
-  -- TODO remove instance I_TEST2("Splittable [Span]", _Splittable, [Span]),
-
-  -- I_TEST2("Splittable Set.Set Duration", _Splittable, Set.Set Duration),
-  -- I_TEST2("Splittable Set.Set Span", _Splittable, Set.Set Span),
-  -- I_TEST2("Splittable Map.Map Int Duration", _Splittable, Map.Map Int Duration),
-  -- I_TEST2("Splittable Map.Map Int Span", _Splittable, Map.Map Int Span),
-
-  -- I_TEST2("Splittable Int", _Splittable, Int),
-  -- I_TEST2("Splittable Double", _Splittable, Double),
-  -- I_TEST2("Splittable Event Int", _Splittable, Event Int),
-  -- I_TEST2("Splittable Event Double", _Splittable, Event Double),
-  -- I_TEST2("Splittable Note Int", _Splittable, Note Int),
-  -- I_TEST2("Splittable Note Double", _Splittable, Note Double),
-  -- I_TEST2("Splittable Placed Int", _Splittable, Placed Int),
-  -- I_TEST2("Splittable Placed Double", _Splittable, Placed Double),
-
-
-
-  -- TODO how to test "pointwise" for Segment and Behavior
-  -- I_TEST2("Splittable Reactive Int", _Splittable, Reactive Int),
-
-  -- I_TEST2("Splittable Voice Int", _Splittable, Voice Int),
---  I_TEST2("Splittable Track Int", _Splittable, Track Int),
-  -- I_TEST2("Splittable Chord Int", _Splittable, Chord Int),
-  -- I_TEST2("Splittable Score Int", _Splittable, Score Int),
-  -- I_TEST2("Splittable Event (Event Int)", _Splittable, Event (Event Int)),
-
-
+  I_TEST2("Splittable Voice ()", _Splittable, Voice ()),
+  I_TEST2("Splittable Note ()", _Splittable, Note ()),
+  I_TEST2("Splittable Voice Int", _Splittable, Voice Int),
+  I_TEST2("Splittable Note Int", _Splittable, Note Int),
 
   I_TEST2("Transformable Note [Event Int]", _Transformable, Note [Event Int])
 
   ]
 
-
-
-{-
-OK
-
-let t = -8
-let s = [(5,3)^.note,((-3),-4)^.note]^.voice
-stretch t (_duration s)
-_duration (stretch t s)
-
-
-FAIL
-
-let t = -8
-let s = [(5 <-> 23,3)^.event,(3 <-> (-3),-4)^.event]^.score
-stretch t (_duration s)
-_duration (stretch t s)
--}

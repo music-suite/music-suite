@@ -39,7 +39,6 @@ import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Time.Behavior
 import Music.Time.Note (note)
-import Music.Time.Reverse
 import Music.Time.Transform
 import Music.Time.Voice
 
@@ -130,9 +129,6 @@ instance IsDynamics a => IsDynamics (TieT a) where
 instance Transformable a => Transformable (TieT a) where
   transform s = fmap (transform s)
 
-instance Reversible a => Reversible (TieT a) where
-  rev = fmap rev
-
 instance Num a => Num (TieT a) where
 
   (+) = liftA2 (+)
@@ -209,7 +205,7 @@ instance (Real a, Enum a, Integral a) => Integral (TieT a) where
   toInteger = toInteger . extract
 
 newtype TieT a = TieT {getTieT :: ((Any, Any), a)}
-  deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
+  deriving (Eq, Ord, Show, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad)
 
 instance Wrapped (TieT a) where
 
