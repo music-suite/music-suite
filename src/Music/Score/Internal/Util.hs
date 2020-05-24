@@ -298,9 +298,6 @@ retainUpdates2 = snd . Data.List.mapAccumL g Nothing
         )
       )
 
--- hretainUpdates :: Eq a => [HList Identity xs] -> [HList Maybe xs]
--- hretainUpdates = undefined
-
 -- Generic version of 'replicate'.
 -- > category: List
 -- > depends: base

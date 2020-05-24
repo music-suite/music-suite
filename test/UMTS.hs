@@ -47,7 +47,6 @@ import qualified Music.Score.Internal.Util
 import qualified Music.Pitch.Literal
 import qualified Music.Score.Pitch
 import Music.Time
-import Control.Monad
 import Control.Exception (SomeException, handle)
 import Music.Score.Internal.Quantize
   ( Rhythm (..),
@@ -646,11 +645,16 @@ umts_13a =
   where
     staff :: Staff
     staff = Staff mempty $ take (length sysStaff) $ repeat $ Bar mempty [PitchLayer $ Beat (1 / 2) $ pitches .~ [P.c] $ mempty]
-    sysStaff = zipWith (\setTS ks -> setTS $ keySignature .~ (Option $ Just $ First $ ks) $ mempty)
-      -- TODO just 2/4
-      ( (timeSignature .~ (Option $ Just $ First (2/4))) : (timeSignature .~ (Option $ Just $ First (3/4))) : repeat mempty)
-      keySigs
+    -- sysStaff = zipWith (\setTS ks -> setTS $ keySignature .~ (Option $ Just $ First $ ks) $ mempty)
+    --   -- TODO just 2/4
+    --   ( (timeSignature .~ (Option $ Just $ First (2/4))) : (timeSignature .~ (Option $ Just $ First (3/4))) : repeat mempty)
+    --   keySigs
 
+    -- TODO include TS too!
+    sysStaff =
+      fmap
+        (\ks -> keySignature .~ ks $ mempty)
+        keySigs
     keySigs :: [KeySignature]
     keySigs = concatMap (\i -> fmap (\m -> Music.Score.Meta.Key.key (error "TODO" i) m) modesPerBar) fifthPerTwoBars
     fifthPerTwoBars = [-11 .. 11] :: [Music.Score.Meta.Key.Fifths]
@@ -1611,7 +1615,7 @@ umts_41a =
   where
     sysStaff = [keySignature .~ keySig $ mempty]
     staves = zipWith (\name -> Staff (instrumentFullName .~ name $ mempty) . pure) names bars
-    keySig = Option $ Just $ First $ Music.Score.Meta.Key.key Music.Pitch.g MajorMode
+    keySig = Music.Score.Meta.Key.key Music.Pitch.g MajorMode
     bars =
       fmap
         ( \p ->
@@ -1643,7 +1647,7 @@ umts_41b =
   where
     sysStaff = [keySignature .~ keySig $ mempty]
     staves = zipWith (\name -> Staff (instrumentFullName .~ name $ mempty) . pure) names bars
-    keySig = Option $ Just $ First $ Music.Score.Meta.Key.key Music.Pitch.g MajorMode
+    keySig = Music.Score.Meta.Key.key Music.Pitch.g MajorMode
     bars =
       repeat $
         Bar
@@ -2062,7 +2066,7 @@ umts_72b =
         ]
     ----
     pitch = Music.Pitch.c'
-    origKeySig = Option $ Just $ First $ Music.Score.Meta.Key.key Music.Pitch.g MajorMode
+    origKeySig = Music.Score.Meta.Key.key Music.Pitch.g MajorMode
     instruments :: [Instrument]
     instruments =
       [ Music.Parts.ebClarinet,
@@ -2140,7 +2144,7 @@ umts_export = do
 
   -- Generate files, counting errors
   errorCount <- newIORef @Integer 0
-  forM_ umts_all $ \(name, work) -> do
+  _ <- for umts_all $ \(name, work) -> do
     let baseName = dir ++ "/" ++ name
         xmlName = baseName ++ ".xml"
     -- lyName  = baseName ++ ".ly"
@@ -2161,7 +2165,7 @@ umts_export = do
     h c = handle $ \e -> do
       modifyIORef c succ
       putStr "          Error: "
-      print @SomeException e
+      print (e :: SomeException)
 
 -- h = id
 {-

@@ -27,7 +27,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 module Music.Score.Internal.Export
-  ( extractTimeSignatures,
+  (
     extractBars,
   )
 where
@@ -64,7 +64,6 @@ import Data.Traversable
 import Data.Typeable
 import Data.VectorSpace
 import Music.Dynamics.Literal
-import Music.Pitch.Common (MajorMinor (..))
 import Music.Pitch.Literal
 import Music.Score.Articulation
 import Music.Score.Dynamics
@@ -135,46 +134,17 @@ extractBarsInEra era x = zip3 dss tss kss
     foo :: Reactive (TimeSignature, KeySignature)
     foo =
       (,) <$> getTimeSignatures defaultTimeSignature x
-        <*> getKeySignatures defaultKeySignature x
+        <*> getKeySignatures x
 
--- | Extract bar-related information from score meta-data.
---
--- Returns a list of bars with durations and possibly time signature, key signature
--- etc. For no change, Nothing is returned.
-extractTimeSignatures ::
-  (HasMeta a, HasPosition a, Transformable a) =>
-  a ->
-  [(Duration, Maybe TimeSignature)]
-extractTimeSignatures x = case _era x of
-  Nothing -> []
-  Just e -> extractTimeSignaturesInEra e x
-
-extractTimeSignaturesInEra era score = zip (fmap realToFrac barTimeSignatures) (retainUpdates barTimeSignatures)
-  where
-    -- From position 0, the duration of each time signature and how long it lasts
-    timeSignatures :: [(Duration, TimeSignature)]
-    timeSignatures =
-      view pairs . reactiveToVoice' era $
-        getTimeSignatures defaultTimeSignature score
-    -- The time signature of each bar
-    barTimeSignatures :: [TimeSignature]
-    barTimeSignatures =
-      fmap fst $ prolongLastBarIfDifferent
-        $ tsPerBar
-        $ undefined timeSignatures
 
 -- | Extract the time signature meta-track, using the given default.
-getTimeSignatures = getSignatures @_ @TimeSignature
+getTimeSignatures :: HasMeta a => TimeSignature -> a -> Reactive TimeSignature
+getTimeSignatures def = fmap (fromMaybe def . fmap getLast . getOption) . fromMetaReactive . (view meta)
 
 -- | Extract the key signature meta-track
-getKeySignatures = getSignatures @_ @KeySignature
+getKeySignatures :: HasMeta a => a -> Reactive KeySignature
+getKeySignatures = fromMetaReactive . view meta
 
-getSignatures :: (HasMeta a, Typeable b) => b -> a -> Reactive b
-getSignatures def =
-  fmap (fromMaybe def . fmap getLast . getOption) . fromMetaReactive . (view meta)
-
-defaultKeySignature :: KeySignature
-defaultKeySignature = key c MajorMode
 defaultTimeSignature :: TimeSignature
 defaultTimeSignature = time 4 4
 

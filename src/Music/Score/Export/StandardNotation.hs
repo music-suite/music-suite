@@ -237,7 +237,7 @@ import qualified Music.Dynamics.Literal as D
 import Music.Parts (Instrument, Part, ScoreLayout (..))
 import qualified Music.Parts
 import qualified Music.Pitch
-import Music.Pitch (IsPitch (..), Pitch, fromPitch, MajorMinor (..))
+import Music.Pitch (IsPitch (..), Pitch, fromPitch)
 import qualified Music.Pitch.Literal
 import qualified Music.Pitch.Literal as P
 import qualified Music.Score.Articulation
@@ -359,7 +359,7 @@ data SystemBar
       -}
       { _barNumbers :: Option (First BarNumber),
         _timeSignature :: Option (First TimeSignature),
-        _keySignature :: Option (First KeySignature),
+        _keySignature :: KeySignature,
         _rehearsalMark :: Option (First RehearsalMark),
         _tempoMark :: Option (First TempoMark)
         -- ,_barLines :: BarLines
@@ -1074,22 +1074,23 @@ toLyBar sysBar bar = do
     sim xs = Lilypond.Simultaneous False xs
 
 addKeySignature ::
-  Option (First KeySignature) ->
+  KeySignature ->
   [Lilypond.Music] ->
   [Lilypond.Music]
-addKeySignature (Option (Just (First (Music.Score.Meta.Key.KeySignature (tonic, mode))))) =
+addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just (tonic, isMajor)))) =
+  -- TODO convert
   ( Lilypond.Key
       (Music.Pitch.Literal.fromPitch tonic)
-      (case mode of Music.Pitch.MajorMode -> Lilypond.Major; Music.Pitch.MinorMode -> Lilypond.Minor)
+      (case isMajor of Music.Pitch.MajorMode -> Lilypond.Major; Music.Pitch.MinorMode -> Lilypond.Minor)
       :
   )
-addKeySignature (Option Nothing) = id
+addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First Nothing)) = id
 
 addTimeSignature ::
   Option (First TimeSignature) ->
   [Lilypond.Music] ->
   [Lilypond.Music]
-addTimeSignature (Option (Just (First (Music.Score.Meta.Time.TimeSignature (ms, n))))) =
+addTimeSignature (Option (Just (First (Music.Score.Meta.Time.getTimeSignature -> (ms, n))))) =
   (Lilypond.Time (sum ms) n :)
 addTimeSignature (Option Nothing) = id
 
@@ -1378,15 +1379,25 @@ movementToPartwiseXml movement = music
 
         divisions_ :: [MusicXml.Music]
         divisions_ = MusicXml.defaultDivisions : repeat mempty
+
         keySignatures_ :: [MusicXml.Music]
-        keySignatures_ = fmap (expTS . unOF) $ fmap (^. keySignature) (movement ^. systemStaff)
+        keySignatures_ = fmap (expKS . view keySignature) $
+            (movement ^. systemStaff)
           where
-            unOF = fmap getFirst . getOption
-            expTS Nothing = (mempty :: MusicXml.Music)
-            expTS (Just (Music.Score.Meta.Key.KeySignature (fifths, mode))) =
-              MusicXml.key (X.Fifths (fromPitch fifths))
-                (case mode of MajorMode -> MusicXml.Major
-                              MinorMode -> MusicXml.Minor)
+            expKS (Music.Score.Meta.Key.KeySignature (Data.Monoid.First Nothing)) =
+              mempty
+            expKS (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just ks))) =
+              let
+                (fifths, mode) = ks
+
+                fifths' = MusicXml.Fifths $ fromInteger $
+                  Music.Score.Meta.Key.getFifths $ fromPitch fifths
+
+                mode' = case mode of
+                  Music.Pitch.MajorMode -> MusicXml.Major
+                  Music.Pitch.MinorMode -> MusicXml.Minor
+
+               in MusicXml.key fifths' mode'
 
         timeSignatures_ :: [MusicXml.Music]
         timeSignatures_ = fmap (expTS . unOF) $ fmap (^. timeSignature) (movement ^. systemStaff)
@@ -2094,7 +2105,7 @@ toStandardNotation sc' = do
       fmap
         ( \(_dur, ts, ks) ->
             timeSignature .~ Option (fmap First ts)
-              $ keySignature .~ Option (fmap First ks)
+              $ keySignature .~ maybe mempty id ks
               $ mempty
         )
         barMeta
