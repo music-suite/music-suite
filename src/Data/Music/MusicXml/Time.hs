@@ -35,8 +35,8 @@ newtype Divs
   = -- | Sounding time in ticks
     Divs {getDivs :: Int}
 
+-- | By default we use 768 per quarter note, like Sibelius.
 instance Default Divs where
-  -- Number of ticks per whole note (we use 768 per quarter like Sibelius).
   def = 768 * 4
 
 
