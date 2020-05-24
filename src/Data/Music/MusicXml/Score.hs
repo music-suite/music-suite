@@ -173,8 +173,6 @@ data ScoreHeader
         mvmNumber :: Maybe Int,
         mvmTitle :: Maybe String,
         scoreIdentification :: Maybe Identification,
-            --  ^ defaults?
-            --  ^ credit*
         scorePartList :: PartList
       }
   deriving Show
