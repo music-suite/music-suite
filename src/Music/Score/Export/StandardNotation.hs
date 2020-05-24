@@ -1380,15 +1380,12 @@ movementToPartwiseXml movement = music
         divisions_ :: [MusicXml.Music]
         divisions_ = MusicXml.defaultDivisions : repeat mempty
         keySignatures_ :: [MusicXml.Music]
-        keySignatures_ = undefined
-        -- keySignatures_ = fmap (expTS . unOF) $ fmap (^. keySignature) (movement ^. systemStaff)
-        --   where
-        --     unOF = fmap getFirst . getOption
-        --     -- TODO recognize common/cut
-        --     expTS Nothing = (mempty :: MusicXml.Music)
-        --     expTS (Just ks) =
-        --       let (fifths, mode) = Music.Score.Meta.Key.getKeySignature ks
-        --        in MusicXml.key (fromIntegral fifths) (if mode then MusicXml.Major else MusicXml.Minor)
+        keySignatures_ = fmap (expKS . view keySignature) $ (movement ^. systemStaff)
+          where
+            expKS (Music.Score.Meta.Key.KeySignature (Data.Monoid.First Nothing)) = (mempty :: MusicXml.Music)
+            expKS (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just ks))) =
+              let (fifths, mode) = ks
+               in MusicXml.key (MusicXml.Fifths $ fromInteger $ Music.Score.Meta.Key.getFifths $ fromPitch fifths) (case mode of { Music.Pitch.MajorMode -> MusicXml.Major; Music.Pitch.MinorMode -> MusicXml.Minor })
         timeSignatures_ :: [MusicXml.Music]
         timeSignatures_ = fmap (expTS . unOF) $ fmap (^. timeSignature) (movement ^. systemStaff)
           where
