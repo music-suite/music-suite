@@ -102,7 +102,9 @@ parsePart part =
 parseMeasure :: Element -> Maybe (MeasureAttrs, Music)
 parseMeasure measure =
   (,)
-    <$> (MeasureAttrs <$> (attr "number" measure >>= readMaybe))
+    <$> ( MeasureAttrs (attr "implicit" measure == Just "yes")
+            <$> (attr "number" measure)
+        )
     <*> (Music <$> dispatch supportedElems measure)
 
 supportedElems :: [(String, Element -> Maybe MusicElem)]

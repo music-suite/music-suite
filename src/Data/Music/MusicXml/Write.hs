@@ -98,7 +98,9 @@ addScoreAttrs (ScoreAttrs xs) = addAttr (uattr "version" $ concatSep "." $ map s
 
 addPartAttrs (PartAttrs x) = addAttr (uattr "id" x)
 
-addMeasureAttrs (MeasureAttrs n) = addAttr (uattr "number" $ show n)
+addMeasureAttrs (MeasureAttrs implicit number) =
+  let yesNo = if implicit then "yes" else "no"
+  in addAttr (uattr "number" number) . addAttr (uattr "implicit" yesNo)
 
 instance WriteMusicXml ScoreHeader where
   write
