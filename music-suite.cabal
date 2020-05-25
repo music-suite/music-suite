@@ -299,6 +299,8 @@ test-suite "music-suite-test-laws"
 
 test-suite "music-suite-test-xml-parser"
     build-depends:      base,
+                        bytestring,
+                        text,
                         music-suite,
                         tasty,
                         tasty-hunit,
