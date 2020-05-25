@@ -3,8 +3,6 @@
 ## Installing
 
 <!--
-### Installing via Docker
-
 TODO Docker or other "easy" install options
 -->
 
@@ -375,6 +373,16 @@ Looking at the type of the composition operators, it becomes clear that `|>` and
 ```haskell
 (|>)  :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 ```
+
+<!--
+TODO refer back to previous table. For example `Music.Pitch.Common` distinguishes between enharmonics, while `Integer` does not.
+-->
+
+### Interval names
+
+Here and elsewhere in Music Suite, the convention is to follow standard theoretical
+notation, so *minor* and *diminished* intervals are written in lower-case, while *major*
+and *perfect* intervals are written in upper-case.
 
 ```haskell
 (</>) :: (Semigroup a, HasParts a, HasSubpart p, p ~ Part a) => a -> a -> a
@@ -1741,6 +1749,38 @@ artificial c |/ 2
 
 ### String techniques
 
+
+```music+haskell
+set parts' violins $
+  pseq [arco $ staccato $ times 4 c, times 4 $ pizz g_ ] |/ 4
+```
+
+```music+haskell
+set parts' violins $
+  pseq [pizz $ pseq [c,c,c,c], d |* 2, pizz e |*2 ] |/ 4
+```
+
+
+TODO bow position (sul tasto, sul pont, nat)
+
+```music+haskell
+set parts' violins $
+  pseq [sulTasto $ pseq [c,c,c,c], posNat d |* 2] |/ 4
+```
+
+```music+haskell
+set parts' violins $
+  pseq [posNat $ pseq [c,c,c,c], sulPont d |* 2] |/ 4
+```
+
+```music+haskell
+set parts' violins $ pseq
+  [ colLegno c
+  , colLegnoBatt c
+  , senzaLegno c
+  ] |* 2
+```
+
 We can switch between bowed versus plucked strings using @[pizz] and @[arco]. The default is /arco/ (bowed). As in standard string notation this is indicated by text at the point of change:
 
 ```music+haskell
@@ -1819,9 +1859,30 @@ TODO chord tremolo
 -->
 
 
-<!--
+```music+haskell
+set parts' violins $ pseq
+  [ conSord c
+  , senzaSord c
+  ]
+  |/ 4
+```
+
+```music+haskell
+set parts' violins $ pseq
+  [ conSord $ arco c
+  , pizz c
+  , pizz $ conSord $ pizz c
+  , conSord $ colLegno $ pizz c
+  ]
+  |* 1.5
+```
+
+TODO chord tremolo
+
+
 ### Wind techniques
 
+<!--
 TODO fingering, multiphonics
 
 TODO key sounds, percussive attacks ("pizz"), haromonics/whistle tones
@@ -1952,12 +2013,9 @@ TODO color
 
 # Meta-information
 
-
 Meta-information is global, rather than attached to a specific part. It is *defined at every point in the score with explicit change points (per type)* and always has a sensible default value (e.g. one (Reactive m) per type). All meta types are monoidal. Examples: key signature, time signature.
 
-For the most part *logical/semantic/sounding* information is not meta (exception: tempo).
-
-Meta-information is always *optional*. All meta-tracks are set to some sensible value by default. We can override this either globally or locally (during some specific time-span).
+Meta-information is always *optional*. There is always a sensible default value which can be overriden either globally or locally (i.e. during some specific time-span).
 
 <!--
 It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In Music Suite these are grouped together under the common label *meta-information*.
@@ -3412,9 +3470,6 @@ The work of Paul Hudak and the the Yale Haskell group, including [Haskore][hasko
 The temporal structures, their instances and more general design philosophy comes from Conal Elliott's [Reactive][reactive] (and its predecessors). Brent Yorgey's [Diagrams][diagrams] provided the separation of points and vectors and was another main influence.
 
 
-```music-extra
-(ignored)
-```
 
 @@@hslinks@@@
 
