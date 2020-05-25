@@ -5,7 +5,12 @@
     <miscellaneous>
       <miscellaneous-field name="description">A part with no id attribute.
             Since this piece has only one part, it is clear which part 
-            is described by the one part element.</miscellaneous-field>
+            is described by the one part element.
+
+            However, the specification says that the id attribute is required on
+            a part element, so this will still fail to parse, despite the fact that it is
+            unambiguous.
+      </miscellaneous-field>
     </miscellaneous>
   </identification>
   <part-list>
