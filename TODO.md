@@ -702,6 +702,7 @@ Consider switching to a decentralized issue tracker such as:
   - Note: often `Traversable` is enough (for the plural form of each class)
 
 - Make doc generation work in CI (again)
+  - For the CI story, see also https://github.com/hanshoglund/music-suite/pull/21#discussion_r429626368
 
 - [ ] IDE allowing "preview on hover"
   - [X] Basic implementation works now (in separate repository), uses the CLI + Cabal/Nix for invocation
