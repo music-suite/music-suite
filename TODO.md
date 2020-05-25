@@ -270,6 +270,18 @@ Consider switching to a decentralized issue tracker such as:
   - Try a polymorphic transformer first, e.g. PitchT (the rest should be easy)
 
 
+- Maybe add new time type, a la Haskore/Mezzo:
+    data Mus a = Note Duration a | Rest Duration | Par (V2 (Mus a)) | Seq (V2 (Mus a))
+    - Would behave much like Time.Voice, e.g.
+        instance HasDuration (Mus a)
+        instance Transformable (Mus a) -- translation invariant
+    - Can be aligned, rendered to a score etc.
+
+- Add parsers for aligned values, e.g.
+    parseAlignedVoice :: MonadError e m => Score a -> m [Aligned (Voice a)]
+    parseAlignedVoice :: MonadError e m => Score a -> m (Aligned (Mus a))
+    etc.
+  See $voiceSeparation
 
 - Issues from the old tracker
   - We have a CLI interface for dynamically exporting to various backends and providing options.
@@ -311,6 +323,9 @@ Consider switching to a decentralized issue tracker such as:
 
 - Multi-staff customization: The current state will gracefully handle overlapping notes in a single part, drawing them on separate staves, however it may not distribute things ideally across the staves. The final state should do better by default *and* allow customization.
 
+- [ ] Putting overlapping events in monophonic instruments (e.g. flute) should be a linting error,
+    similar to range etc.
+
 - [ ] Draw celesta/piano/organ on >1 staff by default
 
 - [ ] Rename Inspectable -> Exportable?
@@ -318,7 +333,6 @@ Consider switching to a decentralized issue tracker such as:
 - [ ] Make parts such as "Piano 0", "Piano (-1)", etc, unrepresentable
 
 - [ ] we should never see Music/StandardNote in the user guide (specific/nice-looking types instead). The only purpose of Music/StandardNote is to be defaults/final objects.
-
 
 - [ ] Make parts such as "Piano 0", "Piano (-1)", etc, unrepresentable
 
