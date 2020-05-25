@@ -2015,7 +2015,7 @@ TODO color
 
 Meta-information is global, rather than attached to a specific part. It is *defined at every point in the score with explicit change points (per type)* and always has a sensible default value (e.g. one (Reactive m) per type). All meta types are monoidal. Examples: key signature, time signature.
 
-Meta-information is always *optional*. There is always a sensible default value which can be overriden.
+Meta-information is always *optional*. There is always a sensible default value which can be overriden either globally or locally (i.e. during some specific time-span).
 
 <!--
 It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In Music Suite these are grouped together under the common label *meta-information*.
