@@ -75,7 +75,7 @@ import Music.Score.Pitch hiding (Pitch)
 import Music.Time
 import Music.Time.Reactive
 
-newtype Fifths = Fifths Integer
+newtype Fifths = Fifths { getFifths :: Integer }
   deriving (Eq, Ord, Num, Enum, Integral, Real)
 
 instance Show Fifths where

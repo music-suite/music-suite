@@ -27,7 +27,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 module Music.Score.Internal.Export
-  ( extractTimeSignatures,
+  (
     extractBars,
   )
 where
@@ -136,31 +136,6 @@ extractBarsInEra era x = zip3 dss tss kss
       (,) <$> getTimeSignatures defaultTimeSignature x
         <*> getKeySignatures x
 
--- | Extract bar-related information from score meta-data.
---
--- Returns a list of bars with durations and possibly time signature, key signature
--- etc. For no change, Nothing is returned.
-extractTimeSignatures ::
-  (HasMeta a, HasPosition a, Transformable a) =>
-  a ->
-  [(Duration, Maybe TimeSignature)]
-extractTimeSignatures x = case _era x of
-  Nothing -> []
-  Just e -> extractTimeSignaturesInEra e x
-
-extractTimeSignaturesInEra era score = zip (fmap realToFrac barTimeSignatures) (retainUpdates barTimeSignatures)
-  where
-    -- From position 0, the duration of each time signature and how long it lasts
-    timeSignatures :: [(Duration, TimeSignature)]
-    timeSignatures =
-      view pairs . reactiveToVoice' era $
-        getTimeSignatures defaultTimeSignature score
-    -- The time signature of each bar
-    barTimeSignatures :: [TimeSignature]
-    barTimeSignatures =
-      fmap fst $ prolongLastBarIfDifferent
-        $ tsPerBar
-        $ undefined timeSignatures
 
 -- | Extract the time signature meta-track, using the given default.
 getTimeSignatures :: HasMeta a => TimeSignature -> a -> Reactive TimeSignature
