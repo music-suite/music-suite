@@ -296,9 +296,9 @@ bracket :: PartList -> PartList
 bracket ps =
   PartList $
     mempty
-      <> [Group 1 Start "" Nothing (Just GroupBracket) (Just GroupBarLines) False]
+      <> [Group 1 Start Nothing Nothing (Just GroupBracket) (Just GroupBarLines) False]
       <> getPartList ps
-      <> [Group 1 Stop "" Nothing Nothing Nothing False]
+      <> [Group 1 Stop Nothing Nothing Nothing Nothing False]
 
 -- |
 -- Enclose the given parts in a brace.
@@ -306,9 +306,9 @@ brace :: PartList -> PartList
 brace ps =
   PartList $
     mempty
-      <> [Group 1 Start "" Nothing (Just GroupBrace) (Just GroupBarLines) False]
+      <> [Group 1 Start Nothing Nothing (Just GroupBrace) (Just GroupBarLines) False]
       <> getPartList ps
-      <> [Group 1 Stop "" Nothing Nothing Nothing False]
+      <> [Group 1 Stop Nothing Nothing Nothing Nothing False]
 
 -- |
 -- Convenient synonym for 'mconcat', allowing us to write things like
@@ -335,17 +335,20 @@ bar :: [Music] -> Music
 bar = measure
 
 header :: String -> String -> PartList -> ScoreHeader
-header title composer partList = ScoreHeader Nothing (Just title) (Just (Identification [Creator "composer" composer])) partList
+header title composer partList = ScoreHeader Nothing Nothing (Just title) (Just (Identification [Composer composer])) partList
 
 setHeader :: ScoreHeader -> Score -> Score
 setHeader header (Partwise attrs _ music) = Partwise attrs header music
 setHeader header (Timewise attrs _ music) = Timewise attrs header music
 
 setTitle :: String -> ScoreHeader -> ScoreHeader
-setTitle title (ScoreHeader _ mvmTitle ident partList) = ScoreHeader (Just title) mvmTitle ident partList
+setTitle title sh = sh { scoreTitle = Just title }
+
+setMovementNumber :: Int -> ScoreHeader -> ScoreHeader
+setMovementNumber n sh = sh { mvmNumber = Just n }
 
 setMovementTitle :: String -> ScoreHeader -> ScoreHeader
-setMovementTitle mvmTitle (ScoreHeader title _ ident partList) = ScoreHeader title (Just mvmTitle) ident partList
+setMovementTitle t sh = sh { mvmTitle = Just t }
 
 -- | The values P1, P2... which are conventionally used to identify parts in MusicXML.
 standardPartAttributes :: [String]
@@ -375,7 +378,8 @@ defaultClef = trebleClef
 -- |
 -- Create a clef.
 clef :: ClefSign -> Line -> Music
-clef symbol line = Music . single $ MusicAttributes $ Clef symbol line
+clef symbol line =
+  Music . single $ MusicAttributes $ single $ Clef symbol line Nothing
 
 defaultKey :: Music
 defaultKey = key 0 Major
@@ -383,7 +387,7 @@ defaultKey = key 0 Major
 -- |
 -- Create a key signature.
 key :: Fifths -> Mode -> Music
-key n m = Music . single $ MusicAttributes $ Key n m
+key n m = Music . single $ MusicAttributes $ single $ Key n m
 
 -- Number of ticks per whole note (we use 768 per quarter like Sibelius).
 defaultDivisionsVal :: Divs
@@ -392,24 +396,24 @@ defaultDivisionsVal = 768 * 4
 -- |
 -- Set the tick division to the default value.
 defaultDivisions :: Music
-defaultDivisions = Music $ single $ MusicAttributes $ Divisions $ defaultDivisionsVal `div` 4
+defaultDivisions = Music $ single $ MusicAttributes $ single $ Divisions $ defaultDivisionsVal `div` 4
 
 -- |
 -- Define the number of ticks per quarter note.
 divisions :: Divs -> Music
-divisions n = Music . single $ MusicAttributes $ Divisions $ n
+divisions n = Music . single $ MusicAttributes $ single $ Divisions n
 
 commonTime, cutTime :: Music
-commonTime = Music . single $ MusicAttributes $ Time CommonTime
-cutTime = Music . single $ MusicAttributes $ Time CutTime
+commonTime = Music . single $ MusicAttributes $ single $ Time CommonTime
+cutTime = Music . single $ MusicAttributes $ single $ Time CutTime
 
 -- |
 -- Create a time signature.
 time :: Beat -> BeatType -> Music
-time a b = Music . single $ MusicAttributes $ Time $ DivTime a b
+time a b = Music . single $ MusicAttributes $ single $ Time $ DivTime a b
 
 staves :: Int -> Music
-staves n = Music $ single $ MusicAttributes $ Staves (fromIntegral n)
+staves n = Music $ single $ MusicAttributes $ single $ Staves (fromIntegral n)
 
 -- |
 -- Create a metronome mark.
@@ -890,40 +894,22 @@ mapNote fn fc fg = go
     go (GraceNote f t p) = let (f', t', p') = fg f t p in GraceNote f' t' p'
 
 mapMusic :: (Attributes -> Attributes) -> (Note -> Note) -> (Direction -> Direction) -> Music -> Music
-mapMusic fa fn fd = foldMusic (MusicAttributes . fa) (MusicNote . fn) (MusicDirection . fd) (Music . return)
+mapMusic fa fn fd = foldMusic (MusicAttributes . fmap fa) (MusicNote . fn) (MusicDirection . fd) (Music . return)
 
-foldMusic :: Monoid m => (Attributes -> r) -> (Note -> r) -> (Direction -> r) -> (r -> m) -> Music -> m
+foldMusic :: Monoid m => ([Attributes] -> r) -> (Note -> r) -> (Direction -> r) -> (r -> m) -> Music -> m
 foldMusic fa fn fd f = mconcat . fmap f . (foldMusic' $ fmap (foldMusicElem fa fn fd))
 
 foldMusic' :: ([MusicElem] -> r) -> Music -> r
 foldMusic' f (Music x) = f x
 
-foldMusicElem :: (Attributes -> r) -> (Note -> r) -> (Direction -> r) -> MusicElem -> r
+foldMusicElem :: ([Attributes] -> r) -> (Note -> r) -> (Direction -> r) -> MusicElem -> r
 foldMusicElem = go
   where
-    go fa fn fd (MusicAttributes x) = fa x
-    go fa fn fd (MusicNote x) = fn x
-    go fa fn fd (MusicDirection x) = fd x
+    go fa _ _ (MusicAttributes x) = fa x
+    go _ fn _ (MusicNote x) = fn x
+    go _ _ fd (MusicDirection x) = fd x
 
 -- ----------------------------------------------------------------------------------
-
-instance Default ScoreAttrs where
-  def = ScoreAttrs []
-
-instance Default ScoreHeader where
-  def = ScoreHeader Nothing Nothing Nothing mempty
-
-instance Default Note where
-  def = Note def def [] def
-
-instance Default Divs where
-  def = defaultDivisionsVal
-
-instance Default FullNote where
-  def = Rest noChord Nothing
-
-instance Default NoteProps where
-  def = NoteProps Nothing Nothing (Just (1 / 4, Nothing)) 0 Nothing Nothing Nothing Nothing Nothing Nothing Nothing [] []
 
 -------------------------------------------------------------------------------------
 

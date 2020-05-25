@@ -25,6 +25,8 @@ module Data.Music.MusicXml.Time
   )
 where
 
+import Data.Default
+
 type Duration = Divs
 
 type NoteType = (NoteVal, Maybe NoteSize)
@@ -33,19 +35,27 @@ newtype Divs
   = -- | Sounding time in ticks
     Divs {getDivs :: Int}
 
+-- | By default we use 768 per quarter note, like Sibelius.
+instance Default Divs where
+  def = 768 * 4
+
+
 newtype NoteVal
   = -- | Notated time in fractions, in @[2^^i | i <- [-10..3]]@.
     NoteVal {getNoteVal :: Rational}
 
 data NoteSize = SizeFull | SizeCue | SizeLarge
+  deriving Show
 
 newtype Beat
   = -- | Time nominator
     Beat {getBeat :: Int}
+  deriving Show
 
 newtype BeatType
   = -- | Time denominator
     BeatType {getBeatType :: Int}
+  deriving Show
 
 newtype Tempo
   = -- | Tempo in BPM

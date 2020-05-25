@@ -104,7 +104,6 @@ library
                         Data.Music.MusicXml.Simple
                         Data.Music.MusicXml.Time
                         Data.Music.MusicXml.Write
-                        Data.Music.MusicXml.Write.Score
                         Music.Pitch
                         Music.Pitch.Equal
                         Music.Pitch.Common
@@ -295,6 +294,18 @@ test-suite "music-suite-test-laws"
                         music-suite
     type:               exitcode-stdio-1.0
     main-is:            Laws.hs
+    hs-source-dirs:     test
+    default-language:   Haskell2010
+
+test-suite "music-suite-test-xml-parser"
+    build-depends:      base,
+                        music-suite,
+                        tasty,
+                        tasty-hunit,
+                        directory,
+                        filepath
+    type:               exitcode-stdio-1.0
+    main-is:            MusicXmlParser.hs
     hs-source-dirs:     test
     default-language:   Haskell2010
 

@@ -650,7 +650,7 @@ data Bar
 -- and the staff annotations. The single-part approach seem to be favored for piano
 -- music.
 --
--- TODO we can also define multiple instrumetns part part using score-instrument,
+-- TODO we can also define multiple instrument parts using score-instrument,
 -- and then assign individual notes (and which other objects?) to this.
 --
 -- [1]: http://www.musicxml.com/tutorial/notation-basics/multi-part-music-2/)
@@ -1424,8 +1424,9 @@ movementToPartwiseXml movement = music
         renderClef :: Music.Pitch.Clef -> MusicXml.Music
         renderClef (Music.Pitch.Clef clef) = case clef of
           (clefSymbol, _octCh, line) ->
-            X.Music $ pure $ X.MusicAttributes $
-              X.Clef (exportSymbol clefSymbol) (fromIntegral line + 3)
+            X.Music $ pure $ X.MusicAttributes [
+              X.Clef (exportSymbol clefSymbol) (fromIntegral line + 3) Nothing
+            ]
           where
             -- TODO add octave-adjust to musicxml2
             exportSymbol x = case x of
