@@ -359,7 +359,7 @@ addPartwiseAttributes :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
 addPartwiseAttributes = deepZip partIds barIds
   where
     partIds = fmap PartAttrs standardPartAttributes
-    barIds = fmap MeasureAttrs [1 ..]
+    barIds = fmap (MeasureAttrs False . show) [1 ..]
     deepZip :: [a] -> [b] -> [[c]] -> [(a, [(b, c)])]
     deepZip xs ys = zipWith (curry $ second (zip ys)) xs
 

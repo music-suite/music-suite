@@ -212,9 +212,12 @@ data PartAttrs
       String --  ^ part id
   deriving Show
 
+-- | Measure numbers are usually integral, but can technically be any type xs:token
+-- http://usermanuals.musicxml.com/MusicXML/MusicXML.htm#EL-MusicXML-measure.htm
 data MeasureAttrs
   = MeasureAttrs
-      Int --  ^ measure number
+      Bool -- ^ implicit
+      String -- ^ number
   deriving Show
 
 -- ----------------------------------------------------------------------------------

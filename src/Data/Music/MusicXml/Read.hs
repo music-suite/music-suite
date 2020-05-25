@@ -20,7 +20,7 @@ import Control.Category ((>>>))
 import Control.Monad
 import Data.Char (toUpper)
 import Data.Default
-import Data.List.Split (wordsBy)
+import Data.List.Split (wordsBy, chop)
 import Data.Maybe
 import Data.Music.MusicXml.Score
 import Text.Read
@@ -102,7 +102,9 @@ parsePart part =
 parseMeasure :: Element -> Maybe (MeasureAttrs, Music)
 parseMeasure measure =
   (,)
-    <$> (MeasureAttrs <$> (attr "number" measure >>= readMaybe))
+    <$> ( MeasureAttrs (attr "implicit" measure == Just "yes")
+            <$> (attr "number" measure)
+        )
     <*> (Music <$> dispatch supportedElems measure)
 
 supportedElems :: [(String, Element -> Maybe MusicElem)]
@@ -287,8 +289,7 @@ supportedNotations =
     ("tuplet", \tuplet -> Tuplet (parseLevel tuplet) <$> parseStartStop tuplet),
     ("glissando", shift Glissando),
     ("slide", shift Slide),
-    -- TODO Accidentals on ornaments
-    ("ornaments", fmap Ornaments . dispatch supportedOrnaments),
+    ("ornaments", fmap Ornaments . parseOrnaments),
     ("technical", fmap Technical . dispatch supportedTechniques),
     ("articulations", fmap Articulations . dispatch supportedArticulations),
     ("dynamics", fmap DynamicNotation . parseDynamics),
@@ -350,29 +351,44 @@ supportedTechniques =
     ("handbell", bare Handbell),
     ("other-technical", fmap OtherTechnical . getText)
   ]
-  where bare = const . pure
 
 supportedArticulations :: [(String, Element -> Maybe Articulation)]
-supportedArticulations = map (\a -> (show a, const (pure a)))
-  [Accent .. OtherArticulation]
+supportedArticulations =
+  map
+    (\a -> (show a, const (pure a)))
+    [Accent .. OtherArticulation]
 
-supportedOrnaments :: [(String, Element -> Maybe (Ornament, [Accidental]))]
+parseOrnaments :: Element -> Maybe [(Ornament, [Accidental])]
+parseOrnaments = traverse parseOrnament . chop takeOrnament . elChildren
+  where
+    takeOrnament [] = error "takeOrnament should never be called on empty list"
+    takeOrnament (e : es) =
+      let (accidentals, rest) =
+            span (\element -> getName element == "accidental-mark") es
+       in ((e, accidentals), rest)
+
+parseOrnament :: (Element, [Element]) -> Maybe (Ornament, [Accidental])
+parseOrnament (ornament, accidentals) =
+  (,)
+    <$> (lookup (getName ornament) supportedOrnaments >>= ($ ornament))
+    <*> (traverse parseAccidental accidentals)
+
+supportedOrnaments :: [(String, Element -> Maybe Ornament)]
 supportedOrnaments =
-  [("trill-mark", bare TrillMark),
-   ("turn", bare Turn),
-   ("delayed-turn", bare DelayedTurn),
-   ("inverted-turn", bare InvertedTurn),
-   ("delayed-inverted-turn", bare DelayedInvertedTurn),
-   ("vertical-turn", bare VerticalTurn),
-   ("shake", bare Shake),
-   ("wavy-line", bare WavyLine),
-   ("mordent", bare Mordent),
-   ("inverted-mordent", bare InvertedMordent),
-   ("schleifer", bare Schleifer),
-   ("tremolo", readText >=> \n -> pure (Tremolo n, [])),
-   ("other-ornament", getText >=> \s -> pure (OtherOrnament s, []))
+  [ ("trill-mark", bare TrillMark),
+    ("turn", bare Turn),
+    ("delayed-turn", bare DelayedTurn),
+    ("inverted-turn", bare InvertedTurn),
+    ("delayed-inverted-turn", bare DelayedInvertedTurn),
+    ("vertical-turn", bare VerticalTurn),
+    ("shake", bare Shake),
+    ("wavy-line", bare WavyLine),
+    ("mordent", bare Mordent),
+    ("inverted-mordent", bare InvertedMordent),
+    ("schleifer", bare Schleifer),
+    ("tremolo", readText >=> pure . Tremolo),
+    ("other-ornament", getText >=> pure . OtherOrnament)
   ]
-  where bare ornament = const (pure (ornament, []))
 
 parseNoteType :: Element -> Maybe NoteType
 parseNoteType typ = do
@@ -488,6 +504,9 @@ dispatch parsers parent =
     mapMaybe
       (\e -> fromMaybe (const Nothing) (lookup (getName e) parsers) $ e)
       (elChildren parent)
+
+bare :: Applicative f => a -> b -> f a
+bare = const . pure
 
 -- ----------------------------------------------------------------------------------
 -- Xml utils
