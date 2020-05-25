@@ -51,9 +51,6 @@ where
 
 import Control.Applicative
 import Control.Concurrent.Async
--- import qualified Music.Prelude.Basic as Music
-
-import Control.Concurrent.QSem
 import Control.Concurrent.QSem
 import Control.Exception
 import Control.Monad
