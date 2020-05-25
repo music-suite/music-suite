@@ -7,7 +7,6 @@ import System.Console.GetOpt
 import Text.Transf
   ( MusicOpts (..),
     haskellT,
-    musicExtraT,
     musicHaskellT,
     musicT,
   )
@@ -19,7 +18,6 @@ transf opts =
   haskellT
     <> musicT (getMusicOpts opts)
     <> musicHaskellT (getMusicOpts opts)
-    <> musicExtraT
 
 data Opt
   = Format String

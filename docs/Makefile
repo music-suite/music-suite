@@ -26,7 +26,6 @@ html: transform
 			) \
 			| $(PANDOC_HTML) -o $(PAGE) && \
 		cp $(CSS) styles.css && \
-		cp -R ../js js && \
 	popd
 
 
