@@ -3470,9 +3470,6 @@ The work of Paul Hudak and the the Yale Haskell group, including [Haskore][hasko
 The temporal structures, their instances and more general design philosophy comes from Conal Elliott's [Reactive][reactive] (and its predecessors). Brent Yorgey's [Diagrams][diagrams] provided the separation of points and vectors and was another main influence.
 
 
-```music-extra
-(ignored)
-```
 
 @@@hslinks@@@
 

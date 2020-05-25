@@ -45,15 +45,11 @@ module Text.Transf
     haskellT,
     evalHaskellT,
     musicHaskellT,
-    musicExtraT,
   )
 where
 
 import Control.Applicative
 import Control.Concurrent.Async
--- import qualified Music.Prelude.Basic as Music
-
-import Control.Concurrent.QSem
 import Control.Concurrent.QSem
 import Control.Exception
 import Control.Monad
@@ -434,47 +430,12 @@ musicT opts = transform "music" $ \input -> do
           hPutStr stderr err
           return ()
     addPost (liftIO $ makeLy)
-  -- Play generated MIDI file
-  let playText = "<div class='haskell-music-listen'><a href='" ++ name ++ ".mid'>[listen]</a></div>"
-  -- Play generated WAV file
-  -- let playText = "<div class='haskell-music-listen'><a href='"++name++".wav'>[listen]</a></div>"
-
-  -- Use Web MIDI player
-  -- let playText = "<div>" ++
-  --                "  <a href=\"javascript:playFile('"++name++".mid')\">[play]</a>\n" ++
-  --                "  <a href=\"javascript:stopPlaying()\">[stop]</a>\n" ++
-  --                "</div>\n"
 
   let ending = "" -- if format opts == "png" then "x" else ""
-  return $ {-playText ++ "\n\n" ++ -} "![](" ++ name ++ ending ++ "." ++ format opts ++ ")"
+  return $ "![](" ++ name ++ ending ++ "." ++ format opts ++ ")"
 
 --  -resize 30%
 
--- |
--- This named transformation includes stuff needed for music playback.
---
--- It should be used exactly once in the document.
-musicExtraT :: Transform
-musicExtraT = transform "music-extra" $ \_ -> return txt
-  where
-    txt =
-      "<script src=\"js/jasmid/stream.js\"></script>\n"
-        ++ "<script src=\"js/jasmid/midifile.js\"></script>\n"
-        ++ "<script src=\"js/jasmid/replayer.js\"></script>\n"
-        ++ "<script src=\"js/midi.js\"></script>\n"
-        ++ "<script src=\"js/Base64.js\" type=\"text/javascript\"></script>\n"
-        ++ "<script src=\"js/base64binary.js\" type=\"text/javascript\"></script>\n"
-        ++ "<script src=\"js/main.js\" type=\"text/javascript\"></script>\n"
-
-{-
-    <script src="js/jasmid/stream.js"></script>
-    <script src="js/jasmid/midifile.js"></script>
-    <script src="js/jasmid/replayer.js"></script>
-    <script src="js/midi.js"></script>
-    <script src="js/Base64.js" type="text/javascript"></script>
-    <script src="js/base64binary.js" type="text/javascript"></script>
-    <script src="js/main.js" type="text/javascript"></script>
--}
 
 -- |
 -- This named transformation passes everything through and retains the source.
