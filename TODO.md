@@ -12,6 +12,10 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
+- [ ] MusicXML Parser
+  - [ ] Make all tests pass (music-suite-test-xml-parser)
+  - [ ] Full ornament support, see https://github.com/hanshoglund/music-suite/pull/22#issuecomment-633314407
+
 - [X] Bug: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
   Intervals not displayed properly
 
