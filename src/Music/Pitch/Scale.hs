@@ -240,6 +240,7 @@ scaleMode f (ScaleChord t xs) = fmap (\xs -> ScaleChord t xs) $ f xs
 repeatingInterval :: AffinePair v p => Mode v p -> v
 repeatingInterval (Mode xs) = sumV xs
 
+
 -- |
 --
 -- >>> leadingInterval majorScale
@@ -434,7 +435,7 @@ bluesMajor = invertMode 3 majorPentaTonic
 minorPentaTonic :: Mode Interval Pitch
 minorPentaTonic = invertMode 4 majorPentaTonic
 
--- a.k.a. "bebop major"
+-- | The bebop scale, a.k.a. "bebop major".
 bebopScale :: Mode Interval Pitch
 bebopScale = Mode [_M2, _M2, m2, _M2, m2, m2, _M2, m2]
 
@@ -482,6 +483,7 @@ diminishedChord = Mode [m3, m3, m3, m3]
 halfDiminishedChord :: ChordType Interval Pitch
 halfDiminishedChord = Mode [m3, m3, _M3, _M2]
 
+-- | Also known as "dominant seventh".
 majorMinorSeventhChord :: ChordType Interval Pitch
 majorMinorSeventhChord = Mode [_M3, m3, m3, _M2]
 

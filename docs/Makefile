@@ -26,7 +26,6 @@ html: transform
 			) \
 			| $(PANDOC_HTML) -o $(PAGE) && \
 		cp $(CSS) styles.css && \
-		cp -R ../js js && \
 	popd
 
 
@@ -42,7 +41,7 @@ transform:
 	mkdir -p $(OUT)
 	pushd $(OUT) && \
 		pwd && \
-		( $(RESOLVE_LINKS) | $(TRANSFORM) ) <../$(SRC)/About.md 		>About.md  && \
+		( $(TRANSFORM) | $(RESOLVE_LINKS) ) <../$(SRC)/About.md 		>About.md  && \
 		( $(TRANSFORM) | $(RESOLVE_LINKS) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
@@ -54,8 +53,8 @@ transform-pdf:
 	mkdir -p $(OUT)
 	pushd $(OUT) && \
 		pwd && \
-		( $(RESOLVE_LINKS) | $(TRANSFORM_PDF) ) <../$(SRC)/About.md 	>About.md  && \
-		( $(RESOLVE_LINKS) | $(TRANSFORM_PDF) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
+		( $(TRANSFORM_PDF) | $(RESOLVE_LINKS) ) <../$(SRC)/About.md 	>About.md  && \
+		( $(TRANSFORM_PDF) | $(RESOLVE_LINKS) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
 		rm -f *.tex	 && \
