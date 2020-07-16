@@ -3,6 +3,8 @@ COPY src suite/src
 COPY examples suite/examples
 COPY data suite/data
 COPY docs suite/docs
+COPY test suite/test
+COPY vendor suite/vendor
 COPY doc-tools suite/doc-tools
 COPY music-suite.cabal suite/music-suite.cabal
 COPY cabal.project suite/cabal.project
