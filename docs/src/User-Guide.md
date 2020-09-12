@@ -119,7 +119,7 @@ This of course represents the note C. Notice that there is more information in t
 - The default *instrument* is *Piano*.
 
 
-> Note: In Haskell, numbers are *overloaded*. The syntax do not convey any type information: `0.25` and `1/4` are equivalent. In Music Suite, all time values are implemented using arbitrary-precision integers and rational numbers, so you do not have to worry about rounding errors.
+> Note: In Music Suite (and Haskell), numbers are *overloaded*. The syntax do not convey any type information: `0.25` and `1/4` are equivalent. In Music Suite, all time values are implemented using arbitrary-precision integers and rational numbers, so you do not have to worry about rounding errors.
 
 By default note have no *accidentals* or *articulation marks*. We will see how to add those later as well.
 
@@ -268,7 +268,7 @@ rcat [c,e,g] |/ 2
 
 ## Comments
 
-Comments are the same as in regular Haskell.
+Comments can be defined as follows:
 
 ```haskell
 -- This is a single-line comment
@@ -325,9 +325,9 @@ compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
 
 ## Functions and types
 
-So far we have written our musical expressions in terms of pre-defined expressions and functions. However the real power of using a functional language is to be able to define our own functions.
+So far we have written our musical expressions in terms of pre-defined operators and functions. We can also define our own functions and operators.
 
-> Note: In Haskell, functions and operators are the same, apart from syntax.
+> Note: In Music Suite (and Haskell), operators and functions are the same, except for syntax.
 
 
 TODO basic functions
@@ -3024,8 +3024,6 @@ Traverals are a subtle and powerful concept. The basic ideas is simple: given so
 - Searching and querying the elements
 - Update the elements one at a time
 
-Of course Haskell is a pure language, so whenever we refer to "change" or "update" in the context of a data structure, we are actually creating new structures on the fly.
-
 The most common traversal is known as `traverse`, and is defined for all types that are `Traversable`. The type signature of `traverse` is highly general:
 
 ```haskell
@@ -3071,13 +3069,6 @@ traverse        :: Traversable t => Traversal (t a) (t b) a b
 traverse        :: Traversal' [Bool] Bool
 traversePitches :: Traversal' (Score Pitch) Pitch
 ```
-
-
-<!--
-A traversal that targets exactly one element is known as a *lens*. We've already seen examples of lenses and traversals in the chapters on [dynamics](TODO) and [articulation](TODO) in the form of `.~` (or `set`) operator.
-
-> Note: For those familiar lenses in Haskell: Music Suite defines lenses and traversals compatible with the `lens` and `microlens` packages.
--->
 
 ## Using traversals
 
