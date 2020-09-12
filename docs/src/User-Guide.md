@@ -1753,29 +1753,39 @@ artificial c |/ 2
 
 ### String techniques
 
+By default string instruments play *arco* (using the bow). We can switch to *pizzicato* (plucked) using @[pizz]. Because *arco* is the default, simply applying @[arco] to an expression has no effect:
 
 ```music+haskell
 set parts' violins $
   pseq [arco $ staccato $ times 4 c, times 4 $ pizz g_ ] |/ 4
 ```
 
+Traditionally the text "arco" is used to revert to bowed playing after a pizzicato section. This is inserted automatically.
+
 ```music+haskell
 set parts' violins $
   pseq [pizz $ pseq [c,c,c,c], d |* 2, pizz e |*2 ] |/ 4
 ```
 
+We can similarly indicate *bow* position. This instructs the performer to adjust the position of the bow to change the quality of the sound. Bow position is always relative to pressure and speed. The normal indications are:
 
-TODO bow position (sul tasto, sul pont, nat)
+* *Sul tasto*, closer to the bridge than normal, producing a flute-like sound.
+* *Sul ponticello*, closer to the stable, producing an unstable, overtone-rich sound.
+
 
 ```music+haskell
 set parts' violins $
   pseq [sulTasto $ pseq [c,c,c,c], posNat d |* 2] |/ 4
 ```
 
+The text *naturale* or *nat* is used to revert to "normal" position. As with *arco*, this is inserted automatically.
+
 ```music+haskell
 set parts' violins $
   pseq [posNat $ pseq [c,c,c,c], sulPont d |* 2] |/ 4
 ```
+
+TODO col legno
 
 ```music+haskell
 set parts' violins $ pseq
