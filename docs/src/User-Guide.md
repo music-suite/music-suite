@@ -38,16 +38,20 @@ import Music.Prelude
 main = defaultMain music
 
 music =
-c <> d <> e
+  c <> e
 ```
 
-The first three lines here are standard boilerplate. The last line (`c <> d <> e`) contains the actual music expression.
+The first three lines here are standard boilerplate. The last line (`c <> d <> e`) contains the actual music expression. Let's break this down line by line:
 
-The purpose of the `import` line is to allow you to use Music Suite, as Haskell only imports its own standard libary by default. The `main` line turns whatever `music` is defined to be into a command line program which we can execute as follows:
+1. Import all Music Suite definitions
+2. This line indicates that the expression `music` (defined below) is the *main expression* in the file. Unless indicated otherwise, this is the music which will rendered or exported by the file.
+4-5. This expression represents the notes `c` and `e` played at the same time.
+
+We can *render* the file like this:
 
 $ cabal exec runhaskell -- Test.hs
 
-We can copy-paste all examples from this file into the above template. Whatever value `music` is assigned to will be exported when you run the file.
+Try replacing the definition of `music` to point to a different expression, such as `c |> stretch 2 d`. You can also try copy-pasting other examples from this file.
 
 
 <!--
