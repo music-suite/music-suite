@@ -1,0 +1,24 @@
+# Ignore everything
+**
+
+# Allow files and directories
+!/README.md
+!/src/**
+!/vendor/**
+!/test/**
+!/examples/**
+!/data/**
+!/docs/**
+/docs/build/**
+/docs/build*/**
+!/doc-tools/**
+!/*.cabal
+!/*.project*
+!/*.nix
+
+# Ignore unnecessary files inside allowed directories
+# This should go after the allowed directories
+**/*~
+**/*.log
+**/.DS_Store
+**/Thumbs.db
