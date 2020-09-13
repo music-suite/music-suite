@@ -1928,7 +1928,7 @@ set parts' trombones $ pseq
 
 ## Percussion
 
-Working with percussion is much like working with normal instruments. There are some difference:
+Working with percussion is much like working with normal instruments. There are some differences:
 
 - Some percussion instruments no notion of pitch, or a limited set of pitches they can play.
 
