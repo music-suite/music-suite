@@ -1952,7 +1952,7 @@ For rolls see [the previous section](tremolo-trills-and-rolls).
 
 TODO adding lyrics (including syllables/word boundaries/melismas)
 
-TODO soloists/character name
+TODO col legnoTODO soloists/character name
 -->
 
 <!--
@@ -2165,6 +2165,8 @@ Polymetric notation is not supported: you must pick one global time signature fo
 
 
 ## Tempo
+
+
 
 @[metronome]
 
@@ -2900,6 +2902,8 @@ inspectableToMusic bachCMajChords
 ```
 -->
 
+<!-- TODO pattern coockbook, a la https://doc.sccode.org/Tutorials/A-Practical-Guide/PG_01_Introduction.html -->
+
 ## Time-varying values
 
 The structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points* or *notes*. We will now look at an alternative time structure where this is not necessarily the case. @[Behavior] represents a *time-varying values*, or functions of time.
@@ -3162,7 +3166,7 @@ over (phrases' . Control.Lens._head) (up _P8) $
 
 ## Filtered traversals
 
-Filtered traversals operate on the elements selected by another traversals if they match a specific predicate. This is similar to where clauses in SQL:
+Filtered traversals operate on the elements selected by another traversals if they match a specific predicate.
 
 This example transposes all notes with a duration less than `2`:
 
@@ -3174,6 +3178,7 @@ over t (up _P8) [d,d,d |* 2,d] |/ 4
     t = notes . each . filtered (\x -> x^.duration < 2)
 ```
 
+<!-- TODO rename (filtered -> when) -->
 
 ## More examples
 
