@@ -1785,7 +1785,6 @@ set parts' violins $
   pseq [posNat $ pseq [c,c,c,c], sulPont d |* 2] |/ 4
 ```
 
-TODO col legno
 
 ```music+haskell
 set parts' violins $ pseq
@@ -1869,6 +1868,8 @@ set parts' violins $ pseq
 ```
 
 <!--
+TODO edit/remove duplication in this section
+
 TODO chord tremolo
 -->
 
@@ -1891,23 +1892,23 @@ set parts' violins $ pseq
   |* 1.5
 ```
 
-TODO chord tremolo
-
 
 ### Wind techniques
 
 <!--
-TODO fingering, multiphonics
+TODO special fingerings, multiphonics, bisbigliando
 
-TODO key sounds, percussive attacks ("pizz"), haromonics/whistle tones
+TODO key sounds, percussive attacks ("pizz"), harmonics/whistle tones
 -->
 
 ### Brass techniques
 
-Mutes are indicated just like string mutes:
+Standard mutes are similarly to string mutes:
 
 - Con sordino: With mute
-- Senza sordino: Without mute (the default)
+- Senza sordino: Without mute
+
+The default is without mute.
 
 ```music+haskell
 set parts' trombones $ pseq
@@ -1921,9 +1922,13 @@ set parts' trombones $ pseq
 
 <!-- TODO hand stopping -->
 
+<!-- TODO bells up -->
+
+<!-- TODO vocalize/multiphonics -->
+
 ## Percussion
 
-Working with percussion is much like working with normal instruments. The main difference of course is that:
+Working with percussion is much like working with normal instruments. There are some difference:
 
 - Some percussion instruments no notion of pitch, or a limited set of pitches they can play.
 
@@ -1966,7 +1971,7 @@ TODO representation? Some kind of sum type in the note stack?
 
 ## Piano/Vibraphone pedalling
 
-TODO
+TODO this should arguably be a property of the notes themselves, though we should provide an action for "release the pedal/damp". Woth adding a section on damping/secco/l.v. under "Percussion".
 
 ## Instrument change warnings
 
