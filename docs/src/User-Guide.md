@@ -3059,11 +3059,14 @@ in times 4 $ melody
 
 In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions. The most important tool for this in Music Suite is called a *traversal*.
 
-Traverals are a subtle and powerful concept. The basic ideas is simple: given some traverable "container" value, we have a way of visiting all of its element in some specific order. We can exploit this to:
+Traverals are a subtle and powerful concept. The basic ideas is simple: given some traverable "container" value, we have a way of *visiting its element in some order*. Traversals can be used to:
 
-- Accumulate computations over all the elements
-- Searching and querying the elements
-- Update the elements one at a time
+- Extract a list of the elements
+- Find all elements matching a specific criteria
+- Compute values by running *accumulators* over matching elements
+- Change the structure by *updating* some or all of the elements
+
+Traversals are also subject to some restrictions (TODO explain Traversal laws).
 
 The most common traversal is known as `traverse`, and is defined for all types that are `Traversable`. The type signature of `traverse` is highly general:
 
