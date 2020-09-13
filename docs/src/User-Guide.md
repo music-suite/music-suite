@@ -2575,7 +2575,14 @@ A @[Voice] represents a *sequential composition of values*, each tagged with *du
 
 ### Creating voices
 
-TODO
+TODO create from IsPitch, rest
+
+TODO create from rhythm
+
+TODO create from list of notes
+
+TODO create using (^.voice)
+
 
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
@@ -2632,13 +2639,6 @@ in trackToScore (1/8) y
 ```
 -->
 
-TODO create from rhythm
-
-TODO create from list of notes
-
-TODO create from IsPitch
-
-TODO create using (^.voice)
 
 ### Traversing voices
 
@@ -2764,16 +2764,30 @@ TODO sequential composition of aligned voices "snap to next stressed beat":
 
 A @[Score] represents a *parallel composition of values*, each tagged with *time span*.
 
+We can think of a @[Score] as a @[Voice] where overlapping notes are allowed.
 
 ### Creating scores
 
-Using IsPitch
-Using pure
-Composition
-Monad comprehensions
-From a list of events
+The *empty score* has no events.
+
+A *rest* is a score containing a single `Nothing` value. We can create
+
+A *single-note* score can be created in a variety of ways:
+
+- We can use [pitch literals][TODO link] to create a score of duration 1: `c`, `cs`, `d` etc. This creates a score in the *default time span* `0 <-> 1`.
+- We can apply `pure` to any value. This also creates a score in the
+
+Because of overloading we can easily mix notes and rest in literals. Note that `c == pure c == pure (Just c)`. Similarly, `rest == pure Nothing`.
+
+
+TODO Composition
+
+TODO Monad comprehensions
+
+TODO From a list of events
 
 ### Traversing scores
+
 Score is Traversable, HasPitches etc
 
 Special traversals such as mapWithSpan
@@ -2795,6 +2809,14 @@ An empty scores has no duration, but we can represent rests using `Score (Maybe 
 ```music+haskell
 pseq [c,rest,d] |/ 4
 ```
+
+## Scores versus more restricted types
+
+`Score` is an extremely flexible type. Often it is useful to work with more restrictive structures, such as `Voice`, `Note`, `Pattern`, or their `Aligned` versions.
+
+TODO parsing scores into restricted types
+
+TODO rendering restricted scores as type
 
 
 
