@@ -2648,11 +2648,19 @@ TODO
 
 TODO Transformable, HasDuration
 
-Voices do not have a position, i.e. they are translation-invariant. In order to anchor a voice at a specific point in time use [`Aligned`](#alignment).
+Voices do not have a position, i.e. they are translation-invariant (if you want to anchor a voice at a specific point in time, see [`Aligned`](#alignment)).
+
 
 TODO rotation
 
+@[rotateDurations]
+@[rotateValues]
+
 TODO fusion and stretch
+
+@[fuse]
+@[fuseBy]
+@[fuseRests]
 
 TODO take/drop
 
@@ -3162,7 +3170,7 @@ TODO
 
 TODO polymorphic update example (e.g. `Common.Pitch` vs `Hertz`)
 
-TODO explain the type families: Pitch, SetPitch etc.
+TODO explain the type families: GetPitch, SetPitch, GetArticulation, SetArticulation, etc.
 
 
 ## Phrase traversals
