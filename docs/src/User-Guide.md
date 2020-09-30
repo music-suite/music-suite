@@ -119,7 +119,7 @@ This of course represents the note C. Notice that there is more information in t
 - The default *instrument* is *Piano*.
 
 
-> Note: In Music Suite (and Haskell), numbers are *overloaded*. The syntax do not convey any type information: `0.25` and `1/4` are equivalent. In Music Suite, all time values are implemented using arbitrary-precision integers and rational numbers, so you do not have to worry about rounding errors.
+> Note: Numbers are *overloaded*. It is important to note that the syntax do not convey any type information: `0.25` and `1/4` are completely equivalent. Time values are implemented using arbitrary-precision integers and rational numbers, so you do not have to worry about rounding errors.
 
 By default note have no *accidentals* or *articulation marks*. We will see how to add those later as well.
 
@@ -325,12 +325,10 @@ compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
 
 ## Functions and types
 
-So far we have written our musical expressions in terms of pre-defined operators and functions. We can also define our own functions and operators.
-
-> Note: In Music Suite (and Haskell), operators and functions are the same, except for syntax.
-
+So far we have written our musical expressions in terms of pre-defined operators and functions. We can also define our own functions.
 
 TODO basic functions
+
 
 ### Function composition
 
@@ -2439,10 +2437,14 @@ transform (1 >-> 2) c
 transform (1 <-> 3) c
 ```
 
-Stretching by `(-1)` is the *retrograde* operation:
+Stretching by `(-1)` is also known as *retrograde*:
 
 ```music+haskell
 stretch (-1) $ pseq [c,d,e]
+```
+
+```TODOmusic+haskell
+retrograde $ pseq [c,d,e]
 ```
 
 ### Translation-invariant types
@@ -2575,70 +2577,48 @@ A @[Voice] represents a *sequential composition of values*, each tagged with *du
 
 ### Creating voices
 
-TODO create from IsPitch, rest
 
-TODO create from rhythm
+As with notes and events, we can enter a single voice using `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
 
-TODO create from list of notes
+```haskell
+>>> c :: Voice Pitch
 
-TODO create using (^.voice)
+>>> rest :: Voice (Maybe Pitch)
+```
 
+You can also put a rests in a voice. Notice how this changes the type:
+
+```haskell
+>>> [c,d,rest,e] :: Voice (Maybe Pitch)
+```
+
+All the pitch names resolve to `Just c`, `Just d` and so on, while the rest resolves to `Nothing`.
+
+We can also create voices from rhythms (lists of durations);
+
+```haskell
+>>> rhythmToVoice [1,2,3] :: Voice ()
+
+>>> c <$ rhythmToVoice [1,2,3] :: Voice Pitch
+```
+
+Or from a list of notes:
+
+```haskell
+>>> view voice [c,d,e]
+
+>>> [c,d,e]^.voice
+
+>>> [(1,c)^.note,(2,d)^.note,(1,e)^.note]^.voice
+```
+
+TODO using comprehensions
 
 ```music+haskell
 inspectableToMusic @(Voice Pitch) $
 
 [cs, bb, a |* 2] |/ 4
 ```
-
-
-As with notes and events, we can enter a single voice using `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
-
-You can put a rest in a voice. Notice how this changes the type:
-
-```music+haskell
-inspectableToMusic @(Voice (Maybe Pitch)) $
-
-(1/4) *| [c |* 2, rest, e]
-```
-
-This works because of [pitch overloading](TODO link).
-
-<!--
-```music+haskellx
-let
-    x = [ (1, c),
-          (1, d),
-          (1, f),
-          (1, e) ]^.voice
-
-    y = join $ [ (1, x),
-                 (0.5, up _P5 x),
-                 (4, up _P8 x) ]^.voice
-
-in stretch (1/8) $ voiceToScore $ y
-```
--->
-
-
-<!--
-
-## Tracks
-
-A @[Track] is similar to a score, except that it events have no offset or duration. It is useful for representing point-wise occurrences such as samples, cues or percussion notes.
-
-It can be converted into a score by delaying each element and composing in parallel. An explicit duration has to be provided.
-
-```music+haskellx
-let
-    x = [ (0, c), (1, d), (2, e) ]^.track
-    y = join $ [ (0, x),
-                (1.5,  up _P5 x),
-                (3.25, up _P8 x) ]^.track
-
-in trackToScore (1/8) y
-```
--->
-
 
 ### Traversing voices
 
@@ -2831,7 +2811,7 @@ TODO rendering restricted scores as type
 
 ## Patterns
 
-A @[Pattern] can be throught of as a generalization of a *rhythm* or *beat*. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will repeat itself (though the repeating duration may be long).
+A @[Pattern] can be throught of as a generalization of a *rhythm* or *beat*. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will eventually repeat (though he repeating duration may be very long).
 
 ### Creating patterns
 
