@@ -2624,6 +2624,10 @@ inspectableToMusic @(Voice Pitch) $
 
 TODO
 
+```haskell
+>>> over pitches (up m3) ([c,d,e] :: Voice Pitch) :: Voice Pitch
+```
+
 ### Transforming voices
 
 TODO Transformable, HasDuration
@@ -2686,8 +2690,6 @@ inspectableToMusic @(Voice [Pitch]) $
 
 [ [x,y,z] | x <- [c] | y <- [d,e] | z <- [f,g] ]
 ```
-
-
 
 ```music+haskell
 inspectableToMusic @(Voice [StandardNote]) $
