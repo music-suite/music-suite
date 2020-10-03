@@ -136,7 +136,7 @@ Music Suite takes inspiration from diagrams in *separating points and vectors*. 
 
 The first musical expression we write will be simple: it consists of a single letter:
 
-```music+haskell
+```haskell+music
 c
 ```
 
@@ -161,15 +161,15 @@ By default note have no *accidentals* or *articulation marks*. We will see how t
 All notes we enter have duration `1` by default. To change this, we use @[stretch] and @[compress]:
 
 
-```music+haskell
+```haskell+music
 stretch (1/2) c
 ```
 
-```music+haskell
+```haskell+music
 stretch 2 c
 ```
 
-```music+haskell
+```haskell+music
 stretch (4+1/2) c
 ```
 
@@ -180,19 +180,19 @@ We count positions from the first beat in the first bar, so in 4/4 time, `0` mea
 
 All notes start at position `0` by default. We can use use @[delay] to move the onset of notes to the right.
 
-```music+haskell
+```haskell+music
 delay 1 c
 ```
 
 Negative numbers work too:
 
-```music+haskell
+```haskell+music
 delay (-0.25) $ delay 1 $ c
 ```
 
 The `|*` and `|/` operators can be used as shorthands for `stretch` and `compress`.
 
-```music+haskell
+```haskell+music
 (c |> d |> e |> c |> d|*2 |> d|*2) |/ 16
 ```
 
@@ -203,7 +203,7 @@ The `|*` and `|/` operators can be used as shorthands for `stretch` and `compres
 The `let ... in` construct introduces a temporary name for an expression.
 
 
-```music+haskell
+```haskell+music
 let
   x = c |> d
   r = 1/3
@@ -213,7 +213,7 @@ x </> delay r x
 
 The `where` construct is similar, but takes the bindings *after* the expression.
 
-```music+haskell
+```haskell+music
 x </> delay r x
   where
     x = c |> d
@@ -224,11 +224,11 @@ x </> delay r x
 
 We can change octaves and accidentals:
 
-```music+haskell
+```haskell+music
 _8va c
 ```
 
-```music+haskell
+```haskell+music
 sharpen c
 ```
 
@@ -238,11 +238,11 @@ sharpen c
 
 We can add articulations and change dynamics:
 
-```music+haskell
+```haskell+music
 accent c
 ```
 
-```music+haskell
+```haskell+music
 level ppp c
 ```
 
@@ -251,7 +251,7 @@ We will see more examples of this later on as well.
 
 The `$` operator is pronounced "apply". `f $ g x` is the same as `f (g x)`, so the apply operator is an alternative to writing parentheses:
 
-```music+haskell
+```haskell+music
 staccato $ stretch (1/8) c
 ```
 
@@ -261,20 +261,20 @@ So far we have worked with a single note, which is not particularly interesting 
 
 The basic composition operator is @[<>], which combines two pieces of music *simultaneously*. For example, we can combine the expressions `c`, `e` and `g`.
 
-```music+haskell
+```haskell+music
 c <> e <> g
 ```
 
 
 Or in sequence using @[|>]:
 
-```music+haskell
+```haskell+music
 c |> d |> e
 ```
 
 Or partwise using @[</>]:
 
-```music+haskell
+```haskell+music
 c </> e </> g
 ```
 
@@ -282,19 +282,19 @@ c </> e </> g
 
 As a shorthand for `x |> y |> z ..`, we can write @[seq] `[x, y, z, ...]`.
 
-```music+haskell
+```haskell+music
 seq [c,e,g] |* (1/4)
 ```
 
 For `x <> y <> z ...`, we can write @[par] `[x, y, z, ...]` .
 
-```music+haskell
+```haskell+music
 par [c,e,g] |/ 2
 ```
 
 For `x </> y </> ...` the syntax is @[rcat] `[x, y, z ...]`.
 
-```music+haskell
+```haskell+music
 rcat [c,e,g] |/ 2
 ```
 
@@ -305,13 +305,13 @@ There is never any need to explicitly create rests, tuplets or ties in Music Sui
 
 Notes with the same onset and offset are rendered as chords by default.
 
-```music+haskell
+```haskell+music
 seq [c,d,e,c] <> seq [e,f,g,e] <> seq [g,a,b,g]
 ```
 
 Or, equivalently:
 
-```music+haskell
+```haskell+music
 par [c,e,g] |> par [d,f,a] |> par [e,g,b] |> par [c,e,g]
 ```
 
@@ -319,7 +319,7 @@ To prevents notes from being merged into chords we must *explicitly* put them in
 
 To create space in our scores we can use `rest`. Rests are empty placeholders which take up space when using sequential composition but do not show up in the final score:
 
-```music+haskell
+```haskell+music
 times 4 (accentAll g|*2 |> rest |> seq [d,d]|/2)|/8
 ```
 
@@ -327,7 +327,7 @@ Rests can be stretched and delayed just like notes.
 
 Any note that crosses a barline will be notated using ties:
 
-```music+haskell
+```haskell+music
 c |* (9/8) |> d |* (7/8)
 ```
 
@@ -335,7 +335,7 @@ c |* (9/8) |> d |* (7/8)
 
 Similarly, durations that do not fit into standard note durations are notated using dots or tuplets:
 
-```music+haskell
+```haskell+music
 compress 4 (seq [c |*3, d |* 3, e |* 2]) |> compress 5 (seq [f,e,c,d,e]) |> d
 ```
 
@@ -363,7 +363,7 @@ Analogously to composition of music seen above we can compose *functions*.
 
 Here is an example using function composition. The dot operator `.` is used to compose the function `up _P8` (which transpose thes the music up by one octave), `compress 2` and `delay 3`. The composed functions are applied in *left to right order*.
 
-```music+haskell
+```haskell+music
 (up _P8 . compress 2 . delay 3) c
 ```
 
@@ -387,11 +387,11 @@ They are completely ignored by the interpreter.
 
 Of course, the combinators we have seen so far such as `stretch`, `_8va` and so on work on arbitrarily complex scores, not just single notes. We can also nest most function within applications of the composition operators.
 
-```music+haskell
+```haskell+music
 _8va $ seq [c, d]
 ```
 
-```music+haskell
+```haskell+music
 let
   x = seq [c, d]
 in
@@ -400,7 +400,7 @@ seq [x, up m3 x]
 
 Here is a more complex example using all forms of composition:
 
-```music+haskell
+```haskell+music
 let
   scale = seq [c, d, e, f, g, a, g, f] |/ 8
   triad a = a <> up _M3 a <> up _P5 a
@@ -633,7 +633,7 @@ Formally `transform @a` is a left group action on some transformable type `a`. I
 
 We have already seen how classical counterpoint and serial operations can be formoulated as transformations. For example *augmentation*, *diminishion* and *phasing* can be accomplished with `stretch`, `compress` and `delay`:
 
-```music+haskell
+```haskell+music
 delay 1 (stretch 2 c)
   </>
 transform (1 >-> 2) c
@@ -643,11 +643,11 @@ transform (1 <-> 3) c
 
 Stretching by `(-1)` is also known as *retrograde*:
 
-```music+haskell
+```haskell+music
 stretch (-1) $ seq [c,d,e]
 ```
 
-```TODOmusic+haskell
+```TODOhaskell+music
 retrograde $ seq [c,d,e]
 ```
 
@@ -712,7 +712,7 @@ Just (1 <-> 3)
 
 Values with a position allow many useful combinators to be defined. For example here we use `during` to add a pedal note to a melody:
 
-```music+haskell
+```haskell+music
 let
     melody = legato $ seq [seq [c,d,e,c], seq [e,f], g|*2]
     pedal = c `during` melody
@@ -736,13 +736,13 @@ The @[Aligned] type adds position to anything with a duration. This is akin to a
 
 Aligned is natural way of modelling pickups and upbeats. Consider this melody:
 
-```music+haskell
+```haskell+music
 (seq [g_,a_,b_]|/2 |> seq [c, c, d, d]) |/ 4
 ```
 
 With @[Aligned] we can represent the fact that the first three notes are "upbeat" notes, and that the main stress of the value should fall on the fourth note:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Aligned (Voice Pitch)] $
 
 delay 2 -- TODO get rid of this, see wall of shame
@@ -777,7 +777,7 @@ The Note and Event types are similar to Duration and Span respectively, except t
 
 A @[Note] represents a single value tagged with a *duration*:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Note Pitch) $
 
 c
@@ -785,7 +785,7 @@ c
 
 An @[Event] represents a single value tagged with a *time span*:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Event Pitch) $
 
 c
@@ -795,13 +795,13 @@ Note that we can enter a single note or event as `c`, `d`, `eb`, etc. because of
 
 Notes and events are very similar. The main difference is that notes are translation-invariant and events are not.
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Note Pitch) $
 
 delay 1 $ stretch 0.5 c
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Event Pitch) $
 delay 1 $ stretch 0.5 c
 ```
@@ -821,7 +821,7 @@ Similarly, `Note` is an instance of `HasDuration`, but not `HasPosition`. Events
 
 Notes and events have instances for `Functor`, `Foldable` and `Traversable`, which all visit the single element the contain. There are also instances for `HasPitches`, `HasDynamics` and so on, meaning that we can use most combinators from the previous chapters on notes and events.
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Note StandardNote) $
 
 set parts' violins $ pizz $ level ff $ accentAll $ compress 4 c
@@ -879,7 +879,7 @@ Or from a list of notes:
 
 TODO using comprehensions
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voice Pitch) $
 
 [cs, bb, a |* 2] |/ 4
@@ -919,7 +919,7 @@ TODO filtering (MonadPlus!)
 
 TODO Monoid, Monad, Applicative, MonadZip + guard
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voice Pitch) $
 
 stretch (1/4) $ do
@@ -929,7 +929,7 @@ stretch (1/4) $ do
 ```
 
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voice Pitch) $
 
 stretch (1/4) $ do
@@ -938,25 +938,25 @@ stretch (1/4) $ do
 ```
 
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voice [Pitch]) $
 
 [ [x,y] | x <- [c], y <- [d,e] ]
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voice [Pitch]) $
 
 [ [x,y] | x <- [c] | y <- [d,e] ]
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voice [Pitch]) $
 
 [ [x,y,z] | x <- [c] | y <- [d,e] | z <- [f,g] ]
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voice [StandardNote]) $
 
 [ dynamics' .~ d $ p
@@ -965,7 +965,7 @@ inspectableToMusic @(Voice [StandardNote]) $
   ]
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voice [Pitch]) $
 
 [ [x,y] | x <- view voice (map fromPitch $ enumChromaticFromTo c c''), y <- [d,e]
@@ -1020,7 +1020,7 @@ TODO
 ### Representing rests
 An empty scores has no duration, but we can represent rests using `Score (Maybe a)`.
 
-```music+haskell
+```haskell+music
 seq [c,rest,d] |/ 4
 ```
 
@@ -1059,7 +1059,7 @@ map Just $ renderPattern (a <> b) (0 <-> 4)
 
 As patterns are infinite, we can compose patterns of different durations. Both patterns will just be repeated indefinately.
 
-```music+haskell
+```haskell+music
 map Just $ renderPattern (a <> b) (0 <-> 2)
   where
     a = parts' .~ trumpets  $ newPattern [c,d] |/ 8
@@ -1070,14 +1070,14 @@ map Just $ renderPattern (a <> b) (0 <-> 2)
 
 Patterns are @[Transformable], @[Transposable], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns. For example we can set parts and dynamics, or transpose patterns.
 
-```music+haskell
+```haskell+music
 map Just $ renderPattern (a <> b) (0.5 <-> 1.5)
   where
     a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
 ```
 
-```music+haskell
+```haskell+music
 map Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
   where
     a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
@@ -1085,7 +1085,7 @@ map Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
 ```
 
 
-```music+haskell
+```haskell+music
 map Just $ renderPattern (a <> b) (0 <-> 2)
   where
     a = parts' .~ trumpets  $ newPattern [c,d,e] |* (3/15)
@@ -1094,7 +1094,7 @@ map Just $ renderPattern (a <> b) (0 <-> 2)
 
 You can adjust the "phase" of a pattern using @[delay]. This is useful together with the composition operator:
 
-```music+haskell
+```haskell+music
 map Just $ renderPattern (a <> b <> delay (1/4) c <> delay (1/4) d) (0 <-> 2)
   where
     a = parts' .~ flutes    $ rhythmPattern [1/2,1/2]
@@ -1108,7 +1108,7 @@ The @[renderPattern] function returns the events of the pattern within a given t
 <!--
 TODO finish/move to examples:
 
-```TODOmusic+haskell
+```TODOhaskell+music
 inspectableToMusic bachCMajChords
   where
     bachCMajChords :: Score [Pitch]
@@ -1192,7 +1192,7 @@ TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" o
 @[beginning]
 @[ending]
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Voice Pitch] $
 
 [ beginning 0.5 melody
@@ -1202,7 +1202,7 @@ inspectableToMusic @[Voice Pitch] $
     melody = {- accent $ legato -} mconcat [d, mconcat [g,fs]|/2,bb|*2]|/4
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Voice Pitch] $
 
 [ beginning (1/2+1/8) melody
@@ -1214,13 +1214,13 @@ inspectableToMusic @[Voice Pitch] $
 
 @[rev] reverse, retrograde
 
-```music+haskell
+```haskell+music
 let
     melody = accent $ legato $ seq [d, seq [g,fs]|/2,bb|*2]|/4
 in melody |> rev melody
 ```
 
-```music+haskell
+```haskell+music
 music |> rev music
   where
     music = (1/16) *| seq [c|*3, legato $ seq [accent eb, fs|*3, a, b|*3], gs, f|*3, d]
@@ -1245,7 +1245,7 @@ The @[Pitch] representation implements the pitch of common (or Western) music no
 
 The following pitch names are used:
 
-```music+haskell
+```haskell+music
 seq [c, d, e, f, g, a, b]
 ```
 
@@ -1253,7 +1253,7 @@ seq [c, d, e, f, g, a, b]
 
 We can change octave using @[octavesUp] and @[octavesDown]:
 
-```music+haskell
+```haskell+music
 octavesUp 4 c
   </>
 octavesUp (-1) c
@@ -1263,13 +1263,13 @@ octavesDown 2 c
 
 There are synonyms for the most common cases:
 
-```music+haskell
+```haskell+music
 _8va c <> c <> _8vb c
 ```
 
 The following is also a shorthand for alternative octaves:
 
-```music+haskell
+```haskell+music
 c__ |> c_ |> c |> c' |> c''
 ```
 
@@ -1277,7 +1277,7 @@ c__ |> c_ |> c |> c' |> c''
 
 Sharps and flats can be added using @[sharpen] and @[flatten].
 
-```music+haskell
+```haskell+music
 sharpen c
   </>
 (sharpen . sharpen) c
@@ -1289,25 +1289,25 @@ flatten c
 
 The @[alter] function is an iterated version of @[sharpen]/@[flatten]:
 
-```music+haskell
+```haskell+music
 alter 1 $ seq [c,d,e]
 ```
 
 Double sharps/flats are supported:
 
-```music+haskell
+```haskell+music
 seq $ map (`alter` c) [-2..2]
 ```
 
 The pitch representation used in Music Suite does in fact allow for an *arbitrary* number of sharps or flats. As there are no symbols for these in standard notation, they are automatically re-spelled in the output. Here is the note `c` written with up to 4 flats and sharps.
 
-```music+haskell
+```haskell+music
 seq $ map (`alter` c) [-4..4]
 ```
 
 There is of course also a shorthand for sharps and flats:
 
-```music+haskell
+```haskell+music
 (cs |> ds |> es)    -- sharp
   </>
 (cb |> db |> eb)    -- flat
@@ -1340,7 +1340,7 @@ As is common in music theory notation, *minor* and *diminished* intervals are
 written in lower-case, while *major* and *perfect* intervals are written in
 upper-case. Here are some examples:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Interval] $
 [ m3
 , _M3
@@ -1354,7 +1354,7 @@ inspectableToMusic @[Interval] $
 Similar to @[sharpen] and @[flatten], the @[augment] and @[diminish] functions can be used
 to alter the size of an interval. For example:
 
-```music+haskell
+```haskell+music
 let
     intervals = [diminish _P5, (diminish . diminish) _P5]
 in seq $ map (`up` c) intervals
@@ -1386,7 +1386,7 @@ A *negative* interval is a compound interval with a negative octave number.
 -1
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Interval] $
 [ m3
 , -m3
@@ -1520,7 +1520,7 @@ _A4
 ```
 
 
-```music+haskell
+```haskell+music
 seq $ map (\x -> over pitches' (relative c $ spell x)  $ par [as,cs,ds,fs])
 [ usingSharps
 , usingFlats
@@ -1530,7 +1530,7 @@ seq $ map (\x -> over pitches' (relative c $ spell x)  $ par [as,cs,ds,fs])
 
 <!-- TODO simpler short cut for `over pitches' (relative c $ spell ...)`: -->
 
-```music+haskell
+```haskell+music
 x </> over pitches' (relative c $ spell modally) x
   where
     x = seq [cs,flatten db,bs]
@@ -1549,13 +1549,13 @@ The `VectorSpace` and `AffineSpace` allow us to apply *affine transformations* t
 
 We can transpose a music expression using the @[up] and @[down] functions.
 
-```music+haskell
+```haskell+music
 up m3 tune
   where
     tune = seq [c,c,g,g,a,a,g|*2] |/8
 ```
 
-```music+haskell
+```haskell+music
 down _A4 tune
   where
     tune = seq [c,c,g,g,a,a,g|*2] |/8
@@ -1563,7 +1563,7 @@ down _A4 tune
 
 As you might expect `down` is the same as `up . negate` and vice versa.
 
-```music+haskell
+```haskell+music
 up (-m3) tune
   where
     tune = seq [c,c,g,g,a,a,g|*2] |/8
@@ -1577,7 +1577,7 @@ The @[up] and @[down] functions perform *chromatic transposition*. For diatonic 
 
 The @[above] and @[below] functions are similar to @[up] and @[down], but also retain the original music.
 
-```music+haskell
+```haskell+music
 above m3 tune |> below m3 tune
   where
     tune = seq [c,c,g,g,a,a,g|*2] |/8
@@ -1585,12 +1585,12 @@ above m3 tune |> below m3 tune
 
 Note that (like `up` and `down`) these functions perform *chromatic transposition* by default. This can make extended sequences created using up and down a distinctive non-tonal sounds. For example paralallel major thirds create whole-tone fields:
 
-```music+haskell
+```haskell+music
 above _M3 [c,d,e]
 ```
 Parallel minor thirds generates the octatonic scale:
 
-```music+haskell
+```haskell+music
 above m3 [a,b,c']
 ```
 
@@ -1599,7 +1599,7 @@ above m3 [a,b,c']
 
 We can also perform *diatonic transposition*. As music expressions can not be presumed to have any particular *tonic* by default, we have to provide this as an extra argument. For example `upDiatonic c 2` means "transpose upwards two diatonic steps, with C as the tonic".
 
-```music+haskell
+```haskell+music
 let
   ch x = par [x, upDiatonic c 2 x, upDiatonic c 5 x]
 in seq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
@@ -1607,7 +1607,7 @@ in seq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
 
 Here is same example, using a different tonic (`fs` instead of `c`):
 
-```music+haskell
+```haskell+music
 let
   ch x = par [x, upDiatonic fs 2 x, upDiatonic fs 5 x]
 in seq $ ch <$> [c,d,e,f,g,a,g,c',b,a,g,fs,g |* 4] |/ 8
@@ -1619,7 +1619,7 @@ As we have seen intervals form a *vector space* and pitches an associated *affin
 
 However pitches live in an affine space without a specific origin, so we have to pick one:
 
-```music+haskell
+```haskell+music
 m </> scale 2 c m </> scale 2 e m
   where
     scale n p = pitches %~ relative p (n *^)
@@ -1632,7 +1632,7 @@ Note how the origin stays the same under scaling.
 
 The @[invertPitches] function is a shorthand for the special case of scaling by `-1`:
 
-```music+haskell
+```haskell+music
 m </> invertPitches c m </> invertPitches e m
   where
     m = seq [c,d,e,f,g] |*(2/5)
@@ -1640,7 +1640,7 @@ m </> invertPitches c m </> invertPitches e m
 
 As with transposition we can define a *diatonic* form of inversion. The function is @[invertDiatonic].
 
-```music+haskell
+```haskell+music
 m </> invertDiatonic c m </> invertDiatonic e m
   where
     m = seq [c,d,e,f,g] |*(2/5)
@@ -1652,7 +1652,7 @@ In this case, the origin is also used as the tonic of the implied diatonic scale
 
 You can extract all the pitches from a piece of music like this:
 
-```music+haskell
+```haskell+music
 inspectableToMusic $
   toListOf pitches' (seq [c,d, par[e,g]] :: Music)
 ```
@@ -1695,7 +1695,7 @@ The @[Ambitus] type represents a *range* of pitches. We can think of an ambitus 
 
 > Note: For pitch, we use *ambitus* instead of the ambigous *range* or *interval*.
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Ambitus Interval Pitch] $
 
 [ Ambitus c g
@@ -1705,7 +1705,7 @@ inspectableToMusic @[Ambitus Interval Pitch] $
 
 Note that the `Ambitus` type constructor is parameterized on both the pitch and interval type. Like most pitch contrainers it is a [bifunctor](http://hackage.haskell.org/package/base-4.12.0.0/docs/Data-Bifunctor.html).
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Ambitus Interval Pitch] $
 
 [                  Ambitus c g
@@ -1715,7 +1715,7 @@ inspectableToMusic @[Ambitus Interval Pitch] $
 
 It is also an instance of `Transposable`, so all the pitch operations from the previous section work for @[Ambitus] as well:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Ambitus Interval Pitch] $
 
 [          Ambitus c g
@@ -1725,11 +1725,11 @@ inspectableToMusic @[Ambitus Interval Pitch] $
 
 You can extract the range of any piece of music using @[pitchRange]:
 
-```music+haskell
+```haskell+music
 seq [c,d,fs,g,db,c,b_,c,g,c,e] |/ 8
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Maybe (Ambitus Interval Pitch)) $
 
 pitchRange @Music $ seq [c,d,fs,g,db,c,b_,c,g,c,e] |/ 8
@@ -1739,7 +1739,7 @@ pitchRange @Music $ seq [c,d,fs,g,db,c,b_,c,g,c,e] |/ 8
 
 The @[Scale] and @[Chord] types represent infinite collections of pitches, anchored at some absolute pitch known as the *tonic*. Like @[Ambitus], @[Scale] and @[Chord] are type constructors taking two type parameters for interval and pitch respectively.
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Scale Interval Pitch] $
 
 [ scale c phrygian
@@ -1751,7 +1751,7 @@ inspectableToMusic @[Scale Interval Pitch] $
 ]
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Chord Interval Pitch] $
 
 [ chord g majorTriad
@@ -1763,7 +1763,7 @@ inspectableToMusic @[Chord Interval Pitch] $
 
 The @[scale] and @[chord] functions take two parameters: the *tonic* (e.g. the absolute pitch at which the chord is centered) and a *mode* or *chord type* describings the characteristics of the chord. Most common scale and chord types are pre-defined, but as will see later it is also possible to make up custom scales and chords.
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[ChordType Interval Pitch] $
 
 [ majorTriad
@@ -1774,7 +1774,7 @@ inspectableToMusic @[ChordType Interval Pitch] $
 ]
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Mode Interval Pitch] $
 
 [ majorScale
@@ -1834,7 +1834,7 @@ _P8
 
 All scales and chords we have seen so far repeat at the octave, but this is not a hard requirement. For example @[quartal] and @[quintal] chords can be seen as one-note scales repeating at the eponymous interval:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Voiced Chord Interval Pitch] $
 
 [ voiceIn 5 $ chord c quartal
@@ -1844,7 +1844,7 @@ inspectableToMusic @[Voiced Chord Interval Pitch] $
 
 Similarly *clusters* are one-note scales repeating at the second:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Voiced Chord Interval Pitch] $
 
 [ voiceIn 5 $ chord c chromaticCluster
@@ -1854,7 +1854,7 @@ inspectableToMusic @[Voiced Chord Interval Pitch] $
 
 And we can repeat at arbitrary intervals:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Voiced Chord Pitch] $
 
 [ voiceIn 3 $ chord c $ repeating m7
@@ -1886,7 +1886,7 @@ c
 
 Naturally, @[Scale] and @[Chord] are instances of `Transposable`:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Scale Pitch] $
 
 [         scale c phrygian
@@ -1894,7 +1894,7 @@ inspectableToMusic @[Scale Pitch] $
 ]
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Chord Pitch] $
 
 [                     chord c majorTriad
@@ -1905,7 +1905,7 @@ inspectableToMusic @[Chord Pitch] $
 
 This is useful for building chord sequences:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Chord Pitch] $
 mconcat [s1, up _M6 s1, _8vb $ up (_M6 ^* 2) s1]
   where
@@ -1922,7 +1922,7 @@ mconcat [s1, up _M6 s1, _8vb $ up (_M6 ^* 2) s1]
 
 This example shows the inversion of various chords. The inversion of a major triad is a minor triad, the inversion of a dominant 7th chord is half-diminished chord, and a minor seventh chord is its own inversion.
 
-```music+haskell
+```haskell+music
 compress 2 $ inspectableToMusic @[Chord Pitch] $
 [                       chord c majorTriad
 , over pitches (relative c negateV) $ chord c majorTriad
@@ -1947,7 +1947,7 @@ While Music Suite predefines all common practice modes, scales and chords, we ca
 
 Here is a mode that repeat at the fourth:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[ChordType Interval Pitch] $
 
 [ Mode [_M2,_M2,m3]
@@ -1966,7 +1966,7 @@ Non-repeating/self-repeating scales (e.g. the overtone series). TODO create by u
 
 The @[chord] function converts a mode into a scale/chord in root position.
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Chord Pitch] $
 [ chord c majorTriad
 , chord g majorMinorSeventhChord
@@ -1981,7 +1981,7 @@ TODO `chord` gives you the root position, define a version of `chord` that gives
 
 TODO this is a rotation, what does it mean:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Chord Pitch] $
 [ chord c $ majorTriad
 , chord g $ invertChord (-1) majorMinorSeventhChord
@@ -2007,14 +2007,14 @@ Recall that chords are infinite sets. A @[Voicing] is a finite subset of that se
 
 The `voiced` function voices a chord as closely as possible above the tonic. Formally the pitches of the generating interval sequence, originating at the tonic. For example:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voiced Chord Pitch) $
   voiced (chord d majorTriad)
 ```
 
 To generate a closed voicing with doubled notes, use `voiceIn`.
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Voiced Chord Pitch] $
 [ voiceIn 4 $ chord c majorTriad
 , invertVoicing (-2) $ voiced $ chord g majorMinorSeventhChord
@@ -2026,7 +2026,7 @@ inspectableToMusic @[Voiced Chord Pitch] $
 
 We extract the pitches from a voiced chord like this:
 
-```music+haskell
+```haskell+music
 seq $ map fromPitch ps
   where
     ps :: [Pitch]
@@ -2038,7 +2038,7 @@ seq $ map fromPitch ps
 
 Voiced chords allow inversion:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Voiced Chord Pitch] $
   map (`invertVoicing` vs) [ -1..4 ]
   where
@@ -2049,17 +2049,17 @@ inspectableToMusic @[Voiced Chord Pitch] $
 
 We can also create custom voicings, using any combination of integers. Recall that `0` stands for the origin, `1` for the first note above the origin, `2` for the next and so on. Negative numbers repeat the pattern below the origin.
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voiced Chord Pitch) $
   Voiced (chord d minorTriad) [0,1..6]
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voiced Chord Pitch) $
   Voiced (chord d minorTriad) [0,2..6]
 ```
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voiced Chord Pitch) $
   Voiced (chord d minorTriad) [-2,0,2,4]
 ```
@@ -2152,19 +2152,19 @@ TODO spectral dissonance using HCF
 
 Dynamics can me applied using @[level]:
 
-```music+haskell
+```haskell+music
 level ppp c
 ```
 
 Here is an overview of the standard dynamic values:
 
-```music+haskell
+```haskell+music
 over eras (stretchRelativeOnset 0.5) $ seq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] (map fromPitch [c..])
 ```
 
 We can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
 
-```music+haskell
+```haskell+music
 (cresc pp mf $ seq [c,d,e,f,g,a,b,c'] |/8)
   </>
 (dim fff ff $ seq [c,d,e,f,g,a,b,c'] |/8)
@@ -2172,7 +2172,7 @@ We can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms)
 
 Long crescendos and diminuendos are supported as well.
 
-```music+haskell
+```haskell+music
 cresc pp mf $ (times 8 $ seq [c,d,e,f,g]) |/8
 ```
 
@@ -2186,7 +2186,7 @@ In general, a new dynamic mark is drawn at the start of each entry, that is afte
 each period of rests per voice. However if the dynamic has not changed the mark is only
 repeated if the last entry was a few bars ago.
 
-```music+haskell
+```haskell+music
 -- Hidden
 [(0<->1, c)^.event, (1.5<->3, d)^.event]^.score
   </>
@@ -2203,7 +2203,7 @@ repeated if the last entry was a few bars ago.
 
 Standard articulations are supported:
 
-```music+haskell
+```haskell+music
 legato (seq [c,d,e,f,g]|/8)
     </>
 staccato (seq [c,d,e,f,g]|/8)
@@ -2219,7 +2219,7 @@ staccatissimo (seq [c,d,e,f,g]|/8)
 
 Adding accents is similar to regular articulations:
 
-```music+haskell
+```haskell+music
 accent (seq [c,d,e,f,g]|/8)
     </>
 marcato (seq [c,d,e,f,g]|/8)
@@ -2227,7 +2227,7 @@ marcato (seq [c,d,e,f,g]|/8)
 
 One difference is that by default, accents are only applied to the first note in each phrase. We can also explicitly specify the last note, or all the notes:
 
-```music+haskell
+```haskell+music
 accentLast (seq [c,d,e,f,g]|/8)
     </>
 accentAll (seq [c,d,e,f,g]|/8)
@@ -2239,7 +2239,7 @@ We can apply slurs and articulation marks to scores of arbitrary complexity. The
 
 For example in this example we're building up a score consisting of three parts and then apply `accent . legato`:
 
-```music+haskell
+```haskell+music
 let
     ps = map fromPitch [c..c']
     p1 = seq ps |/4
@@ -2262,23 +2262,23 @@ TODO explain overloading of articulation
 
 A note with default articulation and dynamics:
 
-```music+haskell
+```haskell+music
 c
 ```
 
 Setting dynamics:
 
-```music+haskell
+```haskell+music
 set dynamics' pp c
 ```
 
 Setting the accentuation and separation components of articulation:
 
-```music+haskell
+```haskell+music
 set articulations' (accentuation +~ 2 $ mempty) c
 ```
 
-```music+haskell
+```haskell+music
 over (articulations' . separation) (+ 2) c
 ```
 
@@ -2315,12 +2315,12 @@ There is no need to explicitly create staves, brackets or braces. These are crea
 
 To illustrate this, here is an example of a score with all the notes in the same part:
 
-```music+haskell
+```haskell+music
 par [c,d,fs]
 ```
 Here is a score with instruments in different parts:
 
-```music+haskell
+```haskell+music
 par [c,parts' .~ violins $ d,fs]
 ```
 
@@ -2346,19 +2346,19 @@ To choose a *non-default* parts or instruments, we use the `set` operator, or it
 
 Setting just the part looks like this:
 
-```music+haskell
+```haskell+music
 parts' .~ trumpets $ par [c,d,fs]
 ```
 
 Setting just the instrument:
 
-```music+haskell
+```haskell+music
 (parts' . instrument) .~ trumpet $ par [c,d,fs]
 ```
 
 Setting just the subpart:
 
-```music+haskell
+```haskell+music
 (parts' . subpart) .~ 2 $ (parts' . instrument) .~ trumpet $ par [c,d,fs]
 ```
 
@@ -2382,19 +2382,19 @@ We have already seen how the `</>` operator can be used to compose music "partwi
 
 When the given expressions have overlapping notes in some part, the subpart is incremented:
 
-```music+haskell
+```haskell+music
 c </> c
 ```
 
 When this is not the case, `</>` behaves like `<>`:
 
-```music+haskell
+```haskell+music
 set parts' violins c </> set parts' violas c
 ```
 
 The subpart of the left side is never changed, and the right side is always assigned to the next available subpart:
 
-```music+haskell
+```haskell+music
 set parts' p c </> set parts' p c
   where
     p = set subpart 2 $ violins
@@ -2402,19 +2402,19 @@ set parts' p c </> set parts' p c
 
 Note that as a consequence of this `</>` is not associative. Compare:
 
-```music+haskell
+```haskell+music
 c </> (e </> g)
 ```
 
 versus
 
-```music+haskell
+```haskell+music
 (c </> e) </> g
 ```
 
 This is normally not a problem, as `</>` associates to the left by default. Similarly with `rcat`:
 
-```music+haskell
+```haskell+music
 rcat [c,e,g]
 ```
 
@@ -2423,13 +2423,13 @@ rcat [c,e,g]
 
 It is important to understand the difference between *parts* and *staves*. While parts have a clear semantics in terms of perfomance, staves are a way of presenting this information visually. There is usually no need to worry about staves, they are automatically created depending on the parts present in the score.
 
-```music+haskell
+```haskell+music
 set parts' flutes c
 ```
 
 Most instruments are drawn on a single staff. Certain instruments are drawn on multiple staves by default, however:
 
-```music+haskell
+```haskell+music
 set parts' (tutti celesta) c
 ```
 
@@ -2443,7 +2443,7 @@ someEnsemble = divide 2 violins ++ [trumpet, clarinet]
 
 We can update several parts at once using the @[arrangeFor] function. This is useful in combination with @[rcat]:
 
-```music+haskell
+```haskell+music
 arrangeFor stringOrchestra $ rcat [c',e,g_,c_]
 ```
 
@@ -2451,7 +2451,7 @@ arrangeFor stringOrchestra $ rcat [c',e,g_,c_]
 
 Each part has a @[solo] component, which is either `Solo` or `Tutti`. This is useful when working with concertante scores.
 
-```music+haskell
+```haskell+music
 (parts' .~ solo violin $ seq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16)
   <>
 arrangeFor stringOrchestra (seq [rcat [c',e,g_,c_]])
@@ -2467,7 +2467,7 @@ TODO soloists *from* the orchestra/altri
 
 We can also *extract parts* from a score:
 
-```music+haskell
+```haskell+music
 extractPart violas fullScore |> fullScore
   where
     melody    = seq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16
@@ -2492,7 +2492,7 @@ We support all instruments in the MusicXML sound set. See [the full list here](h
 
 We can obtain transposition infomation from instruments:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Interval] $
 
 [ transposition violin
@@ -2509,7 +2509,7 @@ inspectableToMusic @[Interval] $
 
 We can obtainin range information from instruments:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @[Ambitus Interval Pitch] $
 
 [ playableRange violin
@@ -2528,7 +2528,7 @@ All instruments come with a variety of playing techniques, many of which produce
 A regular (measured) tremolo can be notated using the @[tremolo] function. Regular tremolo is is a shorthand for rapid iteration of a single note.
 
 
-```music+haskell
+```haskell+music
 tremolo 2 $ times 2 $ (c |> d)|/2
 ```
 
@@ -2536,7 +2536,7 @@ An unmeasured tremolo is notated using @[fastTremolo]. Unmeasured tremolo means 
 
 Note that in keeping with traditional notation, we notate unmeasured tremolo using three beans.
 
-```TODOmusic+haskell
+```TODOhaskell+music
 fastTremolo $ times 2 $ (c |> d)|/2
 ```
 
@@ -2546,7 +2546,7 @@ The former is rare but happen e.g. when double-stopped strings play bow tremolo 
 
 ### Slide and glissando
 
-```music+haskell
+```haskell+music
 glissando $ seq [c,d]|/2
 ```
 
@@ -2554,7 +2554,7 @@ glissando $ seq [c,d]|/2
 
 Use the @[harmonic] function. The argument is the harmonic number, with zero being the fundamental, one the first overtone, and so on. Use sounding pitch, Music Suite will automatically figure out the correct notation.
 
-```music+haskell
+```haskell+music
 (harmonic 1 $ c|/2)
     </>
 (harmonic 2 $ c|/2)
@@ -2564,7 +2564,7 @@ Use the @[harmonic] function. The argument is the harmonic number, with zero bei
 
 For artificial harmonics, use @[artificial]:
 
-```music+haskell
+```haskell+music
 artificial c |/ 2
 ```
 
@@ -2574,14 +2574,14 @@ artificial c |/ 2
 
 By default string instruments play *arco* (using the bow). We can switch to *pizzicato* (plucked) using @[pizz]. Because *arco* is the default, simply applying @[arco] to an expression has no effect:
 
-```music+haskell
+```haskell+music
 set parts' violins $
   seq [arco $ staccato $ times 4 c, times 4 $ pizz g_ ] |/ 4
 ```
 
 Traditionally the text "arco" is used to revert to bowed playing after a pizzicato section. This is inserted automatically.
 
-```music+haskell
+```haskell+music
 set parts' violins $
   seq [pizz $ seq [c,c,c,c], d |* 2, pizz e |*2 ] |/ 4
 ```
@@ -2592,20 +2592,20 @@ We can similarly indicate *bow* position. This instructs the performer to adjust
 * *Sul ponticello*, closer to the stable, producing an unstable, overtone-rich sound.
 
 
-```music+haskell
+```haskell+music
 set parts' violins $
   seq [sulTasto $ seq [c,c,c,c], posNat d |* 2] |/ 4
 ```
 
 The text *naturale* or *nat* is used to revert to "normal" position. As with *arco*, this is inserted automatically.
 
-```music+haskell
+```haskell+music
 set parts' violins $
   seq [posNat $ seq [c,c,c,c], sulPont d |* 2] |/ 4
 ```
 
 
-```music+haskell
+```haskell+music
 set parts' violins $ seq
   [ colLegno c
   , colLegnoBatt c
@@ -2615,14 +2615,14 @@ set parts' violins $ seq
 
 We can switch between bowed versus plucked strings using @[pizz] and @[arco]. The default is /arco/ (bowed). As in standard string notation this is indicated by text at the point of change:
 
-```music+haskell
+```haskell+music
 set parts' violins $
   seq [arco $ staccato $ times 4 c, times 4 $ pizz g_ ] |/ 4
 ```
 
 The text "arco" is used to cancel a previous "pizz". This is also inserted automatically. In the following example the first note in the second bar is using arco by default.
 
-```music+haskell
+```haskell+music
 set parts' violins $
   seq [pizz $ seq [c,c,c,c], d |* 2, pizz e |*2 ] |/ 4
 ```
@@ -2635,14 +2635,14 @@ Bow *position* on the string is indicated in a similar fashion. We support the f
 
 As with pizz/arco, only changes are indicated:
 
-```music+haskell
+```haskell+music
 set parts' violins $
   seq [sulTasto $ seq [c,c,c,c], posNat d |* 2] |/ 4
 ```
 
 As with "arco, the text "nat" is used to cancel a previous position and inserted by default.
 
-```music+haskell
+```haskell+music
 set parts' violins $
   seq [posNat $ seq [c,c,c,c], sulPont d |* 2] |/ 4
 ```
@@ -2653,7 +2653,7 @@ Bow *rotation* can be indated using one of the following:
 - Col legno battuto: play with the wooden part of the bow only. This is normally only used for sharp attacks, hence the name.
 - Senza legno: play with the bow hair (the default)
 
-```music+haskell
+```haskell+music
 set parts' violins $ seq
   [ colLegno c
   , colLegnoBatt c
@@ -2666,7 +2666,7 @@ Finally, string mutes are indicated using:
 - Con sordino: With mute
 - Senza sordino: Without mute (the default)
 
-```music+haskell
+```haskell+music
 set parts' violins $ seq
   [ conSord c
   , senzaSord c
@@ -2676,7 +2676,7 @@ set parts' violins $ seq
 
 Here is an example using a combination of the above techniques:
 
-```music+haskell
+```haskell+music
 set parts' violins $ seq
   [ conSord $ arco c
   , pizz c
@@ -2693,7 +2693,7 @@ TODO chord tremolo
 -->
 
 
-```music+haskell
+```haskell+music
 set parts' violins $ seq
   [ conSord c
   , senzaSord c
@@ -2701,7 +2701,7 @@ set parts' violins $ seq
   |/ 4
 ```
 
-```music+haskell
+```haskell+music
 set parts' violins $ seq
   [ conSord $ arco c
   , pizz c
@@ -2729,7 +2729,7 @@ Standard mutes are similarly to string mutes:
 
 The default is without mute.
 
-```music+haskell
+```haskell+music
 set parts' trombones $ seq
   [ conSord g_
   , senzaSord g_
@@ -2761,7 +2761,7 @@ As with other instruments we currently can not represent players doubling on mul
 
 The solo/tutti component is set to `Tutti` by default even though there might only be one performer in the group (the distinction would still make sense e.g. in a percussion concerto).
 
-```music+haskell
+```haskell+music
 parts' .~ snareDrum $ (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
   where
     rh = stretchTo 1 . seq
@@ -2810,7 +2810,7 @@ TODO
 
 @[text]
 
-```music+haskell
+```haskell+music
 text "pizz." $ c|/2
 ```
 
@@ -2870,7 +2870,7 @@ The distinction between ordinary musical data and meta-data is not always clear-
 
 Title, subtitle etc is grouped together as a single type `Title`, thus an arbitrary number of nested titles is supported. The simplest way to add a title is to use the functions @[title], @[subtitle], @[subsubtitle] and so son.
 
-```music+haskell
+```haskell+music
 title "Frere Jaques" $ seq [c,d,e,c]|/4
 ```
 
@@ -2880,11 +2880,11 @@ Some backends may or may not render subtitles, depending on their configuration.
 
 Similar to titles, the attribution of the creators of music can be annotated according to description such as @[composer], @[lyricist], @[arranger] etc. More generally, @[attribution] or @[attributions] can be used to embed arbitrary `(profession, name)` mappings.
 
-```music+haskell
+```haskell+music
 composer "Anonymous" $ seq [c,d,e,c]
 ```
 
-```music+haskell
+```haskell+music
 composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ seq [c,d,e,c]|/4
 ```
 
@@ -2894,19 +2894,19 @@ Some backends may or may not render attribution information, depending on their 
 
 By default the key signature of C is used. We can override the *global* key signature using @[keySignature].
 
-```music+haskell
+```haskell+music
 keySignature (key db MajorMode) $ seq [db,eb,f]
 ```
 
 We can also set the key signature for a specific time span using @[keySignatureDuring].
 
-```music+haskell
+```haskell+music
 keySignatureDuring (1 <-> 2) (key db MinorMode) $ seq [db,eb,f]
 ```
 
 A key signature change will always force a new bar.
 
-```music+haskell
+```haskell+music
 keySignatureDuring (1.5 <-> 2) (key db MajorMode) $ seq [db,eb,f]
 ```
 
@@ -2938,7 +2938,7 @@ compoundTime [3,2] 8 :: TimeSignature
 
 The default time signature is `4/4` is used (written as *c*). We can override this globally using @[timeSignature].
 
-```music+haskell
+```haskell+music
 timeSignature (3/8) $ seq [db,eb,f]
 ```
 
@@ -2949,7 +2949,7 @@ We can also set the time signature for a specific time span using  @[timeSignatu
 
 Setting the time signature does *not* imply that the music is renotated. To accomplish this we'll need to use @[stretch] or @[compress]. For example, the following music is notated using a quarter note pulse.
 
-```music+haskell
+```haskell+music
 let
   ch = par [e,g,c']
   waltz = seq [c,ch,ch,g_,ch,ch] |* (1/4)
@@ -2959,7 +2959,7 @@ timeSignature (3/4) waltz
 
 To *renotate* this to eight notes, we stretch the music by `1/2` and apply the new time signature:
 
-```music+haskell
+```haskell+music
 let
   ch = par [e,g,c']
   waltz = seq [c,ch,ch,g_,ch,ch] |* (1/4)
@@ -2969,7 +2969,7 @@ timeSignature (3/8) $ compress 2 waltz
 
 This provide more flexibility for renotation. For example we can easily renotate a passage from `4/4` to `12/8` as follows:
 
-```music+haskell
+```haskell+music
 let
   ch = par [e,g,c']
   waltz = times 2 $ seq [c,ch,ch,g_,ch,ch] |* (1/4)
@@ -2977,7 +2977,7 @@ in
 timeSignature (4/4) $ compress 3 $ waltz
 ```
 
-```music+haskell
+```haskell+music
 let
   ch = par [e,g,c']
   waltz = times 2 $ seq [c,ch,ch,g_,ch,ch] |* (1/4)
@@ -2996,15 +2996,15 @@ Polymetric notation is not supported: you must pick one global time signature fo
 
 @[tempo]
 
-```music+haskell
+```haskell+music
 tempo adagio $ seq [c,d,e,b,c] |/ (5*8) |> d |* (3/4)
 ```
 
-```music+haskell
+```haskell+music
 tempo (metronome (1/4) 80) $ seq [c,d,e,b,c] |/ (5*8) |> d |* (3/4)
 ```
 
-```music+haskell
+```haskell+music
 (tempo adagio $ seq [c,d,e,b,c] |/ (5*4) |> d |* (3/4))
   |>
 (tempo allegro $ seq [c,d,e,f,g] |/ 4 )
@@ -3020,13 +3020,13 @@ Fermatas indicate a certain time point (usually a strong beat) should be prolong
 TODO representation should be: meta-mark at the first strong beat *after* the fermata-signed notes (e.g. the one to break *before*). This means we can render fermata signs on all notes where whose span overlaps the break point (including offset, not including onset).
 -->
 
-```music+haskell
+```haskell+music
 fermata StandardFermata (par [c,e,g])
 ```
 
 Note that a fermata attaches to a specific point known as the *sustain point* (the beginning of the given score is used by default). All notes overlapping the sustain point have a fermata drawn on them.
 
-```music+haskell
+```haskell+music
 fermata StandardFermata (par [seq[c,d] |/ 2,e,g])
 ```
 
@@ -3037,11 +3037,11 @@ A fermata usually implies a unison cutoff of the prolonged notes, followed by a 
 <!--
 ### Ritardando and accellerando
 
-```TODOmusic+haskell
+```TODOhaskell+music
 (rit (seq [c,d] |> e |* 2) |/ 4)
 ```
 
-```TODOmusic+haskell
+```TODOhaskell+music
 (acc (seq [c,d] |> e |* 2) |/ 4)
 ```
 -->
@@ -3058,13 +3058,13 @@ There is generally no need to enter bars explicitly, as this information can be 
 
 Whenever a bar line is created as a result of a meta-event, an shorted time signature may need to be inserted before the change. For example here the change of time signature to 3/4 forces the insertion of a 2/4 bar.
 
-```music+haskell
+```haskell+music
 compress 4 $ timeSignature (4/4) (seq [c,d,e,c,d,e,f,d,g,d]) |> timeSignature (3/4) (seq [a,g,f,g,f,e])
 ```
 
 We can force a new bar lines using @[barline].
 
-```music+haskell
+```haskell+music
 compress 4 $ seq [c,d,e] |> barline DoubleBarline (seq [d,e,f])
 ```
 
@@ -3082,19 +3082,19 @@ TODO
 
 Rehearsal marks are added to the beginning of the score by default:
 
-```music+haskell
+```haskell+music
 rehearsalMark $ seq [c,d,e,d,f,e,d,c] |/ 3
 ```
 
 We can also add it to a specific position:
 
-```music+haskell
+```haskell+music
 rehearsalMarkAt 2 $ seq [c,d,e,d,f,e,d,c] |/3
 ```
 
 A rehearsal mark carry no specific meaning. Composing two scores will interleave their rehearsal marks.
 
-```music+haskell
+```haskell+music
 rehearsalMarkAt 1 (up m3 m) </> rehearsalMarkAt 2 m
   where
     m = seq [c,d,e,c,d,f] |/ 2
@@ -3110,7 +3110,7 @@ Annotations are simply textual values attached to a specific section of the scor
 Annotations are *invisible by default*. To show annotations in the generated output, use
 @[showAnnotations].
 
-```TODOmusic+haskell
+```TODOhaskell+music
 showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 ```
 -->
@@ -3171,7 +3171,7 @@ Let's now look at how to use the types and classes introduced in this chapter to
 
 @[times]
 
-```music+haskell
+```haskell+music
 let
     melody = accent $ seq [c,d,e]|/16
 in times 4 $ melody
@@ -3319,7 +3319,7 @@ TODO explain the type families: GetPitch, SetPitch, GetArticulation, SetArticula
 
 Here is a phrase traversal applied to a single-part score:
 
-```music+haskell
+```haskell+music
 over (phrases' . Control.Lens._head) (up _P8) $ bar <> delay 1 bar <> delay 2 bar
   where
     bar = seq [c,c,c] |/ 4
@@ -3327,7 +3327,7 @@ over (phrases' . Control.Lens._head) (up _P8) $ bar <> delay 1 bar <> delay 2 ba
 
 This multi-part score is traversed partwise:
 
-```music+haskell
+```haskell+music
 over (phrases' . Control.Lens._head) (up _P8) $ bar </> delay (3/4) bar </> delay (5/8) bar
   where
     bar = seq [c,c,c] |/ 4
@@ -3335,7 +3335,7 @@ over (phrases' . Control.Lens._head) (up _P8) $ bar </> delay (3/4) bar </> dela
 
 Any overlapping notes *within a single part* are ignored by phrase traversals:
 
-```music+haskell
+```haskell+music
 over (phrases' . Control.Lens._head) (up _P8) $
   bar <> delay (1/8) bar
   where
@@ -3348,7 +3348,7 @@ Filtered traversals operate on the elements selected by another traversals if th
 
 This example transposes all notes with a duration less than `2`:
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voice [StandardNote]) $
 
 over t (up _P8) [d,d,d |* 2,d] |/ 4
@@ -3362,7 +3362,7 @@ over t (up _P8) [d,d,d |* 2,d] |/ 4
 
 ### Traversing the notes in a voice
 
-```music+haskell
+```haskell+music
 inspectableToMusic @(Voice [StandardNote]) $
 
 over t (\x -> if x^.duration > 1 then up m2 x else x) [d,d,d |* 2,d]
@@ -3370,7 +3370,7 @@ over t (\x -> if x^.duration > 1 then up m2 x else x) [d,d,d |* 2,d]
     t = notes . each
 ```
 
-```TODOmusic+haskell
+```TODOhaskell+music
 inspectableToMusic @(Voice [StandardNote]) $
 
 traverseOf t _ [d,d,d |* 2,d]
@@ -3381,7 +3381,7 @@ traverseOf t _ [d,d,d |* 2,d]
 
 ### Traversing all the events in a score
 
-```music+haskell
+```haskell+music
 canon </> renderAlignedVoice rh
   where
     rh :: IsPitch a => Aligned (Voice a)
@@ -3571,16 +3571,16 @@ TODO use `[]` for finite, `Stream` for infinite
 
 Nested tuplets.
 
-```music+haskell
+```haskell+music
 stretch (2/3) (seq [c,d,e]) |> f |*2
 ```
 
 
-```music+haskell
+```haskell+music
 seq [seq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
 ```
 
-```music+haskell
+```haskell+music
 seq [seq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 ```
 -->
@@ -3592,13 +3592,13 @@ TODO this is not documentation, move to some other location. Listing all "bad re
 
 ### Quantization
 
-```TODOmusic+haskell
+```TODOhaskell+music
 (`stretch` c) <$> rh [1,rh [1,1,1],1,1]
   where
     rh = stretchTo 1 . seq
 ```
 
-```music+haskell
+```haskell+music
 rcat
       [ theme
       , theme |* (3/2)
@@ -3610,21 +3610,21 @@ rcat
 
 This should use nested tuplets:
 
-```music+haskell
+```haskell+music
 seq [seq [c,d,e] |* (2/(3)), c, d, e, f] |* (1/(5*4))
 ```
 
-```music+haskell
+```haskell+music
 seq [seq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 ```
 
-```music+haskell
+```haskell+music
 stretch (1/2) $ seq [c,d,e]|/3 |> f |> g|*2
 ```
 
 Should render >1 tuplet:
 
-```music+haskell
+```haskell+music
 let
   ch = par [e,g,c']
   waltz = times 2 $ seq [c,ch,ch,g_,ch,ch] |* (1/4)
@@ -3636,7 +3636,7 @@ timeSignature (4/4) $ compress 3 $ waltz
 
 This should render
 
-```music+haskell
+```haskell+music
 rcat $ map renderAlignedVoice $
 [ aligned 0 0 c
 , aligned 0 (1.5/view duration v) v |/ 4
@@ -3645,7 +3645,7 @@ rcat $ map renderAlignedVoice $
     v = ([g_,a_,b_]|/2 <> [c, c, d, d])
 ```
 very much like this (except without the initial rests):
-```music+haskell
+```haskell+music
 rcat $ map renderAlignedVoice $ delay 1
 [ aligned 0 0 c
 , aligned 0 (1.5/view duration v) v |/ 4
