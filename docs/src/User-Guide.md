@@ -731,7 +731,7 @@ x </> over pitches' (relative c $ spell modally) x
 
 ## Transposing and inverting music
 
-The `VectorSpace` and `AffineSpace` allow us to apply *affine transformations* to pitches. Because pitch is (roughly) a one-dimensional space, this means scaling and transpotion. Let's look at some examples.
+The `VectorSpace` and `AffineSpace` allow us to apply *affine transformations* to pitches. Because pitch is (roughly) a one-dimensional space, this means scaling and transposition. Let's look at some examples.
 
 > Warning: The musical term *transposition* is known as *translation* in maths (where *transposition* means something else entirely!).
 
