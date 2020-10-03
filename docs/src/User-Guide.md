@@ -812,9 +812,9 @@ All the pitch names resolve to `Just c`, `Just d` and so on, while the rest reso
 We can also create voices from rhythms (lists of durations);
 
 ```haskell
->>> rhythmToVoice [1,2,3] :: Voice ()
+>>> Voice.fromRhythm [1,2,3] :: Voice ()
 
->>> c <$ rhythmToVoice [1,2,3] :: Voice Pitch
+>>> c <$ Voice.fromRhythm [1,2,3] :: Voice Pitch
 ```
 
 Or from a list of notes:
@@ -918,7 +918,7 @@ inspectableToMusic @(Voice [StandardNote]) $
 ```music+haskell
 inspectableToMusic @(Voice [Pitch]) $
 
-[ [x,y] | x <- view voice (fmap fromPitch $ enumChromaticFromTo c c''), y <- [d,e]
+[ [x,y] | x <- view voice (map fromPitch $ enumChromaticFromTo c c''), y <- [d,e]
   , isMelodicConsonance (x .-. y) && isConsonance (x .-. y) ]
 ```
 
@@ -1041,7 +1041,7 @@ TODO example
 We can compose patterns in parallel using the regular composition operator @[<>].
 
 ```music+haskell
-fmap Just $ renderPattern (a <> b) (0 <-> 4)
+map Just $ renderPattern (a <> b) (0 <-> 4)
   where
     a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
@@ -1051,7 +1051,7 @@ fmap Just $ renderPattern (a <> b) (0 <-> 4)
 As patterns are infinite, we can compose patterns of different durations. Both patterns will just be repeated indefinately.
 
 ```music+haskell
-fmap Just $ renderPattern (a <> b) (0 <-> 2)
+map Just $ renderPattern (a <> b) (0 <-> 2)
   where
     a = parts' .~ trumpets  $ newPattern [c,d] |/ 8
     b = parts' .~ trombones $ newPattern [c,d,e] |/ 8
@@ -1062,14 +1062,14 @@ fmap Just $ renderPattern (a <> b) (0 <-> 2)
 Patterns are @[Transformable], @[Transposable], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns. For example we can set parts and dynamics, or transpose patterns.
 
 ```music+haskell
-fmap Just $ renderPattern (a <> b) (0.5 <-> 1.5)
+map Just $ renderPattern (a <> b) (0.5 <-> 1.5)
   where
     a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
 ```
 
 ```music+haskell
-fmap Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
+map Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
   where
     a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
@@ -1077,7 +1077,7 @@ fmap Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
 
 
 ```music+haskell
-fmap Just $ renderPattern (a <> b) (0 <-> 2)
+map Just $ renderPattern (a <> b) (0 <-> 2)
   where
     a = parts' .~ trumpets  $ newPattern [c,d,e] |* (3/15)
     b = parts' .~ trombones $ newPattern [c,d,e] |* (3/8)
@@ -1086,7 +1086,7 @@ fmap Just $ renderPattern (a <> b) (0 <-> 2)
 You can adjust the "phase" of a pattern using @[delay]. This is useful together with the composition operator:
 
 ```music+haskell
-fmap Just $ renderPattern (a <> b <> delay (1/4) c <> delay (1/4) d) (0 <-> 2)
+map Just $ renderPattern (a <> b <> delay (1/4) c <> delay (1/4) d) (0 <-> 2)
   where
     a = parts' .~ flutes    $ rhythmPattern [1/2,1/2]
     b = parts' .~ oboes     $ rhythmPattern [1,1/2,1/2]
@@ -1130,7 +1130,7 @@ inspectableToMusic bachCMajChords
 
 
     bachCMajPattern :: (Num a) => Pattern a
-    bachCMajPattern = newPattern $ stretchTo 1 $ (view voice) $ fmap pure [0,1,2,3,4,2,3,4]
+    bachCMajPattern = newPattern $ stretchTo 1 $ (view voice) $ map pure [0,1,2,3,4,2,3,4]
 ```
 -->
 
@@ -1285,13 +1285,13 @@ alter 1 $ pseq [c,d,e]
 Double sharps/flats are supported:
 
 ```music+haskell
-pseq $ fmap (`alter` c) [-2..2]
+pseq $ map (`alter` c) [-2..2]
 ```
 
 The pitch representation used in Music Suite does in fact allow for an *arbitrary* number of sharps or flats. As there are no symbols for these in standard notation, they are automatically re-spelled in the output. Here is the note `c` written with up to 4 flats and sharps.
 
 ```music+haskell
-pseq $ fmap (`alter` c) [-4..4]
+pseq $ map (`alter` c) [-4..4]
 ```
 
 There is of course also a shorthand for sharps and flats:
@@ -1346,7 +1346,7 @@ to alter the size of an interval. For example:
 ```music+haskell
 let
     intervals = [diminish _P5, (diminish . diminish) _P5]
-in pseq $ fmap (`up` c) intervals
+in pseq $ map (`up` c) intervals
 ```
 
 
@@ -1510,7 +1510,7 @@ _A4
 
 
 ```music+haskell
-pseq $ fmap (\x -> over pitches' (relative c $ spell x)  $ ppar [as,cs,ds,fs])
+pseq $ map (\x -> over pitches' (relative c $ spell x)  $ ppar [as,cs,ds,fs])
 [ usingSharps
 , usingFlats
 , modally
@@ -1612,7 +1612,7 @@ However pitches live in an affine space without a specific origin, so we have to
 m </> scale 2 c m </> scale 2 e m
   where
     scale n p = pitches %~ relative p (n *^)
-    m = pseq (fmap fromPitch [c,d,e,f,g]) |*(2/5)
+    m = pseq (map fromPitch [c,d,e,f,g]) |*(2/5)
 ```
 
 Note how the origin stays the same under scaling.
@@ -1622,29 +1622,17 @@ Note how the origin stays the same under scaling.
 The @[invertPitches] function is a shorthand for the special case of scaling by `-1`:
 
 ```music+haskell
-m
-    </>
-(invertPitches c m)
-    </>
-(invertPitches e m)
-    </>
-(invertPitches f m)
+m </> invertPitches c m </> invertPitches e m
   where
-    m = pseq (fmap fromPitch [c,d,e,f,g]) |*(2/5)
+    m = pseq [c,d,e,f,g] |*(2/5)
 ```
 
 As with transposition we can define a *diatonic* form of inversion. The function is @[invertDiatonic].
 
 ```music+haskell
-m
-    </>
-(invertDiatonic c m)
-    </>
-(invertDiatonic e m)
-    </>
-(invertDiatonic f m)
+m </> invertDiatonic c m </> invertDiatonic e m
   where
-    m = pseq (fmap fromPitch [c,d,e,f,g]) |*(2/5)
+    m = pseq [c,d,e,f,g] |*(2/5)
 ```
 
 In this case, the origin is also used as the tonic of the implied diatonic scale.
@@ -1710,7 +1698,7 @@ Note that the `Ambitus` type constructor is parameterized on both the pitch and 
 inspectableToMusic @[Ambitus Interval Pitch] $
 
 [                  Ambitus c g
-, fmap (const c) $ Ambitus @Interval @Pitch c g
+, map (const c) $ Ambitus @Interval @Pitch c g
 ]
 ```
 
@@ -1876,10 +1864,10 @@ We can look up pitches in any chord or scale using the `index` function. This co
 >>> index (chord c majorTriad) 0
 c
 
->>> fmap (index $ chord c majorTriad)) [-1,0,1,2]
+>>> map (index $ chord c majorTriad)) [-1,0,1,2]
 [g_,c,e,g]
 
->>> fmap (index $ chord g majorMinorSeventhChord)) [-2,-1,0,1]
+>>> map (index $ chord g majorMinorSeventhChord)) [-2,-1,0,1]
 [d,f,g,b]
 ```
 
@@ -2028,7 +2016,7 @@ inspectableToMusic @[Voiced Chord Pitch] $
 We extract the pitches from a voiced chord like this:
 
 ```music+haskell
-pseq $ fmap fromPitch ps
+pseq $ map fromPitch ps
   where
     ps :: [Pitch]
     ps = Data.List.NonEmpty.toList $ getVoiced v
@@ -2041,7 +2029,7 @@ Voiced chords allow inversion:
 
 ```music+haskell
 inspectableToMusic @[Voiced Chord Pitch] $
-  fmap (`invertVoicing` vs) [ -1..4 ]
+  map (`invertVoicing` vs) [ -1..4 ]
   where
     vs = voiced (chord c majorTriad)
 ```
@@ -2160,7 +2148,7 @@ level ppp c
 Here is an overview of the standard dynamic values:
 
 ```music+haskell
-over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] (fmap fromPitch [c..])
+over eras (stretchRelativeOnset 0.5) $ pseq $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] (map fromPitch [c..])
 ```
 
 We can give any two dynamic values to `cresc` and `dim` (e.g. they are synonyms). A crescendo/diminuendo line will be drawn as necessary.
@@ -2242,7 +2230,7 @@ For example in this example we're building up a score consisting of three parts 
 
 ```music+haskell
 let
-    ps = fmap fromPitch [c..c']
+    ps = map fromPitch [c..c']
     p1 = pseq ps |/4
     p2 = delay (1/4) $ pseq ps |/4
     p3 = delay (3/4) $ pseq ps |/4
@@ -3389,7 +3377,7 @@ traverseOf t _ [d,d,d |* 2,d]
 canon </> renderAlignedVoice rh
   where
     rh :: IsPitch a => Aligned (Voice a)
-    rh = fmap (fmap $ const c) $ aligned 0 0 $ view durationsAsVoice (tail $ toRelativeTime onsets)
+    rh = map (map $ const c) $ aligned 0 0 $ view durationsAsVoice (tail $ toRelativeTime onsets)
 
 
     onsets :: [Time]
@@ -3641,7 +3629,7 @@ timeSignature (4/4) $ compress 3 $ waltz
 This should render
 
 ```music+haskell
-rcat $ fmap renderAlignedVoice $
+rcat $ map renderAlignedVoice $
 [ aligned 0 0 c
 , aligned 0 (1.5/view duration v) v |/ 4
 ]
@@ -3650,7 +3638,7 @@ rcat $ fmap renderAlignedVoice $
 ```
 very much like this (except without the initial rests):
 ```music+haskell
-rcat $ fmap renderAlignedVoice $ delay 1
+rcat $ map renderAlignedVoice $ delay 1
 [ aligned 0 0 c
 , aligned 0 (1.5/view duration v) v |/ 4
 ]
