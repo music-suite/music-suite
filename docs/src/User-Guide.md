@@ -845,6 +845,10 @@ As with notes and events, we can enter a single voice using `c`, `d`, `eb`, etc.
 >>> c :: Voice Pitch
 
 >>> rest :: Voice (Maybe Pitch)
+
+>>> Voice.singleton True
+
+>>> pure True :: Voice Bool
 ```
 
 You can also put a rests in a voice. Notice how this changes the type:
@@ -1045,10 +1049,10 @@ TODO example
 
 We can compose patterns in parallel using the regular composition operator @[<>].
 
-```music+haskell
+```haskell+music
 map Just $ renderPattern (a <> b) (0 <-> 4)
   where
-    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
+    a = parts' .~ mempty $ Pattern.fromRhythm [3,3,4,2,4] |/ 8
     b = parts' .~ flutes $ rhythmPattern [1] |/ 8
     -- TODO use claves, maracas here
 ```
