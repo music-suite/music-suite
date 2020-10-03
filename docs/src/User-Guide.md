@@ -1,13 +1,44 @@
 
 # Tutorial
 
+In this chapter we will learn how to install Music Suite and use it to compose simple pieces. 
+
+This tutorial does not require any prerequisite knowledge, apart from a basic fluency with the terminal. You should  know how to create and modify text files.
+
+We will introduce other programming and music theory concepts as we go along. If you are already familiar with these fields, this tutorial should not contain many suprises. In future chapters we will go more in-depth.
+
+### Other resources
+
+There are serveral free introductions to Music Theory and compositions online:
+- [Open Music Theory](http://openmusictheory.com/contents.html)
+- [School of Composition](https://www.schoolofcomposition.com)
+- [Music Theory on Youtube](https://www.schoolofcomposition.com/music-theory-composition-youtube-channels/)
+
+As Music Suite is based on Haskell, you may also want to look at the following texts, aimed at new Haskell users:
+- [Learn You A Haskell](http://learnyouahaskell.com/)
+- [What I Wish I Knew Learning Haskell](http://dev.stephendiehl.com/hask/)
+
 ## Installing
 
 <!--
 TODO Docker or other "easy" install options
 -->
 
-### Installing from source
+### Online editor
+
+TODO
+
+### Windows
+
+TODO
+
+### MacOS
+
+TODO
+
+### Linux
+
+#### Installing from source
 
 We'll need Git and Nix (2.3.2 or later).
 
@@ -23,7 +54,7 @@ Then follow the instructions in `README.md` to setup the environment and build M
 
 Music Suite is based on *expressions*. An expression may represent any piece of music, from a single note to a complex, multi-movement work.
 
-To use Music Suite, you will need to write expressions, which Music Suite will convert into *audio* or *graphics* (or both) on your behalf. We can ask Music Suite to do this in a couple of different ways. Choose one that works for you so that you can follow along with the examples in the tutorial.
+To use Music Suite, you will need to write expressions, which the system will convert into *audio* or *graphics* (or both) on your behalf. We can ask it to do this in a couple of different ways. Choose one that works for you so that you can follow along with the examples in the tutorial.
 
 <!--
 Note: While Music Suite was written with Western classical notation in mind and it is not restricted to these formats.
@@ -466,6 +497,8 @@ The rest of this manual can be read as a *reference*. We will be looking at musi
 
 
 # Time and Rhythm
+
+In this chapter we will learn how time and rhythm is represented in Music Suite. 
 
 ## Basic time types
 
@@ -2378,18 +2411,22 @@ TODO soloists *from* the orchestra/altri
 
 ## Extracting parts
 
-We can also *extract parts* from a score. Note that if you're working with an external score writing program there is usually no need to do this explicitly in Music Suite: just export the entire score and use the part extraction mechanism in your editing application.
-
-If you *need* to perform part extraction in Music Suite, this is easy:
+We can also *extract parts* from a score:
 
 ```music+haskell
-extractPart violas fullScore
+extractPart violas fullScore |> fullScore
   where
+    melody    = pseq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16
+    harmony   = pseq [rcat [c',e,g_,c_]]
     fullScore =
-      (parts' .~ solo violin $ pseq [c,d,e,f,g,a,g,e,ds,e,cs,d,b,bb,a,ab] |/ 16)
+      (parts' .~ solo violin melody)
         <>
-      arrangeFor stringOrchestra (pseq [rcat [c',e,g_,c_]])
+      arrangeFor stringOrchestra harmony
 ```
+
+ Note that if you're working with an external score writing program there is usually no need to do this in Music Suite: just export the entire score and use the part extraction mechanism in your editing application.
+
+<!-- TODO this example needs a "multi-movement composition" operator to look nice -->
 
 ## More about instruments
 
