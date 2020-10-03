@@ -3,9 +3,9 @@
 
 In this chapter we will learn how to install Music Suite and use it to compose simple pieces. 
 
-This tutorial does not require any prerequisite knowledge, apart from a basic fluency with the terminal. You should  know how to create and modify text files.
+This tutorial does not require any prerequisite knowledge, apart from basic familiarity with the  [terminal](https://en.wikipedia.org/wiki/Shell_(computing)). You should  know how to create and modify [text files](https://en.wikipedia.org/wiki/Text_file) and run [commands](https://en.wikipedia.org/wiki/Command_(computing)).
 
-We will introduce other programming and music theory concepts as we go along. If you are already familiar with these fields, this tutorial should not contain many suprises. In future chapters we will go more in-depth.
+We will introduce other programming and music theory concepts as we go along. If you are already familiar with both of these, this chapter should not contain many surprises. We will go more in-depth in  future chapters.
 
 ### Other resources
 
@@ -522,6 +522,8 @@ The `.+^` operator adds a duration to a time point.
 
 Formally, time points form an affine space over durations.
 
+### Relationship with traditional notation
+
 In non-musical applications, time points are defined using clocks and calendars, and durations measured in seconds, minutes, hours and so on. In music, durations are measured in [*note values*](https://en.wikipedia.org/wiki/Note_value). The exact length of a note depends on the tempo, which may be indicated in the score or left to the discretion of the performer.
 
 The following table shows the relationship between the traditional note values and the durations used in Music Suite.
@@ -544,16 +546,25 @@ The following table shows the relationship between the traditional note values a
 | Quadruplet | 3/4  | 4 |
 | Quintuplet | 4/5  | 5 |
 | Sextuplet | 4/6  | 6 |
- 
+
+*Dotted notes* similarly indicate (at least nominally) duration multipliers as per below.
+
+| Number of dots | Multiplier |
+|--|--|
+| 1 | 2-1/2  |
+| 2 | 2-1/4  |
+| 3 | 2-1/8  |
+
+
 Music Suite also allows negative durations, which have no direct correspondance in traditional theory.
 
-Time points in a score are counted in note values, starting from 0 (the beginning of the piece). For a piece in 4/4 this corresponds exactly to the number of measures. The first beat of the first measure is represented by `0 :: Time`, the second beat by `1/4 :: Time` and so on. The first beat of the second measure is represented by `1 :: Time`, the second beat of the second measure by `1 + 1/4 :: Time`, and so on.
+Time points in a score are counted in note values, starting from $0$ (the beginning of the piece). For a piece in $4/4$ this corresponds exactly to the number of measures. The first beat of the first measure is represented by $0 :: Time$, the second beat by $1/4 :: Time$ and so on. The first beat of the second measure is represented by $1 :: Time$, the second beat of the second measure by $1 + 1/4 :: Time$, and so on.
 
 ### Time spans
 
 The @[Span] type represents a non-empty *slice* of time. We can represent spans as two points representing *onset* and *offset*. Alternatively, we can think of it as one point representing *onset* along with a *duration*, or as a point representing *offset* along with a *duration*. The three representations are equivalent.
 
-The expression `x <-> y` means a span with `x` as its onset and `y`  as its offset. We can access onset, offset and duration as follows:
+The expression `x <-> y` denotes a span with `x` as its onset and `y`  as its offset. We can access onset, offset and duration as follows:
 
 ```haskell
 >>> (2 <-> 3)^.onset
@@ -566,7 +577,7 @@ The expression `x <-> y` means a span with `x` as its onset and `y`  as its offs
 1
 ```
 
-The expression `x >-> d` means a span with onset `x` and duration `d`. Similarly, the notation `d <-< y` means a span *offset* `y` and duration `d`. The following expressions mean the same thing:
+The expression `x >-> d` denotes a span with onset `x` and duration `d`. Similarly, the notation `d <-< y` means a span *offset* `y` and duration `d`. The following expressions all denote the same span:
 
 ```haskell
 >>> 2 <-> 3
@@ -651,7 +662,18 @@ Note that this does *not* invalidate the laws.
 
 ### Spans as time intervals
 
-The @[TimeInterval] type is similar to @[Span], but also allows for empty spans to be represented. It forms a monoid with the convex @[hull] operator.
+We mentioned before that @[Span] represents *non-empty* slices of time. The @[TimeInterval] type is similar to @[Span], but also allows for empty spans to be represented. It forms a monoid with the convex @[hull] operator. Intuitively the (convex) hull of two intervals is the smallest interval that contains them both.
+
+```haskell
+>>> TimeInterval (1 <-> 2) <> TimeInterval (0 <-> 1.5)
+TimeInterval (0 <-> 2)
+
+>>> mempty :: TimeInterval
+EmptyInterval
+
+>>> EmptyInterval <> TimeInterval (3 <-> 4)
+TimeInterval (3 <-> 4)
+```
 
 
 
