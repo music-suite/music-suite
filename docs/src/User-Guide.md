@@ -2124,7 +2124,7 @@ timeSignature (3/8) $ pseq [db,eb,f]
 We can also set the time signature for a specific time span using  @[timeSignatureDuring]. Time signature changes will always force a new bar.
 
 
-### Converting from one time signature to another
+### Converting between time signatures
 
 Setting the time signature does *not* imply that the music is renotated. To accomplish this we'll need to use @[stretch] or @[compress]. For example, the following music is notated using a quarter note pulse.
 
