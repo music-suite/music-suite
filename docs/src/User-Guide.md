@@ -763,6 +763,8 @@ up (-m3) tune
 
 > Note: transposing does *not* automatically change the key signature. See [key signatures](#key-signatures) for how to do this explicitly.
 
+The @[up] and @[down] functions perform *chromatic transposition*. For diatonic transposition, see below.
+
 ### Parallel motion
 
 The @[above] and @[below] functions are similar to @[up] and @[down], but also retain the original music.
@@ -773,11 +775,21 @@ above m3 tune |> below m3 tune
     tune = pseq [c,c,g,g,a,a,g|*2] |/8
 ```
 
+Note that (like `up` and `down`) these functions perform *chromatic transposition* by default. This can make extended sequences created using up and down a distinctive non-tonal sounds. For example paralallel major thirds create whole-tone fields:
+
+```music+haskell
+above _M3 [c,d,e]
+```
+Parallel minor thirds generates the octatonic scale:
+
+```music+haskell
+above m3 [a,b,c']
+```
+
+
 ### Diatonic transposition
 
-The @[up] and @[down] functions perform what is known as *chromatic transposition*, meaning they add *both* the diatonic and the alteration component of the given interval to all pitches in the given score.
-
-We can also perform *diatonic transposition*, which adds only the diatonic component. Diatonic transpotion only makes sense relative a given tonic, so we provide one:
+We can also perform *diatonic transposition*. As music expressions can not be presumed to have any particular *tonic* by default, we have to provide this as an extra argument. For example `upDiatonic c 2` means "transpose upwards two diatonic steps, with C as the tonic".
 
 ```music+haskell
 let
@@ -800,11 +812,7 @@ As we have seen intervals form a *vector space* and pitches an associated *affin
 However pitches live in an affine space without a specific origin, so we have to pick one:
 
 ```music+haskell
-m
-    </>
-(scale 2 c m)
-    </>
-(scale 2 e m)
+m </> scale 2 c m </> scale 2 e m
   where
     scale n p = pitches %~ relative p (n *^)
     m = pseq (fmap fromPitch [c,d,e,f,g]) |*(2/5)
@@ -2378,7 +2386,9 @@ Time points form an affine space over durations, so we can use the operators @[.
 
 ### Time spans
 
-The @[Span] type represents a non-empty *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration.
+The @[Span] type represents a non-empty *slice* of time. We can represent spans as two points representing *onset* and *offset*. Alternatively, we can think of it as one point representing *onset* along with a *duration*, or as a point representing *offset* along with a *duration*. The three representations are equivalent.
+
+The expression `x <-> y` means a span with `x` as its onset and `y`  as its offset. We can access onset, offset and duration as follows:
 
 ```haskell
 >>> (2 <-> 3)^.onset
@@ -2388,11 +2398,10 @@ The @[Span] type represents a non-empty *slice* of time. We can represent spans 
 3
 
 >>> (2 <-> 3)^.duration
-3
-
+1
 ```
 
-We can also enter a span using either its *onset and offset*, its *onset and duration*, or its *duration and offset*. The three literals are equivalent:
+The expression `x >-> d` means a span with onset `x` and duration `d`. Similarly, the notation `d <-< y` means a span *offset* `y` and duration `d`. The following expressions mean the same thing:
 
 ```haskell
 >>> 2 <-> 3
@@ -2501,14 +2510,14 @@ The @[HasPosition] class represent values that have an *absolute position* in ti
 Just (1 <-> 3)
 ```
 
-Here `Maybe` is used to represent the "empty span". The class `HasPosition1` refines `HasPosition` by explicitly disallowing the empty span:
+`Nothing` is used to represent the "empty era". This is used for scores which doesn't have any notes. The class `HasPosition1` is similar to  `HasPosition`, but is only defined for types that can not have ane empty era. Consequently, there is no such instance for the `Score` type (since empty scores are allowed).
 
 ```haskell
 >>> _era1 (1 <-> 3)
 1 <-> 3
 ```
 
-Values with a position allow many useful combinators to be defined. For example here we use `during` to add a pedal note underneath a melody:
+Values with a position allow many useful combinators to be defined. For example here we use `during` to add a pedal note to a melody:
 
 ```music+haskell
 let
@@ -2519,9 +2528,9 @@ in compress 4 $ melody </> pedal
 
 <!--
 TODO example with stretchRelative, stretchTo
--->
 
 The laws for @[HasPosition] and @[HasPosition1] are not too exciting: they assure that transforming a value also transforms its position in the same manner, and that the duration of a value is exactly the duration between its onset and offset point.
+-->
 
 
 
