@@ -125,7 +125,7 @@ This of course represents the note C. Notice that there is more information in t
 By default note have no *accidentals* or *articulation marks*. We will see how to add those later as well.
 
 
-## Duration and onset
+## Onset, offset and duration
 
 All notes we enter have duration `1` by default. To change this, we use @[stretch] and @[compress]:
 
@@ -267,22 +267,8 @@ For `x </> y </> ...` the syntax is @[rcat] `[x, y, z ...]`.
 rcat [c,e,g] |/ 2
 ```
 
-## Comments
 
-Comments can be defined as follows:
-
-```haskell
--- This is a single-line comment
-
-{-
- This is
- a multi-line
- comment!
--}
-```
-
-
-## Rests, tuplets and ties
+## Rests, Tuplets and Ties
 
 There is never any need to explicitly create rests, tuplets or ties in Music Suite. Instead, each note exists in a dedicated time span, which can be inspected and transformed. When we compose music expressions in parallel, all notes are interleaved without affecting their onset or duration.
 
@@ -324,12 +310,21 @@ compress 4 (pseq [c |*3, d |* 3, e |* 2]) |> compress 5 (pseq [f,e,c,d,e]) |> d
 
 
 
-## Functions and types
+## Functions
 
 So far we have written our musical expressions in terms of pre-defined operators and functions. We can also define our own functions.
 
-TODO basic functions
+### Named functions
 
+TODO
+
+### Anonymous functions
+
+TODO
+
+### Pattern matching
+
+TODO
 
 ### Function composition
 
@@ -340,6 +335,22 @@ Here is an example using function composition. The dot operator `.` is used to c
 ```music+haskell
 (up _P8 . compress 2 . delay 3) c
 ```
+
+
+## Comments
+
+Comments can be defined as follows:
+
+```haskell
+-- This is a single-line comment
+
+{-
+ This is
+ a multi-line
+ comment!
+-}
+```
+They are completely ignored by the interpreter.
 
 ## More examples
 
@@ -365,7 +376,9 @@ let
 in up _P8 scale </> (triad c) |/2 |> (triad g_) |/2
 ```
 
-## Understanding composition types
+## Types and Type Classes
+
+TODO intro
 
 Looking at the type of the composition operators, it becomes clear that `|>` and `</>` are in fact based on `<>`:
 
@@ -412,7 +425,9 @@ The rest of this manual can be read as a *reference*. We will be looking at musi
 
 
 
-# Pitch
+# Pitches and Intervals
+
+In this chapter we will learn how to represent pitches and intervals and perform basic operations such as transposition and scaling. In the next chapter we will use these to build harmony concepts such as chords and scales.
 
 ## The Pitch type
 
@@ -1327,7 +1342,7 @@ TODO spectral dissonance using HCF
 
 
 
-# Articulation and dynamics
+# Dynamics and Articulation
 
 ## Adding dynamics
 
@@ -1696,7 +1711,7 @@ inspectableToMusic @[Ambitus Interval Pitch] $
 
 
 
-# Playing techniques
+# Playing Technique
 
 All instruments come with a variety of playing techniques, many of which produce fundamentally different sound types. We treat playing technique as a separate aspect from part and pitch.
 
@@ -2343,7 +2358,7 @@ TODO Use more specicif wrappers to preserve `Transformable`
 
 
 
-# Time, rhythm and form
+# Time and Rhythm
 
 ## Basic time types
 
@@ -3006,7 +3021,9 @@ music |> rev music
 
 
 
-## Building larger musical structures
+# Form
+
+### Building larger musical structures
 
 Let's now look at how to use the types and classes introduced in this chapter to organize larger musical forms.
 
@@ -3552,6 +3569,6 @@ The temporal structures, their instances and more general design philosophy come
 
 ----
 
-*Copyright Hans Jacob Hoeglund and others 2012–2020*
+*Copyright Music Suite contributors 2012–2020*
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This documentation is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
