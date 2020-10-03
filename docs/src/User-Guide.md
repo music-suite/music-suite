@@ -378,7 +378,43 @@ in up _P8 scale </> (triad c) |/2 |> (triad g_) |/2
 
 ## Types and Type Classes
 
+### Types
+
 TODO intro
+
+### Type classes
+
+TODO intro
+
+The most useful type classes come with *laws*, which all instances must satisfy. For example the laws for the `Monoid` class are:
+
+- `mempty <> x = x`
+	- The empty element composed with `x` is the same as `x`
+- `x <> mempty = x`
+	- `x` composed with the empty element is the same as `x`
+- `x <> (y <> z) = (x <> y) <> z`
+	- The operation is associatibe, e.g. we can rearrange brackets without changing the meaning of the expression.
+
+As an example, we can see that this holds for the list instance:
+
+```haskell
+[] ++ [1,2,3] = [1,2,3]
+
+[1,2,3] ++ [] = []
+
+[1] ++ ([2,3] ++ []) 
+= 
+[1] ++ [2,3] 
+= 
+[1,2,3] 
+= 
+[1,2,3] ++ []
+= 
+([1] ++ [2,3]) ++ []
+```
+
+
+### Understanding the composition operator types
 
 Looking at the type of the composition operators, it becomes clear that `|>` and `</>` are in fact based on `<>`:
 
@@ -509,9 +545,12 @@ TODO examples of transforming points
 
 The @[Transformable] class represent all things that can be transformed. All instance satisfy the following laws:
 
-- `transform mempty x = x`, e.g. applying the empty transformation changes nothing.
-- `transform (s <> t) x = transform s (transform t) x`, e.g. applying a composition of transfomrations is equivalent to applying them all in sequence.
-- `transform (s <> negateV s) x = x`, e.g. each transformation has an inverse.
+- `transform mempty x = x`
+	- The empty transformation does nothing.
+- `transform (s <> t) x = transform s (transform t) x`
+	- Applying a composition of two transformations is the same to applying them one at a time.
+- `transform (s <> negateV s) x = x`
+	- Each transformation has an inverse.
 
 Formally `transform @a` is a left group action on some transformable type `a`. Intuitively, transforming  a value is equivalent to transforming *all the points in the value*.
 
@@ -1559,9 +1598,9 @@ The type of the previous operations mention @[Transposable]:
 
 # Harmony
 
-While the `Pitch` and `Interval` types allow us to represent any pitch (the Western/classical framework), they do not tell us much about *harmony*. We need types to represent *collections* and *relationships* between pitches, including modes, chords and scales.
+While the `Pitch` and `Interval` types allow us to represent any pitch (within the Western/classical framework), they do not tell us much about *harmony*. We need types to represent *collections* and *relationships* between pitches, including modes, chords and scales.
 
-While we can of course course use regular data structures like tuples, lists and maps for this, Music Sutie also defines some structures that makes particular sense from a musical point of view.
+While we can of course course use regular data structures like tuples, lists and maps for this, Music Suite also defines some structures that makes particular sense from a musical point of view.
 
 ## Ambitus
 
