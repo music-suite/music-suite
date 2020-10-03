@@ -43,7 +43,7 @@ TODO
 We'll need Git and Nix (2.3.2 or later).
 
 ```
-$ git clone https://github.com/hanshoglund/music-suite
+$ git clone https://github.com/music-suite/music-suite
 $ cd music-suite
 ```
 
