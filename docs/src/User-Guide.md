@@ -407,13 +407,12 @@ let
 in up _P8 scale </> (triad c) |/2 |> (triad g_) |/2
 ```
 
-## Types and Type Classes
 
-### Types
+## Types
 
 TODO intro
 
-### Type classes
+## Classes and constraints
 
 TODO intro
 
@@ -461,8 +460,6 @@ Looking at the type of the composition operators, it becomes clear that `|>` and
 TODO refer back to previous table. For example `Music.Pitch.Common` distinguishes between enharmonics, while `Integer` does not.
 -->
 
-### Interval names
-
 Here and elsewhere in Music Suite, the convention is to follow standard theoretical
 notation, so *minor* and *diminished* intervals are written in lower-case, while *major*
 and *perfect* intervals are written in upper-case.
@@ -473,7 +470,7 @@ and *perfect* intervals are written in upper-case.
 
 In fact the `<>` operator is used for almost all forms of composition in Music Suite. The other operators simply peform some kind of manipulation on their values before or after composing.
 
-### Musical aspects
+## Musical aspects
 
 While music is often though to be concerned primarily with time and pitch, Music Suite also allow representation of other "dimensions", including:
 
@@ -862,9 +859,9 @@ All the pitch names resolve to `Just c`, `Just d` and so on, while the rest reso
 We can also create voices from rhythms (lists of durations);
 
 ```haskell
->>> Voice.fromRhythm [1,2,3] :: Voice ()
+>>> Voice.rhythm [1,2,3] :: Voice ()
 
->>> c <$ Voice.fromRhythm [1,2,3] :: Voice Pitch
+>>> c <$ Voice.rhythm [1,2,3] :: Voice Pitch
 ```
 
 Or from a list of notes:
@@ -1052,8 +1049,8 @@ We can compose patterns in parallel using the regular composition operator @[<>]
 ```haskell+music
 map Just $ renderPattern (a <> b) (0 <-> 4)
   where
-    a = parts' .~ mempty $ Pattern.fromRhythm [3,3,4,2,4] |/ 8
-    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
+    a = parts' .~ mempty $ Pattern.rhythm [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ Pattern.rhythm [1] |/ 8
     -- TODO use claves, maracas here
 ```
 
@@ -1062,8 +1059,8 @@ As patterns are infinite, we can compose patterns of different durations. Both p
 ```haskell+music
 map Just $ renderPattern (a <> b) (0 <-> 2)
   where
-    a = parts' .~ trumpets  $ newPattern [c,d] |/ 8
-    b = parts' .~ trombones $ newPattern [c,d,e] |/ 8
+    a = parts' .~ trumpets  $ Pattern.line [c,d] |/ 8
+    b = parts' .~ trombones $ Pattern.line [c,d,e] |/ 8
 ```
 
 ### Transforming patterns
@@ -1073,23 +1070,23 @@ Patterns are @[Transformable], @[Transposable], @[Attenuable] and so on, so many
 ```haskell+music
 map Just $ renderPattern (a <> b) (0.5 <-> 1.5)
   where
-    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
-    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
+    a = parts' .~ mempty $ Pattern.rhythm [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ Pattern.rhythm [1] |/ 8
 ```
 
 ```haskell+music
 map Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
   where
-    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
-    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
+    a = parts' .~ mempty $ Pattern.rhythm [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ Pattern.rhythm [1] |/ 8
 ```
 
 
 ```haskell+music
 map Just $ renderPattern (a <> b) (0 <-> 2)
   where
-    a = parts' .~ trumpets  $ newPattern [c,d,e] |* (3/15)
-    b = parts' .~ trombones $ newPattern [c,d,e] |* (3/8)
+    a = parts' .~ trumpets  $ Pattern.line [c,d,e |* 2] |* (3/15)
+    b = parts' .~ trombones $ Pattern.line [c,d,e |* 2] |* (3/8)
 ```
 
 You can adjust the "phase" of a pattern using @[delay]. This is useful together with the composition operator:
@@ -1097,10 +1094,10 @@ You can adjust the "phase" of a pattern using @[delay]. This is useful together 
 ```haskell+music
 map Just $ renderPattern (a <> b <> delay (1/4) c <> delay (1/4) d) (0 <-> 2)
   where
-    a = parts' .~ flutes    $ rhythmPattern [1/2,1/2]
-    b = parts' .~ oboes     $ rhythmPattern [1,1/2,1/2]
-    c = parts' .~ trumpets  $ rhythmPattern [1/2,1/2]
-    d = parts' .~ trombones $ rhythmPattern [1,1/2,1/2]
+    a = parts' .~ flutes    $ Pattern.rhythm [1/2,1/2]
+    b = parts' .~ oboes     $ Pattern.rhythm [1,1/2,1/2]
+    c = parts' .~ trumpets  $ Pattern.rhythm [1/2,1/2]
+    d = parts' .~ trombones $ Pattern.rhythm [1,1/2,1/2]
 ```
 
 The @[renderPattern] function returns the events of the pattern within a given time span.
@@ -1483,10 +1480,10 @@ The @[HasSemitones] class provides the enharmonic equivalence relation.
 You can use the `=:=` operator to compare for enharmonic equivalence.
 
 ```haskell
->>> id @Interval _A2 == m3
+>>> (_A2 :: Interval) == m3
 False
 
->>> id @Interval _A2 =:= m3
+>>> (_A2 :: Interval) =:= m3
 True
 ```
 
@@ -2030,7 +2027,7 @@ We extract the pitches from a voiced chord like this:
 seq $ map fromPitch ps
   where
     ps :: [Pitch]
-    ps = Data.List.NonEmpty.toList $ getVoiced v
+    ps = NonEmpty.toList $ getVoiced v
 
     v :: Voiced Chord Pitch
     v = voiceIn 4 $ chord c majorTriad
@@ -3202,7 +3199,6 @@ in times 4 $ melody
 -->
 
 
-<!--
 # Traversals
 
 In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions. The most important tool for this in Music Suite is called a *traversal*.
@@ -3286,7 +3282,7 @@ False
 
 @[over]
 
-### Applicative side-effects
+### Failure and state
 
 @[State]
 @[Maybe]
