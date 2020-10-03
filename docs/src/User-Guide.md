@@ -483,7 +483,7 @@ While music is often though to be concerned primarily with time and pitch, Music
 
 We'll sometimes refer to these collectively as *aspects*. Each aspect comes with its own traversal class, which is named after it, `HasPitches`, `HasDynamics`, `HasArticulations`, `HasParts`, `HasTechniques`, and so on.
 
-## Wrapping up
+## Next steps
 
 This concludes the first chapter of the manual. We have seen how to write simple pieces, using melody, harmony and voices. You should now know enough to start working on your own music. You will find many more examples of pieces in the [examples directory](https://github.com/hanshoglund/music-suite/tree/master/examples).
 
@@ -504,17 +504,50 @@ In this chapter we will learn how time and rhythm is represented in Music Suite.
 
 ### Time and Duration
 
-Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
+Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between [points](https://en.wikipedia.org/wiki/Point_(geometry)) and [vectors](https://en.wikipedia.org/wiki/Euclidean_vector) in geometry.  Intuitively, durations is that duration are  *relative*, while *time* is absolute.
 
-Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
+We can use the operators @[.+^] and @[.-.] to convert between times and durations. The @[.-.]  operator returns the difference (or distance) between two time points.
 
 ```haskell
->>> 2 :: Time
-2
+>>> (2 :: Time) .-. (0 :: Time)
+2 :: Duration
+```
 
+The `.+^` operator adds a duration to a time point.
+
+```haskell
 >>> (2 :: Time) .+^ (3 :: Duration)
 5 :: Time
 ```
+
+Formally, time points form an affine space over durations.
+
+In non-musical applications, time points are defined using clocks and calendars, and durations measured in seconds, minutes, hours and so on. In music, durations are measured in [*note values*](https://en.wikipedia.org/wiki/Note_value). The exact length of a note depends on the tempo, which may be indicated in the score or left to the discretion of the performer.
+
+The following table shows the relationship between the traditional note values and the durations used in Music Suite.
+
+|  Name 1 | Name 2 | Duration  |
+|--|--|--|
+| Longa | Longa | 4 |
+| Breve | Breve | 2 |
+| Semibreve | Whole note | 1 |
+| Minim | Half note | 1/2 |
+| Crotchet | Quarter note | 1/4 |
+| Quaver | Eight note | 1/8 |
+| Semiquaver | Sixtheenth note | 1/16 |
+
+*Tuplets* indicate the sounding duration of some note is written note value by a multiplier. Normally the multiplier is smaller than one, meaning a note of some value written under a tuplet is *shorter* than its non-tupled counterpart. The following table shows the most common types of tuples.
+
+| Name | Multiplier | Shorthand |
+|--|--|--|
+| Triplet | 2/3  | 3 |
+| Quadruplet | 3/4  | 4 |
+| Quintuplet | 4/5  | 5 |
+| Sextuplet | 4/6  | 6 |
+ 
+Music Suite also allows negative durations, which have no direct correspondance in traditional theory.
+
+Time points in a score are counted in note values, starting from 0 (the beginning of the piece). For a piece in 4/4 this corresponds exactly to the number of measures. The first beat of the first measure is represented by `0 :: Time`, the second beat by `1/4 :: Time` and so on. The first beat of the second measure is represented by `1 :: Time`, the second beat of the second measure by `1 + 1/4 :: Time`, and so on.
 
 ### Time spans
 
