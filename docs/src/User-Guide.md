@@ -425,6 +425,676 @@ The rest of this manual can be read as a *reference*. We will be looking at musi
 
 
 
+
+
+
+
+# Time and Rhythm
+
+## Basic time types
+
+### Time and Duration
+
+Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
+
+Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
+
+```haskell
+>>> 2 :: Time
+2
+
+>>> (2 :: Time) .+^ (3 :: Duration)
+5 :: Time
+```
+
+### Time spans
+
+The @[Span] type represents a non-empty *slice* of time. We can represent spans as two points representing *onset* and *offset*. Alternatively, we can think of it as one point representing *onset* along with a *duration*, or as a point representing *offset* along with a *duration*. The three representations are equivalent.
+
+The expression `x <-> y` means a span with `x` as its onset and `y`  as its offset. We can access onset, offset and duration as follows:
+
+```haskell
+>>> (2 <-> 3)^.onset
+2
+
+>>> (2 <-> 3)^.offset
+3
+
+>>> (2 <-> 3)^.duration
+1
+```
+
+The expression `x >-> d` means a span with onset `x` and duration `d`. Similarly, the notation `d <-< y` means a span *offset* `y` and duration `d`. The following expressions mean the same thing:
+
+```haskell
+>>> 2 <-> 3
+(2 <-> 3) :: Span
+
+>>> 2 >-> 1
+(2 <-> 3) :: Span
+
+>>> 1 <-< 3
+(2 <-> 3) :: Span
+```
+
+To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset].
+
+### Spans as transformations
+
+Here is an alternative view of span: as an *affine transformation*.
+
+A span `a >-> b` represents the act of *stretching by b* followed by *delaying by a*. Spans form a group using *composition of transformations*. The identity transformation is `0 >-> 1` (scaling a by one and delaying by zero).
+
+<!--
+For those familiar with linear algebra or computer graphics: Because time is one-dimensional a *linear transformation matrix* in time is a 1x1 matrix (e.g. a scalar). Its *affine transformation matrix* is a 2x2 matrix. We can understand the monoid instance for @[Span] as multiplication of 2x2 matrices.
+-->
+
+```haskell
+>>> mempty :: Span
+(0 <-> 1)
+
+>>> negateV (0 <-> 2)
+(0 <-> 0.5)
+
+>>> negateV (2 <-> 1)
+(0.5 >-> 1)
+
+>>> (0 >-> 3) <> (2 >-> 1)
+(2 >-> 3)
+```
+
+TODO examples of transforming points
+
+### The Transformable class
+
+The @[Transformable] class represent all things that can be transformed. All instance satisfy the following laws:
+
+- `transform mempty x = x`, e.g. applying the empty transformation changes nothing.
+- `transform (s <> t) x = transform s (transform t) x`, e.g. applying a composition of transfomrations is equivalent to applying them all in sequence.
+- `transform (s <> negateV s) x = x`, e.g. each transformation has an inverse.
+
+Formally `transform @a` is a left group action on some transformable type `a`. Intuitively, transforming  a value is equivalent to transforming *all the points in the value*.
+
+We have already seen how classical counterpoint and serial operations can be formoulated as transformations. For example *augmentation*, *diminishion* and *phasing* can be accomplished with `stretch`, `compress` and `delay`:
+
+```music+haskell
+delay 1 (stretch 2 c)
+  </>
+transform (1 >-> 2) c
+  </>
+transform (1 <-> 3) c
+```
+
+Stretching by `(-1)` is also known as *retrograde*:
+
+```music+haskell
+stretch (-1) $ pseq [c,d,e]
+```
+
+```TODOmusic+haskell
+retrograde $ pseq [c,d,e]
+```
+
+### Translation-invariant types
+
+We can think of our time types as coming in two shapes:
+
+- Translation-invariant types such as `Duration` are "floating" without being anchored to specific start/stop time (though they still have a duration)
+- Translation-variant types such as `Span` have both a specific duration and a specific point in which they "occur" relative to ther events.
+
+Note that this does *not* invalidate the laws.
+
+### Spans as time intervals
+
+The @[TimeInterval] type is similar to @[Span], but also allows for empty spans to be represented. It forms a monoid with the convex @[hull] operator.
+
+
+
+## Position and duration
+
+The @[HasDuration] class represents values that have a duration. The most obvious example is `Duration` itself:
+
+```haskell
+>>> _duration (2 :: Duration)
+2
+```
+
+There are also instances for `Span` and, as we will see, most other time-based types:
+
+```haskell
+>>> _duration (1 <-> 3)
+2
+```
+
+The @[HasPosition] class represent values that have an *absolute position* in time. The simplest example is `Span`:
+
+```haskell
+>>> _era (1 <-> 3)
+Just (1 <-> 3)
+```
+
+`Nothing` is used to represent the "empty era". This is used for scores which doesn't have any notes. The class `HasPosition1` is similar to  `HasPosition`, but is only defined for types that can not have ane empty era. Consequently, there is no such instance for the `Score` type (since empty scores are allowed).
+
+```haskell
+>>> _era1 (1 <-> 3)
+1 <-> 3
+```
+
+Values with a position allow many useful combinators to be defined. For example here we use `during` to add a pedal note to a melody:
+
+```music+haskell
+let
+    melody = legato $ pseq [pseq [c,d,e,c], pseq [e,f], g|*2]
+    pedal = c `during` melody
+in compress 4 $ melody </> pedal
+```
+
+<!--
+TODO example with stretchRelative, stretchTo
+
+The laws for @[HasPosition] and @[HasPosition1] are not too exciting: they assure that transforming a value also transforms its position in the same manner, and that the duration of a value is exactly the duration between its onset and offset point.
+-->
+
+
+
+
+## Times with values
+
+The Note and Event types are similar to Duration, Time and Span respectively, except they also contain a *payload* of an arbitrary type. This is expressed as a type parameter (often written using a lowercase letter, as in `Note a`).  In practice the payload will usually contain (possibly overloaded) *aspects* such as part, pitch, dynamics and so on.
+
+A @[Note] represents a single value tagged with a *duration*:
+
+```music+haskell
+inspectableToMusic @(Note Pitch) $
+
+c
+```
+
+An @[Event] represents a single value tagged with a *time span*:
+
+```music+haskell
+inspectableToMusic @(Event Pitch) $
+
+c
+```
+
+Note that we can enter a single note or event as `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
+
+Notes and events are very similar. The main difference is that notes are translation-invariant and events are not.
+
+```music+haskell
+inspectableToMusic @(Note Pitch) $
+
+delay 1 $ stretch 0.5 c
+```
+
+```music+haskell
+inspectableToMusic @(Event Pitch) $
+delay 1 $ stretch 0.5 c
+```
+
+Similarly, `Note` is an instance of `HasDuration`, but not `HasPosition`. Events have both duration and position:
+
+```haskell
+>>> (c :: Note)^.duration
+1
+
+>>> (c :: Event)^.duration
+1
+
+>>> (c :: Event)^.era
+0 <-> 1
+```
+
+Notes and events have instances for `Functor`, `Foldable` and `Traversable`, which all visit the single element the contain. There are also instances for `HasPitches`, `HasDynamics` and so on, meaning that we can use most combinators from the previous chapters on notes and events.
+
+```music+haskell
+inspectableToMusic @(Note StandardNote) $
+
+set parts' violins $ pizz $ level ff $ accentAll $ compress 4 c
+```
+
+You may wonder, what is the point of representing music with *just a single note*? The answer is that these types are used in combinations with other types. For example we can use `Note [Pitch]` to represent a melody where all notes have the same duration.
+
+
+
+
+## Voices
+
+A @[Voice] represents a *sequential composition of values*, each tagged with *duration*.
+
+### Creating voices
+
+
+As with notes and events, we can enter a single voice using `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
+
+```haskell
+>>> c :: Voice Pitch
+
+>>> rest :: Voice (Maybe Pitch)
+```
+
+You can also put a rests in a voice. Notice how this changes the type:
+
+```haskell
+>>> [c,d,rest,e] :: Voice (Maybe Pitch)
+```
+
+All the pitch names resolve to `Just c`, `Just d` and so on, while the rest resolves to `Nothing`.
+
+We can also create voices from rhythms (lists of durations);
+
+```haskell
+>>> rhythmToVoice [1,2,3] :: Voice ()
+
+>>> c <$ rhythmToVoice [1,2,3] :: Voice Pitch
+```
+
+Or from a list of notes:
+
+```haskell
+>>> view voice [c,d,e]
+
+>>> [c,d,e]^.voice
+
+>>> [(1,c)^.note,(2,d)^.note,(1,e)^.note]^.voice
+```
+
+TODO using comprehensions
+
+```music+haskell
+inspectableToMusic @(Voice Pitch) $
+
+[cs, bb, a |* 2] |/ 4
+```
+
+### Traversing voices
+
+TODO
+
+```haskell
+>>> over pitches (up m3) ([c,d,e] :: Voice Pitch) :: Voice Pitch
+```
+
+### Transforming voices
+
+TODO Transformable, HasDuration
+
+Voices do not have a position, i.e. they are translation-invariant (if you want to anchor a voice at a specific point in time, see [`Aligned`](#alignment)).
+
+
+TODO rotation
+
+@[rotateDurations]
+@[rotateValues]
+
+TODO fusion and stretch
+
+@[fuse]
+@[fuseBy]
+@[fuseRests]
+
+TODO take/drop
+
+TODO filtering (MonadPlus!)
+
+### Combining voices
+
+TODO Monoid, Monad, Applicative, MonadZip + guard
+
+```music+haskell
+inspectableToMusic @(Voice Pitch) $
+
+stretch (1/4) $ do
+  x <- [c, d, e] |/ 2
+  y <- [c', b, bb] |/ 2
+  [x, g, y |*4 ]
+```
+
+
+```music+haskell
+inspectableToMusic @(Voice Pitch) $
+
+stretch (1/4) $ do
+  x <- [c, d, e] |/ 2
+  [x, b, c' |*4 ]
+```
+
+
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y] | x <- [c], y <- [d,e] ]
+```
+
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y] | x <- [c] | y <- [d,e] ]
+```
+
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y,z] | x <- [c] | y <- [d,e] | z <- [f,g] ]
+```
+
+```music+haskell
+inspectableToMusic @(Voice [StandardNote]) $
+
+[ dynamics' .~ d $ p
+  | p <- [c, ab, fs, g]
+  | d <- [ppp, ff, mp, mf]
+  ]
+```
+
+```music+haskell
+inspectableToMusic @(Voice [Pitch]) $
+
+[ [x,y] | x <- view voice (fmap fromPitch $ enumChromaticFromTo c c''), y <- [d,e]
+  , isMelodicConsonance (x .-. y) && isConsonance (x .-. y) ]
+```
+
+
+
+## Alignment
+
+The @[Aligned] type adds position to anything with a duration. This is akin to alignment in computer graphis, hence the name. Alignment works by picking:
+
+- A time point to which the value is "anchored". By default this is time zero.
+- An alignment point in the duration of the value. By default this is the onset of the value.
+
+Aligned is natural way of modelling pickups and upbeats. Consider this melody:
+
+```music+haskell
+(pseq [g_,a_,b_]|/2 |> pseq [c, c, d, d]) |/ 4
+```
+
+With @[Aligned] we can represent the fact that the first three notes are "upbeat" notes, and that the main stress of the value should fall on the fourth note:
+
+```music+haskell
+inspectableToMusic @[Aligned (Voice Pitch)] $
+
+delay 2 -- TODO get rid of this, see wall of shame
+
+[ av |/ 2
+, av |/ 4
+, av |* (2/3)
+]
+  where
+    av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
+```
+
+The `||>` operator is similar to the normal sequential composition operator `|>`, but aligns the result to the point of composition.
+
+
+<!--
+TODO align and realign
+-->
+
+<!--
+TODO sequential composition of aligned voices "snap to next stressed beat":
+`snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]`
+-->
+
+
+## Scores
+
+A @[Score] represents a *parallel composition of values*, each tagged with *time span*.
+
+We can think of a @[Score] as a @[Voice] where overlapping notes are allowed.
+
+### Creating scores
+
+The *empty score* has no events.
+
+A *rest* is a score containing a single `Nothing` value. We can create
+
+A *single-note* score can be created in a variety of ways:
+
+- We can use [pitch literals][TODO link] to create a score of duration 1: `c`, `cs`, `d` etc. This creates a score in the *default time span* `0 <-> 1`.
+- We can apply `pure` to any value. This also creates a score in the
+
+Because of overloading we can easily mix notes and rest in literals. Note that `c == pure c == pure (Just c)`. Similarly, `rest == pure Nothing`.
+
+
+TODO Composition
+
+TODO Monad comprehensions
+
+TODO From a list of events
+
+### Traversing scores
+
+Score is Traversable, HasPitches etc
+
+Special traversals such as mapWithSpan
+
+Filtering with MonadPlus
+
+### Transforming scores
+Transformable, HasPosition
+
+### Nested scores
+join
+
+### Overlapping events
+TODO
+
+### Representing rests
+An empty scores has no duration, but we can represent rests using `Score (Maybe a)`.
+
+```music+haskell
+pseq [c,rest,d] |/ 4
+```
+
+## Scores versus more restricted types
+
+`Score` is an extremely flexible type. Often it is useful to work with more restrictive structures, such as `Voice`, `Note`, `Pattern`, or their `Aligned` versions.
+
+TODO parsing scores into restricted types
+
+TODO rendering restricted scores as type
+
+
+
+
+## Patterns
+
+A @[Pattern] can be throught of as a generalization of a *rhythm* or *beat*. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will eventually repeat (though he repeating duration may be very long).
+
+### Creating patterns
+
+The basic way of buildings patterns are @[newPattern] and @[rhythmPattern].
+
+TODO example
+
+### Composing patterns
+
+We can compose patterns in parallel using the regular composition operator @[<>].
+
+```music+haskell
+fmap Just $ renderPattern (a <> b) (0 <-> 4)
+  where
+    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
+    -- TODO use claves, maracas here
+```
+
+As patterns are infinite, we can compose patterns of different durations. Both patterns will just be repeated indefinately.
+
+```music+haskell
+fmap Just $ renderPattern (a <> b) (0 <-> 2)
+  where
+    a = parts' .~ trumpets  $ newPattern [c,d] |/ 8
+    b = parts' .~ trombones $ newPattern [c,d,e] |/ 8
+```
+
+### Transforming patterns
+
+Patterns are @[Transformable], @[Transposable], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns. For example we can set parts and dynamics, or transpose patterns.
+
+```music+haskell
+fmap Just $ renderPattern (a <> b) (0.5 <-> 1.5)
+  where
+    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
+```
+
+```music+haskell
+fmap Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
+  where
+    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
+    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
+```
+
+
+```music+haskell
+fmap Just $ renderPattern (a <> b) (0 <-> 2)
+  where
+    a = parts' .~ trumpets  $ newPattern [c,d,e] |* (3/15)
+    b = parts' .~ trombones $ newPattern [c,d,e] |* (3/8)
+```
+
+You can adjust the "phase" of a pattern using @[delay]. This is useful together with the composition operator:
+
+```music+haskell
+fmap Just $ renderPattern (a <> b <> delay (1/4) c <> delay (1/4) d) (0 <-> 2)
+  where
+    a = parts' .~ flutes    $ rhythmPattern [1/2,1/2]
+    b = parts' .~ oboes     $ rhythmPattern [1,1/2,1/2]
+    c = parts' .~ trumpets  $ rhythmPattern [1/2,1/2]
+    d = parts' .~ trombones $ rhythmPattern [1,1/2,1/2]
+```
+
+The @[renderPattern] function returns the events of the pattern within a given time span.
+
+<!--
+TODO finish/move to examples:
+
+```TODOmusic+haskell
+inspectableToMusic bachCMajChords
+  where
+    bachCMajChords :: Score [Pitch]
+    bachCMajChords =
+      [(0 <-> (1/2),[c,e,g,c',e'])^.event,((1/2) <-> 1,[c,e,g,c',e'])^.event,(1 <-> (3/2),[c,d,a,d',f'])^.event,((3/2) <->
+      2,[c,d,a,d',f'])^.event,(2 <-> (5/2),[b_,d,g,d',f'])^.event,((5/2) <-> 3,[b_,d,g,d',f'])^.event,(3 <->
+      (7/2),[c,e,g,c',e'])^.event,((7/2) <-> 4,[c,e,g,c',e'])^.event,(4 <-> (9/2),[c,e,a,e',a'])^.event,((9/2) <->
+      5,[c,e,a,e',a'])^.event,(5 <-> (11/2),[c,d,fs,a,d'])^.event,((11/2) <-> 6,[c,d,fs,a,d'])^.event,(6 <->
+      (13/2),[b_,d,g,d',g'])^.event,((13/2) <-> 7,[b_,d,g,d',g'])^.event,(7 <-> (15/2),[b_,c,e,g,c'])^.event,((15/2) <->
+      8,[b_,c,e,g,c'])^.event,(8 <-> (17/2),[a_,c,e,g,c'])^.event,((17/2) <-> 9,[a_,c,e,g,c'])^.event,(9 <->
+      (19/2),[d_,a_,d,fs,c'])^.event,((19/2) <-> 10,[d_,a_,d,fs,c'])^.event,(10 <-> (21/2),[g_,b_,d,g,b])^.event,((21/2) <->
+      11,[g_,b_,d,g,b])^.event,(11 <-> (23/2),[g_,bb_,e,g,cs'])^.event,((23/2) <-> 12,[g_,bb_,e,g,cs'])^.event,(12 <->
+      (25/2),[f_,a_,d,a,d'])^.event,((25/2) <-> 13,[f_,a_,d,a,d'])^.event,(13 <-> (27/2),[f_,ab_,d,f,b])^.event,((27/2) <->
+      14,[f_,ab_,d,f,b])^.event,(14 <-> (29/2),[e_,g_,c,g,c'])^.event,((29/2) <-> 15,[e_,g_,c,g,c'])^.event,(15 <->
+      (31/2),[e_,f_,a_,c,f])^.event,((31/2) <-> 16,[e_,f_,a_,c,f])^.event,(16 <-> (33/2),[d_,f_,a_,c,f])^.event,((33/2) <->
+      17,[d_,f_,a_,c,f])^.event,(17 <-> (35/2),[g__,d_,g_,b_,f])^.event,((35/2) <-> 18,[g__,d_,g_,b_,f])^.event,(18 <->
+      (37/2),[c_,e_,g_,c,e])^.event,((37/2) <-> 19,[c_,e_,g_,c,e])^.event,(19 <-> (39/2),[c_,g_,bb_,c,e])^.event,((39/2) <->
+      20,[c_,g_,bb_,c,e])^.event,(20 <-> (41/2),[f__,f_,a_,c,e])^.event,((41/2) <-> 21,[f__,f_,a_,c,e])^.event,(21 <->
+      (43/2),[fb__,c_,a_,c,eb])^.event,((43/2) <-> 22,[fb__,c_,a_,c,eb])^.event,(22 <-> (45/2),[ab__,f_,b_,c,d])^.event,((45/2)
+      <-> 23,[ab__,f_,b_,c,d])^.event,(23 <-> (47/2),[g__,f_,g_,b_,d])^.event,((47/2) <-> 24,[g__,f_,g_,b_,d])^.event,(24 <->
+      (49/2),[g__,e_,g_,c,e])^.event,((49/2) <-> 25,[g__,e_,g_,c,e])^.event,(25 <-> (51/2),[g__,d_,g_,c,f])^.event,((51/2) <->
+      26,[g__,d_,g_,c,f])^.event,(26 <-> (53/2),[g__,d_,g_,b_,f])^.event,((53/2) <-> 27,[g__,d_,g_,b_,f])^.event,(27 <->
+      (55/2),[g__,eb_,a_,c,fs])^.event,((55/2) <-> 28,[g__,eb_,a_,c,fs])^.event,(28 <-> (57/2),[g__,e_,g_,c,g])^.event,((57/2)
+      <-> 29,[g__,e_,g_,c,g])^.event,(29 <-> (59/2),[g__,d_,g_,c,f])^.event,((59/2) <-> 30,[g__,d_,g_,c,f])^.event,(30 <->
+      (61/2),[g__,d_,g_,b_,f])^.event,((61/2) <-> 31,[g__,d_,g_,b_,f])^.event,(31 <-> (63/2),[c__,c_,g_,bb_,e])^.event,((63/2)
+      <-> 32,[c__,c_,g_,bb_,e])^.event,(32 <-> 33,[c__,c_,f_,a_,e])^.event,(33 <-> 34,[c__,b__,f,g,d'])^.event,(34 <->
+      35,[c__,c_,e,g,c'])^.event]^.score
+
+
+    bachCMajPattern :: (Num a) => Pattern a
+    bachCMajPattern = newPattern $ stretchTo 1 $ (view voice) $ fmap pure [0,1,2,3,4,2,3,4]
+```
+-->
+
+<!-- TODO pattern coockbook, a la https://doc.sccode.org/Tutorials/A-Practical-Guide/PG_01_Introduction.html -->
+
+## Time-varying values
+
+The structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points* or *notes*. We will now look at an alternative time structure where this is not necessarily the case. @[Behavior] represents a *time-varying values*, or functions of time.
+
+TODO example
+
+Behaviours are continous, which implies that:
+
+- They are defined at *any point in time*. A behavior always has a value, unlike, e.g. aligned boices.
+
+- They can change at infinitely small intervals. Just like with vector graphics, behaviours allow us to zoom in arbitrarily close, and potentially discover new changes. Thus it is (in general) nonsensical to talk about *when* a behaviour changes.
+
+A @[Reactive] is a discrete behabior, e.g. a time-varing value that can only change at certain well-known locations. A @[Reactibe] value is similar to a @[Voice], but stretches out indefinately in both directions.
+
+TODO exampels of Reactives
+
+### Constant values
+### Switching
+### Predefined behaviors
+### Transforming Behaviors and Reactives
+
+IsPitch/Transposable
+Transformable
+Functor
+Applicative
+Monad
+
+### Conversions
+#### Reactive to Behavior
+#### Behavior to Reactive
+#### Score to Behavior
+<!--
+TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
+-->
+
+
+<!--
+## Splitting and reversing
+
+@[Splittable]
+
+@[split]
+@[beginning]
+@[ending]
+
+```music+haskell
+inspectableToMusic @[Voice Pitch] $
+
+[ beginning 0.5 melody
+, ending 0.5 melody
+]
+  where
+    melody = {- accent $ legato -} mconcat [d, mconcat [g,fs]|/2,bb|*2]|/4
+```
+
+```music+haskell
+inspectableToMusic @[Voice Pitch] $
+
+[ beginning (1/2+1/8) melody
+, ending (1/2+1/8) melody
+]
+  where
+    melody = {- accent $ legato -} mconcat [d, mconcat [g,fs]|/2,bb|*2]|/4
+```
+
+@[rev] reverse, retrograde
+
+```music+haskell
+let
+    melody = accent $ legato $ pseq [d, pseq [g,fs]|/2,bb|*2]|/4
+in melody |> rev melody
+```
+
+```music+haskell
+music |> rev music
+  where
+    music = (1/16) *| pseq [c|*3, legato $ pseq [accent eb, fs|*3, a, b|*3], gs, f|*3, d]
+```
+
+-->
+
+
+
+
+
+
 # Pitches and Intervals
 
 In this chapter we will learn how to represent pitches and intervals and perform basic operations such as transposition and scaling. In the next chapter we will use these to build harmony concepts such as chords and scales.
@@ -2360,672 +3030,6 @@ TODO Use more specicif wrappers to preserve `Transformable`
 
 
 
-
-
-
-
-
-
-# Time and Rhythm
-
-## Basic time types
-
-### Time and Duration
-
-Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
-
-Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
-
-```haskell
->>> 2 :: Time
-2
-
->>> (2 :: Time) .+^ (3 :: Duration)
-5 :: Time
-```
-
-### Time spans
-
-The @[Span] type represents a non-empty *slice* of time. We can represent spans as two points representing *onset* and *offset*. Alternatively, we can think of it as one point representing *onset* along with a *duration*, or as a point representing *offset* along with a *duration*. The three representations are equivalent.
-
-The expression `x <-> y` means a span with `x` as its onset and `y`  as its offset. We can access onset, offset and duration as follows:
-
-```haskell
->>> (2 <-> 3)^.onset
-2
-
->>> (2 <-> 3)^.offset
-3
-
->>> (2 <-> 3)^.duration
-1
-```
-
-The expression `x >-> d` means a span with onset `x` and duration `d`. Similarly, the notation `d <-< y` means a span *offset* `y` and duration `d`. The following expressions mean the same thing:
-
-```haskell
->>> 2 <-> 3
-(2 <-> 3) :: Span
-
->>> 2 >-> 1
-(2 <-> 3) :: Span
-
->>> 1 <-< 3
-(2 <-> 3) :: Span
-```
-
-To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset].
-
-### Spans as transformations
-
-Here is an alternative view of span: as an *affine transformation*.
-
-A span `a >-> b` represents the act of *stretching by b* followed by *delaying by a*. Spans form a group using *composition of transformations*. The identity transformation is `0 >-> 1` (scaling a by one and delaying by zero).
-
-<!--
-For those familiar with linear algebra or computer graphics: Because time is one-dimensional a *linear transformation matrix* in time is a 1x1 matrix (e.g. a scalar). Its *affine transformation matrix* is a 2x2 matrix. We can understand the monoid instance for @[Span] as multiplication of 2x2 matrices.
--->
-
-```haskell
->>> mempty :: Span
-(0 <-> 1)
-
->>> negateV (0 <-> 2)
-(0 <-> 0.5)
-
->>> negateV (2 <-> 1)
-(0.5 >-> 1)
-
->>> (0 >-> 3) <> (2 >-> 1)
-(2 >-> 3)
-```
-
-TODO examples of transforming points
-
-### The Transformable class
-
-The @[Transformable] class represent all things that can be transformed. All instance satisfy the following laws:
-
-- `transform mempty x = x`, e.g. applying the empty transformation changes nothing.
-- `transform (s <> t) x = transform s (transform t) x`, e.g. applying a composition of transfomrations is equivalent to applying them all in sequence.
-- `transform (s <> negateV s) x = x`, e.g. each transformation has an inverse.
-
-Formally `transform @a` is a left group action on some transformable type `a`. Intuitively, transforming  a value is equivalent to transforming *all the points in the value*.
-
-We have already seen how classical counterpoint and serial operations can be formoulated as transformations. For example *augmentation*, *diminishion* and *phasing* can be accomplished with `stretch`, `compress` and `delay`:
-
-```music+haskell
-delay 1 (stretch 2 c)
-  </>
-transform (1 >-> 2) c
-  </>
-transform (1 <-> 3) c
-```
-
-Stretching by `(-1)` is also known as *retrograde*:
-
-```music+haskell
-stretch (-1) $ pseq [c,d,e]
-```
-
-```TODOmusic+haskell
-retrograde $ pseq [c,d,e]
-```
-
-### Translation-invariant types
-
-We can think of our time types as coming in two shapes:
-
-- Translation-invariant types such as `Duration` are "floating" without being anchored to specific start/stop time (though they still have a duration)
-- Translation-variant types such as `Span` have both a specific duration and a specific point in which they "occur" relative to ther events.
-
-Note that this does *not* invalidate the laws.
-
-### Spans as time intervals
-
-The @[TimeInterval] type is similar to @[Span], but also allows for empty spans to be represented. It forms a monoid with the convex @[hull] operator.
-
-
-
-## Position and duration
-
-The @[HasDuration] class represents values that have a duration. The most obvious example is `Duration` itself:
-
-```haskell
->>> _duration (2 :: Duration)
-2
-```
-
-There are also instances for `Span` and, as we will see, most other time-based types:
-
-```haskell
->>> _duration (1 <-> 3)
-2
-```
-
-The @[HasPosition] class represent values that have an *absolute position* in time. The simplest example is `Span`:
-
-```haskell
->>> _era (1 <-> 3)
-Just (1 <-> 3)
-```
-
-`Nothing` is used to represent the "empty era". This is used for scores which doesn't have any notes. The class `HasPosition1` is similar to  `HasPosition`, but is only defined for types that can not have ane empty era. Consequently, there is no such instance for the `Score` type (since empty scores are allowed).
-
-```haskell
->>> _era1 (1 <-> 3)
-1 <-> 3
-```
-
-Values with a position allow many useful combinators to be defined. For example here we use `during` to add a pedal note to a melody:
-
-```music+haskell
-let
-    melody = legato $ pseq [pseq [c,d,e,c], pseq [e,f], g|*2]
-    pedal = c `during` melody
-in compress 4 $ melody </> pedal
-```
-
-<!--
-TODO example with stretchRelative, stretchTo
-
-The laws for @[HasPosition] and @[HasPosition1] are not too exciting: they assure that transforming a value also transforms its position in the same manner, and that the duration of a value is exactly the duration between its onset and offset point.
--->
-
-
-
-
-## Times with values
-
-The Note and Event types are similar to Duration, Time and Span respectively, except they also contain a *payload* of an arbitrary type. This is expressed as a type parameter (often written using a lowercase letter, as in `Note a`).  In practice the payload will usually contain (possibly overloaded) *aspects* such as part, pitch, dynamics and so on.
-
-A @[Note] represents a single value tagged with a *duration*:
-
-```music+haskell
-inspectableToMusic @(Note Pitch) $
-
-c
-```
-
-An @[Event] represents a single value tagged with a *time span*:
-
-```music+haskell
-inspectableToMusic @(Event Pitch) $
-
-c
-```
-
-Note that we can enter a single note or event as `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
-
-Notes and events are very similar. The main difference is that notes are translation-invariant and events are not.
-
-```music+haskell
-inspectableToMusic @(Note Pitch) $
-
-delay 1 $ stretch 0.5 c
-```
-
-```music+haskell
-inspectableToMusic @(Event Pitch) $
-delay 1 $ stretch 0.5 c
-```
-
-Similarly, `Note` is an instance of `HasDuration`, but not `HasPosition`. Events have both duration and position:
-
-```haskell
->>> (c :: Note)^.duration
-1
-
->>> (c :: Event)^.duration
-1
-
->>> (c :: Event)^.era
-0 <-> 1
-```
-
-Notes and events have instances for `Functor`, `Foldable` and `Traversable`, which all visit the single element the contain. There are also instances for `HasPitches`, `HasDynamics` and so on, meaning that we can use most combinators from the previous chapters on notes and events.
-
-```music+haskell
-inspectableToMusic @(Note StandardNote) $
-
-set parts' violins $ pizz $ level ff $ accentAll $ compress 4 c
-```
-
-You may wonder, what is the point of representing music with *just a single note*? The answer is that these types are used in combinations with other types. For example we can use `Note [Pitch]` to represent a melody where all notes have the same duration.
-
-
-
-
-## Voices
-
-A @[Voice] represents a *sequential composition of values*, each tagged with *duration*.
-
-### Creating voices
-
-
-As with notes and events, we can enter a single voice using `c`, `d`, `eb`, etc. because of [pitch overloading](#pitch-overloading).
-
-```haskell
->>> c :: Voice Pitch
-
->>> rest :: Voice (Maybe Pitch)
-```
-
-You can also put a rests in a voice. Notice how this changes the type:
-
-```haskell
->>> [c,d,rest,e] :: Voice (Maybe Pitch)
-```
-
-All the pitch names resolve to `Just c`, `Just d` and so on, while the rest resolves to `Nothing`.
-
-We can also create voices from rhythms (lists of durations);
-
-```haskell
->>> rhythmToVoice [1,2,3] :: Voice ()
-
->>> c <$ rhythmToVoice [1,2,3] :: Voice Pitch
-```
-
-Or from a list of notes:
-
-```haskell
->>> view voice [c,d,e]
-
->>> [c,d,e]^.voice
-
->>> [(1,c)^.note,(2,d)^.note,(1,e)^.note]^.voice
-```
-
-TODO using comprehensions
-
-```music+haskell
-inspectableToMusic @(Voice Pitch) $
-
-[cs, bb, a |* 2] |/ 4
-```
-
-### Traversing voices
-
-TODO
-
-```haskell
->>> over pitches (up m3) ([c,d,e] :: Voice Pitch) :: Voice Pitch
-```
-
-### Transforming voices
-
-TODO Transformable, HasDuration
-
-Voices do not have a position, i.e. they are translation-invariant (if you want to anchor a voice at a specific point in time, see [`Aligned`](#alignment)).
-
-
-TODO rotation
-
-@[rotateDurations]
-@[rotateValues]
-
-TODO fusion and stretch
-
-@[fuse]
-@[fuseBy]
-@[fuseRests]
-
-TODO take/drop
-
-TODO filtering (MonadPlus!)
-
-### Combining voices
-
-TODO Monoid, Monad, Applicative, MonadZip + guard
-
-```music+haskell
-inspectableToMusic @(Voice Pitch) $
-
-stretch (1/4) $ do
-  x <- [c, d, e] |/ 2
-  y <- [c', b, bb] |/ 2
-  [x, g, y |*4 ]
-```
-
-
-```music+haskell
-inspectableToMusic @(Voice Pitch) $
-
-stretch (1/4) $ do
-  x <- [c, d, e] |/ 2
-  [x, b, c' |*4 ]
-```
-
-
-```music+haskell
-inspectableToMusic @(Voice [Pitch]) $
-
-[ [x,y] | x <- [c], y <- [d,e] ]
-```
-
-```music+haskell
-inspectableToMusic @(Voice [Pitch]) $
-
-[ [x,y] | x <- [c] | y <- [d,e] ]
-```
-
-```music+haskell
-inspectableToMusic @(Voice [Pitch]) $
-
-[ [x,y,z] | x <- [c] | y <- [d,e] | z <- [f,g] ]
-```
-
-```music+haskell
-inspectableToMusic @(Voice [StandardNote]) $
-
-[ dynamics' .~ d $ p
-  | p <- [c, ab, fs, g]
-  | d <- [ppp, ff, mp, mf]
-  ]
-```
-
-```music+haskell
-inspectableToMusic @(Voice [Pitch]) $
-
-[ [x,y] | x <- view voice (fmap fromPitch $ enumChromaticFromTo c c''), y <- [d,e]
-  , isMelodicConsonance (x .-. y) && isConsonance (x .-. y) ]
-```
-
-
-
-## Alignment
-
-The @[Aligned] type adds position to anything with a duration. This is akin to alignment in computer graphis, hence the name. Alignment works by picking:
-
-- A time point to which the value is "anchored". By default this is time zero.
-- An alignment point in the duration of the value. By default this is the onset of the value.
-
-Aligned is natural way of modelling pickups and upbeats. Consider this melody:
-
-```music+haskell
-(pseq [g_,a_,b_]|/2 |> pseq [c, c, d, d]) |/ 4
-```
-
-With @[Aligned] we can represent the fact that the first three notes are "upbeat" notes, and that the main stress of the value should fall on the fourth note:
-
-```music+haskell
-inspectableToMusic @[Aligned (Voice Pitch)] $
-
-delay 2 -- TODO get rid of this, see wall of shame
-
-[ av |/ 2
-, av |/ 4
-, av |* (2/3)
-]
-  where
-    av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
-```
-
-The `||>` operator is similar to the normal sequential composition operator `|>`, but aligns the result to the point of composition.
-
-
-<!--
-TODO align and realign
--->
-
-<!--
-TODO sequential composition of aligned voices "snap to next stressed beat":
-`snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]`
--->
-
-
-## Scores
-
-A @[Score] represents a *parallel composition of values*, each tagged with *time span*.
-
-We can think of a @[Score] as a @[Voice] where overlapping notes are allowed.
-
-### Creating scores
-
-The *empty score* has no events.
-
-A *rest* is a score containing a single `Nothing` value. We can create
-
-A *single-note* score can be created in a variety of ways:
-
-- We can use [pitch literals][TODO link] to create a score of duration 1: `c`, `cs`, `d` etc. This creates a score in the *default time span* `0 <-> 1`.
-- We can apply `pure` to any value. This also creates a score in the
-
-Because of overloading we can easily mix notes and rest in literals. Note that `c == pure c == pure (Just c)`. Similarly, `rest == pure Nothing`.
-
-
-TODO Composition
-
-TODO Monad comprehensions
-
-TODO From a list of events
-
-### Traversing scores
-
-Score is Traversable, HasPitches etc
-
-Special traversals such as mapWithSpan
-
-Filtering with MonadPlus
-
-### Transforming scores
-Transformable, HasPosition
-
-### Nested scores
-join
-
-### Overlapping events
-TODO
-
-### Representing rests
-An empty scores has no duration, but we can represent rests using `Score (Maybe a)`.
-
-```music+haskell
-pseq [c,rest,d] |/ 4
-```
-
-## Scores versus more restricted types
-
-`Score` is an extremely flexible type. Often it is useful to work with more restrictive structures, such as `Voice`, `Note`, `Pattern`, or their `Aligned` versions.
-
-TODO parsing scores into restricted types
-
-TODO rendering restricted scores as type
-
-
-
-
-## Patterns
-
-A @[Pattern] can be throught of as a generalization of a *rhythm* or *beat*. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will eventually repeat (though he repeating duration may be very long).
-
-### Creating patterns
-
-The basic way of buildings patterns are @[newPattern] and @[rhythmPattern].
-
-TODO example
-
-### Composing patterns
-
-We can compose patterns in parallel using the regular composition operator @[<>].
-
-```music+haskell
-fmap Just $ renderPattern (a <> b) (0 <-> 4)
-  where
-    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
-    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
-    -- TODO use claves, maracas here
-```
-
-As patterns are infinite, we can compose patterns of different durations. Both patterns will just be repeated indefinately.
-
-```music+haskell
-fmap Just $ renderPattern (a <> b) (0 <-> 2)
-  where
-    a = parts' .~ trumpets  $ newPattern [c,d] |/ 8
-    b = parts' .~ trombones $ newPattern [c,d,e] |/ 8
-```
-
-### Transforming patterns
-
-Patterns are @[Transformable], @[Transposable], @[Attenuable] and so on, so many expressions that work for scores and voices also work for patterns. For example we can set parts and dynamics, or transpose patterns.
-
-```music+haskell
-fmap Just $ renderPattern (a <> b) (0.5 <-> 1.5)
-  where
-    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
-    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
-```
-
-```music+haskell
-fmap Just $ renderPattern (stretch 0.5 $ up m3 $ a <> b) (0 <-> 2)
-  where
-    a = parts' .~ mempty $ rhythmPattern [3,3,4,2,4] |/ 8
-    b = parts' .~ flutes $ rhythmPattern [1] |/ 8
-```
-
-
-```music+haskell
-fmap Just $ renderPattern (a <> b) (0 <-> 2)
-  where
-    a = parts' .~ trumpets  $ newPattern [c,d,e] |* (3/15)
-    b = parts' .~ trombones $ newPattern [c,d,e] |* (3/8)
-```
-
-You can adjust the "phase" of a pattern using @[delay]. This is useful together with the composition operator:
-
-```music+haskell
-fmap Just $ renderPattern (a <> b <> delay (1/4) c <> delay (1/4) d) (0 <-> 2)
-  where
-    a = parts' .~ flutes    $ rhythmPattern [1/2,1/2]
-    b = parts' .~ oboes     $ rhythmPattern [1,1/2,1/2]
-    c = parts' .~ trumpets  $ rhythmPattern [1/2,1/2]
-    d = parts' .~ trombones $ rhythmPattern [1,1/2,1/2]
-```
-
-The @[renderPattern] function returns the events of the pattern within a given time span.
-
-<!--
-TODO finish/move to examples:
-
-```TODOmusic+haskell
-inspectableToMusic bachCMajChords
-  where
-    bachCMajChords :: Score [Pitch]
-    bachCMajChords =
-      [(0 <-> (1/2),[c,e,g,c',e'])^.event,((1/2) <-> 1,[c,e,g,c',e'])^.event,(1 <-> (3/2),[c,d,a,d',f'])^.event,((3/2) <->
-      2,[c,d,a,d',f'])^.event,(2 <-> (5/2),[b_,d,g,d',f'])^.event,((5/2) <-> 3,[b_,d,g,d',f'])^.event,(3 <->
-      (7/2),[c,e,g,c',e'])^.event,((7/2) <-> 4,[c,e,g,c',e'])^.event,(4 <-> (9/2),[c,e,a,e',a'])^.event,((9/2) <->
-      5,[c,e,a,e',a'])^.event,(5 <-> (11/2),[c,d,fs,a,d'])^.event,((11/2) <-> 6,[c,d,fs,a,d'])^.event,(6 <->
-      (13/2),[b_,d,g,d',g'])^.event,((13/2) <-> 7,[b_,d,g,d',g'])^.event,(7 <-> (15/2),[b_,c,e,g,c'])^.event,((15/2) <->
-      8,[b_,c,e,g,c'])^.event,(8 <-> (17/2),[a_,c,e,g,c'])^.event,((17/2) <-> 9,[a_,c,e,g,c'])^.event,(9 <->
-      (19/2),[d_,a_,d,fs,c'])^.event,((19/2) <-> 10,[d_,a_,d,fs,c'])^.event,(10 <-> (21/2),[g_,b_,d,g,b])^.event,((21/2) <->
-      11,[g_,b_,d,g,b])^.event,(11 <-> (23/2),[g_,bb_,e,g,cs'])^.event,((23/2) <-> 12,[g_,bb_,e,g,cs'])^.event,(12 <->
-      (25/2),[f_,a_,d,a,d'])^.event,((25/2) <-> 13,[f_,a_,d,a,d'])^.event,(13 <-> (27/2),[f_,ab_,d,f,b])^.event,((27/2) <->
-      14,[f_,ab_,d,f,b])^.event,(14 <-> (29/2),[e_,g_,c,g,c'])^.event,((29/2) <-> 15,[e_,g_,c,g,c'])^.event,(15 <->
-      (31/2),[e_,f_,a_,c,f])^.event,((31/2) <-> 16,[e_,f_,a_,c,f])^.event,(16 <-> (33/2),[d_,f_,a_,c,f])^.event,((33/2) <->
-      17,[d_,f_,a_,c,f])^.event,(17 <-> (35/2),[g__,d_,g_,b_,f])^.event,((35/2) <-> 18,[g__,d_,g_,b_,f])^.event,(18 <->
-      (37/2),[c_,e_,g_,c,e])^.event,((37/2) <-> 19,[c_,e_,g_,c,e])^.event,(19 <-> (39/2),[c_,g_,bb_,c,e])^.event,((39/2) <->
-      20,[c_,g_,bb_,c,e])^.event,(20 <-> (41/2),[f__,f_,a_,c,e])^.event,((41/2) <-> 21,[f__,f_,a_,c,e])^.event,(21 <->
-      (43/2),[fb__,c_,a_,c,eb])^.event,((43/2) <-> 22,[fb__,c_,a_,c,eb])^.event,(22 <-> (45/2),[ab__,f_,b_,c,d])^.event,((45/2)
-      <-> 23,[ab__,f_,b_,c,d])^.event,(23 <-> (47/2),[g__,f_,g_,b_,d])^.event,((47/2) <-> 24,[g__,f_,g_,b_,d])^.event,(24 <->
-      (49/2),[g__,e_,g_,c,e])^.event,((49/2) <-> 25,[g__,e_,g_,c,e])^.event,(25 <-> (51/2),[g__,d_,g_,c,f])^.event,((51/2) <->
-      26,[g__,d_,g_,c,f])^.event,(26 <-> (53/2),[g__,d_,g_,b_,f])^.event,((53/2) <-> 27,[g__,d_,g_,b_,f])^.event,(27 <->
-      (55/2),[g__,eb_,a_,c,fs])^.event,((55/2) <-> 28,[g__,eb_,a_,c,fs])^.event,(28 <-> (57/2),[g__,e_,g_,c,g])^.event,((57/2)
-      <-> 29,[g__,e_,g_,c,g])^.event,(29 <-> (59/2),[g__,d_,g_,c,f])^.event,((59/2) <-> 30,[g__,d_,g_,c,f])^.event,(30 <->
-      (61/2),[g__,d_,g_,b_,f])^.event,((61/2) <-> 31,[g__,d_,g_,b_,f])^.event,(31 <-> (63/2),[c__,c_,g_,bb_,e])^.event,((63/2)
-      <-> 32,[c__,c_,g_,bb_,e])^.event,(32 <-> 33,[c__,c_,f_,a_,e])^.event,(33 <-> 34,[c__,b__,f,g,d'])^.event,(34 <->
-      35,[c__,c_,e,g,c'])^.event]^.score
-
-
-    bachCMajPattern :: (Num a) => Pattern a
-    bachCMajPattern = newPattern $ stretchTo 1 $ (view voice) $ fmap pure [0,1,2,3,4,2,3,4]
-```
--->
-
-<!-- TODO pattern coockbook, a la https://doc.sccode.org/Tutorials/A-Practical-Guide/PG_01_Introduction.html -->
-
-## Time-varying values
-
-The structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points* or *notes*. We will now look at an alternative time structure where this is not necessarily the case. @[Behavior] represents a *time-varying values*, or functions of time.
-
-TODO example
-
-Behaviours are continous, which implies that:
-
-- They are defined at *any point in time*. A behavior always has a value, unlike, e.g. aligned boices.
-
-- They can change at infinitely small intervals. Just like with vector graphics, behaviours allow us to zoom in arbitrarily close, and potentially discover new changes. Thus it is (in general) nonsensical to talk about *when* a behaviour changes.
-
-A @[Reactive] is a discrete behabior, e.g. a time-varing value that can only change at certain well-known locations. A @[Reactibe] value is similar to a @[Voice], but stretches out indefinately in both directions.
-
-TODO exampels of Reactives
-
-### Constant values
-### Switching
-### Predefined behaviors
-### Transforming Behaviors and Reactives
-
-IsPitch/Transposable
-Transformable
-Functor
-Applicative
-Monad
-
-### Conversions
-#### Reactive to Behavior
-#### Behavior to Reactive
-#### Score to Behavior
-<!--
-TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
--->
-
-
-<!--
-## Splitting and reversing
-
-@[Splittable]
-
-@[split]
-@[beginning]
-@[ending]
-
-```music+haskell
-inspectableToMusic @[Voice Pitch] $
-
-[ beginning 0.5 melody
-, ending 0.5 melody
-]
-  where
-    melody = {- accent $ legato -} mconcat [d, mconcat [g,fs]|/2,bb|*2]|/4
-```
-
-```music+haskell
-inspectableToMusic @[Voice Pitch] $
-
-[ beginning (1/2+1/8) melody
-, ending (1/2+1/8) melody
-]
-  where
-    melody = {- accent $ legato -} mconcat [d, mconcat [g,fs]|/2,bb|*2]|/4
-```
-
-@[rev] reverse, retrograde
-
-```music+haskell
-let
-    melody = accent $ legato $ pseq [d, pseq [g,fs]|/2,bb|*2]|/4
-in melody |> rev melody
-```
-
-```music+haskell
-music |> rev music
-  where
-    music = (1/16) *| pseq [c|*3, legato $ pseq [accent eb, fs|*3, a, b|*3], gs, f|*3, d]
-```
-
--->
 
 
 
