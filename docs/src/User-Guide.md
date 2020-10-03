@@ -676,8 +676,9 @@ TimeInterval (3 <-> 4)
 ```
 
 
+## Position and Duration
 
-## Position and duration
+### Inspecting Duration
 
 The @[HasDuration] class represents values that have a duration. The most obvious example is `Duration` itself:
 
@@ -692,6 +693,8 @@ There are also instances for `Span` and, as we will see, most other time-based t
 >>> _duration (1 <-> 3)
 2
 ```
+
+### Inspecting Position
 
 The @[HasPosition] class represent values that have an *absolute position* in time. The simplest example is `Span`:
 
@@ -724,10 +727,53 @@ The laws for @[HasPosition] and @[HasPosition1] are not too exciting: they assur
 
 
 
+### Alignment
 
-## Times with values
+The @[Aligned] type adds position to anything with a duration. This is akin to alignment in computer graphis, hence the name. Alignment works by picking:
 
-The Note and Event types are similar to Duration, Time and Span respectively, except they also contain a *payload* of an arbitrary type. This is expressed as a type parameter (often written using a lowercase letter, as in `Note a`).  In practice the payload will usually contain (possibly overloaded) *aspects* such as part, pitch, dynamics and so on.
+- A time point to which the value is "anchored". By default this is time zero.
+- An alignment point in the duration of the value. By default this is the onset of the value.
+
+Aligned is natural way of modelling pickups and upbeats. Consider this melody:
+
+```music+haskell
+(pseq [g_,a_,b_]|/2 |> pseq [c, c, d, d]) |/ 4
+```
+
+With @[Aligned] we can represent the fact that the first three notes are "upbeat" notes, and that the main stress of the value should fall on the fourth note:
+
+```music+haskell
+inspectableToMusic @[Aligned (Voice Pitch)] $
+
+delay 2 -- TODO get rid of this, see wall of shame
+
+[ av |/ 2
+, av |/ 4
+, av |* (2/3)
+]
+  where
+    av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
+```
+
+The `||>` operator is similar to the normal sequential composition operator `|>`, but aligns the result to the point of composition.
+
+
+<!--
+TODO align and realign
+-->
+
+<!--
+TODO sequential composition of aligned voices "snap to next stressed beat":
+`snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]`
+-->
+
+
+
+
+
+## Notes and Events
+
+The Note and Event types are similar to Duration and Span respectively, except they also contain a *payload* of an arbitrary type. This is expressed as a type parameter (often written using a lowercase letter, as in `Note a`).  In practice the payload will usually contain (possibly overloaded) *aspects* such as part, pitch, dynamics and so on.
 
 A @[Note] represents a single value tagged with a *duration*:
 
@@ -924,47 +970,6 @@ inspectableToMusic @(Voice [Pitch]) $
 
 
 
-## Alignment
-
-The @[Aligned] type adds position to anything with a duration. This is akin to alignment in computer graphis, hence the name. Alignment works by picking:
-
-- A time point to which the value is "anchored". By default this is time zero.
-- An alignment point in the duration of the value. By default this is the onset of the value.
-
-Aligned is natural way of modelling pickups and upbeats. Consider this melody:
-
-```music+haskell
-(pseq [g_,a_,b_]|/2 |> pseq [c, c, d, d]) |/ 4
-```
-
-With @[Aligned] we can represent the fact that the first three notes are "upbeat" notes, and that the main stress of the value should fall on the fourth note:
-
-```music+haskell
-inspectableToMusic @[Aligned (Voice Pitch)] $
-
-delay 2 -- TODO get rid of this, see wall of shame
-
-[ av |/ 2
-, av |/ 4
-, av |* (2/3)
-]
-  where
-    av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
-```
-
-The `||>` operator is similar to the normal sequential composition operator `|>`, but aligns the result to the point of composition.
-
-
-<!--
-TODO align and realign
--->
-
-<!--
-TODO sequential composition of aligned voices "snap to next stressed beat":
-`snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]`
--->
-
-
 ## Scores
 
 A @[Score] represents a *parallel composition of values*, each tagged with *time span*.
@@ -1015,7 +1020,7 @@ An empty scores has no duration, but we can represent rests using `Score (Maybe 
 pseq [c,rest,d] |/ 4
 ```
 
-## Scores versus more restricted types
+### Scores versus more restricted types
 
 `Score` is an extremely flexible type. Often it is useful to work with more restrictive structures, such as `Voice`, `Note`, `Pattern`, or their `Aligned` versions.
 
@@ -1136,17 +1141,19 @@ inspectableToMusic bachCMajChords
 
 <!-- TODO pattern coockbook, a la https://doc.sccode.org/Tutorials/A-Practical-Guide/PG_01_Introduction.html -->
 
-## Time-varying values
+## Signals
 
-The structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points* or *notes*. We will now look at an alternative time structure where this is not necessarily the case. @[Behavior] represents a *time-varying values*, or functions of time.
+The structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points* or *notes*. We will now look at an alternative time structure where this is not necessarily the case. @[Signals] represents a *time-varying values*, or functions of time.
 
 TODO example
 
-Behaviours are continous, which implies that:
+Signals are continous, which implies that:
 
 - They are defined at *any point in time*. A behavior always has a value, unlike, e.g. aligned boices.
 
-- They can change at infinitely small intervals. Just like with vector graphics, behaviours allow us to zoom in arbitrarily close, and potentially discover new changes. Thus it is (in general) nonsensical to talk about *when* a behaviour changes.
+- They can change at infinitely small intervals. Just like with vector graphics, signal allow us to zoom in arbitrarily close, and potentially discover new changes. Thus it is (in general) nonsensical to talk about *when* a signal changes.
+
+TODO rename Reactive -> StepSignal or similar
 
 A @[Reactive] is a discrete behabior, e.g. a time-varing value that can only change at certain well-known locations. A @[Reactibe] value is similar to a @[Voice], but stretches out indefinately in both directions.
 
@@ -2507,13 +2514,10 @@ inspectableToMusic @[Ambitus Interval Pitch] $
 ```
 
 
-
-# Playing Technique
+## Playing Techniques
 
 All instruments come with a variety of playing techniques, many of which produce fundamentally different sound types. We treat playing technique as a separate aspect from part and pitch.
 
-
-## Non-instrument specific techniques
 
 ### Tremolo, trills and rolls
 
@@ -3152,7 +3156,7 @@ TODO Use more specicif wrappers to preserve `Transformable`
 
 
 
-
+<!--
 # Form
 
 ### Building larger musical structures
@@ -3168,7 +3172,7 @@ let
     melody = accent $ pseq [c,d,e]|/16
 in times 4 $ melody
 ```
-
+-->
 <!--
 - variation
 
@@ -3194,7 +3198,7 @@ in times 4 $ melody
 -->
 
 
-
+<!--
 # Traversals
 
 In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions. The most important tool for this in Music Suite is called a *traversal*.
@@ -3395,7 +3399,7 @@ canon </> renderAlignedVoice rh
 
 
 
-
+-->
 
 
 
