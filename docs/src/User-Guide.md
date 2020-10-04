@@ -1024,13 +1024,13 @@ TODO rendering restricted scores as type
 
 ## Patterns
 
-A [Pattern][ref-Pattern] can be throught of as a generalization of a *rhythm* or *beat*. They are similar to scores, but are infinite. Each pattern is created by repeating a number of layers. Every pattern will eventually repeat (though he repeating duration may be very long).
+A [Pattern][ref-Pattern] can be throught of as a generalization of a *rhythm* or *beat*. They are similar to scores, but are meant to be repeated indefinately. A pattern can contain a number of *layers*, all of which are also repeating. Each layer may have a different *duration* and *phase*.
+
+The repeating frequency of a pattern may be very short or very long.
 
 ### Creating patterns
 
-The basic way of buildings patterns are [newPattern][ref-newPattern] and [rhythmPattern][ref-rhythmPattern].
-
-TODO example
+The basic way of buildings patterns are [Pattern.line][ref-newPattern] and [Pattern.rhythm][ref-rhythmPattern].
 
 ### Composing patterns
 
@@ -1044,7 +1044,7 @@ map Just $ renderPattern (a <> b) (0 <-> 4)
     -- TODO use claves, maracas here
 ```
 
-As patterns are infinite, we can compose patterns of different durations. Both patterns will just be repeated indefinately.
+We can compose patterns of different durations. The layers of the two pattern will be repeated independently.
 
 ```haskell+music
 map Just $ renderPattern (a <> b) (0 <-> 2)
@@ -1138,17 +1138,16 @@ The structures we have been dealing with so far are all discrete, capturing some
 
 TODO example
 
-Signals are continous, which implies that:
+Signals are continuous. This has a few consequences:
 
-- They are defined at *any point in time*. A behavior always has a value, unlike, e.g. aligned boices.
+- Signals are defined at *any point in time*.
 
-- They can change at infinitely small intervals. Just like with vector graphics, signal allow us to zoom in arbitrarily close, and potentially discover new changes. Thus it is (in general) nonsensical to talk about *when* a signal changes.
+- Signals may change arbitrarily often. We can always zoom in on a signal and discover more detail. 
 
-TODO rename Reactive -> StepSignal or similar
+While this can be extremely useful, we often want to deal with signals that change only at specific, well-known locations. For this purpose we have a different type, known as [StepSignal][ref-StepSignal].
 
-A [Reactive][ref-Reactive] is a discrete behabior, e.g. a time-varing value that can only change at certain well-known locations. A [Reactibe][ref-Reactibe] value is similar to a [Voice][ref-Voice], but stretches out indefinately in both directions.
 
-TODO exampels of Reactives
+TODO rename Reactive -> StepSignal
 
 ### Constant values
 ### Switching
@@ -3787,6 +3786,7 @@ The temporal structures, their instances and more general design philosophy come
 [ref-VectorSpace]: docs
 [ref-Voice]: docs
 [ref-Voicing]: docs
+[ref-StepSignal]: docs
 
 [lilypond]:         http://lilypond.org
 [timidity]:         http://timidity.sourceforge.net/
