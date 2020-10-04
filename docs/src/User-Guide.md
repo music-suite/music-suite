@@ -670,14 +670,14 @@ TimeInterval (3 <-> 4)
 The [HasDuration][ref-HasDuration] class represents values that have a duration. The most obvious example is `Duration` itself:
 
 ```haskell
->>> _duration (2 :: Duration)
+>>> (2 :: Duration)^.duration
 2
 ```
 
 There are also instances for `Span` and, as we will see, most other time-based types:
 
 ```haskell
->>> _duration (1 <-> 3)
+>>> (1 <-> 3)^.duration
 2
 ```
 
@@ -686,14 +686,14 @@ There are also instances for `Span` and, as we will see, most other time-based t
 The [HasPosition][ref-HasPosition] class represent values that have an *absolute position* in time. The simplest example is `Span`:
 
 ```haskell
->>> _era (1 <-> 3)
+>>> (1 <-> 3)^.era
 Just (1 <-> 3)
 ```
 
 `Nothing` is used to represent the "empty era". This is used for scores which doesn't have any notes. The class `HasPosition1` is similar to  `HasPosition`, but is only defined for types that can not have ane empty era. Consequently, there is no such instance for the `Score` type (since empty scores are allowed).
 
 ```haskell
->>> _era1 (1 <-> 3)
+>>> (1 <-> 3)^.era1
 1 <-> 3
 ```
 
@@ -1142,7 +1142,7 @@ Signals are continuous. This has a few consequences:
 
 - Signals are defined at *any point in time*.
 
-- Signals may change arbitrarily often. We can always zoom in on a signal and discover more detail. 
+- Signals may change arbitrarily often. We can always zoom in on a signal and discover more detail.
 
 While this can be extremely useful, we often want to deal with signals that change only at specific, well-known locations. For this purpose we have a different type, known as [StepSignal][ref-StepSignal].
 
