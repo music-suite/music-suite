@@ -821,7 +821,7 @@ You may wonder, what is the point of representing music with *just a single note
 
 ## Voices
 
-A [Voice][ref-Voice] represents a *sequential composition of values*, each tagged with *duration*.
+A [Voice][ref-Voice] represents a *sequential composition of values*, each tagged with *duration*. Voices are strictly monophonic: they are not allowed to contain overlapping notes.
 
 ### Creating voices
 
@@ -965,7 +965,7 @@ inspectableToMusic @(Voice [Pitch]) $
 
 A [Score][ref-Score] represents a *parallel composition of values*, each tagged with *time span*.
 
-We can think of a [Score][ref-Score] as a [Voice][ref-Voice] where overlapping notes are allowed.
+Unlike voices , scores may contain overlapping notes, and can therefore represent arbitrary polyphonic music.
 
 ### Creating scores
 
