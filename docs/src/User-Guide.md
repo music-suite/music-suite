@@ -2472,7 +2472,7 @@ extractPart violas fullScore |> fullScore
 
 We support all instruments in the MusicXML sound set. See [the full list here](https://www.musicxml.com/for-developers/standard-sounds/).
 
-> Note: If you are working with the MIDI backend, only the General MIDI sound set is supported.
+> Note: If you are working with the MIDI output format, only the General MIDI sound set is supported.
 
 ### Transposing instruments
 
@@ -2738,7 +2738,7 @@ Working with percussion is much like working with normal instruments. There are 
 
 - Percussion players tend to double on many different types of instruments than other musicians.
 
-We currently do not ruling out entering pitches for e.g. snare drum parts. However backends will ignore the pitch information, and the music will render on a single-line staff.
+We currently do not ruling out entering pitches for e.g. snare drum parts. However exporters will ignore the pitch information, and the music will render on a single-line staff.
 
 As with other instruments we currently can not represent players doubling on multiple instrumentsexplicitly. You will have to manually enter the music in different parts and manually assure that there is no overlap in parts meant to be executed by the same performer.
 
@@ -2859,7 +2859,7 @@ Title, subtitle etc is grouped together as a single type `Title`, thus an arbitr
 title "Frere Jaques" $ seq [c,d,e,c]|/4
 ```
 
-Some backends may or may not render subtitles, depending on their configuration.
+Some output formats may or may not render subtitles, depending on their configuration.
 
 ## Attribution
 
@@ -2873,7 +2873,7 @@ composer "Anonymous" $ seq [c,d,e,c]
 composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ seq [c,d,e,c]|/4
 ```
 
-Some backends may or may not render attribution information, depending on their configuration.
+Some output formats may or may not render attribution information, depending on their configuration.
 
 ## Key signatures
 
@@ -3476,7 +3476,7 @@ TODO very simple space representation (e.g. Angle), minimal example using Ambiso
 
 ## Prelude/Inspectable
 
-The [Inspectable][ref-Inspectable] class represents types that can be converted into a standard musical representation and exported via an *output backend*. The top-level music expression in a file needs to be inspectable.
+The [Inspectable][ref-Inspectable] class represents types that can be converted into a standard musical representation and exported using one of the supported *output formats*. The top-level music expression in a file needs to be inspectable.
 
 In some cases, the generality of the Music Suite library leads to ambiguity when selecting the type of the top-level expression. The `Music` type defined in `Music.Prelude` can be used as a default.
 
@@ -3491,13 +3491,13 @@ $ cabal exec runhaskell test.hs
 Usage: <executable> -f [xml|ly|mid] -o PATH
 ```
 
-To select e.g. the Lilypond backend:
+To select e.g. the Lilypond output format:
 
 ```bash
 $ cabal exec runhaskell test.hs -- -f ly -o hello.ly
 ```
 
-<!-- TODO API to select backend rather than CLI -->
+<!-- TODO API to select output format rather than CLI -->
 
 ## Output formats
 
