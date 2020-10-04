@@ -623,10 +623,8 @@ The @[Transformable] class represent all things that can be transformed. All ins
 	- The empty transformation does nothing.
 - `transform (s <> t) x = transform s (transform t) x`
 	- Applying a composition of two transformations is the same to applying them one at a time.
-- `transform (s <> negateV s) x = x`
-	- Each transformation has an inverse.
 
-Formally `transform @a` is a left group action on some transformable type `a`. Intuitively, transforming  a value is equivalent to transforming *all the points in the value*.
+Formally `transform @a` is a [left group action](https://en.wikipedia.org/wiki/Group_action) on some transformable type `a`. Intuitively, transforming  a value is equivalent to transforming *all the points in the value*.
 
 We have already seen how classical counterpoint and serial operations can be formoulated as transformations. For example *augmentation*, *diminishion* and *phasing* can be accomplished with `stretch`, `compress` and `delay`:
 
