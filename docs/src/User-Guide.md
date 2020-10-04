@@ -419,11 +419,11 @@ TODO intro
 The most useful type classes come with *laws*, which all instances must satisfy. For example the laws for the `Monoid` class are:
 
 - `mempty <> x = x`
-	- The empty element composed with `x` is the same as `x`
+	- The empty element composed with `x` is the same as `x`.
 - `x <> mempty = x`
-	- `x` composed with the empty element is the same as `x`
+	- `x` composed with the empty element is the same as `x`.
 - `x <> (y <> z) = (x <> y) <> z`
-	- The operation is associatibe, e.g. we can rearrange brackets without changing the meaning of the expression.
+	- The operation is associative. That is, we can rearrange brackets without changing the meaning of the expression.
 
 As an example, we can see that this holds for the list instance:
 
@@ -432,15 +432,7 @@ As an example, we can see that this holds for the list instance:
 
 [1,2,3] ++ [] = []
 
-[1] ++ ([2,3] ++ [])
-=
-[1] ++ [2,3]
-=
-[1,2,3]
-=
-[1,2,3] ++ []
-=
-([1] ++ [2,3]) ++ []
+[1] ++ ([2,3] ++ []) = [1,2,3] = ([1] ++ [2,3]) ++ []
 ```
 
 
@@ -2513,7 +2505,7 @@ inspectableToMusic @[Ambitus Interval Pitch] $
 ```
 
 
-## Playing Techniques
+## Playing techniques
 
 All instruments come with a variety of playing techniques, many of which produce fundamentally different sound types. We treat playing technique as a separate aspect from part and pitch.
 
@@ -2563,9 +2555,8 @@ For artificial harmonics, use @[artificial]:
 artificial c |/ 2
 ```
 
-## Instrument-specific techniques
 
-### String techniques
+## String instruments
 
 By default string instruments play *arco* (using the bow). We can switch to *pizzicato* (plucked) using @[pizz]. Because *arco* is the default, simply applying @[arco] to an expression has no effect:
 
@@ -2707,7 +2698,7 @@ set parts' violins $ seq
 ```
 
 
-### Wind techniques
+## Wind instruments
 
 <!--
 TODO special fingerings, multiphonics, bisbigliando
@@ -2715,7 +2706,7 @@ TODO special fingerings, multiphonics, bisbigliando
 TODO key sounds, percussive attacks ("pizz"), harmonics/whistle tones
 -->
 
-### Brass techniques
+## Brass instruments
 
 Standard mutes are similarly to string mutes:
 
