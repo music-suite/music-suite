@@ -3868,7 +3868,17 @@ rcat $ map renderAlignedVoice $ delay 1
 In other words, scores with events before time 0 should be treated as pickups and rendered in the same time signature as the first bar (starting at 0).
 
 
+# Differences from Haskell
 
+- Record syntax
+- Extensions enabled by default: Dotted records, OverloadedStrings, MonadComprehensions
+- Extended defaulting to include `Music` type
+- Custom prelude: 
+  - `Data.List` availible `List` etc.
+  - Included dependencies: `containers`, `text`, `Debug.Trace`
+  - Aliases `fmap` as `map`, `mempty` as `empty` (`Monoid.empty`), etc.
+  - Numeric hierarchy: `Semigroup < Monoid < Group`. (VectorSpace/AffineSpace?).
+  - `seq` and `par` hidden
 
 # Acknowledgements
 
