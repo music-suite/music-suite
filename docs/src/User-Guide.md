@@ -1751,12 +1751,14 @@ In this case, the origin is also used as the tonic of the implied diatonic scale
 You can extract all the pitches from a piece of music like this:
 
 ```haskell+music
-inspectableToMusic $
-  toListOf pitches' (seq [c,d, par[e,g]] :: Music)
+>>> toListOf pitches (seq [c,d, par[e,g]] :: Music)
+[c,d,e,g]
 ```
 
 > Note: `pitches` is a example of a [traversal](#traversals). We'll learn more about these later on.
 
+<!--
+TODO get rid of Transposable et al (make them prerequisites of HasPitches etc)
 
 ## The Transposable class
 
@@ -1777,7 +1779,7 @@ The type of the previous operations mention [Transposable][ref-Transposable]:
 - `IsInterval` and `IsPitch`, meaning that We can lift standard pitch/interval
   names into the pitch space, so expressions such as `cs` and `m3` makes sense
 - `Num (Scalar v)`, meaning that we can scale the intervals
-
+-->
 
 
 
