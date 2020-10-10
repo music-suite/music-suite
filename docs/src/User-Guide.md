@@ -1295,9 +1295,9 @@ While this can be extremely useful, we sometimes want to deal with *discrete* si
 
 Computer music systems such as [Max](https://cycling74.com/) or [SuperCollider](https://supercollider.github.io/) often a notion of *signals* or *generators* for the purpose of describing real-time audio or video. These signals are highly optimized and typically use fixed sample rates to obtain predictable performance on standard hardware. While the signals in Music Suite can be used for audio synthesis, they are not primarily optimized for this behavior. 
 
-In signal processing terms, we can think of them as *control signals*. Up to performance, everything you already know about signals maths or DSP system should apply, however.
+In signal processing terms, we can think of them as *control signals*. Up to performance and sampling, everything you already know about signals from acoustics or DSP should apply.
 
-### Constant values
+### Basic signals
 
 The simplest signal is a constant value. We can define this like this:
 
@@ -1307,7 +1307,9 @@ The simplest signal is a constant value. We can define this like this:
 >>> Signal.constant 2 :: Signal Integer
 ```
 
-We can lift functions to operate on the signal level using  comprehensions:
+### Operators on signals
+
+We can lift any function to operate on the signal level using  comprehensions:
 
 ```haskell
 >>> let a = Signal.constant 1
@@ -1318,24 +1320,49 @@ We can lift functions to operate on the signal level using  comprehensions:
   :: Signal Double
 ```
 
+Common operators like `+` and `*` are predefined to work on signals too, so the following expressions are equivalent:
+
+```haskell
+>>> [ a * b | a <- x, b <- y ] :: Signal Double
+
+>>> a * b :: Signal Double
+```
+
 
 ### Switching
-### Predefined behaviors
-### Transforming Behaviors and Reactives
 
-IsPitch/Transposable
-Transformable
-Functor
-Applicative
-Monad
+```haskell
+>>> let a = Signal.constant 1
 
-### Conversions
-#### Reactive to Behavior
-#### Behavior to Reactive
-#### Score to Behavior
+>>> let b = Signal.sine 440
+
+>>> Signal.switch 2 a b
+```
+
+TODO use a StepSignal or Score to switch
+
 <!--
 TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
 -->
+
+
+### Transforming Behaviors and Reactives
+
+Signals are functors, so we can use `map` on them. They are not traversable however.
+
+```haskell
+>>> map (+ 1) (Signal.constant 1) ! t
+2
+```
+
+IsPitch/Transposable
+Transformable
+Applicative
+Monad
+
+
+
+
 
 
 <!--
