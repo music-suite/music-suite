@@ -1062,17 +1062,49 @@ Unlike voices , scores may contain overlapping notes, and can therefore represen
 
 The *empty score* has no events.
 
-A *rest* is a score containing a single `Nothing` value. We can create
+```haskell
+>>> Score.empty :: Score ()
+```
 
-A *single-note* score can be created in a variety of ways:
+```haskell
+>>> empty :: Score ()
+```
 
-- We can use [pitch literals][TODO link] to create a score of duration 1: `c`, `cs`, `d` etc. This creates a score in the *default time span* `0 <-> 1`.
-- We can apply `pure` to any value. This also creates a score in the
+We can create a *single-note* score like this:
 
-Because of overloading we can easily mix notes and rest in literals. Note that `c == pure c == pure (Just c)`. Similarly, `rest == pure Nothing`.
+```haskell
+>>> Score.singleton (2 <-> 3) c :: Score Pitch
+
+>>> [(2 <-> 3, c).toEvent].toScore :: Score Pitch
+
+>>> [c]^.score :: Score Pitch
+
+>>> pure c :: Score Pitch
+
+>>> c :: Score Pitch
+```
 
 
-TODO Composition
+A *rest* is a score containing a single `Nothing` value.
+
+```haskell
+>>> Score.singleton (2 <-> 3) c :: Score Pitch
+
+>>> [(2 <-> 3, c).toEvent].toScore :: Score Pitch
+
+>>> [c]^.score :: Score Pitch
+
+>>> pure c :: Score Pitch
+
+>>> c :: Score Pitch
+```
+
+`Score` is a monoid. Composing two scores interleaves all of their events in parallel:
+
+```haskell
+>>> c <> g :: Score Pitch
+```
+
 
 TODO Monad comprehensions
 
@@ -1080,7 +1112,32 @@ TODO From a list of events
 
 ### Traversing scores
 
-Score is Traversable, HasPitches etc
+We can traverse the values in a score using `traverse`:
+
+```haskell
+>>> traverse print (c |> d |> (e |* 2))
+c
+d
+e
+```
+
+To traverse the events (including the spans), use `events`:
+
+```haskell
+>>> traverseOf events print (c |> d |> (e |* 2))
+(0 <-> 1, c)
+(1 <-> 2, d)
+(2 <-> 3, e)
+```
+
+To traverse the pitches:
+
+```haskell
+>>> traverseOf pitches print (pure { pitch = c, dynamics = pp } |> d |> (e |* 2))
+c
+d
+e
+```
 
 Special traversals such as mapWithSpan
 
@@ -1590,7 +1647,7 @@ True
 
 ### Pitch equality and ordering
 
-The `Pitch` type has instances for the `Eq` and `Ord` type classes, representing equality and ordering respectively.
+The `Pitch` type has instances for the `Eq` and `Ord` type classes.
 
 As we have already seen, equality of pitches takes spelling into account, so e.g. `cs /= db` holds. There are many ways of defining orderings on pitches: the default ordering compares diatonic steps first, alteration second.
 
@@ -3401,11 +3458,21 @@ traversePitches :: Traversal' (Score Pitch) Pitch
 
 ### Folding and accumulating
 
-[toListOf][ref-toListOf]
+The [toList][ref-toListOf] function converts any traversable type into a list:
 
 ```haskell
->>> toListOf pitches' (c <> d :: Score Pitch)
+>>> toList (Set.fromList [1,2,2])
+[1,2]
+```
+
+Similarly, [toListOf][ref-toListOf] function can be used with an arbitrary traversal:
+
+```haskell
+>>> toListOf pitches (c <> d :: Score Pitch)
 [c,d] :: [Pitch]
+
+>>> toListOf traverse [1,2]
+[1,2]
 ```
 
 [anyOf][ref-anyOf], [allOf][ref-allOf]
@@ -3419,12 +3486,23 @@ False
 
 ### Mapping and setting
 
+All traversables are also [functors][ref-Functor], supporting `map`:
+
+```haskell
+>>> map (+ 10) [1,2,3]
+[11,12,13]
+```
+
+[ref-Functor]: x
+
 [over][ref-over]
 
-### Failure and state
+### State and exceptions
 
 [State][ref-State]
-[Maybe][ref-Maybe]
+
+The [Maybe][ref-Maybe] and [Either][ref-Either] types can be used to abort a traversal.
+
 @[Either A]
 
 
