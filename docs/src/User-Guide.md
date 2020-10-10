@@ -401,7 +401,7 @@ in up _P8 scale </> (triad c) |/2 |> (triad g_) |/2
 
 ## Types
 
-Music Suite is a [strongly typed](https://en.wikipedia.org/wiki/Strong_and_weak_typing]) system. Every expression has a type, which  correspond to a (possibly infinite) set of values. If a value of an unexpected type is used, the system will tell us up front before performing any work (such as rendering or playing music). This is useful for catching problems early.
+Music Suite is a [strongly typed](https://en.wikipedia.org/wiki/Strong_and_weak_typing]) language. Every expression has a type, which  correspond to a (possibly infinite) set of values. If a value of an unexpected type is used, the system will tell us up front before performing any work (such as rendering or playing music). This is useful for catching problems early.
 
 Here are some examples of expressions with their type. The `::` notations is pronounced "has type".
 
@@ -418,10 +418,71 @@ Types may be written out explicitly or [inferred](https://en.wikipedia.org/wiki/
 "hi" + "there"
 ```
 
+## Immutability
 
-## Classes and constraints
+Music Suite is also a *functional language*. Side effects are disallowed by default and all values are *immutable*. 
 
-TODO intro
+Despite this, we will often talk about *changing* or *modifying* values. This is accomplished by [creating new values](https://www.infoq.com/presentations/Value-Values/) instead of doing in-place mutation. For example, the `List.delete` function  can be used to remove an element from a list:
+
+```haskell
+>>> List.delete 2 [1,2,3]
+[1,3]
+```
+
+A consequence of this is that once a variable has been assigned, it will always refer to the same value.
+
+```haskell
+>>> let x = [1,2,3]
+
+>>> let y = List.delete 2 [1,2,3]
+
+>>> x
+[1,2,3]
+>>> y
+[1,3]
+```
+
+We can reuse variable names however. This is known as *shadowing*.
+
+```haskell
+>>> let x = 1
+
+>>> let x = 2
+
+>>> x
+2
+```
+
+## Type classes
+
+Music Suite also has a notion of *interfaces* or *traits*, known as *type classes*.
+
+Classes group together types that happen to share a common interface, allowing us to write *polymorphic functions* which can operate on more than one type. A common example is the `Eq` class, defined on all types that have a notion of equality.
+
+```haskell
+>>> True == False
+False
+
+>>> 1 == 1
+True
+
+>>> [Pitch.c, Pitch.d] == [Pitch.d]
+False
+```
+
+### Common type classes
+
+| Name | Meaning |
+|--|--|
+| Eq |  |
+| Ord | |
+| Hashable | | 
+| Monoid | |
+| Group | |
+| Num | |
+
+
+### Laws
 
 The most useful type classes come with *laws*, which all instances must satisfy. For example the laws for the `Monoid` class are:
 
@@ -487,9 +548,10 @@ There are serveral free introductions to Music Theory and compositions online:
 - [School of Composition](https://www.schoolofcomposition.com)
 - [Music Theory on Youtube](https://www.schoolofcomposition.com/music-theory-composition-youtube-channels/)
 
-As Music Suite is based on Haskell, you may also want to look at the following texts, aimed at new Haskell users:
+Music Suite is a dialect of the Haskell programming language. There are many excellent text aimed at new Haskell users:
 - [Learn You A Haskell](http://learnyouahaskell.com/)
 - [What I Wish I Knew Learning Haskell](http://dev.stephendiehl.com/hask/)
+
 
 
 
@@ -3003,11 +3065,13 @@ Polymetric notation is not supported: you must pick one global time signature fo
 
 ## Tempo
 
+The [tempo][ref-tempo] function is used to attach a tempo to a score. A tempo marking consists of a metronome mark (beats per minute) and an optional *instruction text*.
 
+Common tempo markings such as [adagio][ref-adagio] and [allegro][ref-allegro] are pre-defined. Custom tempi can be entered using [metronome][ref-metronome].
 
-[metronome][ref-metronome]
+[ref-adagio]: x
+[ref-allegro]: x
 
-[tempo][ref-tempo]
 
 ```haskell+music
 tempo adagio $ seq [c,d,e,b,c] |/ (5*8) |> d |* (3/4)
@@ -3017,10 +3081,12 @@ tempo adagio $ seq [c,d,e,b,c] |/ (5*8) |> d |* (3/4)
 tempo (metronome (1/4) 80) $ seq [c,d,e,b,c] |/ (5*8) |> d |* (3/4)
 ```
 
+A tempo mark only attaches to the part of the score it is applied to (overriding any previous markings). Here is an example of a multi-tempo score, which is notated as a tempo change.
+
 ```haskell+music
-(tempo adagio $ seq [c,d,e,b,c] |/ (5*4) |> d |* (3/4))
-  |>
-(tempo allegro $ seq [c,d,e,f,g] |/ 4 )
+rest
+|> (tempo adagio  $ seq [c,d,e,b,c] |/ (5*4) |> d |* (3/4))
+|> (tempo allegro $ seq [c,d,e,f,g] |/ 4 )
 ```
 
 Tempo changes will always force a new bar.
@@ -3037,11 +3103,15 @@ TODO representation should be: meta-mark at the first strong beat *after* the fe
 fermata StandardFermata (par [c,e,g])
 ```
 
-Note that a fermata attaches to a specific point known as the *sustain point* (the beginning of the given score is used by default). All notes overlapping the sustain point have a fermata drawn on them.
+Note that a fermata attaches to a specific point known as the *sustain point*. The beginning of score to which the [fermata][ref-fermata] function is applied is used by default. 
+
+[ref-fermata]: x
 
 ```haskell+music
 fermata StandardFermata (par [seq[c,d] |/ 2,e,g])
 ```
+
+Note that all notes overlapping the sustain point have a fermata drawn on them.
 
 <!--
 A fermata usually implies a unison cutoff of the prolonged notes, followed by a short break before continouing to the next beat. This can be made explicit by addng caesuras or breathing marks (commas).
@@ -3217,14 +3287,17 @@ in times 4 $ melody
 
 # Traversals
 
-Traversals are a subtle and powerful concept. The basic ideas is simple: given some traversable "container" value, we have a way of *visiting its element in some order*. Traversals can be used to:
+Traversals are a subtle and powerful concept. The basic ideas is simple: given some traversable "container" value, we have a way of *visiting its element in some order*. In some languages this concept is known as an [iterable container](https://www.cs.ox.ac.uk/jeremy.gibbons/publications/iterator.pdf).
+
+Traversals can be used to:
 
 - Extract a list of the elements
 - Find all elements matching a specific criteria
 - Compute values by running *accumulators* over matching elements
 - Change the structure by *updating* some or all of the elements
 
-Traversals are also subject to some restrictions (TODO explain Traversal laws).
+Traversals are  to some restrictions. Notably, a traversal is not allowed to delete or insert new elements (though it can modify them).
+ (TODO explain Traversal laws).
 
 The most common traversal is known as `traverse`, and is defined for all types that are `Traversable`. The type signature of `traverse` is highly general:
 
