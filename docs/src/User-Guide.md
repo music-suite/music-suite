@@ -225,7 +225,7 @@ sharpen c
 
 > Note: We will lean many more ways of entering pitch in the [next chapter](#pitch).
 
-## Basic dynamics and articulations
+## Dynamics and articulations
 
 We can add articulations and change dynamics:
 
@@ -406,10 +406,10 @@ Music Suite is a [strongly typed](https://en.wikipedia.org/wiki/Strong_and_weak_
 Here are some examples of expressions with their type. The `::` notations is pronounced "has type".
 
 ```haskell
-2 :: Integer
-True :: Boolean
+2        :: Integer
+True     :: Boolean
 (1, "2") :: (Integer, Text)
-[c,d,e] :: [Pitch]
+[c,d,e]  :: [Pitch]
 ```
 
 Types may be written out explicitly or [inferred](https://en.wikipedia.org/wiki/Type_inference). It is important to note that inferred types are no less "strong" than written out types. For example this will fail, because the `+` operator is not defined on text values:
@@ -1214,7 +1214,34 @@ In constrast [Signals][ref-Signals] represents a *time-varying values*, or funct
 
 While this can be extremely useful, we sometimes want to deal with *discrete* signals, which that change only at specific points in time locations. For this purpose we have a different type, known as [StepSignal][ref-StepSignal]. Most of what can be said about signals also applies to step signals.
 
+### A note about performance
+
+Computer music systems such as [Max](https://cycling74.com/) or [SuperCollider](https://supercollider.github.io/) often a notion of *signals* or *generators* for the purpose of describing real-time audio or video. These signals are highly optimized and typically use fixed sample rates to obtain predictable performance on standard hardware. While the signals in Music Suite can be used for audio synthesis, they are not primarily optimized for this behavior. 
+
+In signal processing terms, we can think of them as *control signals*. Up to performance, everything you already know about signals maths or DSP system should apply, however.
+
 ### Constant values
+
+The simplest signal is a constant value. We can define this like this:
+
+```haskell
+>>> Signal.constant () :: Signal Integer
+
+>>> Signal.constant 2 :: Signal Integer
+```
+
+We can lift functions to operate on the signal level using  comprehensions:
+
+```haskell
+>>> let a = Signal.constant 1
+
+>>> let b = Signal.sine 440
+
+>>> [ a * b | a <- x, b <- y ]
+  :: Signal Double
+```
+
+
 ### Switching
 ### Predefined behaviors
 ### Transforming Behaviors and Reactives
