@@ -1,4 +1,5 @@
 
+
 # Tutorial
 
 In this chapter we will learn how to install Music Suite and use it to compose simple pieces.
@@ -7,17 +8,6 @@ This tutorial does not require any prerequisite knowledge, apart from basic fami
 
 We will introduce other programming and music theory concepts as we go along. If you are already familiar with both of these, this chapter should not contain many surprises. We will go more in-depth in  future chapters.
 
-### Other resources
-
-There are serveral free introductions to Music Theory and compositions online:
-- [Open Music Theory](http://openmusictheory.com/contents.html)
-- [School of Composition](https://www.schoolofcomposition.com)
-- [Music Theory on Youtube](https://www.schoolofcomposition.com/music-theory-composition-youtube-channels/)
- - [ ] List item
-
-As Music Suite is based on Haskell, you may also want to look at the following texts, aimed at new Haskell users:
-- [Learn You A Haskell](http://learnyouahaskell.com/)
-- [What I Wish I Knew Learning Haskell](http://dev.stephendiehl.com/hask/)
 
 ## Installing
 
@@ -342,7 +332,7 @@ compress 4 (seq [c |*3, d |* 3, e |* 2]) |> compress 5 (seq [f,e,c,d,e]) |> d
 
 
 
-## Functions
+## Functions and Patterns
 
 So far we have written our musical expressions in terms of pre-defined operators and functions. We can also define our own functions.
 
@@ -411,9 +401,23 @@ in up _P8 scale </> (triad c) |/2 |> (triad g_) |/2
 
 ## Types
 
-Music Suite is a [strongly typed](https://en.wikipedia.org/wiki/Strong_and_weak_typing]) system. Every expression has a data type, which  
+Music Suite is a [strongly typed](https://en.wikipedia.org/wiki/Strong_and_weak_typing]) system. Every expression has a type, which  correspond to a (possibly infinite) set of values. If a value of an unexpected type is used, the system will tell us up front before performing any work (such as rendering or playing music). This is useful for catching problems early.
 
-TODO intro
+Here are some examples of expressions with their type. The `::` notations is pronounced "has type".
+
+```haskell
+2 :: Integer
+True :: Boolean
+(1, "2") :: (Integer, Text)
+[c,d,e] :: [Pitch]
+```
+
+Types may be written out explicitly or [inferred](https://en.wikipedia.org/wiki/Type_inference). It is important to note that inferred types are no less "strong" than written out types. For example this will fail, because the `+` operator is not defined on text values:
+
+```haskell
+"hi" + "there"
+```
+
 
 ## Classes and constraints
 
@@ -439,7 +443,7 @@ As an example, we can see that this holds for the list instance:
 ```
 
 
-### Understanding the composition operator types
+## Composition operator types
 
 Looking at the type of the composition operators, it becomes clear that `|>` and `</>` are in fact based on `<>`:
 
@@ -465,25 +469,27 @@ and *perfect* intervals are written in upper-case.
 
 In fact the `<>` operator is used for almost all forms of composition in Music Suite. The other operators simply peform some kind of manipulation on their values before or after composing.
 
-## Musical aspects
-
-While music is often though to be concerned primarily with time and pitch, Music Suite also allow representation of other "dimensions", including:
-
-- Dynamics: the *loudness* of a sound
-- Articulation: the *attack* and *relative length* of a sound
-- Instruments, parts and playing techniques, all of which affect *timbre*
-
-We'll sometimes refer to these collectively as *aspects*. Each aspect comes with its own traversal class, which is named after it, `HasPitches`, `HasDynamics`, `HasArticulations`, `HasParts`, `HasTechniques`, and so on.
 
 ## Next steps
 
 This concludes the first chapter of the manual. We have seen how to write simple pieces, using melody, harmony and voices. You should now know enough to start working on your own music. You will find many more examples of pieces in the [examples directory](https://github.com/hanshoglund/music-suite/tree/master/examples).
 
-The rest of this manual can be read as a *reference*. We will be looking at musical aspects such as pitch, dynamics, rhythm, form and orchestration in detail. In general these chapters can generally be read in any order.
+The rest of this manual can be read as a *reference*. We will be looking at [musical aspects](https://en.wikipedia.org/wiki/Elements_of_music) such as pitch, dynamics, rhythm, form and orchestration. The chapters can be read in any order.
 
+### Getting help
 
+TODO
 
+### Other resources
 
+There are serveral free introductions to Music Theory and compositions online:
+- [Open Music Theory](http://openmusictheory.com/contents.html)
+- [School of Composition](https://www.schoolofcomposition.com)
+- [Music Theory on Youtube](https://www.schoolofcomposition.com/music-theory-composition-youtube-channels/)
+
+As Music Suite is based on Haskell, you may also want to look at the following texts, aimed at new Haskell users:
+- [Learn You A Haskell](http://learnyouahaskell.com/)
+- [What I Wish I Knew Learning Haskell](http://dev.stephendiehl.com/hask/)
 
 
 
@@ -2854,9 +2860,13 @@ TODO color
 
 # Meta-information
 
-Meta-information is global, rather than attached to a specific part. It is *defined at every point in the score with explicit change points (per type)* and always has a sensible default value (e.g. one (Reactive m) per type). All meta types are monoidal. Examples: key signature, time signature.
+In previous chapters we have been concerned with structure and sound of music. However scores contain many other types of information, such as titles, attribution, key and time signatures. We refer to these collectively as *meta-information* (following [MIDI file standard](http://www.music.mcgill.ca/~ich/classes/mumt306/StandardMIDIfileformat.html#BM3_)).
 
-Meta-information is always *optional*. There is always a sensible default value which can be overriden either globally or locally (i.e. during some specific time-span).
+The distinction between ordinary musical data and meta-data is not always clear-cut. As a rule of thumb, meta-informatio does not directly affect how the represented music *sounds*, but may greatly affect the appearance of the notation. There are some exceptions to this rule, notably tempo.
+
+Meta-information is global, rather than attached to a specific part. All meta-data types are monoids, meaning the have a sensible default value and can be overlayed. For example the default key signature is $4/4$. Thanks to the default, adding meta-information is always *optional*. 
+
+Meta-information does not have to be constant. We use the [StepSignal][ref-StepSignal] type to represent key changes, time signature changes and so on.
 
 <!--
 It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In Music Suite these are grouped together under the common label *meta-information*.
@@ -3207,9 +3217,7 @@ in times 4 $ melody
 
 # Traversals
 
-In previous chapters have focused on *composing* musical expressions. In this chapter we will look at various ways of *analyzing* and *transforming* musical expressions. The most important tool for this in Music Suite is called a *traversal*.
-
-Traverals are a subtle and powerful concept. The basic ideas is simple: given some traverable "container" value, we have a way of *visiting its element in some order*. Traversals can be used to:
+Traversals are a subtle and powerful concept. The basic ideas is simple: given some traversable "container" value, we have a way of *visiting its element in some order*. Traversals can be used to:
 
 - Extract a list of the elements
 - Find all elements matching a specific criteria
@@ -3401,11 +3409,12 @@ canon </> renderAlignedVoice rh
     theme = seq [e,a|*2,c',b|*2,a,gs|*3,e'] |/ 8
 ```
 
+## Optics
 
-
-
-
--->
+Traversals are a special case of a more general concept called optics. Other notable types of optics include:
+- *Lenses*, which are akin to traversal targeting exactly one element
+- *Prisms*, which are akin to traversls targeting at most one element and support creation ofsingle-element values.
+- *Isomorphisms*, which allow conversions between two types with no loss of information. 
 
 
 
