@@ -2579,19 +2579,19 @@ To choose a *non-default* parts or instruments, we use the `set` operator, or it
 Setting just the part looks like this:
 
 ```haskell+music
-parts' .~ trumpets $ par [c,d,fs]
+parts .~ trumpets $ par [c,d,fs]
 ```
 
 Setting just the instrument:
 
 ```haskell+music
-(parts' . instrument) .~ trumpet $ par [c,d,fs]
+(parts . instrument) .~ trumpet $ par [c,d,fs]
 ```
 
 Setting just the subpart:
 
 ```haskell+music
-(parts' . subpart) .~ 2 $ (parts' . instrument) .~ trumpet $ par [c,d,fs]
+(parts . subpart) .~ 2 $ (parts . instrument) .~ trumpet $ par [c,d,fs]
 ```
 
 ## Subdivision
@@ -2621,13 +2621,13 @@ c </> c
 When this is not the case, `</>` behaves like `<>`:
 
 ```haskell+music
-set parts' violins c </> set parts' violas c
+set parts violins c </> set parts violas c
 ```
 
 The subpart of the left side is never changed, and the right side is always assigned to the next available subpart:
 
 ```haskell+music
-set parts' p c </> set parts' p c
+set parts p c </> set parts p c
   where
     p = set subpart 2 $ violins
 ```
@@ -2806,14 +2806,14 @@ artificial c |/ 2
 By default string instruments play *arco* (using the bow). We can switch to *pizzicato* (plucked) using [pizz][ref-pizz]. Because *arco* is the default, simply applying [arco][ref-arco] to an expression has no effect:
 
 ```haskell+music
-set parts' violins $
+set parts violins $
   seq [arco $ staccato $ times 4 c, times 4 $ pizz g_ ] |/ 4
 ```
 
 Traditionally the text "arco" is used to revert to bowed playing after a pizzicato section. This is inserted automatically.
 
 ```haskell+music
-set parts' violins $
+set parts violins $
   seq [pizz $ seq [c,c,c,c], d |* 2, pizz e |*2 ] |/ 4
 ```
 
@@ -2824,20 +2824,20 @@ We can similarly indicate *bow* position. This instructs the performer to adjust
 
 
 ```haskell+music
-set parts' violins $
+set parts violins $
   seq [sulTasto $ seq [c,c,c,c], posNat d |* 2] |/ 4
 ```
 
 The text *naturale* or *nat* is used to revert to "normal" position. As with *arco*, this is inserted automatically.
 
 ```haskell+music
-set parts' violins $
+set parts violins $
   seq [posNat $ seq [c,c,c,c], sulPont d |* 2] |/ 4
 ```
 
 
 ```haskell+music
-set parts' violins $ seq
+set parts violins $ seq
   [ colLegno c
   , colLegnoBatt c
   , senzaLegno c
@@ -2847,14 +2847,14 @@ set parts' violins $ seq
 We can switch between bowed versus plucked strings using [pizz][ref-pizz] and [arco][ref-arco]. The default is /arco/ (bowed). As in standard string notation this is indicated by text at the point of change:
 
 ```haskell+music
-set parts' violins $
+set parts violins $
   seq [arco $ staccato $ times 4 c, times 4 $ pizz g_ ] |/ 4
 ```
 
 The text "arco" is used to cancel a previous "pizz". This is also inserted automatically. In the following example the first note in the second bar is using arco by default.
 
 ```haskell+music
-set parts' violins $
+set parts violins $
   seq [pizz $ seq [c,c,c,c], d |* 2, pizz e |*2 ] |/ 4
 ```
 
@@ -2867,14 +2867,14 @@ Bow *position* on the string is indicated in a similar fashion. We support the f
 As with pizz/arco, only changes are indicated:
 
 ```haskell+music
-set parts' violins $
+set parts violins $
   seq [sulTasto $ seq [c,c,c,c], posNat d |* 2] |/ 4
 ```
 
 As with "arco, the text "nat" is used to cancel a previous position and inserted by default.
 
 ```haskell+music
-set parts' violins $
+set parts violins $
   seq [posNat $ seq [c,c,c,c], sulPont d |* 2] |/ 4
 ```
 
@@ -2885,7 +2885,7 @@ Bow *rotation* can be indated using one of the following:
 - Senza legno: play with the bow hair (the default)
 
 ```haskell+music
-set parts' violins $ seq
+set parts violins $ seq
   [ colLegno c
   , colLegnoBatt c
   , senzaLegno c
@@ -2898,7 +2898,7 @@ Finally, string mutes are indicated using:
 - Senza sordino: Without mute (the default)
 
 ```haskell+music
-set parts' violins $ seq
+set parts violins $ seq
   [ conSord c
   , senzaSord c
   ]
@@ -2908,7 +2908,7 @@ set parts' violins $ seq
 Here is an example using a combination of the above techniques:
 
 ```haskell+music
-set parts' violins $ seq
+set parts violins $ seq
   [ conSord $ arco c
   , pizz c
   , pizz $ conSord $ pizz c
@@ -2925,14 +2925,14 @@ TODO chord tremolo
 
 
 ```haskell+music
-set parts' violins $ (1/4) *| seq
+set parts violins $ (1/4) *| seq
   [ conSord c
   , senzaSord c
   ]
 ```
 
 ```haskell+music
-set parts' violins $ 1.5 *| seq
+set parts violins $ 1.5 *| seq
   [ conSord $ arco c
   , pizz c
   , pizz $ conSord $ pizz c
@@ -2959,7 +2959,7 @@ Standard mutes are similarly to string mutes:
 The default is without mute.
 
 ```haskell+music
-set parts' trombones $ (1/2) *| seq [ 
+set parts trombones $ (1/2) *| seq [ 
   conSord g,
   senzaSord g
   ]
