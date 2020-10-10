@@ -13,6 +13,7 @@ There are serveral free introductions to Music Theory and compositions online:
 - [Open Music Theory](http://openmusictheory.com/contents.html)
 - [School of Composition](https://www.schoolofcomposition.com)
 - [Music Theory on Youtube](https://www.schoolofcomposition.com/music-theory-composition-youtube-channels/)
+ - [ ] List item
 
 As Music Suite is based on Haskell, you may also want to look at the following texts, aimed at new Haskell users:
 - [Learn You A Haskell](http://learnyouahaskell.com/)
@@ -410,6 +411,8 @@ in up _P8 scale </> (triad c) |/2 |> (triad g_) |/2
 
 ## Types
 
+Music Suite is a [strongly typed](https://en.wikipedia.org/wiki/Strong_and_weak_typing]) system. Every expression has a data type, which  
+
 TODO intro
 
 ## Classes and constraints
@@ -487,7 +490,7 @@ The rest of this manual can be read as a *reference*. We will be looking at musi
 
 # Time and Rhythm
 
-In this chapter we will learn how time and rhythm is represented in Music Suite.
+In this chapter we will learn how to represent time and rhythm.
 
 ## Basic time types
 
@@ -1134,20 +1137,14 @@ inspectableToMusic bachCMajChords
 
 ## Signals
 
-The structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points* or *notes*. We will now look at an alternative time structure where this is not necessarily the case. [Signals][ref-Signals] represents a *time-varying values*, or functions of time.
+The time structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points*. For example voices and scores contain notes and events with well defined *onset* and *offset* points. 
 
-TODO example
-
-Signals are continuous. This has a few consequences:
+In constrast [Signals][ref-Signals] represents a *time-varying values*, or functions of time. Signals are continuous. Informally this means that:
 
 - Signals are defined at *any point in time*.
+- It is not (in general) possible to known when a signal has changed.
 
-- Signals may change arbitrarily often. We can always zoom in on a signal and discover more detail.
-
-While this can be extremely useful, we often want to deal with signals that change only at specific, well-known locations. For this purpose we have a different type, known as [StepSignal][ref-StepSignal].
-
-
-TODO rename Reactive -> StepSignal
+While this can be extremely useful, we sometimes want to deal with *discrete* signals, which that change only at specific points in time locations. For this purpose we have a different type, known as [StepSignal][ref-StepSignal]. Most of what can be said about signals also applies to step signals.
 
 ### Constant values
 ### Switching
@@ -1221,11 +1218,11 @@ music |> rev music
 
 # Pitches and Intervals
 
-In this chapter we will learn how to represent pitches and intervals and perform basic operations such as transposition and scaling. In the next chapter we will use these to build harmony concepts such as chords and scales.
+In this chapter we will learn how to represent pitches and intervals and perform basic operations such as transposition and scaling. In the next chapter we will use these to describe harmony, chords and scales.
 
 ## The Pitch type
 
-The [Pitch][ref-Pitch] representation implements the pitch of common (or Western) music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling. As we shall see later this is not the only way of representing pitch in Music Suite, but it is common enough to be the default.
+The [Pitch][ref-Pitch] representation implements the pitch of common (sometimes known as "Western") music notation, with built-in support for the diatonic/chromatic transposition, enharmonics and spelling. As we shall see later this is not the only way of representing pitch in Music Suite, but it is common enough to be the default.
 
 ### Pitch names
 
@@ -1671,7 +1668,7 @@ The type of the previous operations mention [Transposable][ref-Transposable]:
 
 # Harmony
 
-While the `Pitch` and `Interval` types allow us to represent any pitch (within the Western/classical framework), they do not tell us much about *harmony*. We need types to represent *collections* and *relationships* between pitches, including modes, chords and scales.
+While the `Pitch` and `Interval` types allow us to represent pitch, they do not tell us much about *harmony*. We need types to represent *collections* and *relationships* between pitches, including modes, chords and scales.
 
 While we can of course course use regular data structures like tuples, lists and maps for this, Music Suite also defines some structures that makes particular sense from a musical point of view.
 
@@ -1985,11 +1982,11 @@ TODO set operations on chords/scales (e.g. union/difference/intersection/isSubse
 
 
 
-## Voicings
+## Voicing
 
 Recall that chords are infinite sets. A [Voicing][ref-Voicing] is a finite subset of that set. For a normal (octave-repeating) chord, it defines what pitches appear and in what octave.
 
-### Close voicings
+### Close voicing
 
 The `close` function voices a chord as closely as possible above the tonic. Formally the pitches of the generating interval sequence, originating at the tonic. For example:
 
@@ -2007,6 +2004,32 @@ inspectableToMusic @[Voiced Chord Pitch] $
 , Voicing.closeIn 4 $ chord c majorTriad
 ]
 ```
+
+### Drop voicing
+
+TODO
+
+
+### Custom voicings
+
+We can also create custom voicings, using any combination of integers. Recall that `0` stands for the origin, `1` for the first note above the origin, `2` for the next and so on. Negative numbers repeat the pattern below the origin.
+
+```haskell+music
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (chord d minorTriad) [0,1..6]
+```
+
+```haskell+music
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (chord d minorTriad) [0,2..6]
+```
+
+```haskell+music
+inspectableToMusic @(Voiced Chord Pitch) $
+  Voiced (chord d minorTriad) [-2,0,2,4]
+```
+
+
 
 ### Operations on voicings
 
@@ -2030,26 +2053,6 @@ inspectableToMusic @[Voiced Chord Pitch] $
   where
     vs = voiced (chord c majorTriad)
 ```
-
-### Other voicings
-
-We can also create custom voicings, using any combination of integers. Recall that `0` stands for the origin, `1` for the first note above the origin, `2` for the next and so on. Negative numbers repeat the pattern below the origin.
-
-```haskell+music
-inspectableToMusic @(Voiced Chord Pitch) $
-  Voiced (chord d minorTriad) [0,1..6]
-```
-
-```haskell+music
-inspectableToMusic @(Voiced Chord Pitch) $
-  Voiced (chord d minorTriad) [0,2..6]
-```
-
-```haskell+music
-inspectableToMusic @(Voiced Chord Pitch) $
-  Voiced (chord d minorTriad) [-2,0,2,4]
-```
-
 
 
 
@@ -2134,6 +2137,8 @@ TODO spectral dissonance using HCF
 
 # Dynamics and Articulation
 
+For much of musical history, only pitch and time were notated, leaving all other aspects of the sound to the performer. Dynamics and articulations allow the composer to specify the type of sound more exactly.
+
 ## Adding dynamics
 
 Dynamics can me applied using [level][ref-level]:
@@ -2187,6 +2192,8 @@ repeated if the last entry was a few bars ago.
 
 ### Staccato and legato
 
+
+
 Standard articulations are supported:
 
 ```haskell+music
@@ -2194,14 +2201,12 @@ legato (seq [c,d,e,f,g]|/8)
     </>
 staccato (seq [c,d,e,f,g]|/8)
     </>
-portato (seq [c,d,e,f,g]|/8)
-    </>
-tenuto (seq [c,d,e,f,g]|/8)
-    </>
 staccatissimo (seq [c,d,e,f,g]|/8)
 ```
 
 ### Accents
+
+An accent represents a stronger *relative* emphasis, usually in the form of loudness. 
 
 Adding accents is similar to regular articulations:
 
@@ -2219,10 +2224,20 @@ accentLast (seq [c,d,e,f,g]|/8)
 accentAll (seq [c,d,e,f,g]|/8)
 ```
 
+### Tenuto and portato
+
+TODO
+
+```hask
+tenuto
+  </>
+portato (seq [c,d,e,f,g]|/8)
+```
+
 ### Articulations and phrases
 
 We can apply slurs and articulation marks to scores of arbitrary complexity. The library will traverse each phrase in the score and apply the articulations separately.
-
+as
 For example in this example we're building up a score consisting of three parts and then apply `accent . legato`:
 
 ```haskell+music
@@ -2285,19 +2300,22 @@ over (articulations' . separation) (+ 2) c
 
 
 
-# Instruments and Parts
+# Parts
 
-For working with multi-part scores, we first need to look at the distinction between parts and instruments:
+In this chapter we'll describe how to work with multi-part scores.
 
-- The [Part][ref-Part] type represent a *vocal or instrumental part in a composition* such as `Violin I.I`, `Trumpet II`, etc.
+## Instruments and Parts
 
-- The [Instrument][ref-Instrument] type represents a *class of instruments* such as `Violin`, `Guitar`, `Maracas`, etc. This includes vocals types and, electronics etc.
+We make a distinction between parts and instruments:
 
+- The [Instrument][ref-Instrument] type represents a *class of instruments* such as `Violin`, `Guitar`, `Maracas`, etc. We define "instrument" broadly to include vocals types, electronics and so on.
+- The [Part][ref-Part] type represent a (vocal or instrumental) *part in a composition* such as `Violin I.I`, `Trumpet II`, etc. An part is made up of an *instrument*, a *subpart* such as `I.I` .
 
-A *part* is a record type consisting of (among other things) an *instrument* and a *subpart* such as `I.I`.
+We use the term subpart rather than *voice* to avoid collission with the [Voice][ref-Voice] type.
 
+## Staves, brackets and braces
 
-There is no need to explicitly create staves, brackets or braces. These are created automatically based on the parts present in the score.
+In staff notation, parts are distinguished using stem direction, staves, brackets or braces. In Music Suite we do not represent these concepts directly, instead these are created automatically based on the parts that hapen to present in the score.
 
 To illustrate this, here is an example of a score with all the notes in the same part:
 
