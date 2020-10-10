@@ -696,7 +696,27 @@ For those familiar with linear algebra or computer graphics: Because time is one
 (2 >-> 3)
 ```
 
-TODO examples of transforming points
+We can *apply* a transformation to a time point using [transform][ref-transform]:
+
+```haskell
+>>> transform (0 >-> 2) 1
+2 
+
+>>> transform (1 >-> 3) 0
+1
+
+>>> transform (1 >-> 3) 1
+3
+```
+
+[ref-transform]: x
+
+The `stretch` and `delay` functions are defined in terms of `transform`:
+
+```haskell
+delay   x = transform (x >-> 1)
+stretch x = transform (0 >-> x)
+```
 
 ### The Transformable class
 
@@ -807,18 +827,20 @@ The laws for [HasPosition][ref-HasPosition] and @[HasPosition1] are not too exci
 
 ### Alignment
 
-The [Aligned][ref-Aligned] type adds position to anything with a duration. This is akin to alignment in computer graphis, hence the name. Alignment works by picking:
+The [Aligned][ref-Aligned] type adds position to anything with a duration. A value is aligned by by picking:
 
-- A time point to which the value is "anchored". By default this is time zero.
-- An alignment point in the duration of the value. By default this is the onset of the value.
+- A time point to which the value is "anchored". By default this is $0 :: Time$.
+- An alignment point in the duration of the value. By default this is the onset.
 
-Aligned is natural way of modelling pickups and upbeats. Consider this melody:
+Formally $Aligned$ is the free construction over $HasPosition$.
+
+Alignment is natural way of modelling pickups and upbeats. Consider this melody:
 
 ```haskell+music
-(seq [g_,a_,b_]|/2 |> seq [c, c, d, d]) |/ 4
+(seq [g_,a_,b_] |* 0.5 |> seq [c,c,d,d]) |* (1/4)
 ```
 
-With [Aligned][ref-Aligned] we can represent the fact that the first three notes are "upbeat" notes, and that the main stress of the value should fall on the fourth note:
+With [Aligned][ref-Aligned] we can represent the fact that the first three notes are "upbeat" notes, and that the main stress of the value should fall on the fourth note.
 
 ```haskell+music
 inspectableToMusic @[Aligned (Voice Pitch)] $
@@ -830,10 +852,10 @@ delay 2 -- TODO get rid of this, see wall of shame
 , av |* (2/3)
 ]
   where
-    av = ([g_,a_,b_]|/2) ||> [c, c, d, d]
+    av = ([g_,a_,b_] |* 0.5) >| [c, c, d, d]
 ```
 
-The `||>` operator is similar to the normal sequential composition operator `|>`, but aligns the result to the point of composition.
+The `>|` operator is similar to the normal sequential composition operator `|>`, but aligns the result to the point of composition.
 
 
 <!--
@@ -1703,14 +1725,14 @@ _A4
 
 
 ```haskell+music
-seq $ map (\x -> over pitches' (relative c $ spell x)  $ par [as,cs,ds,fs])
+seq $ map (\x -> over pitches (relative c $ spell x) $ par [as,cs,ds,fs])
 [ usingSharps
 , usingFlats
 , modally
 ]
 ```
 
-<!-- TODO simpler short cut for `over pitches' (relative c $ spell ...)`: -->
+<!-- TODO simpler short cut for `over pitches (relative c $ spell ...)`: -->
 
 ```haskell+music
 x </> over pitches' (relative c $ spell modally) x
@@ -1892,8 +1914,8 @@ Note that the `Ambitus` type constructor is parameterized on both the pitch and 
 ```haskell+music
 inspectableToMusic @[Ambitus Interval Pitch] $
 
-[                  Ambitus c g
-, map (const c) $ Ambitus @Interval @Pitch c g
+[               Ambitus c g
+, map (up _P8) $ Ambitus c g
 ]
 ```
 
@@ -2108,19 +2130,19 @@ This example shows the inversion of various chords. The inversion of a major tri
 
 ```haskell+music
 compress 2 $ inspectableToMusic @[Chord Pitch] $
-[                       chord c majorTriad
+[                                     chord c majorTriad
 , over pitches (relative c negateV) $ chord c majorTriad
 
-,                       chord c majorMinorSeventhChord
+,                                     chord c majorMinorSeventhChord
 , over pitches (relative c negateV) $ chord c majorMinorSeventhChord
 
-,                       chord c majorMajorSeventhChord
+,                                     chord c majorMajorSeventhChord
 , over pitches (relative c negateV) $ chord c majorMajorSeventhChord
 
-,                       chord c minorMinorSeventhChord
+,                                     chord c minorMinorSeventhChord
 , over pitches (relative c negateV) $ chord c minorMinorSeventhChord
 
-,                       chord c minorMajorSeventhChord
+,                                     chord c minorMajorSeventhChord
 , over pitches (relative c negateV) $ chord c minorMajorSeventhChord
 ]
 ```
@@ -2200,9 +2222,9 @@ To generate a closed voicing with doubled notes, use `closeIn`.
 
 ```haskell+music
 inspectableToMusic @[Voiced Chord Pitch] $
-[ Voicing.closeIn 4 $ chord c majorTriad
-, Voicing.invert (-2) $ Voicing.close $ chord g majorMinorSeventhChord
-, Voicing.closeIn 4 $ chord c majorTriad
+[                       Voicing.closeIn 4 $ chord c majorTriad
+, Voicing.invert (-2) $ Voicing.closeIn 4 $ chord g majorMinorSeventhChord
+,                       Voicing.closeIn 4 $ chord c majorTriad
 ]
 ```
 
@@ -2670,7 +2692,7 @@ TODO soloists *from* the orchestra/altri
 
 ## Extracting parts
 
-We can also *extract parts* from a score:
+We can also *extract parts* from a score. For example:
 
 ```haskell+music
 extractPart violas fullScore |> fullScore
@@ -2898,27 +2920,25 @@ TODO chord tremolo
 
 
 ```haskell+music
-set parts' violins $ seq
+set parts' violins $ (1/4) *| seq
   [ conSord c
   , senzaSord c
   ]
-  |/ 4
 ```
 
 ```haskell+music
-set parts' violins $ seq
+set parts' violins $ 1.5 *| seq
   [ conSord $ arco c
   , pizz c
   , pizz $ conSord $ pizz c
   , conSord $ colLegno $ pizz c
   ]
-  |* 1.5
 ```
 
 
+<!--
 ## Wind instruments
 
-<!--
 TODO special fingerings, multiphonics, bisbigliando
 
 TODO key sounds, percussive attacks ("pizz"), harmonics/whistle tones
@@ -2934,11 +2954,10 @@ Standard mutes are similarly to string mutes:
 The default is without mute.
 
 ```haskell+music
-set parts' trombones $ seq
-  [ conSord g_
-  , senzaSord g_
+set parts' trombones $ (1/2) *| seq [ 
+  conSord g,
+  senzaSord g
   ]
-  |* (3/2)
 ```
 
 <!-- TODO alternative mutes -->
@@ -3498,15 +3517,16 @@ Similarly, [toListOf][ref-toListOf] function can be used with an arbitrary trave
 >>> toListOf pitches (c <> d :: Score Pitch)
 [c,d] :: [Pitch]
 
->>> toListOf traverse [1,2]
-[1,2]
+>>> toListOf dynamics (c <> d :: Score { Pitch, Dynamics })
+[mf,mf] :: [Dynamics]
 ```
 
-[anyOf][ref-anyOf], [allOf][ref-allOf]
-
 ```haskell
-anyOf pitches' (> c) (b_ <> c :: Score Pitch)
-False
+>>> foldMap Max (c <> d :: Score Pitch)
+Max d
+
+foldMapOf dynamics Max (c <> d :: Score Pitch)
+Max mf
 ```
 
 [allOf][ref-allOf]
@@ -3524,6 +3544,11 @@ All traversables are also [functors][ref-Functor], supporting `map`:
 
 [over][ref-over]
 
+```haskell
+>>> mapOf pitches (up m3) (c <> d :: Score Pitch)
+
+>>> over pitches (up m3) (c <> d :: Score Pitch)
+```
 ### State and exceptions
 
 [State][ref-State]
@@ -3894,11 +3919,13 @@ rcat $ map renderAlignedVoice $ delay 1
 ```
 In other words, scores with events before time 0 should be treated as pickups and rendered in the same time signature as the first bar (starting at 0).
 
+# Appendices
 
-# Differences from Haskell
+## Differences from Standard Haskell
 
-- Record syntax
-- Extensions enabled by default: Dotted records, OverloadedStrings, MonadComprehensions
+Music Suite is based on GHCs version of Haskell2010, but changes some defaults.
+
+- Extensions enabled by default: `RecordDotSyntax`, `OverloadedStrings`,  `MonadComprehensions`
 - Extended defaulting to include `Music` type
 - Custom prelude: 
   - `Data.List` availible `List` etc.
@@ -3907,13 +3934,13 @@ In other words, scores with events before time 0 should be treated as pickups an
   - Numeric hierarchy: `Semigroup < Monoid < Group`. (VectorSpace/AffineSpace?).
   - `seq` and `par` hidden
 
-# Acknowledgements
+## Acknowledgements
 
-## Contributors
+### Contributors
 
 Music Suite was made possible by [all the contributors](https://github.com/music-suite/music-score/graphs/contributors).
 
-## Previous work
+## Related work
 
 Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [PWGL][pwgl], [nyquist][nyquist], [music21][music21], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
 
