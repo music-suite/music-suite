@@ -3287,9 +3287,9 @@ in times 4 $ melody
 
 # Traversals
 
-Traversals are a subtle and powerful concept. The basic ideas is simple: given some traversable "container" value, we have a way of *visiting its element in some order*. In some languages this concept is known as an [iterable container](https://www.cs.ox.ac.uk/jeremy.gibbons/publications/iterator.pdf).
+The idea behind a traversal is simple: given some traversable "container" value, we have a way of *visiting its element in some order*. Traversals generalize the concept of an [iterable container](https://www.cs.ox.ac.uk/jeremy.gibbons/publications/iterator.pdf).
 
-Traversals can be used to:
+Traversals are a subtle and powerful concept. They can be used to:
 
 - Extract a list of the elements
 - Find all elements matching a specific criteria
@@ -3297,7 +3297,6 @@ Traversals can be used to:
 - Change the structure by *updating* some or all of the elements
 
 Traversals are  to some restrictions. Notably, a traversal is not allowed to delete or insert new elements (though it can modify them).
- (TODO explain Traversal laws).
 
 The most common traversal is known as `traverse`, and is defined for all types that are `Traversable`. The type signature of `traverse` is highly general:
 
@@ -3377,8 +3376,6 @@ False
 
 
 ## Aspect traversals
-
-TODO We have already seen these : pitches, parts, dynamics, articulation, techniques.
 
 Music Suite defines traversals and lenses for pitch, dynamic, articulation, parts and playing technique. If you've been following the previous chapters, you might have seen examples of these already: expressions such as `pitches .~ c`, `dynamics .~ ff` or `over dynamics (+ 1)` make use of traversals to *update* all pitches, dynamics and so on, in a given piece of music.
 
