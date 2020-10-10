@@ -338,11 +338,30 @@ So far we have written our musical expressions in terms of pre-defined operators
 
 ### Named functions
 
-TODO
+The most common type of functions are named functions. They are introduced by an equality sign at the top-level of the file:
+
+```haskell
+addTen x = x + 10 
+```
+
+In the interpreter functions (like all other definitions) have to be prefixed with `let`:
+
+```haskell
+>>> let addTen x = x + 10 
+
+>>> addTen 1
+11
+```
+
 
 ### Anonymous functions
 
-TODO
+We can also define anonymous functions. They are introduced by a backslash:
+
+```haskell
+>>> (\x -> if x then 1 else 0) True
+1
+```
 
 ### Pattern matching
 
@@ -472,15 +491,14 @@ False
 
 ### Common type classes
 
-| Name | Meaning |
-|--|--|
-| Eq |  |
-| Ord | |
-| Hashable | | 
-| Monoid | |
-| Group | |
-| Num | |
-
+| Name | Meaning | Operations |
+|--|--|-- |
+| Eq | Can be compared for equality.  | `==`
+| Ord | Can be ordered. | `<`, `<=`
+| Hashable | Can be hashed. | `hash` 
+| Semigroup | Can be "appended". | `<>`
+| Monoid | A semigroup with a default element. | `empty`
+| Show | Can be converted to text. | `show`
 
 ### Laws
 
@@ -548,7 +566,7 @@ There are serveral free introductions to Music Theory and compositions online:
 - [School of Composition](https://www.schoolofcomposition.com)
 - [Music Theory on Youtube](https://www.schoolofcomposition.com/music-theory-composition-youtube-channels/)
 
-Music Suite is a dialect of the Haskell programming language. There are many excellent text aimed at new Haskell users:
+Music Suite is based on the Haskell programming language. There are many excellent text aimed at new Haskell users:
 - [Learn You A Haskell](http://learnyouahaskell.com/)
 - [What I Wish I Knew Learning Haskell](http://dev.stephendiehl.com/hask/)
 
@@ -606,8 +624,9 @@ The following table shows the relationship between the traditional note values a
 | Quadruplet | 3/4  | 4 |
 | Quintuplet | 4/5  | 5 |
 | Sextuplet | 4/6  | 6 |
+| Septuplet | 4/7 | 7 |
 
-*Dotted notes* similarly indicate (at least nominally) duration multipliers as per below.
+*Dotted notes* similarly indicate duration multipliers as per below.
 
 | Number of dots | Multiplier |
 |--|--|
@@ -615,6 +634,7 @@ The following table shows the relationship between the traditional note values a
 | 2 | 2-1/4  |
 | 3 | 2-1/8  |
 
+> *Note:* Dotted notes may be performed differently from these ratios. For example in jazz, the type of *swing*  depends on the piece, and is usually up to the performer.
 
 Music Suite also allows negative durations, which have no direct correspondance in traditional theory.
 
@@ -663,13 +683,13 @@ For those familiar with linear algebra or computer graphics: Because time is one
 -->
 
 ```haskell
->>> mempty :: Span
+>>> empty :: Span
 (0 <-> 1)
 
->>> negateV (0 <-> 2)
+>>> negate (0 <-> 2)
 (0 <-> 0.5)
 
->>> negateV (2 <-> 1)
+>>> negate (2 <-> 1)
 (0.5 >-> 1)
 
 >>> (0 >-> 3) <> (2 >-> 1)
@@ -1064,7 +1084,7 @@ Score is Traversable, HasPitches etc
 
 Special traversals such as mapWithSpan
 
-Filtering with MonadPlus
+Filtering
 
 ### Transforming scores
 Transformable, HasPosition
@@ -3156,7 +3176,7 @@ A fermata usually implies a unison cutoff of the prolonged notes, followed by a 
 ```
 -->
 
-## Barlines and repeats
+## Barlines
 
 There is generally no need to enter bars explicitly, as this information can be inferred from other meta-information. Generally, the following meta-events (in any part), will force a change of bar:
 
@@ -3177,6 +3197,10 @@ We can force a new bar lines using [barline][ref-barline].
 ```haskell+music
 compress 4 $ seq [c,d,e] |> barline DoubleBarline (seq [d,e,f])
 ```
+
+## Repeat signs
+
+(Not supported yet.)
 
 ## Clefs
 
