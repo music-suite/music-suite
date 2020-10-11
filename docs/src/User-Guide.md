@@ -13,7 +13,6 @@ We will introduce other programming and music theory concepts as we go along. If
 
 <!--
 TODO Docker or other "easy" install options
--->
 
 ### Online editor
 
@@ -27,9 +26,12 @@ TODO
 
 TODO
 
+
+
 ### Linux
 
 #### Installing from source
+-->
 
 We'll need Git and Nix (2.3.2 or later).
 
@@ -362,10 +364,6 @@ We can also define anonymous functions. They are introduced by a backslash:
 >>> (\x -> if x then 1 else 0) True
 1
 ```
-
-### Pattern matching
-
-TODO
 
 ### Function composition
 
@@ -1214,7 +1212,6 @@ map Just $ renderPattern (a <> b) (0 <-> 4)
   where
     a = parts' .~ mempty $ Pattern.rhythm [3,3,4,2,4] |/ 8
     b = parts' .~ flutes $ Pattern.rhythm [1] |/ 8
-    -- TODO use claves, maracas here
 ```
 
 We can compose patterns of different durations. The layers of the two pattern will be repeated independently.
@@ -2230,11 +2227,9 @@ inspectableToMusic @[Voiced Chord Pitch] $
 ,                       Voicing.closeIn 4 $ chord c majorTriad
 ]
 ```
-
-### Drop voicing
-
-TODO
-
+<!--
+TODO drop voicings
+-->
 
 ### Custom voicings
 
@@ -2444,7 +2439,7 @@ accent (seq [c,d,e,f,g]|/8)
 marcato (seq [c,d,e,f,g]|/8)
 ```
 
-One difference is that by default, accents are only applied to the first note in each phrase. We can also explicitly specify the last note, or all the notes:
+By default, accents are only applied to the first note in each phrase. We can also explicitly specify the last note, or all the notes:
 
 ```haskell+music
 accentLast (seq [c,d,e,f,g]|/8)
@@ -2454,9 +2449,9 @@ accentAll (seq [c,d,e,f,g]|/8)
 
 ### Tenuto and portato
 
-TODO
-
-```hask
+ Tenuto and portato indicate a combined emphasis and separation of notes. They can be added like this:
+ 
+```haskell
 tenuto
   </>
 portato (seq [c,d,e,f,g]|/8)
@@ -3574,12 +3569,13 @@ Music Suite defines traversals and lenses for pitch, dynamic, articulation, part
 TODO
 -->
 
+<!--
 ## Polymorphic updates
 
 TODO polymorphic update example (e.g. `Common.Pitch` vs `Hertz`)
 
 TODO explain the type families: GetPitch, SetPitch, GetArticulation, SetArticulation, etc.
-
+-->
 
 ## Phrase traversals
 
