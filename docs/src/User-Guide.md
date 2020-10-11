@@ -724,7 +724,7 @@ stretch x = transform (0 >-> x)
 
 The [Transformable][ref-Transformable] class represent all things that can be transformed. All instance satisfy the following laws:
 
-- `transform mempty x = x`
+- `transform empty x = x`
 	- The empty transformation does nothing.
 - `transform (s <> t) x = transform s (transform t) x`
 	- Applying a composition of two transformations is the same to applying them one at a time.
@@ -3937,7 +3937,8 @@ Music Suite is based on GHCs version of Haskell2010, but changes some defaults.
   - Included dependencies: `containers`, `text`, `Debug.Trace`
   - Aliases `fmap` as `map`, `mempty` as `empty` (`Monoid.empty`), etc.
   - Numeric hierarchy: `Semigroup < Monoid < Group`. (VectorSpace/AffineSpace?).
-  - `seq` and `par` hidden
+  - `seq` and `par` means different things
+  - No `IO` functions, except `putStrLn` and `print`
 
 ## Acknowledgements
 
