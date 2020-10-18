@@ -3331,7 +3331,7 @@ compress 4 $ seq [c,d,e] |> barline DoubleBarline (seq [d,e,f])
 
 ## Repeat signs
 
-(Not supported yet.)
+Repeat signs are not supported.
 
 ## Clefs
 
