@@ -758,14 +758,16 @@ stretch (-1) $ seq [c,d,e]
 retrograde $ seq [c,d,e]
 ```
 
-### Translation-invariant types
+### Translation-sensitive and translation-invariant types
 
 We can think of our time types as coming in two shapes:
 
-- Translation-invariant types such as `Duration` are "floating" without being anchored to specific start/stop time (though they still have a duration)
-- Translation-variant types such as `Span` have both a specific duration and a specific point in which they "occur" relative to ther events.
+- Translation-invariant types have a duration, but no position. They occur "outside of time". For example `Duration`, `Note` and `Voice` are translation-invariant types.
+- Translation-sensitive types have both a specific duration and a specific point in which they "occur". For example `Time`, `Span` and `Score` are translation-sensitive types.
 
-Note that this does *not* invalidate the laws.
+Note that this does not invalidate the `Transformable` laws.
+
+
 
 ### Spans as time intervals
 
@@ -972,19 +974,19 @@ All the pitch names resolve to `Just c`, `Just d` and so on, while the rest reso
 We can also create voices from rhythms (lists of durations);
 
 ```haskell
->>> Voice.rhythm [1,2,3] :: Voice ()
+>>> Voice.fromRhythm [1,2,3] :: Voice ()
 
->>> c <$ Voice.rhythm [1,2,3] :: Voice Pitch
+>>> c <$ Voice.fromRhythm [1,2,3] :: Voice Pitch
 ```
 
 Or from a list of notes:
 
 ```haskell
->>> view voice [c,d,e]
+>>> Voice.fromNotes [c,d,e]
 
 >>> [c,d,e]^.voice
 
->>> [(1,c)^.note,(2,d)^.note,(1,e)^.note]^.voice
+>>> [(1,c).note,(2,d).note,(1,e).note].voice
 ```
 
 TODO using comprehensions
@@ -997,10 +999,14 @@ inspectableToMusic @(Voice Pitch) $
 
 ### Traversing voices
 
-TODO
+Voices also support several [traversals](#Traversals):
 
 ```haskell
->>> over pitches (up m3) ([c,d,e] :: Voice Pitch) :: Voice Pitch
+>>> over pitches (up m3) ([c,d,e].voice)
+
+>>> over dynamics (compress 2)  ([c,level ff d,e].voice)
+
+>>> set parts flutes ([c,d,e].voice)
 ```
 
 ### Transforming voices
@@ -1009,15 +1015,29 @@ TODO Transformable, HasDuration
 
 Voices do not have a position, i.e. they are translation-invariant (if you want to anchor a voice at a specific point in time, see [`Aligned`](#alignment)).
 
+We can *rotate* the durations or elements of a voice:
 
-TODO rotation
+```haskell
+>>> Voice.rotateDurations  2 [c,d,e]
+[(1,c).note,(1,d).note,(1,e).note].voice
+```
 
-[rotateDurations][ref-rotateDurations]
-[rotateValues][ref-rotateValues]
+```haskell
+>>> Voice.rotateValues  2 ([c,d,e].voice) 
+[(1,d).note,(1,e).note,(1,c).note].voice
+```
 
-TODO fusion and stretch
+The [fuse][ref-fuse] function merges consecutive equal notes.
 
-[fuse][ref-fuse]
+```haskell
+>>> Voice.fuse  ([c,c,d].voice) 
+[(2,c).note,(1,d).note].voice
+
+>>> Voice.fuseRests  ([c,rest,rest,c]^.voice)
+[(1,Just c).note,(2,Nothing).note,(1,Just c).note]^.voice
+```
+
+
 [fuseBy][ref-fuseBy]
 [fuseRests][ref-fuseRests]
 
@@ -1192,7 +1212,28 @@ Transformable, HasPosition
 join
 
 ### Overlapping events
-TODO
+
+We can check a score for overlapping events:
+
+```haskell
+>>> hasOverlappingEvents ([c,d].score <> [e].score)
+True
+
+>>> hasOverlappingEvents ([c,d,e].score)
+False
+```
+
+The [simultaneous][ref-simultaneous] function *merges* events that share the same time span. It does not merge events that only overlap partially:
+
+```haskell
+>>> Score.simultaneous ([1, 1].score <> [1].score :: Score (Sum Integer))
+[(0 <-> 1,Sum 3).event].score
+
+>>> Score.simultaneous ([1].score <> [stretch 2 1].score :: Score (Sum Integer))
+[(0 <-> 1,Sum 1).event,(0 <-> 2,Sum 1).event].score
+```
+
+[ref-simultaneous]: x
 
 ### Representing rests
 An empty scores has no duration, but we can represent rests using `Score (Maybe a)`.
@@ -1339,7 +1380,7 @@ Humans percieve *audio* as amplitude (or loudness) over time. We can describe th
 
 Computer music systems such as [Max](https://cycling74.com/) or [SuperCollider](https://supercollider.github.io/) often a notion of *signals* or *generators* for the purpose of describing real-time audio or video. These signalstypically use fixed sample rates to obtain predictable  performance on standard hardware. While the signals in Music Suite can be used for audio synthesis, they are not primarily optimized for this behavior. 
 
-In signal processing terms, we can think of them as *control signals*. Up to performance and sampling, everything you already know about signals from acoustics or DSP should apply.
+In signal processing terms, we can think of them as *control signals*. 
 
 ### Basic signals
 
@@ -1353,7 +1394,7 @@ The simplest signal is a constant value. We can define this like this:
 
 ### Operators on signals
 
-We can lift any function to operate on the signal level using  comprehensions:
+We can *lift* any function to operate on the signal level using  comprehensions:
 
 ```haskell
 >>> let a = Signal.constant 1
@@ -1402,12 +1443,12 @@ TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" o
 Because signals are continously defined, it does not makes sense to talk about "when" a signal has changed or not. Sometimes we want to deal with *discrete* signals, which that change only at well-known points in time. For this purpose we have a different type, known as [StepSignal][ref-StepSignal]. A step signal always changes from one value to another, and then retains this value until the next change. Apart from this, most of what can be said about signals also applies to step signals.
 
 
-
+<!--
 IsPitch/Transposable
 Transformable
 Applicative
 Monad
-
+-->
 
 
 
