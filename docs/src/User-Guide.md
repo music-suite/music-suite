@@ -1325,15 +1325,19 @@ inspectableToMusic bachCMajChords
 
 The time structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points*. For example voices and scores contain notes and events with well defined *onset* and *offset* points. 
 
-In constrast [Signals][ref-Signals] represents a *time-varying values*, or functions of time. Signals are continuous. Informally this means that:
+In constrast [Signals][ref-Signals] represents a *time-varying values*, or functions of time. 
 
-- Signals are defined at *any point in time*.
-- Signals *can change* at any point in time.
+Signals are *continuous*. This means that this means that they are defined at *any point in time*. It also means that they *can change* at any point in time. No matter how closely we look at a singal, it is always possible to discover more change.
 
+Signals are commonly visualized as a graph with time on the horizontal axis. For example, here is a sine wave:
 
-### A note about performance
+![Sine wave.](https://www.pngkey.com/png/full/878-8786030_sine-wave-plot.png =300x)
 
-Computer music systems such as [Max](https://cycling74.com/) or [SuperCollider](https://supercollider.github.io/) often a notion of *signals* or *generators* for the purpose of describing real-time audio or video. These signals are highly optimized and typically use fixed sample rates to obtain predictable performance on standard hardware. While the signals in Music Suite can be used for audio synthesis, they are not primarily optimized for this behavior. 
+### Signals and audio
+
+Humans percieve *audio* as amplitude (or loudness) over time. We can describe this as $Signal _{Amplitude}$ for mono or $Signal_{Amplitude^2}$ for stereo.
+
+Computer music systems such as [Max](https://cycling74.com/) or [SuperCollider](https://supercollider.github.io/) often a notion of *signals* or *generators* for the purpose of describing real-time audio or video. These signalstypically use fixed sample rates to obtain predictable  performance on standard hardware. While the signals in Music Suite can be used for audio synthesis, they are not primarily optimized for this behavior. 
 
 In signal processing terms, we can think of them as *control signals*. Up to performance and sampling, everything you already know about signals from acoustics or DSP should apply.
 
