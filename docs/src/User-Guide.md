@@ -1,5 +1,4 @@
 
-
 # Tutorial
 
 In this chapter we will learn how to install Music Suite and use it to compose simple pieces.
@@ -423,9 +422,11 @@ Music Suite is a [strongly typed](https://en.wikipedia.org/wiki/Strong_and_weak_
 Here are some examples of expressions with their type. The `::` notations is pronounced "has type".
 
 ```haskell
-2        :: Integer
 True     :: Boolean
-(1, "2") :: (Integer, Text)
+2        :: Integer
+1/3      :: Rational
+2.5      :: Rational
+(1, "2") :: (Integer, String)
 [c,d,e]  :: [Pitch]
 ```
 
@@ -434,6 +435,13 @@ Types may be written out explicitly or [inferred](https://en.wikipedia.org/wiki/
 ```haskell
 "hi" + "there"
 ```
+
+### Numeric types
+### Lists
+### Tuples
+### Records
+### Maps
+### Custom types
 
 ## Immutability
 
@@ -493,9 +501,10 @@ False
 |--|--|-- |
 | Eq | Can be compared for equality.  | `==`
 | Ord | Can be ordered. | `<`, `<=`
-| Hashable | Can be hashed. | `hash` 
-| Semigroup | Can be "appended". | `<>`
-| Monoid | A semigroup with a default element. | `empty`
+| Semigroup | Can be added. | `<>`
+| Monoid | Can be added and has a default element. | `<>`, `empty`
+| Functor | Can be mapped over. | `map`
+| Traversable | Can be traversed. | `for`, `traverse`
 | Show | Can be converted to text. | `show`
 
 ### Laws
@@ -1122,6 +1131,16 @@ A *rest* is a score containing a single `Nothing` value.
 >>> c :: Score Pitch
 ```
 
+It is also possible to construct scores from other types
+
+```haskell
+>>> Score.fromVoice [c,d,e]
+
+>>> Score.fromNote [c,d,e]
+
+>>> Score.fromSpan c (1 <-> 3)
+```
+
 `Score` is a monoid. Composing two scores interleaves all of their events in parallel:
 
 ```haskell
@@ -1309,9 +1328,8 @@ The time structures we have been dealing with so far are all discrete, capturing
 In constrast [Signals][ref-Signals] represents a *time-varying values*, or functions of time. Signals are continuous. Informally this means that:
 
 - Signals are defined at *any point in time*.
-- It is not (in general) possible to known when a signal has changed.
+- Signals *can change* at any point in time.
 
-While this can be extremely useful, we sometimes want to deal with *discrete* signals, which that change only at specific points in time locations. For this purpose we have a different type, known as [StepSignal][ref-StepSignal]. Most of what can be said about signals also applies to step signals.
 
 ### A note about performance
 
@@ -1350,6 +1368,13 @@ Common operators like `+` and `*` are predefined to work on signals too, so the 
 >>> a * b :: Signal Double
 ```
 
+Signals are functors, so we can use `map` on them. They are not traversable however.
+
+```haskell
+>>> map (+ 1) (Signal.constant 1) ! t
+2
+```
+
 
 ### Switching
 
@@ -1361,21 +1386,18 @@ Common operators like `+` and `*` are predefined to work on signals too, so the 
 >>> Signal.switch 2 a b
 ```
 
-TODO use a StepSignal or Score to switch
+
 
 <!--
 TODO viewing a score as a Behavior (concatB). Useful for "vertical slice view" of harmony, as in https://web.mit.edu/music21/doc/usersGuide/usersGuide_09_chordify.html
 -->
 
 
-### Transforming Behaviors and Reactives
+### Step signals
 
-Signals are functors, so we can use `map` on them. They are not traversable however.
+Because signals are continously defined, it does not makes sense to talk about "when" a signal has changed or not. Sometimes we want to deal with *discrete* signals, which that change only at well-known points in time. For this purpose we have a different type, known as [StepSignal][ref-StepSignal]. A step signal always changes from one value to another, and then retains this value until the next change. Apart from this, most of what can be said about signals also applies to step signals.
 
-```haskell
->>> map (+ 1) (Signal.constant 1) ! t
-2
-```
+
 
 IsPitch/Transposable
 Transformable
