@@ -989,6 +989,7 @@ Or from a list of notes:
 >>> [(1,c).note,(2,d).note,(1,e).note].voice
 ```
 
+<!--
 TODO using comprehensions
 
 ```haskell+music
@@ -996,6 +997,7 @@ inspectableToMusic @(Voice Pitch) $
 
 [cs, bb, a |* 2] |/ 4
 ```
+-->
 
 ### Traversing voices
 
@@ -1011,9 +1013,26 @@ Voices also support several [traversals](#Traversals):
 
 ### Transforming voices
 
-TODO Transformable, HasDuration
+The duration of a voice is the sum of its notes:
 
-Voices do not have a position, i.e. they are translation-invariant (if you want to anchor a voice at a specific point in time, see [`Aligned`](#alignment)).
+```haskell
+>>> [c,d,e].voice.duration
+3
+
+>>> .duration (Voice.fromNotes [c,d,e])
+3
+```
+
+Stretching a voice stretches all of its notes:
+
+```haskell
+>>> stretch 2 [c,d,e |* 2].voice
+[(2,c).note,(2,d).note,(4,e).note].voice
+```
+
+Voices are translation-invariant. To anchor a voice at a specific point in time, see [`Aligned`](#alignment)).
+
+#### Rotation
 
 We can *rotate* the durations or elements of a voice:
 
@@ -1026,6 +1045,8 @@ We can *rotate* the durations or elements of a voice:
 >>> Voice.rotateValues  2 ([c,d,e].voice) 
 [(1,d).note,(1,e).note,(1,c).note].voice
 ```
+
+#### Fusion
 
 The [fuse][ref-fuse] function merges consecutive equal notes.
 
@@ -1041,13 +1062,17 @@ The [fuse][ref-fuse] function merges consecutive equal notes.
 [fuseBy][ref-fuseBy]
 [fuseRests][ref-fuseRests]
 
+<!--
 TODO take/drop
 
 TODO filtering (MonadPlus!)
+-->
 
 ### Combining voices
 
+<!--
 TODO Monoid, Monad, Applicative, MonadZip + guard
+-->
 
 ```haskell+music
 inspectableToMusic @(Voice Pitch) $
@@ -1167,10 +1192,11 @@ It is also possible to construct scores from other types
 >>> c <> g :: Score Pitch
 ```
 
-
+<!--
 TODO Monad comprehensions
 
 TODO From a list of events
+-->
 
 ### Traversing scores
 
@@ -1201,6 +1227,8 @@ d
 e
 ```
 
+<!--
+TODO
 Special traversals such as mapWithSpan
 
 Filtering
@@ -1210,6 +1238,7 @@ Transformable, HasPosition
 
 ### Nested scores
 join
+-->
 
 ### Overlapping events
 
@@ -1246,11 +1275,11 @@ seq [c,rest,d] |/ 4
 
 `Score` is an extremely flexible type. Often it is useful to work with more restrictive structures, such as `Voice`, `Note`, `Pattern`, or their `Aligned` versions.
 
+<!--
 TODO parsing scores into restricted types
 
 TODO rendering restricted scores as type
-
-
+-->
 
 
 ## Patterns
@@ -3920,7 +3949,7 @@ seq [seq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 
 # Wall of Shame
 
-TODO this is not documentation, move to some other location. Listing all "bad rendering" examplesas a visual issue tracker
+This is a list "bad rendering" examples. It's not really documentation so we should probably move it somewher else. For now they are listed here, as the documentation generator give us a reasonably good "visual issue tracker".
 
 ### Quantization
 
