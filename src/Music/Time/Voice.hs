@@ -8,8 +8,7 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
-  -fno-warn-deprecations
-  -fno-warn-unused-matches #-}
+  -fno-warn-deprecations #-}
 
 module Music.Time.Voice
   ( -- * Voice type
@@ -728,9 +727,9 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy me
   where
     -- norm = fuseRests x
     merge Nothing Nothing = error "Voice normalized, so consecutive rests are impossible"
-    merge (Just x) Nothing = True
-    merge Nothing (Just x) = True
-    merge (Just x) (Just y) = False
+    merge (Just _) Nothing = True
+    merge Nothing (Just _) = True
+    merge (Just _) (Just _) = False
     hasOnlyRests = all isNothing $ toListOf traverse x -- norm
 
 -- | Decorate all notes in a voice with their context, i.e. previous and following value
@@ -745,7 +744,7 @@ durationsV = lens getDurs (flip setDurs)
     getDurs :: Voice a -> [Duration]
     getDurs = map fst . view pairs
     setDurs :: [Duration] -> Voice a -> Voice a
-    setDurs ds as = zipVoiceWith' (\a b_ -> a) (\a_ b -> b) (mconcat $ map durToVoice ds) as
+    setDurs ds as = zipVoiceWith' (\a _b -> a) (\_a b -> b) (mconcat $ map durToVoice ds) as
     durToVoice d = stretch d $ pure ()
 
 -- Warning: Breaks the lens laws, unless the length of the list is unmodified.
