@@ -1,3 +1,12 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-top-binds
+  -fno-warn-unused-imports #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -7,11 +16,12 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Music.Score.Import.Sibelius
-  ( IsSibelius (..),
+  ( IsSibelius,
     fromSibelius,
     readSibelius,
     readSibeliusMaybe,
     readSibeliusEither,
+    readSibeliusEither',
   )
 where
 
@@ -67,6 +77,7 @@ getSibeliusTimeSignatures x =
 convertTimeSignature :: SibeliusBarObject -> TimeSignature
 convertTimeSignature (SibeliusBarObjectTimeSignature (SibeliusTimeSignature voice position [m, n] isCommon isAllaBReve)) =
   (fromIntegral m / fromIntegral n)
+convertTimeSignature _ = error "convertTimeSignature: unexpected input"
 
 -- |
 -- Convert a score from a Sibelius representation.
@@ -345,8 +356,9 @@ fromSibeliusBar d (SibeliusBar elems) =
   fmap Just (ppar $ fmap fromSibeliusChordElem chords) <> stretch d rest
   where
     chords = filter isChord elems
-    tuplets = filter isTuplet elems -- TODO use these
-    floating = filter isFloating elems
+    -- TODO use these
+    -- tuplets = filter isTuplet elems
+    -- floating = filter isFloating elems
 
 fromSibeliusChordElem :: IsSibelius a => SibeliusBarObject -> Score a
 fromSibeliusChordElem = go
@@ -394,7 +406,7 @@ fromSibeliusChord (SibeliusChord pos dur voice ar strem dtrem acci appo notes) =
 -- setArt a               = error $ "fromSibeliusChord: Unsupported articulation " ++ show a
 -- TODO tremolo and appogiatura/acciaccatura support
 
-fromSibeliusNote :: (IsSibelius a, Tiable a) => SibeliusNote -> Score a
+fromSibeliusNote :: (IsSibelius a) => SibeliusNote -> Score a
 fromSibeliusNote (SibeliusNote pitch diatonicPitch acc tied style) =
   (if tied then fmap beginTie else id) $
     fromPitch actualPitch
@@ -426,4 +438,5 @@ type IsSibelius a =
 every :: (a -> b -> b) -> [a] -> b -> b
 every f = flip (foldr f)
 
+kTicksPerWholeNote :: Duration
 kTicksPerWholeNote = 1024 -- Always in Sibelius
