@@ -6,7 +6,6 @@
   -Wincomplete-uni-patterns
   -Werror
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
 
 module Music.Time.Types
@@ -715,9 +714,9 @@ a `isBefore` b = (_onsetS a `max` _offsetS a) <= (_onsetS b `min` _offsetS b)
 
 -- TODO resolve this so we can use actual onset/offset etc in the above definitions
 -- Same as (onset, offset), defined here for bootstrapping reasons
-_onsetS (view onsetAndOffset -> (t1, t2)) = t1
+_onsetS (view onsetAndOffset -> (t1, _t2)) = t1
 
-_offsetS (view onsetAndOffset -> (t1, t2)) = t2
+_offsetS (view onsetAndOffset -> (_t1, t2)) = t2
 
 _midpointS s = _onsetS s .+^ _durationS s / 2
 
