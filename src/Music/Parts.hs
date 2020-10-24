@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-} -- TODO get rid of this!
 {-# LANGUAGE FlexibleContexts #-}
 
 -- | Representation of musical instruments, parts and playing techniques.
@@ -120,8 +122,6 @@ module Music.Parts
   )
 where
 
-import Control.Lens (Lens, Lens', (^.), toListOf)
-import Data.Maybe
 import Music.Parts.Division
 import Music.Parts.Group
 import Music.Parts.Instrument

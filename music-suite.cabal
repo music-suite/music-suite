@@ -226,7 +226,7 @@ library
     -Wredundant-constraints
     -Wno-unused-top-binds
     -Wno-name-shadowing
-    -- TODO: -Werror
+    -Werror
 
 test-suite "music-suite-test-umts"
     build-depends:      base,

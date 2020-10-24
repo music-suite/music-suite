@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-dodgy-exports #-}
 -------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
@@ -113,7 +114,6 @@ import Data.Music.MusicXml.Dynamics
 import Data.Music.MusicXml.Pitch
 import Data.Music.MusicXml.Read
 import Data.Music.MusicXml.Score
-import Data.Music.MusicXml.Time
 import Data.Music.MusicXml.Write
 import Text.XML.Light hiding (Line)
 

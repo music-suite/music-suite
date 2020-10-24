@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-unused-matches #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -52,8 +53,8 @@ module Data.Music.Lilypond
     -- ** Pitch
     Pitch (..),
     PitchName (..),
-    Accidental (..),
-    Octaves (..),
+    Accidental ,
+    Octaves ,
 
     -- * Constructing Lilypond expresions
 
@@ -140,7 +141,8 @@ module Data.Music.Lilypond
   )
 where
 
-import Control.Arrow ((***), (<<<), first, second)
+import Control.Arrow ((***), (<<<))
+import Data.Bifunctor (second)
 import Data.Default
 -- import System.Process -- TODO debug
 
@@ -148,7 +150,6 @@ import Data.Music.Lilypond.Dynamics
 import Data.Music.Lilypond.Pitch
 import Data.Music.Lilypond.Value
 import Data.Ratio
-import Data.Semigroup
 import Data.String
 import Data.VectorSpace
 import Music.Pitch.Literal
@@ -673,6 +674,7 @@ addPost a = foldMusic' (addPost' a) id (addPost a)
     addPost' a (Rest d es) = Rest d (es ++ [a])
     addPost' a (Note n d es) = Note n d (es ++ [a])
     addPost' a (Chord ns d es) = Chord ns d (es ++ [a])
+    addPost' _ _ = error "addPost: Unexpected"
 
 addText :: String -> Music -> Music
 addText s = addPost (Text def s)
@@ -887,14 +889,14 @@ separateDots :: Duration -> (Duration, Int)
 separateDots = separateDots' [2 / 3, 6 / 7, 14 / 15, 30 / 31, 62 / 63]
 
 separateDots' :: [Duration] -> Duration -> (Duration, Int)
-separateDots' [] nv = error "separateDots: Strange"
+separateDots' [] _nv = error "separateDots: Strange"
 separateDots' (div : divs) nv
-  | isDivisibleBy 2 nv = (nv, 0)
+  | isDivisibleBy @Integer 2 nv = (nv, 0)
   | otherwise = (nv', dots' + 1)
   where
     (nv', dots') = separateDots' divs (nv * div)
 
-logBaseR :: forall a. (RealFloat a, Floating a) => Rational -> Rational -> a
+logBaseR :: forall a. (RealFloat a) => Rational -> Rational -> a
 logBaseR k n
   | isInfinite (fromRational n :: a) = logBaseR k (n / k) + 1
 logBaseR k n
@@ -902,11 +904,12 @@ logBaseR k n
 logBaseR k n = logBase (fromRational k) (fromRational n)
 
 isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
-isDivisibleBy n = (equalTo 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
+isDivisibleBy n = (equalTo 0.0) . snd . properFraction @Double @Integer . logBaseR (toRational n) . toRational
 
 equalTo :: Eq a => a -> a -> Bool
 equalTo = (==)
 
 infixl 9 <=>
 
+(<=>) :: Printer -> Printer -> Printer
 a <=> b = sep [a, b]

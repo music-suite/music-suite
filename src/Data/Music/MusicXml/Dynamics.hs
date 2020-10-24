@@ -61,3 +61,4 @@ instance IsDynamics Dynamics where
     4.5 -> FFFF
     5.5 -> FFFFF
     6.5 -> FFFFFF
+    _ -> error "fromDynamics: Unexpected value"

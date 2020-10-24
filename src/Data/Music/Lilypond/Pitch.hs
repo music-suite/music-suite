@@ -16,8 +16,8 @@
 module Data.Music.Lilypond.Pitch
   ( Pitch (..),
     PitchName (..),
-    Accidental (..),
-    Octaves (..),
+    Accidental,
+    Octaves ,
     Mode (..),
     OctaveCheck (..),
   )
@@ -48,10 +48,12 @@ instance Pretty Pitch where
         | n < 0 = concat $ replicate (negate n) "es"
         | n == 0 = ""
         | n > 0 = concat $ replicate (n) "is"
+        | otherwise = error "Impossible"
       oct n
         | n < 0 = concat $ replicate (negate n) ","
         | n == 0 = ""
         | n > 0 = concat $ replicate n "'"
+        | otherwise = error "Impossible"
 
 instance IsPitch Pitch where
   fromPitch p = let i = p .-. c in Pitch (toEnum $ fromEnum $ name p, fromIntegral $ accidental p, fromIntegral $ octaves i)

@@ -15,18 +15,11 @@
 module Music.Dynamics
   ( module Music.Dynamics.Absolute,
     module Music.Dynamics.Common,
-    module Music.Dynamics.Balance,
     module Music.Dynamics.Literal,
   )
 where
 
-import Control.Applicative
-import Control.Monad
-import Data.Either
-import Data.Maybe
-import Data.Semigroup
 import Music.Dynamics.Absolute
-import Music.Dynamics.Balance
 import Music.Dynamics.Common
 import Music.Dynamics.Literal
 

@@ -21,7 +21,6 @@ module Data.Music.Lilypond.Value
 where
 
 import Data.String
-import Music.Pitch.Literal
 import Text.Pretty hiding (Mode)
 
 -- |
@@ -68,6 +67,7 @@ instance Fractional Value where
 
 instance Show Value where
   show (Value a) = show a
+  show (Literal x) = x
 
 instance Eq Value where
   a == b = show a == show b

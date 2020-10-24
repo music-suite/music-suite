@@ -1,6 +1,5 @@
 module Data.Functor.Rep.Lens where
 
-import Control.Lens hiding (index)
 
 -- $dataFunctorRepLens
 -- Provides access to the definition in "Data.Functor.Rep" in terms of "Control.Lens".
