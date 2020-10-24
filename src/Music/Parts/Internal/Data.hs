@@ -1,12 +1,8 @@
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-orphans
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+  -fno-warn-unused-imports
+  -fno-warn-orphans
+  -fno-warn-redundant-constraints #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
