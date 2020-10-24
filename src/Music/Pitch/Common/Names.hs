@@ -3,8 +3,6 @@
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
 -- | Common pitch names in various (human) languages.
@@ -19,8 +17,7 @@ module Music.Pitch.Common.Names
 where
 
 import qualified Data.List
-import Data.Maybe
-import Music.Pitch.Common.Interval
+import Data.Maybe (fromMaybe, listToMaybe)
 import Music.Pitch.Common.Pitch
 import Music.Pitch.Literal
 
