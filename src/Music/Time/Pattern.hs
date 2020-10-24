@@ -36,7 +36,6 @@
   -fno-warn-deprecations
   -fno-warn-unused-imports
   -fno-warn-unused-matches #-}
-{-# OPTIONS_GHC -fno-warn-unused-top-binds #-} -- TODO FIXME
 module Music.Time.Pattern
   ( Pattern,
     newPattern,
@@ -44,12 +43,18 @@ module Music.Time.Pattern
     renderPattern,
     renderPatternsRel,
     renderPatternsAbs,
+
+  -- TODO hide?
+    renderLunga,
+    getCycles,
+    splitAt,
   )
 where
 
 import Prelude hiding (splitAt)
 import Control.Lens (Rewrapped, Wrapped (..), (^.), _Wrapped, from, iso, over, view)
 import Control.Monad (join)
+import Control.Monad.Abort
 import Data.AffineSpace
 import Data.VectorSpace
 import Data.Traversable (for)
@@ -86,43 +91,7 @@ divModDur x v = (n, r)
 {-# INLINE divModDur #-}
 
 
--- TODO move Abort elsewhere
 
--- |
--- Abort is like 'State' but allow short-circuiting the computation.
-data Abort s a = Abort { runAbort :: s -> (Maybe a, s) }
-  deriving (Functor)
-  deriving (Applicative, Monad, MonadState s) via
-    (ExceptT () (State s) `As1` Abort s)
-
--- | Abort the computation. The current state will be retained, but no
--- result will be returned.
-abort :: Abort s a
-abort = Abort $ \s -> (Nothing, s)
-
-quit :: a -> Abort s a
-quit x = Abort $ \s -> (Just x, s)
-
-instance Inject (ExceptT () (State s) a) (Abort s a) where
-  inj (ExceptT f) = Abort $ \s -> first eitherToMaybe $ runState f s
-instance Project (ExceptT () (State s) a) (Abort s a) where
-  prj (Abort f) = ExceptT $ StateT $ fmap (pure . first maybeToEither) f
-instance Isomorphic (ExceptT () (State s) a) (Abort s a)
-
-eitherToMaybe :: Either a b -> Maybe b
-eitherToMaybe (Left _) = Nothing
-eitherToMaybe (Right x) = Just x
-
-maybeToEither :: Maybe a -> Either () a
-maybeToEither Nothing = Left ()
-maybeToEither (Just x) = Right x
-
-t :: Abort Int ()
-t = do
-  !x <- get
-  when (x > 10) abort
-  put $ x + 1
-  t
 
 takeM, dropM :: Duration -> Voice a -> Voice a
 takeM d = fst . splitAt d
@@ -187,25 +156,7 @@ splitAt d xs = split $ getSplitPoint d xs
       = ( splitNotesAt notesEaten remainingDur xs
         )
 
--- TODO proper test
-testSplitAt :: Bool
-testSplitAt = all id
-  [ splitAt (-1) ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
-    == ([]^.voice, [(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
-
-  , splitAt 0 ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
-    == ([]^.voice, [(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
-
-  , splitAt 0.5 ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
-    == ([((0.5),'a')^.note]^.voice, [((0.5),'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
-
-  , splitAt 2.5 ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
-    == ([(1,'a')^.note,((1.5),'b')^.note]^.voice, [((0.5),'b')^.note,(1,'c')^.note]^.voice)
-
-  , splitAt 5 ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
-    == ([(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice,[]^.voice)
-  ]
-
+--
 modDur :: Duration -> Duration -> Duration
 modDur a b = snd $ a `divModDur` b
 
@@ -219,72 +170,6 @@ getCycles ts s
   where
     phase = (view offset s .-. view offset ts) `modDur` _duration ts
     (cycles, rem) = (_duration s - phase) `divModDur` _duration ts
-
--- TODO proper test
-testGetCycles :: Bool
-testGetCycles = all id
-  -- At least one cycle
-  [ getCycles (0 <-> 2) (0 <-> 4)         == Right (0, 2, 0)
-  , getCycles (0 <-> 2) (1 <-> 4)         == Right (1, 1, 0)
-  , getCycles (0 <-> 2) ((-1) <-> 5)      == Right (1, 2, 1)
-  , getCycles (0 <-> 2) ((-9) <-> (-2.5)) == Right (1, 2, 1.5)
-  , getCycles (0 <-> 2) (2 <-> 4)         == Right (0, 1, 0)
-
-  -- No full cycles, s properly enclosed by a cycle
-  , getCycles (0 <-> 2) (0.5 <-> 1.5)     == Left  (0.5)
-  , getCycles (0 <-> 2) (0.6 <-> 1.6)     == Left  (0.6)
-  , getCycles (0 <-> 2) ((-0.2) <-> (-0.1)) == Left (1.8)
-
-  -- No full cycles, s NOT properly enclosed by a cycle
-  , getCycles (1 <-> 3) (1 <-> 2)         == Right (0, 0, 1)
-  , getCycles (1 <-> 3) (2 <-> 3)         == Right (1, 0, 0)
-  , getCycles (1 <-> 3) (0 <-> 1)         == Right (1, 0, 0)
-  , getCycles (1 <-> 3) ((-1) <-> 0)      == Right (0, 0, 1)
-  ]
-
-testC :: Span -> Aligned (Voice a) -> Either Duration (Duration, Integer, Duration)
-testC s l = getCycles (_era1 l) s
-
-testRenderLungaNEW :: Bool
-testRenderLungaNEW = all id
-  [ renderLunga (0 <-> 2) aba
-  == [(0 <-> 1,'a')^.event,(1 <-> 2,'b')^.event]^.score
-
-  , renderLunga (0 <-> 4) aba
-  == [(0 <-> 1,'a')^.event,(1 <-> 3,'b')^.event,(3 <-> 4,'c')^.event]^.score
-
-  , renderLunga (0 <-> 1) aba
-  == [(0 <-> 1,'a')^.event]^.score
-
-  , renderLunga ((-1)<->1) aba
-  == [(-1 <-> 0,'c')^.event,(0 <-> 1,'a')^.event]^.score
-
-  , renderLunga ((0)<->1) aba1
-  == [(0 <-> 1,'c')^.event]^.score
-
-  , renderLunga ((0.5)<->1.5) (aligned 0 0 $ stretch 2 $ pure 'c')
-  == [(0.5 <-> 1.5,'c')^.event]^.score
-
-  , renderLunga (3<->8) aba
-  == [(3 <-> 4,'c')^.event,(4 <-> 5,'a')^.event,(5 <-> 7,'b')^.event,(7 <-> 8,'c')^.event]^.score
-
-  , renderLunga (0<->2) (aligned 0 0 c :: Aligned (Voice Int))
-  == [(0 <-> 1,0)^.event,(1 <-> 2,0)^.event]^.score
-
-  , renderLunga (0<->2) (stretch 2 $ aligned 0 0 c :: Aligned (Voice Int))
-  == [(0 <-> 2,0)^.event]^.score
-
-  , renderLunga (0<->2) (delay 0.3 $ stretch 0.9 $ aligned 0 0 c :: Aligned (Voice Int))
-  == [(0 <-> (3/10),0)^.event,((3/10) <-> (6/5),0)^.event,((6/5) <-> 2,0)^.event]^.score
-
-  , renderLunga ((-4) <-> 0) aba
-  == [((-4) <-> (-3),'a')^.event,((-3) <-> (-1),'b')^.event,((-1) <-> 0,'c')^.event]^.score
-  ]
-  where
-    aba =
-      (aligned 0 0 $ [(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
-    aba1 =
-      (aligned 1 0 $ [(1,'a')^.note,(2,'b')^.note,(1,'c')^.note]^.voice)
 
 
 newtype Lunga a = Lunga { getLunga :: [Aligned a] }
@@ -313,7 +198,7 @@ renderLunga s l = case getCycles (_era1 l) s of
 -- List of repeated voices
 -- TODO is this isomorphic to Tidal's pattern (i.e. Span -> Score a)
 newtype Pattern a
-  = Pattern {getPattern :: [Aligned (Voice a)]}
+  = Pattern {_getPattern :: [Aligned (Voice a)]}
   deriving (Semigroup, Monoid, Transformable, Functor, Foldable, Traversable)
 
 instance (IsPitch a) => IsPitch (Pattern a) where

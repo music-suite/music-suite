@@ -131,6 +131,7 @@ library
                         Data.Functor.Context
                         Data.Functor.Rep.Lens
                         Data.Semigroup.Instances
+                        Control.Monad.Abort
                         Control.Monad.Compose
                         Music.Time
                         Music.Time.Types
@@ -308,6 +309,22 @@ test-suite "music-suite-test-xml-parser"
                         filepath
     type:               exitcode-stdio-1.0
     main-is:            MusicXmlParser.hs
+    hs-source-dirs:     test
+    default-language:   Haskell2010
+
+test-suite "music-suite-patterns"
+    build-depends:      base,
+                        bytestring,
+                        text,
+                        music-suite,
+                        tasty,
+                        tasty-hunit,
+                        directory,
+                        filepath,
+                        lens,
+                        music-suite
+    type:               exitcode-stdio-1.0
+    main-is:            Patterns.hs
     hs-source-dirs:     test
     default-language:   Haskell2010
 
