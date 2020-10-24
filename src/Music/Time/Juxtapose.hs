@@ -5,8 +5,7 @@
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports #-}
+  -fno-warn-name-shadowing #-}
 
 module Music.Time.Juxtapose
   ( module Music.Time.Split,
@@ -38,12 +37,6 @@ module Music.Time.Juxtapose
   )
 where
 
-import Control.Lens hiding ((<|), (|>))
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Semigroup
-import Data.Stream.Infinite hiding (group)
-import Data.VectorSpace
 import GHC.Generics (Generic)
 import Music.Time.Split
 
