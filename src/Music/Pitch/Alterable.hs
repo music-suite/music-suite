@@ -93,14 +93,6 @@ instance Alterable a => Alterable (b, a) where
 
 deriving instance (Alterable a) => Alterable (Couple b a)
 
-{-
-sharpened :: Alterable a => Iso' a a
-sharpened = iso sharpen flatten
-
-flattened :: Alterable a => Iso' a a
-flattened = iso flatten sharpen
--}
-
 alter :: Alterable a => Int -> a -> a
 alter n x
   | n < 0 = iterate flatten x !! (abs n)

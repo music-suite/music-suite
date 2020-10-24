@@ -120,57 +120,36 @@ positionPitch (Clef (s, o, l)) x = fmap (upDiatonic relativePosition) referenceP
 upDiatonic :: Number -> Pitch -> Pitch
 upDiatonic = upDiatonicP c . fromIntegral -- TODO Why c?
 
-{-
-TODO
-
-IsPitch instance?
-  What to do with the non-standard pitches, i.e.
-  we know what (g :: ClefSymbol) is, but what about (cs :: ClefSymbol)?
-  I think 1) error or 2) default to g.
-
-Map this to Pitch.Common
-  Do we make this module 1) depend on Pitch.Common or 2) the other way around?
-  If 1), do we need to separate G/C/F in ClefSymbol, maybe just put a single constructor for common pitch.
-  In that case, maybe a function isStandardClefPitch (i.e. c/f/g) would be appropriate.
--}
-
 -- | Standard treble clef.
 trebleClef :: Clef
+trebleClef = Clef (GClef, -1 :: ClefOctave, -1 :: ClefLine)
 
 -- |  Standard bass clef.
 bassClef :: Clef
+bassClef = Clef (FClef, 1 :: ClefOctave, 1 :: ClefLine)
 
 -- |  Standard soprano clef.
 sopranoClef :: Clef
+sopranoClef = Clef (CClef, 0 :: ClefOctave, -2 :: ClefLine)
 
 -- |  Standard mezzo soprano clef.
 mezzoSopranoClef :: Clef
+mezzoSopranoClef = Clef (CClef, 0 :: ClefOctave, -1 :: ClefLine)
 
 -- |  Standard alto clef.
 altoClef :: Clef
+altoClef = Clef (CClef, 0 :: ClefOctave, 0 :: ClefLine)
 
 -- |  Standard tenor clef.
 tenorClef :: Clef
+tenorClef = Clef (CClef, 0 :: ClefOctave, 1 :: ClefLine)
 
 -- |  Standard baritone clef.
 baritoneClef :: Clef
-
-percussionClef :: Clef
-
-trebleClef = Clef (GClef, -1 :: ClefOctave, -1 :: ClefLine)
-
-bassClef = Clef (FClef, 1 :: ClefOctave, 1 :: ClefLine)
-
-sopranoClef = Clef (CClef, 0 :: ClefOctave, -2 :: ClefLine)
-
-mezzoSopranoClef = Clef (CClef, 0 :: ClefOctave, -1 :: ClefLine)
-
-altoClef = Clef (CClef, 0 :: ClefOctave, 0 :: ClefLine)
-
-tenorClef = Clef (CClef, 0 :: ClefOctave, 1 :: ClefLine)
-
 baritoneClef = Clef (CClef, 0 :: ClefOctave, 2 :: ClefLine)
 
+-- |  Standard percussion clef.
+percussionClef :: Clef
 percussionClef = Clef (PercClef, 0 :: ClefOctave, 0 :: ClefLine)
 
 -- | Is this a clef used in contemporary notation?
