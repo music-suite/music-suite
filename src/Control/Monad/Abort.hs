@@ -35,8 +35,10 @@ quit x = Abort $ \s -> (Just x, s)
 
 instance Inject (ExceptT () (State s) a) (Abort s a) where
   inj (ExceptT f) = Abort $ \s -> first eitherToMaybe $ runState f s
+
 instance Project (ExceptT () (State s) a) (Abort s a) where
   prj (Abort f) = ExceptT $ StateT $ fmap (pure . first maybeToEither) f
+
 instance Isomorphic (ExceptT () (State s) a) (Abort s a)
 
 eitherToMaybe :: Either a b -> Maybe b
