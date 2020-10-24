@@ -7,6 +7,15 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_HADDOCK hide #-}
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-redundant-constraints
+  -fno-warn-unused-imports #-}
 
 -------------------------------------------------------------------------------------
 
@@ -35,6 +44,11 @@ module Music.Score.Internal.Quantize
     -- * Utility
     drawRhythm,
     testQuantize,
+
+    -- * Internals
+    splitTupletIfLongEnough,
+    realize,
+    match,
   )
 where
 
@@ -126,7 +140,7 @@ rhythmToTree = go
     go (Tuplet n r) = Node ("*^ " ++ showD n) [rhythmToTree r]
     showD = (\x -> show (numerator x) ++ "/" ++ show (denominator x)) . toRational
 
-drawRhythm :: Show a => Rhythm a -> String
+drawRhythm :: Rhythm a -> String
 drawRhythm = drawTree . rhythmToTree
 
 mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
@@ -139,13 +153,14 @@ mapWithDur f = go
     go (Tuplet m r) = Tuplet m (mapWithDur f r)
 
 instance Semigroup (Rhythm a) where
-  (<>) = mappend
+  (<>) = appendRhythm
 
 -- Catenates using 'Group'
 instance Monoid (Rhythm a) where
-
   mempty = Group []
 
+appendRhythm :: Rhythm a -> Rhythm a -> Rhythm a
+appendRhythm = mappend where
   Group as `mappend` Group bs = Group (as <> bs)
   r `mappend` Group bs = Group ([r] <> bs)
   Group as `mappend` r = Group (as <> [r])
@@ -218,7 +233,7 @@ singleGroup orig = orig
 
 -- | Removes dotted notes in 2/3 tuplets.
 tupletDot :: Rhythm a -> Rhythm a
-tupletDot orig@(Tuplet ((unRatio . realToFrac) -> (2, 3)) (Dotted 1 x)) = x
+tupletDot orig@(Tuplet ((unRatio . realToFrac @Duration @Rational) -> (2, 3)) (Dotted 1 x)) = x
 tupletDot orig = orig
 
 splitTupletIfLongEnough :: Rhythm a -> Rhythm a
@@ -484,10 +499,11 @@ logBaseR k n | otherwise = logBase (fromRational k) (fromRational n)
 -- As it sounds, do NOT use infix
 -- Only works for simple n such as 2 or 3, TODO determine
 -- isPowerOf :: Duration -> Duration -> Bool
-isPowerOf n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
+isPowerOf :: forall a a1. (Real a, Real a1) => a -> a1 -> Bool
+isPowerOf n = (== (0.0 :: Double)) . snd . properFraction @Double @Integer . logBaseR (toRational n) . toRational
 
--- isPowerOf2 :: Duration -> Bool
-isPowerOf2 = isPowerOf 2
+isPowerOf2 :: forall a. Real a => a -> Bool
+isPowerOf2 = isPowerOf @Integer 2
 
 greatestSmallerPowerOf2 :: Integer -> Integer
 greatestSmallerPowerOf2 x
@@ -525,6 +541,3 @@ rewriteR :: forall a. Rhythm a -> Rhythm a
 
 rewrite1 :: forall a. Rhythm a -> Rhythm a
 
-isPowerOf :: forall a a1. (Real a, Real a1) => a -> a1 -> Bool
-
-isPowerOf2 :: forall a. Real a => a -> Bool
