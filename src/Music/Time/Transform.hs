@@ -3,8 +3,7 @@
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-unused-matches #-}
+  -fno-warn-name-shadowing #-}
 
 module Music.Time.Transform
   ( module Music.Time.Types,
