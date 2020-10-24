@@ -46,7 +46,7 @@ data Dynamics
   deriving (Eq, Ord, Show, Enum, Bounded, Read)
 
 instance IsDynamics Dynamics where
-  fromDynamics (DynamicsL (Just x, Nothing)) = case x of
+  fromDynamics (DynamicsL (x, _)) = case x of
     (-6.5) -> PPPPPP
     (-5.5) -> PPPPP
     (-4.5) -> PPPP
@@ -61,4 +61,3 @@ instance IsDynamics Dynamics where
     4.5 -> FFFF
     5.5 -> FFFFF
     6.5 -> FFFFFF
-  fromDynamics _ = error "fromDynamics: Unsupported literal for MusicXml.Dynamics"

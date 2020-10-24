@@ -45,7 +45,7 @@ instance Pretty Dynamics where
   pretty = string . ("\\" ++) . fmap Char.toLower . show
 
 instance IsDynamics Dynamics where
-  fromDynamics (DynamicsL (Just x, Nothing)) = case x of
+  fromDynamics (DynamicsL (x, _)) = case x of
     (-5.5) -> PPPPP
     (-4.5) -> PPPP
     (-3.5) -> PPP
@@ -58,4 +58,3 @@ instance IsDynamics Dynamics where
     3.5 -> FFF
     4.5 -> FFFF
     x -> error $ "Lilypond.Dynamics: Strange value " ++ show x
-  fromDynamics _ = error "Lilypond.Dynamics: Unsupported literal"

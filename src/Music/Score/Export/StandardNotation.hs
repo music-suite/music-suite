@@ -1162,7 +1162,7 @@ notateLevel showLevel = case showLevel of
     Lilypond.addDynamics
       ( fromDynamics
           ( DynamicsL
-              (Just (fixLevel . realToFrac $ lvl), Nothing)
+              ((fixLevel . realToFrac $ lvl), Nothing)
           )
       )
 
@@ -1563,7 +1563,7 @@ movementToPartwiseXml movement = music
                   MusicXml.dynamic
                     ( fromDynamics
                         ( DynamicsL
-                            (Just (fixLevel . realToFrac $ lvl), Nothing)
+                            ((fixLevel . realToFrac $ lvl), Nothing)
                         )
                     )
             fixLevel :: Double -> Double
