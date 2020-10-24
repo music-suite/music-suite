@@ -99,4 +99,3 @@ stretchToD d x = (d ^/ _duration x) `stretch` x
 duration :: (Transformable a, HasDuration a) => Getter a Duration
 duration = to _duration
 {-# INLINE duration #-}
-{-# DEPRECATED duration "Use _duration" #-}

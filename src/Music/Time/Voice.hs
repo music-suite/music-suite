@@ -7,8 +7,7 @@
   -Wincomplete-record-updates
   -Wincomplete-uni-patterns
   -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-deprecations #-}
+  -fno-warn-name-shadowing #-}
 
 module Music.Time.Voice
   ( -- * Voice type

@@ -65,4 +65,3 @@ reactiveToVoice' (view onsetAndOffset -> (u, v)) r = (^. voice) $ fmap (^. note)
   where
     times = 0 : filter (\t -> u < t && t < v) (occs r)
     durs = toRelativeTimeN' v times
-{-# DEPRECATED reactiveToVoice' "" #-}
