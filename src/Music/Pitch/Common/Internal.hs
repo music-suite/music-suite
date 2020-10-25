@@ -3,14 +3,11 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-missing-signatures #-}
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
 
 module Music.Pitch.Common.Internal where
