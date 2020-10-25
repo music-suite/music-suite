@@ -208,6 +208,8 @@ library
                         DeriveFunctor,
                         DeriveTraversable,
                         DerivingStrategies,
+                        FlexibleContexts,
+                        FlexibleInstances,
                         GeneralizedNewtypeDeriving,
                         MultiParamTypeClasses,
                         NoMonomorphismRestriction,
