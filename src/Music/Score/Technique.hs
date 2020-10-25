@@ -12,7 +12,7 @@
 -- |  Provides functions for manipulating techniques.
 module Music.Score.Technique
   ( -- * Technique type functions
-    Technique,
+    GetTechnique,
     SetTechnique,
     TechniqueLensLaws',
     TechniqueLensLaws,
@@ -88,7 +88,7 @@ import Music.Time.Internal.Transform
 
 -- |
 -- Techniques type.
-type family Technique (s :: Type) :: Type
+type family GetTechnique (s :: Type) :: Type
 
 -- |
 -- Technique type.
@@ -98,15 +98,15 @@ type family SetTechnique (b :: Type) (s :: Type) :: Type
 -- Class of types that provide a single technique.
 class (HasTechniques s t) => HasTechnique s t where
   -- | Access a single technique.
-  technique :: Lens s t (Technique s) (Technique t)
+  technique :: Lens s t (GetTechnique s) (GetTechnique t)
 
 type TechniqueLensLaws' s t a b =
-  ( Technique (SetTechnique a s) ~ a,
-    SetTechnique (Technique t) s ~ t,
+  ( GetTechnique (SetTechnique a s) ~ a,
+    SetTechnique (GetTechnique t) s ~ t,
     SetTechnique a (SetTechnique b s) ~ SetTechnique a s
   )
 
-type TechniqueLensLaws s t = TechniqueLensLaws' s t (Technique s) (Technique t)
+type TechniqueLensLaws s t = TechniqueLensLaws' s t (GetTechnique s) (GetTechnique t)
 
 -- |
 -- Class of types that provide a technique traversal.
@@ -115,37 +115,37 @@ class
   ) =>
   HasTechniques s t where
   -- | Access all techniques.
-  techniques :: Traversal s t (Technique s) (Technique t)
+  techniques :: Traversal s t (GetTechnique s) (GetTechnique t)
 
 type HasTechnique' a = HasTechnique a a
 
 type HasTechniques' a = HasTechniques a a
 
 -- | Access a single technique.
-technique' :: (HasTechnique s t, s ~ t) => Lens' s (Technique s)
+technique' :: (HasTechnique s t, s ~ t) => Lens' s (GetTechnique s)
 technique' = technique
 
 -- | Access all techniques.
-techniques' :: (HasTechniques s t, s ~ t) => Traversal' s (Technique s)
+techniques' :: (HasTechniques s t, s ~ t) => Traversal' s (GetTechnique s)
 techniques' = techniques
 
-type instance Technique (c, a) = Technique a
+type instance GetTechnique (c, a) = GetTechnique a
 
 type instance SetTechnique b (c, a) = (c, SetTechnique b a)
 
-type instance Technique [a] = Technique a
+type instance GetTechnique [a] = GetTechnique a
 
 type instance SetTechnique b [a] = [SetTechnique b a]
 
-type instance Technique (Maybe a) = Technique a
+type instance GetTechnique (Maybe a) = GetTechnique a
 
 type instance SetTechnique b (Maybe a) = Maybe (SetTechnique b a)
 
-type instance Technique (PartT r a) = Technique a
+type instance GetTechnique (PartT r a) = GetTechnique a
 
 type instance SetTechnique b (PartT r a) = PartT r (SetTechnique b a)
 
-type instance Technique (StaffNumberT a) = Technique a
+type instance GetTechnique (StaffNumberT a) = GetTechnique a
 
 type instance SetTechnique b (StaffNumberT a) = StaffNumberT (SetTechnique b a)
 
@@ -155,7 +155,7 @@ instance HasTechniques a b => HasTechniques (StaffNumberT a) (StaffNumberT b) wh
 instance HasTechnique a b => HasTechnique (StaffNumberT a) (StaffNumberT b) where
   technique = _Wrapped . technique
 
-type instance Technique (TremoloT a) = Technique a
+type instance GetTechnique (TremoloT a) = GetTechnique a
 
 type instance SetTechnique b (TremoloT a) = TremoloT (SetTechnique b a)
 
@@ -165,7 +165,7 @@ instance HasTechniques a b => HasTechniques (TremoloT a) (TremoloT b) where
 instance HasTechnique a b => HasTechnique (TremoloT a) (TremoloT b) where
   technique = _Wrapped . technique
 
-type instance Technique (ColorT a) = Technique a
+type instance GetTechnique (ColorT a) = GetTechnique a
 
 type instance SetTechnique b (ColorT a) = ColorT (SetTechnique b a)
 
@@ -175,55 +175,55 @@ instance HasTechniques a b => HasTechniques (ColorT a) (ColorT b) where
 instance HasTechnique a b => HasTechnique (ColorT a) (ColorT b) where
   technique = _Wrapped . technique
 
-type instance Technique (TextT a) = Technique a
+type instance GetTechnique (TextT a) = GetTechnique a
 
 type instance SetTechnique b (TextT a) = TextT (SetTechnique b a)
 
-type instance Technique (HarmonicT a) = Technique a
+type instance GetTechnique (HarmonicT a) = GetTechnique a
 
 type instance SetTechnique b (HarmonicT a) = HarmonicT (SetTechnique b a)
 
-type instance Technique (SlideT a) = Technique a
+type instance GetTechnique (SlideT a) = GetTechnique a
 
 type instance SetTechnique b (SlideT a) = SlideT (SetTechnique b a)
 
-type instance Technique (Either c a) = Technique a
+type instance GetTechnique (Either c a) = GetTechnique a
 
 type instance SetTechnique b (Either c a) = Either c (SetTechnique b a)
 
-type instance Technique (Event a) = Technique a
+type instance GetTechnique (Event a) = GetTechnique a
 
 type instance SetTechnique b (Event a) = Event (SetTechnique b a)
 
-type instance Technique (Placed a) = Technique a
+type instance GetTechnique (Placed a) = GetTechnique a
 
 type instance SetTechnique b (Placed a) = Placed (SetTechnique b a)
 
-type instance Technique (Note a) = Technique a
+type instance GetTechnique (Note a) = GetTechnique a
 
 type instance SetTechnique b (Note a) = Note (SetTechnique b a)
 
-type instance Technique (Voice a) = Technique a
+type instance GetTechnique (Voice a) = GetTechnique a
 
 type instance SetTechnique b (Voice a) = Voice (SetTechnique b a)
 
-type instance Technique (Track a) = Technique a
+type instance GetTechnique (Track a) = GetTechnique a
 
 type instance SetTechnique b (Track a) = Track (SetTechnique b a)
 
-type instance Technique (Score a) = Technique a
+type instance GetTechnique (Score a) = GetTechnique a
 
 type instance SetTechnique b (Score a) = Score (SetTechnique b a)
 
-type instance Technique (Aligned a) = Technique a
+type instance GetTechnique (Aligned a) = GetTechnique a
 
 type instance SetTechnique b (Aligned a) = Aligned (SetTechnique b a)
 
-type instance Technique () = ()
+type instance GetTechnique () = ()
 
 type instance SetTechnique a () = a
 
-type instance Technique SomeTechnique = SomeTechnique
+type instance GetTechnique SomeTechnique = SomeTechnique
 
 type instance SetTechnique a SomeTechnique = a
 
@@ -276,7 +276,7 @@ instance HasTechniques a b => HasTechniques (PartT p a) (PartT p b) where
   techniques = traverse . techniques
 
 {-
-type instance Technique (Chord a)       = Technique a
+type instance Technique (Chord a)       = GetTechnique a
 type instance SetTechnique b (Chord a)  = Chord (SetTechnique b a)
 instance HasTechniques a b => HasTechniques (Chord a) (Chord b) where
   techniques = traverse . techniques
@@ -285,12 +285,12 @@ instance HasTechniques a b => HasTechniques (Chord a) (Chord b) where
 instance (HasTechniques a b) => HasTechniques (Score a) (Score b) where
   techniques = traverse . techniques
 
-type instance Technique (Behavior a) = Behavior a
+type instance GetTechnique (Behavior a) = Behavior a
 
 type instance SetTechnique b (Behavior a) = b
 
 instance
-  ( b ~ Technique b,
+  ( b ~ GetTechnique b,
     SetTechnique (Behavior a) b ~ Behavior a
   ) =>
   HasTechniques (Behavior a) b
@@ -298,30 +298,30 @@ instance
   techniques = ($)
 
 instance
-  ( b ~ Technique b,
+  ( b ~ GetTechnique b,
     SetTechnique (Behavior a) b ~ Behavior a
   ) =>
   HasTechnique (Behavior a) b
   where
   technique = ($)
 
-type instance Technique (Couple c a) = Technique a
+type instance GetTechnique (Couple c a) = GetTechnique a
 
 type instance SetTechnique g (Couple c a) = Couple c (SetTechnique g a)
 
-type instance Technique (TextT a) = Technique a
+type instance GetTechnique (TextT a) = GetTechnique a
 
 type instance SetTechnique g (TextT a) = TextT (SetTechnique g a)
 
-type instance Technique (HarmonicT a) = Technique a
+type instance GetTechnique (HarmonicT a) = GetTechnique a
 
 type instance SetTechnique g (HarmonicT a) = HarmonicT (SetTechnique g a)
 
-type instance Technique (TieT a) = Technique a
+type instance GetTechnique (TieT a) = GetTechnique a
 
 type instance SetTechnique g (TieT a) = TieT (SetTechnique g a)
 
-type instance Technique (SlideT a) = Technique a
+type instance GetTechnique (SlideT a) = GetTechnique a
 
 type instance SetTechnique g (SlideT a) = SlideT (SetTechnique g a)
 
@@ -448,7 +448,7 @@ instance Wrapped (TechniqueT p a) where
 
 instance Rewrapped (TechniqueT p a) (TechniqueT p' b)
 
-type instance Technique (TechniqueT p a) = p
+type instance GetTechnique (TechniqueT p a) = p
 
 type instance SetTechnique p' (TechniqueT p a) = TechniqueT p' a
 
@@ -543,26 +543,26 @@ instance Semigroup SomeTechnique where
 instance Tiable SomeTechnique where
   toTied x = (x, x)
 
-pizz, arco :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
+pizz, arco :: (HasTechniques' a, GetTechnique a ~ SomeTechnique) => a -> a
 pizz = set (techniques . pizzicato) Pizz
 arco = set (techniques . pizzicato) Arco
 
-moltoSulPont, sulPont, posNat, sulTasto, moltoSulTasto :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
+moltoSulPont, sulPont, posNat, sulTasto, moltoSulTasto :: (HasTechniques' a, GetTechnique a ~ SomeTechnique) => a -> a
 moltoSulPont = set (techniques . stringPos) MoltoSulPont
 sulPont = set (techniques . stringPos) SulPont
 posNat = set (techniques . stringPos) PosNat
 sulTasto = set (techniques . stringPos) SulTasto
 moltoSulTasto = set (techniques . stringPos) MoltoSulTasto
 
-naturale :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
+naturale :: (HasTechniques' a, GetTechnique a ~ SomeTechnique) => a -> a
 naturale = senzaLegno . posNat . unmuted
 
-colLegno, colLegnoBatt, senzaLegno :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
+colLegno, colLegnoBatt, senzaLegno :: (HasTechniques' a, GetTechnique a ~ SomeTechnique) => a -> a
 colLegno = set (techniques . legno) ColLegnoTratto
 colLegnoBatt = set (techniques . legno) ColLegnoBatt
 senzaLegno = set (techniques . legno) NonLegno
 
-muted, unmuted, conSord, senzaSord :: (HasTechniques' a, Technique a ~ SomeTechnique) => a -> a
+muted, unmuted, conSord, senzaSord :: (HasTechniques' a, GetTechnique a ~ SomeTechnique) => a -> a
 muted = set (techniques . stringMute) StringMute
 unmuted = set (techniques . stringMute) NoStringMute
 conSord = set (techniques . stringMute) StringMute
@@ -572,7 +572,7 @@ senzaSord = set (techniques . stringMute) NoStringMute
 -- View just the techniquees in a voice.
 vtechnique ::
   ({-SetTechnique (Technique t) s ~ t,-} HasTechnique a a, HasTechnique a b) =>
-  Lens (Voice a) (Voice b) (Voice (Technique a)) (Voice (Technique b))
+  Lens (Voice a) (Voice b) (Voice (GetTechnique a)) (Voice (GetTechnique b))
 vtechnique = lens (fmap $ view technique) (flip $ zipVoiceWithNoScale (set technique))
 
 -- vtechnique = through technique technique
@@ -581,8 +581,8 @@ addTechniqueCon ::
   ( HasPhrases s t a b,
     HasTechnique a a,
     HasTechnique a b,
-    Technique a ~ d,
-    Technique b ~ Ctxt d
+    GetTechnique a ~ d,
+    GetTechnique b ~ Ctxt d
   ) =>
   s ->
   t
