@@ -1,17 +1,5 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE QuantifiedConstraints #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TypeOperators #-}
-{-# OPTIONS_GHC -Wall
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-deprecations
-  -fno-warn-unused-imports
   -fno-warn-unused-matches #-}
 module Music.Time.Pattern
   ( Pattern,
@@ -29,14 +17,12 @@ module Music.Time.Pattern
 where
 
 import Prelude hiding (splitAt)
-import Control.Lens (Rewrapped, Wrapped (..), (^.), _Wrapped, from, iso, over, view)
-import Control.Monad (join)
+import Control.Lens ((^.), from, view)
 import Control.Monad.Abort
 import Data.AffineSpace
 import Data.VectorSpace
 import Data.Traversable (for)
 import qualified Data.List
-import Data.Bifunctor (first)
 import Music.Pitch (IsPitch (..))
 import Music.Pitch.Literal (c)
 import Music.Score.Part
@@ -44,16 +30,11 @@ import Music.Score.Pitch
 import Music.Score.Dynamics
 import Music.Score.Articulation
 import Music.Time.Aligned
-import Music.Time.Event
 import Music.Time.Juxtapose
 import Music.Time.Note
-import Music.Time.Placed
 import Music.Time.Score
-import Music.Time.Transform
 import Music.Time.Voice
 import Control.Monad.State.Strict
-import Control.Monad.Except
-import Iso.Deriving
 
 
 -- TODO move divModDur
