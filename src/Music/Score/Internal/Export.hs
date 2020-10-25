@@ -32,14 +32,6 @@ module Music.Score.Internal.Export
   )
 where
 
--- voiceToBars',
--- -- separateBars,
--- spellPitch,
--- MVoice,
--- -- toMVoice,
--- unvoice,
--- openCommand
-
 import qualified Codec.Midi as Midi
 import Control.Applicative
 import Control.Exception
