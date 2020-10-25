@@ -28,10 +28,6 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
   -fno-warn-name-shadowing
   -fno-warn-deprecations
   -fno-warn-unused-imports
