@@ -212,6 +212,7 @@ instance VectorSpace (Rhythm a) where
 rewrite :: Rhythm a -> Rhythm a
 rewrite = rewriteR . rewrite1
 
+rewriteR :: Rhythm a -> Rhythm a
 rewriteR = go
   where
     go (Beat d a) = Beat d a
@@ -219,6 +220,7 @@ rewriteR = go
     go (Dotted n r) = Dotted n ((rewriteR . rewrite1) r)
     go (Tuplet n r) = Tuplet n ((rewriteR . rewrite1) r)
 
+rewrite1 :: Rhythm a -> Rhythm a
 rewrite1 = tupletDot . {-splitTupletIfLongEnough .-} singleGroup
 
 -- | Removes single-note groups
@@ -304,11 +306,11 @@ konstMaxTupletNest = 1
 
 data RhythmContext
   = RhythmContext
-      { -- Time scaling of the current note (from dots and tuplets).
+      { -- | Time scaling of the current note (from dots and tuplets).
         timeMod :: Duration,
-        -- Time subtracted from the current rhythm (from ties).
+        -- | Time subtracted from the current rhythm (from ties).
         timeSub :: Duration,
-        -- Number of tuplets above the current note (default 0).
+        -- | Number of tuplets above the current note (default 0).
         tupleDepth :: Int
       }
 
@@ -350,13 +352,6 @@ rhythm' =
     <|> dotted
     <|> tuplet
 
--- Matches a beat divisible by 2 (notated)
--- beat :: Tiable a => RhythmParser a (Rhythm a)
--- beat = do
---     RhythmContext tm ts _ <- getState
---     (\d -> (d^/tm) `subDur` ts) <$> match (\d _ ->
---         d - ts > 0  &&  isPowerOf 2 (d / tm - ts))
-
 beat :: Tiable a => RhythmParser a (Rhythm a)
 beat = do
   RhythmContext tm ts _ <- getState
@@ -372,8 +367,6 @@ dotted = msum . fmap dotted' $ konstNumDotsAllowed
 -- TODO this should be abolished, see below!
 bound :: Tiable a => RhythmParser a (Rhythm a)
 bound = msum $ fmap bound' $ konstBounds
-
--- bound = msum $ fmap bound' $ (konstBounds <> fmap (*(3/2)) konstBounds)
 
 {-
 What this should really do is to split the rhythm into two rhythms where the first have the bound duration...
@@ -531,8 +524,5 @@ quSimp = Right . qu1 1
 -- (1/n) = (p/np)
 -- (1/n) = (1/n)
 
--- subDur :: forall a. Rhythm a -> Duration -> Rhythm a
-rewriteR :: forall a. Rhythm a -> Rhythm a
 
-rewrite1 :: forall a. Rhythm a -> Rhythm a
 
