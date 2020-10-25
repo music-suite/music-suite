@@ -129,7 +129,6 @@ library
                         Data.AffineSpace.Point.Offsets
                         Data.Functor.Couple
                         Data.Functor.Context
-                        Data.Functor.Rep.Lens
                         Data.Semigroup.Instances
                         Control.Monad.Abort
                         Control.Monad.Compose
