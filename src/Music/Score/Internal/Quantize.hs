@@ -364,15 +364,17 @@ dotted :: Tiable a => RhythmParser a (Rhythm a)
 dotted = msum . fmap dotted' $ konstNumDotsAllowed
 
 -- | Matches a bound rhythm
--- TODO this should be abolished, see below!
 bound :: Tiable a => RhythmParser a (Rhythm a)
-bound = msum $ fmap bound' $ konstBounds
-
 {-
+TODO this should be abolished!
 What this should really do is to split the rhythm into two rhythms where the first have the bound duration...
 -}
+bound = msum $ fmap bound' $ konstBounds
 
--- | Matches a tuplet
+
+-- | Look for a common tuplet.
+--
+-- See @tuplet'@ for abitrary tuplets.
 tuplet :: Tiable a => RhythmParser a (Rhythm a)
 tuplet = msum . fmap tuplet' $ konstTuplets
 
@@ -408,7 +410,14 @@ bound' d = do
         -- if isPowerOf2 d then Beat d c else if isPowerOf2 (d*(2/3)) then Dotted 1 (Beat (d*(2/3)) c) else (error "Bad bound rhythm")
       ]
 
--- tuplet' 2/3 for triplet, 4/5 for quintuplet etc
+-- |
+-- Look for a tuplet.
+--
+-- * @2/3@ for triplet
+--
+-- * @4/5@ for quintuplet
+--
+-- etc.
 tuplet' :: Tiable a => Duration -> RhythmParser a (Rhythm a)
 tuplet' d = do
   RhythmContext _ _ depth <- getState
@@ -468,27 +477,20 @@ onlyIf b p = if b then p else mzero
 assuming :: a -> Bool -> Maybe a
 assuming x b = if b then Just x else Nothing
 
-{-
-isDivisibleBy2 :: RealFrac a => a -> Bool
-isDivisibleBy2 x = isInt x && even (round x)
-
-isInt :: RealFrac a => a -> Bool
-isInt x = x == fromInteger (round x)
--}
-
 logBaseR :: forall a. (RealFloat a, Floating a) => Rational -> Rational -> a
 logBaseR k n | isInfinite (fromRational n :: a) = logBaseR k (n / k) + 1
 logBaseR k n | isDenormalized (fromRational n :: a) = logBaseR k (n * k) - 1
 logBaseR k n | otherwise = logBase (fromRational k) (fromRational n)
 
--- divides     = isDivisibleBy
--- divisibleBy = flip isDivisibleBy
 
 -- As it sounds, do NOT use infix
 -- Only works for simple n such as 2 or 3, TODO determine
 -- isPowerOf :: Duration -> Duration -> Bool
 isPowerOf :: forall a a1. (Real a, Real a1) => a -> a1 -> Bool
-isPowerOf n = (== (0.0 :: Double)) . snd . properFraction @Double @Integer . logBaseR (toRational n) . toRational
+isPowerOf n = (== (0.0 :: Double)) . snd
+  . properFraction @Double @Integer
+  . logBaseR (toRational n)
+  . toRational
 
 isPowerOf2 :: forall a. Real a => a -> Bool
 isPowerOf2 = isPowerOf @Integer 2
@@ -499,10 +501,9 @@ greatestSmallerPowerOf2 x
   | isPowerOf2 x = x
   | otherwise = greatestSmallerPowerOf2 (x - 1)
 
-{-
-An "emergency" quantizer that ignores input durations and outputs a single beat sequence
-with all notes in the same length.
--}
+-- |
+-- An "emergency" quantizer that ignores input durations and outputs a single beat sequence
+-- with all notes in the same length.
 quSimp :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
 quSimp = Right . qu1 1
   where
