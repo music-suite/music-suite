@@ -141,7 +141,7 @@ type instance GetDynamic (TremoloT a) = GetDynamic a
 
 type instance SetDynamic g (TremoloT a) = TremoloT (SetDynamic g a)
 
-type instance Articulation (TremoloT a) = Articulation a
+type instance GetArticulation (TremoloT a) = GetArticulation a
 
 type instance SetArticulation g (TremoloT a) = TremoloT (SetArticulation g a)
 

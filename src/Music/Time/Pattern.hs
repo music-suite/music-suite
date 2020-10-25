@@ -162,7 +162,7 @@ newtype Pattern a
 instance (IsPitch a) => IsPitch (Pattern a) where
   fromPitch = pureP . fromPitch
 
-type instance Articulation (Pattern a) = Articulation a
+type instance GetArticulation (Pattern a) = GetArticulation a
 
 type instance SetArticulation b (Pattern a) = Pattern (SetArticulation b a)
 

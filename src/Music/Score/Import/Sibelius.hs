@@ -39,7 +39,7 @@ import Music.Pitch.Literal (IsPitch)
 import qualified Music.Pitch.Literal as Pitch
 import qualified Music.Prelude
 import qualified Music.Score as S
-import Music.Score hiding (Articulation, Interval, Part, Pitch)
+import Music.Score hiding (Interval, Part, Pitch)
 
 -- |
 -- Read a Sibelius score from a file. Fails if the file could not be read or if a parsing
@@ -424,7 +424,7 @@ type IsSibelius a =
     HasPart' a,
     S.Part a ~ Part,
     HasArticulation' a,
-    S.Articulation a ~ Articulation,
+    GetArticulation a ~ Articulation,
     HasDynamic' a,
     GetDynamic a ~ Dynamics,
     HasHarmonic a,

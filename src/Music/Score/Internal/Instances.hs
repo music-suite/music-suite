@@ -124,7 +124,7 @@ instance HasDynamic a b => HasDynamic (TechniqueT p a) (TechniqueT p b) where
 instance HasDynamics a b => HasDynamics (TechniqueT p a) (TechniqueT p b) where
   dynamics = _Wrapped . dynamics
 
-type instance Articulation (TechniqueT p a) = Articulation a
+type instance GetArticulation (TechniqueT p a) = GetArticulation a
 
 type instance SetArticulation b (TechniqueT p a) = TechniqueT p (SetArticulation b a)
 
@@ -184,7 +184,7 @@ instance HasDynamic a b => HasDynamic (ArticulationT p a) (ArticulationT p b) wh
 instance HasDynamics a b => HasDynamics (ArticulationT p a) (ArticulationT p b) where
   dynamics = _Wrapped . _2 . dynamics
 
-type instance Articulation (PartT p a) = Articulation a
+type instance GetArticulation (PartT p a) = GetArticulation a
 
 type instance SetArticulation b (PartT p a) = PartT p (SetArticulation b a)
 
@@ -215,7 +215,7 @@ instance (HasDynamics a b) => HasDynamics (ColorT a) (ColorT b) where
 instance (HasDynamic a b) => HasDynamic (ColorT a) (ColorT b) where
   dynamic = _Wrapped . dynamic
 
-type instance Articulation (ColorT a) = Articulation a
+type instance GetArticulation (ColorT a) = GetArticulation a
 
 type instance SetArticulation g (ColorT a) = ColorT (SetArticulation g a)
 

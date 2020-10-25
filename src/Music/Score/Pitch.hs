@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# OPTIONS_GHC -Weverything
   -Wcompat
   -Wincomplete-record-updates

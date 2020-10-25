@@ -168,7 +168,7 @@ topLevelScore =
 -- |
 -- Alternative to 'render' just to get a sense of 'topLevelScore'.
 renderSimple ::
-  (IsPitch a, Transposable a, HasArticulations' a, Articulated (S.Articulation a)) =>
+  (IsPitch a, Transposable a, HasArticulations' a, Articulated (GetArticulation a)) =>
   Block ->
   Pattern a
 renderSimple Block {col, range, texture} =
