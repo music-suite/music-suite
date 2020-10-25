@@ -9,7 +9,6 @@
 {-# OPTIONS_HADDOCK hide #-}
 {-# OPTIONS_GHC -Wall
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
   -fno-warn-redundant-constraints
   -fno-warn-unused-imports #-}
 
@@ -101,11 +100,11 @@ instance Transformable (Rhythm a) where
   transform s (Tuplet n r) = Tuplet n (transform s r)
 
 getBeatValue :: Rhythm a -> a
-getBeatValue (Beat d a) = a
+getBeatValue (Beat _d a) = a
 getBeatValue _ = error "getBeatValue: Not a beat"
 
 getBeatDuration :: Rhythm a -> Duration
-getBeatDuration (Beat d a) = d
+getBeatDuration (Beat d _a) = d
 getBeatDuration _ = error "getBeatValue: Not a beat"
 
 -- TODO return voice
@@ -130,7 +129,7 @@ realize (Tuplet n r) = n `stretch` realize r
 rhythmToTree :: Rhythm a -> Tree String
 rhythmToTree = go
   where
-    go (Beat d a) = Node ("" ++ showD d) []
+    go (Beat d _a) = Node ("" ++ showD d) []
     go (Group rs) = Node ("") (fmap rhythmToTree rs)
     go (Dotted n r) = Node (replicate n '.') [rhythmToTree r]
     go (Tuplet n r) = Node ("*^ " ++ showD n) [rhythmToTree r]
@@ -181,7 +180,7 @@ instance VectorSpace (Rhythm a) where
   type Scalar (Rhythm a) = Duration
 
   a *^ Beat d x = Beat (a * d) x
-  a *^ _ = error "instance VectorSpace (Rhythm a): Can only scale beats"
+  _ *^ _ = error "instance VectorSpace (Rhythm a): Can only scale beats"
 
 -- TODO partial, and might not preserve the invariant?
 -- This is probably a good reason to get rid of this instance
@@ -224,12 +223,12 @@ rewrite1 = tupletDot . {-splitTupletIfLongEnough .-} singleGroup
 
 -- | Removes single-note groups
 singleGroup :: Rhythm a -> Rhythm a
-singleGroup orig@(Group [x]) = x
+singleGroup (Group [x]) = x
 singleGroup orig = orig
 
 -- | Removes dotted notes in 2/3 tuplets.
 tupletDot :: Rhythm a -> Rhythm a
-tupletDot orig@(Tuplet ((unRatio . realToFrac @Duration @Rational) -> (2, 3)) (Dotted 1 x)) = x
+tupletDot (Tuplet ((unRatio . realToFrac @Duration @Rational) -> (2, 3)) (Dotted 1 x)) = x
 tupletDot orig = orig
 
 splitTupletIfLongEnough :: Rhythm a -> Rhythm a
@@ -444,7 +443,7 @@ tuplet' d = do
 match :: Tiable a => (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
 match p = tokenPrim show next test
   where
-    show x = ""
+    show _ = ""
     next pos _ _ = updatePosChar pos 'x'
     test (d, x) = if p d x then Just (Beat d x) else Nothing
 
@@ -452,7 +451,7 @@ match p = tokenPrim show next test
 match' :: Tiable a => (Duration -> a -> Maybe (Duration, b)) -> RhythmParser a (Rhythm b)
 match' f = tokenPrim show next test
   where
-    show x = ""
+    show _ = ""
     next pos _ _ = updatePosChar pos 'x'
     test (d, x) = case f d x of
       Nothing -> Nothing
