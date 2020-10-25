@@ -1,9 +1,4 @@
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 
 -- | Common pitch names in various (human) languages.
 module Music.Pitch.Common.Names

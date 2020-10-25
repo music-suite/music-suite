@@ -7,7 +7,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_HADDOCK hide #-}
-{-# OPTIONS_GHC -Wall
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-redundant-constraints
   -fno-warn-unused-imports #-}
