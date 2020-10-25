@@ -1,22 +1,3 @@
-{-# LANGUAGE ConstraintKinds,
-                        DeriveDataTypeable,
-                        DeriveFoldable,
-                        DeriveFunctor,
-                        DeriveTraversable,
-                        GeneralizedNewtypeDeriving,
-                        MultiParamTypeClasses,
-                        NoMonomorphismRestriction,
-                        RankNTypes,
-                        StandaloneDeriving,
-                        TupleSections,
-                        TypeFamilies,
-                        TypeOperators,
-                        TypeApplications,
-                        ViewPatterns,
-                        OverloadedStrings #-}
-{-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE InstanceSigs #-}

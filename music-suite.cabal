@@ -201,21 +201,25 @@ library
                         Music.Prelude.Inspectable
     hs-source-dirs:     src, vendor
     default-language:   Haskell2010
-    default-extensions: ConstraintKinds,
+    default-extensions: BangPatterns,
+                        ConstraintKinds,
                         DeriveDataTypeable,
                         DeriveFoldable,
                         DeriveFunctor,
                         DeriveTraversable,
+                        DerivingStrategies,
                         GeneralizedNewtypeDeriving,
                         MultiParamTypeClasses,
                         NoMonomorphismRestriction,
                         RankNTypes,
+                        ScopedTypeVariables,
                         StandaloneDeriving,
                         TupleSections,
                         TypeFamilies,
                         TypeOperators,
                         TypeApplications,
                         ViewPatterns,
+                        NamedFieldPuns,
                         OverloadedStrings
   ghc-options:
     -Wall
