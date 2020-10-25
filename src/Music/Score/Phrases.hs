@@ -4,14 +4,11 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
+  -fno-warn-unused-imports
   -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -- | Provides phrase-wise traversal.
