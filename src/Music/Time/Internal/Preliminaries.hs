@@ -1,11 +1,3 @@
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
 
 module Music.Time.Internal.Preliminaries
@@ -50,6 +42,5 @@ import Data.Functor.Couple
 import Data.Ratio
 import Data.Semigroup hiding (Product (..), Sum (..))
 import Data.String
-import Data.Typeable
 import Data.Typeable
 import Data.VectorSpace
