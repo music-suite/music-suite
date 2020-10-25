@@ -1,9 +1,3 @@
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-name-shadowing #-}
 
 module Music.Time.Transform
   ( module Music.Time.Types,

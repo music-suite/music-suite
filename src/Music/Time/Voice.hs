@@ -2,12 +2,7 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-name-shadowing #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 module Music.Time.Voice
   ( -- * Voice type
