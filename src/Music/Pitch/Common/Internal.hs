@@ -89,7 +89,7 @@ instance Num Number where
 
   signum (Number a) = Number (signum a)
 
-  -- TODO should we?: fromInteger 0 = error "Invalid Number: zero"
+  fromInteger 0 = error "Invalid Number: zero"
   fromInteger n = Number n
 
 -- |
@@ -533,12 +533,6 @@ separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ _P8))
 simple :: Interval -> Interval
 simple = snd . separate
 
-{-
-  TODO
-  Generalize simple like this:
-    > (number (id @Interval (m9))-(fromIntegral $ signum (m9))) `mod` 7
-
--}
 
 -- |
 -- Returns whether the given interval is simple.
@@ -1563,14 +1557,6 @@ instance Transformable Pitch where
 mkPitch :: Name -> Accidental -> Pitch
 mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b) ^. intervalAlterationSteps) acc (fromEnum name)
 
-{-
--- TODO name
--- TODO use this to define pitch-class equivalence
-toFirstOctave :: Pitch -> Pitch
-toFirstOctave p = case (name p, accidental p) of
-  (n, a) -> mkPitch n a
--}
-
 -- TODO rename (and flip Iso!)
 --
 --    intervalTotalSteps -> totalSteps
@@ -1670,7 +1656,6 @@ deriving instance IsPitch a => IsPitch (Data.Semigroup.Product a)
 
 deriving instance (Monoid b, IsPitch a) => IsPitch (Couple b a)
 
--- TODO clean by inlining this whole thing or similar
 viaPitchL :: (Int, Int, Int) -> Pitch
 viaPitchL (pc, sem, oct) = Pitch $ mkInterval' sem (oct * 7 + pc)
   where
@@ -1681,6 +1666,7 @@ viaPitchL (pc, sem, oct) = Pitch $ mkInterval' sem (oct * 7 + pc)
         -- restDia is always in [0..6]
         (octaves, restDia) = fromIntegral d `divMod` 7
         go = ([0, 2, 4, 5, 7, 9, 11] !!)
+{-# INLINEABLE viaPitchL #-}
 
 cs'''' = fromPitch $ viaPitchL (0, 1, 4)
 
