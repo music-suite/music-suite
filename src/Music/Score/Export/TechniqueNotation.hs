@@ -40,7 +40,7 @@ module Music.Score.Export.TechniqueNotation
   )
 where
 
-import Control.Lens -- ()
+import Control.Lens
 import Data.AffineSpace
 import Data.Functor.Context
 import Data.Semigroup
@@ -56,7 +56,7 @@ newtype TechniqueNotation = TechniqueNotation [String]
 textualNotations :: TechniqueNotation -> [String]
 textualNotations (TechniqueNotation xs) = xs
 
-notateTechnique :: Ctxt SomeTechnique -> TechniqueNotation
+notateTechnique :: Ctxt Technique -> TechniqueNotation
 notateTechnique t = TechniqueNotation $ case getCtxt t of
   (Just prev, cur, _) ->
     if prev ^. pizzicato /= cur ^. pizzicato

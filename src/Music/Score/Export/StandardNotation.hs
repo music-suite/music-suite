@@ -276,7 +276,7 @@ import qualified Music.Score.Pitch
 import Music.Score.Pitch ()
 import Music.Score.Slide (SlideT, runSlideT)
 import Music.Score.StaffNumber (StaffNumberT, runStaffNumberT)
-import Music.Score.Technique (HasTechniques (techniques), SomeTechnique, TechniqueT (..))
+import Music.Score.Technique (HasTechniques (techniques), Technique, TechniqueT (..))
 import qualified Music.Score.Technique
 import Music.Score.Text (TextT, runTextT)
 import qualified Music.Score.Ties
@@ -1833,7 +1833,7 @@ type Asp1a =
                   ( TextT
                       ( HarmonicT
                           ( SlideT
-                              ( TechniqueT SomeTechnique
+                              ( TechniqueT Technique
                                   ( ArticulationT Articulation
                                       ( DynamicT Dynamics
                                           Pitch
@@ -1858,7 +1858,7 @@ type Asp2 =
                     ( TextT
                         ( HarmonicT
                             ( SlideT
-                                ( TechniqueT SomeTechnique
+                                ( TechniqueT Technique
                                     ( ArticulationT Articulation
                                         ( DynamicT Dynamics
                                             [Pitch]
