@@ -1,11 +1,3 @@
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
 
 -- |
 -- Many time structures such as 'Score' allows for rests between notes. Generally rests
@@ -22,9 +14,5 @@ module Music.Time.Rest
   )
 where
 
-import Control.Applicative
-import Music.Time.Juxtapose
-
 rest :: Applicative f => f (Maybe a)
 rest = pure Nothing
--- TODO overload a la IsPitch (bottom instances for ()/Maybe, transformed like IsPitch)

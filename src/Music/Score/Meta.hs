@@ -1,11 +1,8 @@
 {-# LANGUAGE ViewPatterns #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches #-}
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 module Music.Score.Meta
   ( module Music.Time.Meta,
@@ -63,15 +60,15 @@ inSpan t' (view onsetAndOffset -> (t, u)) = t <= t' && t' < u
 
 -- TODO move
 mapBefore :: Time -> (Score a -> Score a) -> Score a -> Score a
-mapBefore t f x = let (y, n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2, x) -> t2 < t) (withTime x) in (f y <> n)
+mapBefore t f x = let (y, n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2, _) -> t2 < t) (withTime x) in (f y <> n)
 
 -- TODO move
 mapDuring :: Span -> (Score a -> Score a) -> Score a -> Score a
-mapDuring s f x = let (y, n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t, x) -> t `inSpan` s) (withTime x) in (f y <> n)
+mapDuring s f x = let (y, n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t, _) -> t `inSpan` s) (withTime x) in (f y <> n)
 
 -- TODO move
 mapAfter :: Time -> (Score a -> Score a) -> Score a -> Score a
-mapAfter t f x = let (y, n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2, x) -> t2 >= t) (withTime x) in (f y <> n)
+mapAfter t f x = let (y, n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2, _) -> t2 >= t) (withTime x) in (f y <> n)
 
 -- Transform the score with the current value of some meta-information
 -- Each "update chunk" of the meta-info is processed separately

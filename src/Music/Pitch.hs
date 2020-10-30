@@ -27,8 +27,7 @@ import Music.Pitch.Alterable
 import Music.Pitch.Ambitus
 import Music.Pitch.Augmentable
 import Music.Pitch.Clef
-import Music.Pitch.Common hiding (Mode)
-import Music.Pitch.Common.Names
+import Music.Pitch.Common
 import Music.Pitch.Equal
 import Music.Pitch.Intonation
 import Music.Pitch.Literal

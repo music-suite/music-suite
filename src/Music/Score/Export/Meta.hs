@@ -1,9 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
@@ -44,12 +40,6 @@ attributionsAt t x =
 titleAt :: HasMeta a => Time -> a -> Maybe Title
 titleAt _ _ = Nothing
 
--- TODO key
-
--- TODO time
-
--- TODO tempo
-
 partNames :: (HasParts' a, Show (Part a)) => a -> [String]
 partNames = fmap show . toListOf parts'
 
@@ -63,5 +53,3 @@ commonMetaAt t x =
     getTitle1 = (`getTitleAt` 0)
     getTitle2 = (`getTitleAt` 1)
     getTitle3 = (`getTitleAt` 2)
---     >>> commonMetaAt 0 $ asScore $ composer "Hans" $ lyricist "Sondheim" c
---     [("title",Nothing),("subtitle",Nothing),("subsubtitle",Nothing),("composer",Just "Hans"),("lyricist",Just "Sondheim")]

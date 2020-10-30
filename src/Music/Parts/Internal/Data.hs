@@ -1,3 +1,8 @@
+{-# OPTIONS_GHC
+  -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-orphans
+  -fno-warn-redundant-constraints #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -18,6 +23,7 @@ where
 import Control.Applicative
 import Control.Lens ((^.), toListOf)
 import Control.Monad.Plus
+import qualified Data.Text
 import Data.AffineSpace
 import qualified Data.ByteString.Lazy
 import qualified Data.ByteString.Lazy
@@ -173,13 +179,6 @@ instance FromRecord InstrumentDef where
       <*> v .! 11
       <*> v .! 12
 
-getInstrumentData' :: [Map String String]
-getInstrumentData' =
-  let d = Data.ByteString.Lazy.fromStrict $(embedFile "data/instruments.csv")
-   in case Data.Csv.decodeByName d of
-        Left e -> error $ "Could not read data/instruments.csv " ++ show e
-        Right (_header, x) -> toListOf traverse x
-
 getInstrumentData :: [InstrumentDef]
 getInstrumentData =
   let d = Data.ByteString.Lazy.fromStrict $(embedFile "data/instruments.csv")
@@ -187,12 +186,6 @@ getInstrumentData =
         Left e -> error $ "Could not read data/instruments.csv " ++ show e
         Right (x) -> toListOf traverse x
 
-splitBy :: Eq a => a -> [a] -> [[a]]
-splitBy _ [] = []
-splitBy x xs = splitBy1 x xs
-  where
-    splitBy1 delimiter = foldr f [[]]
-      where
-        f c l@(x : xs)
-          | c == delimiter = [] : l
-          | otherwise = (c : x) : xs
+splitBy :: Char -> String -> [String]
+splitBy sep = fmap Data.Text.unpack . Data.Text.split (== sep) . Data.Text.pack
+

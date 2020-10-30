@@ -1,3 +1,9 @@
+{-# OPTIONS_GHC
+  -fno-warn-name-shadowing
+  -fno-warn-unused-top-binds
+  -fno-warn-redundant-constraints
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
 module Music.Time.Track
   ( -- * Track type
     Track,
@@ -13,7 +19,6 @@ import Control.Lens hiding
   ( (<|),
     Indexable,
     Level,
-    above,
     below,
     index,
     inside,

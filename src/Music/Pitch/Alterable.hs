@@ -1,10 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
@@ -92,14 +88,6 @@ instance Alterable a => Alterable (b, a) where
   flatten = fmap flatten
 
 deriving instance (Alterable a) => Alterable (Couple b a)
-
-{-
-sharpened :: Alterable a => Iso' a a
-sharpened = iso sharpen flatten
-
-flattened :: Alterable a => Iso' a a
-flattened = iso flatten sharpen
--}
 
 alter :: Alterable a => Int -> a -> a
 alter n x

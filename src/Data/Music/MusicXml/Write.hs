@@ -1,3 +1,7 @@
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -fno-warn-unused-matches #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-} -- TODO
+
 -------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
@@ -17,17 +21,14 @@ where
 
 import Text.XML.Light hiding (Line)
 import qualified Data.Char as Char
-import Data.Default
 import qualified Data.List as List
 import Data.Maybe (maybeToList)
-import Data.Music.MusicXml.Dynamics
 import Data.Music.MusicXml.Pitch
-import Data.Music.MusicXml.Read
 import Data.Music.MusicXml.Score
 import Data.Music.MusicXml.Time
 import Data.Semigroup
-import Numeric.Natural
 import Prelude hiding (getLine)
+import GHC.Stack (HasCallStack)
 
 class WriteMusicXml a where
   write :: a -> [Element]
@@ -232,15 +233,15 @@ instance WriteMusicXml Attributes where
     single $ addAttr (uattr "symbol" "common") $
       unode
         "time"
-        [ unode "beats" (show 4),
-          unode "beat-type" (show 4)
+        [ unode "beats" (show @Integer 4),
+          unode "beat-type" (show @Integer 4)
         ]
   write (Time (CutTime)) =
     single $ addAttr (uattr "symbol" "cut") $
       unode
         "time"
-        [ unode "beats" (show 2),
-          unode "beat-type" (show 2)
+        [ unode "beats" (show @Integer 2),
+          unode "beat-type" (show @Integer 2)
         ]
   write (Time (DivTime beats beatType)) =
     single $
@@ -537,7 +538,7 @@ instance WriteMusicXml Direction where
     single $ unode "metronome" $
       [unode "beat-unit" (writeNoteVal noteVal)]
         <> singleIf dotted (unode "beat-unit-dot" ())
-        <> [unode "per-minute" (show $ round $ getTempo tempo)]
+        <> [unode "per-minute" (show $ round @Double @Integer $ getTempo tempo)]
   write Bracket = notImplemented "Unsupported directions"
   write (OtherDirection dir) = notImplemented ("OtherDirection " <> dir)
 
@@ -721,4 +722,5 @@ singleIf p x
   | not p = []
   | otherwise = [x]
 
+notImplemented :: HasCallStack => String -> a
 notImplemented x = error $ "Not implemented: " ++ x

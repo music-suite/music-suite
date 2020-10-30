@@ -1,12 +1,9 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports #-}
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 module Music.Time.Juxtapose
   ( module Music.Time.Split,
@@ -38,12 +35,6 @@ module Music.Time.Juxtapose
   )
 where
 
-import Control.Lens hiding ((<|), (|>))
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Semigroup
-import Data.Stream.Infinite hiding (group)
-import Data.VectorSpace
 import GHC.Generics (Generic)
 import Music.Time.Split
 

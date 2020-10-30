@@ -46,22 +46,13 @@ import Control.Monad.Plus
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.Basis
-import Data.Either
-import Data.Foldable
-import Data.Maybe
-import Data.Ratio
 import Data.Semigroup
-import Data.Traversable
-import Data.Typeable
 import Data.VectorSpace hiding (Sum, getSum)
 import Music.Score.Articulation
 import Music.Score.Color
 import Music.Score.Dynamics
 import Music.Score.Harmonics
-import Music.Score.Import.Abc
-import Music.Score.Import.Lilypond
-import Music.Score.Import.Midi
-import Music.Score.Internal.Instances
+import Music.Score.Internal.Instances ()
 import Music.Score.Meta
 import Music.Score.Meta.Annotations
 import Music.Score.Meta.Attribution
@@ -82,4 +73,4 @@ import Music.Score.Technique
 import Music.Score.Text
 import Music.Score.Ties
 import Music.Score.Tremolo
-import Music.Time hiding (time)
+import Music.Time

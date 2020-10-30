@@ -15,11 +15,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
@@ -50,7 +46,7 @@ import Control.Lens -- ()
 import Data.Functor.Context
 import Data.Semigroup
 import qualified Music.Articulation
-import Music.Score.Articulation (Accentuation, Articulated (..), Articulation, Separation)
+import Music.Score.Articulation (Accentuation, Articulated (..), GetArticulation, Separation)
 import qualified Music.Score.Articulation
 import Music.Score.Ties (Tiable (..))
 import Music.Time (Transformable (..))
@@ -113,7 +109,7 @@ instance Wrapped ArticulationNotation where
 
 instance Rewrapped ArticulationNotation ArticulationNotation
 
-type instance Articulation ArticulationNotation = ArticulationNotation
+type instance GetArticulation ArticulationNotation = ArticulationNotation
 
 instance Transformable ArticulationNotation where
   transform _ = id

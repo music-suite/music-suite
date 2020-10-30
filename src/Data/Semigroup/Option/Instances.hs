@@ -1,14 +1,10 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Data.Semigroup.Option.Instances where
 
 import Control.Applicative
 import Control.Lens (toListOf)
-import Data.Default
-import qualified Data.List
-import Data.Maybe
 import Data.Semigroup
-import Data.Traversable (traverse)
-import Data.Typeable
-import Text.Numeral.Roman (toRoman)
 
 -- TODO move
 -- TODO toInteger/toRational/fromEnum are unsafe
@@ -67,4 +63,5 @@ instance Integral a => Integral (First a) where
 instance Real a => Real (First a) where
   toRational = toRational . get where get = (head . toListOf traverse)
 
+unzipR :: Functor f => f (a, b) -> (f a, f b)
 unzipR x = (fmap fst x, fmap snd x)

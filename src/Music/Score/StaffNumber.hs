@@ -1,12 +1,8 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 module Music.Score.StaffNumber
   ( -- * StaffNumber
@@ -139,7 +135,7 @@ type instance GetDynamic (StaffNumberT a) = GetDynamic a
 
 type instance SetDynamic g (StaffNumberT a) = StaffNumberT (SetDynamic g a)
 
-type instance Articulation (StaffNumberT a) = Articulation a
+type instance GetArticulation (StaffNumberT a) = GetArticulation a
 
 type instance SetArticulation g (StaffNumberT a) = StaffNumberT (SetArticulation g a)
 

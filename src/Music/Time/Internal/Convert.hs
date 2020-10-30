@@ -8,11 +8,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
@@ -65,4 +61,3 @@ reactiveToVoice' (view onsetAndOffset -> (u, v)) r = (^. voice) $ fmap (^. note)
   where
     times = 0 : filter (\t -> u < t && t < v) (occs r)
     durs = toRelativeTimeN' v times
-{-# DEPRECATED reactiveToVoice' "" #-}

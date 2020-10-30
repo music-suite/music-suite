@@ -1,12 +1,8 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 module Music.Score.Tremolo
   ( -- * Tremolo
@@ -141,7 +137,7 @@ type instance GetDynamic (TremoloT a) = GetDynamic a
 
 type instance SetDynamic g (TremoloT a) = TremoloT (SetDynamic g a)
 
-type instance Articulation (TremoloT a) = Articulation a
+type instance GetArticulation (TremoloT a) = GetArticulation a
 
 type instance SetArticulation g (TremoloT a) = TremoloT (SetArticulation g a)
 

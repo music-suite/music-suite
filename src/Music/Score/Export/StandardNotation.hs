@@ -16,13 +16,10 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports #-}
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 -- |
 -- This module defines a monomorphic representation of Western music notation.
@@ -1162,7 +1159,7 @@ notateLevel showLevel = case showLevel of
     Lilypond.addDynamics
       ( fromDynamics
           ( DynamicsL
-              (Just (fixLevel . realToFrac $ lvl), Nothing)
+              ((fixLevel . realToFrac $ lvl), Nothing)
           )
       )
 
@@ -1563,7 +1560,7 @@ movementToPartwiseXml movement = music
                   MusicXml.dynamic
                     ( fromDynamics
                         ( DynamicsL
-                            (Just (fixLevel . realToFrac $ lvl), Nothing)
+                            ((fixLevel . realToFrac $ lvl), Nothing)
                         )
                     )
             fixLevel :: Double -> Double

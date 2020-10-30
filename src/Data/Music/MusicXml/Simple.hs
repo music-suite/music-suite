@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
@@ -233,14 +234,9 @@ where
 import Control.Arrow
 import Data.Default
 import qualified Data.List as List
-import Data.Monoid
 import Data.Music.MusicXml
-import Data.Music.MusicXml.Dynamics
-import Data.Music.MusicXml.Pitch
-import Data.Music.MusicXml.Read
 import Data.Music.MusicXml.Score
 import Data.Music.MusicXml.Time
-import Data.Music.MusicXml.Write
 import Data.Ratio
 
 -- ----------------------------------------------------------------------------------
@@ -352,14 +348,14 @@ setMovementTitle t sh = sh { mvmTitle = Just t }
 
 -- | The values P1, P2... which are conventionally used to identify parts in MusicXML.
 standardPartAttributes :: [String]
-standardPartAttributes = ["P" ++ show n | n <- [1 ..]]
+standardPartAttributes = ["P" ++ show @Integer n | n <- [1 ..]]
 
 -- | Given a partwise score (list of parts, which are lists of measures), add part and measure attributes (numbers).
 addPartwiseAttributes :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
 addPartwiseAttributes = deepZip partIds barIds
   where
     partIds = fmap PartAttrs standardPartAttributes
-    barIds = fmap (MeasureAttrs False . show) [1 ..]
+    barIds = fmap (MeasureAttrs False . show @Integer) [1 ..]
     deepZip :: [a] -> [b] -> [[c]] -> [(a, [(b, c)])]
     deepZip xs ys = zipWith (curry $ second (zip ys)) xs
 
@@ -481,7 +477,7 @@ rest dur = case dots of
 rest' :: NoteVal -> Music
 rest' dur = Music . single $ MusicNote (Note def (defaultDivisionsVal `div` denom) noTies (setNoteValP val def))
   where
-    num = fromIntegral $ numerator $ toRational $ dur
+    -- num = fromIntegral $ numerator $ toRational $ dur
     denom = fromIntegral $ denominator $ toRational $ dur
     val = NoteVal $ toRational $ dur
 
@@ -526,7 +522,7 @@ note' isChord pitch dur dots =
     -- num ~ 1
     -- denom ~ 4
 
-    num = fromIntegral $ numerator $ toRational $ dur
+    -- num = numerator $ toRational $ dur
     denom = fromIntegral $ denominator $ toRational $ dur
     val = NoteVal $ toRational $ dur
 
@@ -534,9 +530,9 @@ separateDots :: NoteVal -> (NoteVal, Int)
 separateDots = separateDots' [2 / 3, 6 / 7, 14 / 15, 30 / 31, 62 / 63]
 
 separateDots' :: [NoteVal] -> NoteVal -> (NoteVal, Int)
-separateDots' [] nv = errorNoteValue
+separateDots' [] _nv = errorNoteValue
 separateDots' (div : divs) nv
-  | isDivisibleBy 2 nv = (nv, 0)
+  | isDivisibleBy @Integer 2 nv = (nv, 0)
   | otherwise = (nv', dots' + 1)
   where
     (nv', dots') = separateDots' divs (nv * div)
@@ -574,7 +570,7 @@ mergeNotations notations =
     <> others
   where
     (ornaments, notations') = List.partition isOrnaments notations
-    (technical, notations'') = List.partition isTechnical notations'
+    (technical, _notations'') = List.partition isTechnical notations'
     (articulations, others) = List.partition isArticulations notations'
     isOrnaments (Ornaments _) = True
     isOrnaments _ = False
@@ -588,6 +584,7 @@ mergeNotations notations =
     (Ornaments xs) `mergeN` (Ornaments ys) = Ornaments (xs <> ys)
     (Technical xs) `mergeN` (Technical ys) = Technical (xs <> ys)
     (Articulations xs) `mergeN` (Articulations ys) = Articulations (xs <> ys)
+    _ `mergeN` _ = error "mergeNotations: mergeN: Unexpected"
 
 beginTuplet :: Music -> Music
 
@@ -633,11 +630,11 @@ setVoiceP n x = x {noteVoice = Just (fromIntegral n)}
 
 setTimeModP m n x = x {noteTimeMod = Just (fromIntegral m, fromIntegral n)}
 
-beginBeamP n x = x {noteBeam = Just (fromIntegral n, BeginBeam)}
+beginBeamP n x = x {noteBeam = Just (n, BeginBeam)}
 
-continueBeamP n x = x {noteBeam = Just (fromIntegral n, ContinueBeam)}
+continueBeamP n x = x {noteBeam = Just (n, ContinueBeam)}
 
-endBeamP n x = x {noteBeam = Just (fromIntegral n, EndBeam)}
+endBeamP n x = x {noteBeam = Just (n, EndBeam)}
 
 dotP x@(NoteProps {noteDots = n@_}) = x {noteDots = succ n}
 
@@ -908,12 +905,13 @@ foldMusicElem = go
     go fa _ _ (MusicAttributes x) = fa x
     go _ fn _ (MusicNote x) = fn x
     go _ _ fd (MusicDirection x) = fd x
+    go _ _ _ _ = error "foldMusicElem: Unexpected"
 
 -- ----------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
 
-logBaseR :: forall a. (RealFloat a, Floating a) => Rational -> Rational -> a
+logBaseR :: forall a. (RealFloat a) => Rational -> Rational -> a
 logBaseR k n
   | isInfinite (fromRational n :: a) = logBaseR k (n / k) + 1
 logBaseR k n
@@ -921,7 +919,7 @@ logBaseR k n
 logBaseR k n = logBase (fromRational k) (fromRational n)
 
 isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
-isDivisibleBy n = (equalTo 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
+isDivisibleBy n = (equalTo 0.0) . snd . properFraction @Double @Integer . logBaseR (toRational n) . toRational
 
 single x = [x]
 

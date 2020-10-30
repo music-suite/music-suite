@@ -1,8 +1,4 @@
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
@@ -99,4 +95,3 @@ stretchToD d x = (d ^/ _duration x) `stretch` x
 duration :: (Transformable a, HasDuration a) => Getter a Duration
 duration = to _duration
 {-# INLINE duration #-}
-{-# DEPRECATED duration "Use _duration" #-}

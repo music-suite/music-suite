@@ -764,7 +764,6 @@ deriving instance Num Level
 -- Bounded ints
 type Max8 = Index N8
 
-notImplemented x = error $ "Not implemented: " ++ x
 
 -- ----------------------------------------------------------------------------------
 -- Default instances

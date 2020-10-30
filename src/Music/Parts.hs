@@ -1,10 +1,10 @@
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-} -- TODO get rid of this!
 {-# LANGUAGE FlexibleContexts #-}
 
 -- | Representation of musical instruments, parts and playing techniques.
 module Music.Parts
-  ( -- * Terminology
-    -- $terminology
-
+  (
     -- * Subparts
     module Music.Parts.Division,
     module Music.Parts.Subpart,
@@ -120,8 +120,6 @@ module Music.Parts
   )
 where
 
-import Control.Lens (Lens, Lens', (^.), toListOf)
-import Data.Maybe
 import Music.Parts.Division
 import Music.Parts.Group
 import Music.Parts.Instrument
@@ -134,22 +132,6 @@ import Music.Parts.Instrument.Woodwind
 import Music.Parts.Part
 import Music.Parts.Solo
 import Music.Parts.Subpart
-
--- $terminology
---
--- Parts represent a subset of a group of performers. It is mainly used for instrumental and
--- vocal music, but some concetps may be useful in electronic music as well.
---
--- -   'Section' refers to a set of instrumentfamilies related by sound production method (i.e. woodwind).
---
--- -   'Family' refers to a set of instrument or voice types, which typically differ in size (i.e. saxophones).
---
--- -   'Instrument' refers to a set of instruments or voice types of a given type (i.e. soprano saxophones).
---     Perhaps confusingly, this includes vocal types such as alto, tenor etc as well. However, there is
---     no good general term that incorporate both /instrument/ and /voice type/.
---
--- -   A 'Part' is made up of an 'Instrument' and a 'Division' (i.e. Violin I). Solo parts are treated
---     separately, so i.e. /Violin solo II/ (as in a double concerto) is distinct from /Violin II/.
 
 piccoloFlute = fromMidiProgram 72
 

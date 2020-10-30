@@ -12,8 +12,8 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
-- [ ] MusicXML Parser
-  - [ ] Make all tests pass (music-suite-test-xml-parser)
+- [X] MusicXML Parser
+  - [X] Make all tests pass (music-suite-test-xml-parser)
   - [ ] Full ornament support, see https://github.com/hanshoglund/music-suite/pull/22#issuecomment-633314407
 
 - [X] Bug: Regression in 2b8bb331098eac1e14b6f0cc6a7a8833ca2fb533
@@ -46,8 +46,8 @@ Consider switching to a decentralized issue tracker such as:
 - Rename Music.Score.Pitch -> GetPitch
   - [ ] Pitch
   - [X] Dynamics
-  - [ ] Articulation
-  - [ ] Technique
+  - [X] Articulation
+  - [X] Technique
   - [ ] Part
   - Also rename SomeTechnique -> Music.Technique.Technique or similar (a la pitch et al)
 

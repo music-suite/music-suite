@@ -1,8 +1,4 @@
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
@@ -120,20 +116,3 @@ fifths a = Fifths $ logBase (3 / 2) (frequency a)
 -- |  Convert a frequency to cents.
 cents :: HasFrequency a => a -> Cents
 cents a = Cents $ logBase (2 / 1) (frequency a) * 1200
-{-
--- Calculate spectral dissonance.
--- Only works as exp for freqs > 1
---
--- TODO should use NonEmpty
-diss :: RealFrac a => [a] -> a
-diss xs = lcms xs / minimum xs
-
--- gcdG :: RealFrac a => a -> a -> a
--- gcdG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (gcd a1 b1) / fromIntegral (lcm a2 b2)
-
-lcmG :: RealFrac a => a -> a -> a
-lcmG a b = let f = (unRatio . toRational); (a1, a2) = f a; (b1, b2) = f b in fromIntegral (lcm a1 b1) / fromIntegral (gcd a2 b2)
-
-lcms :: RealFrac a => [a] -> a
-lcms = foldr lcmG 1
--}
