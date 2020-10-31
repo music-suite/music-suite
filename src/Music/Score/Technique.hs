@@ -27,7 +27,7 @@ module Music.Score.Technique
     TechniqueT (..),
 
     -- * Dynamically typed playing techniques
-    SomeTechnique,
+    Technique,
     PizzArco (..),
     Legno (..),
     StringPos (..),
@@ -223,9 +223,9 @@ type instance GetTechnique () = ()
 
 type instance SetTechnique a () = a
 
-type instance GetTechnique SomeTechnique = SomeTechnique
+type instance GetTechnique Technique = Technique
 
-type instance SetTechnique a SomeTechnique = a
+type instance SetTechnique a Technique = a
 
 instance HasTechniques a b => HasTechniques (Aligned a) (Aligned b) where
   techniques = traverse . techniques
@@ -471,8 +471,8 @@ data InstrType = Winds | Strings | Brass | Perc | Keyboard | Vocal
 data Technique :: '[InstrType] -> Type where
   Pizz :: Bool -> Technique Strings
 
-data SomeTechnique where
-  SomeTechnique :: forall ts . Technique ts -> SomeTechnique
+data Technique where
+  Technique :: forall ts . Technique ts -> Technique
 -}
 
 data PizzArco = Arco | Pizz
@@ -515,8 +515,10 @@ instance Semigroup StringMute where
     | x == mempty = y
     | otherwise = x
 
-data SomeTechnique
-  = SomeTechnique
+-- |
+-- Represents playing techniques.
+data Technique
+  = Technique
       { _pizzicato :: PizzArco,
         _legno :: Legno,
         _stringPos :: StringPos,
@@ -525,44 +527,44 @@ data SomeTechnique
       }
   deriving (Show, Eq)
 
-makeLenses ''SomeTechnique
+makeLenses ''Technique
 
-instance Monoid SomeTechnique where
-  mempty = SomeTechnique
+instance Monoid Technique where
+  mempty = Technique
     { _pizzicato = mempty,
       _legno = mempty,
       _stringPos = mempty,
       _stringMute = mempty
     }
 
-instance Semigroup SomeTechnique where
-  SomeTechnique p1 l1 o1 m1
-    <> SomeTechnique p2 l2 o2 m2 =
-      SomeTechnique (p1 <> p2) (l1 <> l2) (o1 <> o2) (m1 <> m2)
+instance Semigroup Technique where
+  Technique p1 l1 o1 m1
+    <> Technique p2 l2 o2 m2 =
+      Technique (p1 <> p2) (l1 <> l2) (o1 <> o2) (m1 <> m2)
 
-instance Tiable SomeTechnique where
+instance Tiable Technique where
   toTied x = (x, x)
 
-pizz, arco :: (HasTechniques' a, GetTechnique a ~ SomeTechnique) => a -> a
+pizz, arco :: (HasTechniques' a, GetTechnique a ~ Technique) => a -> a
 pizz = set (techniques . pizzicato) Pizz
 arco = set (techniques . pizzicato) Arco
 
-moltoSulPont, sulPont, posNat, sulTasto, moltoSulTasto :: (HasTechniques' a, GetTechnique a ~ SomeTechnique) => a -> a
+moltoSulPont, sulPont, posNat, sulTasto, moltoSulTasto :: (HasTechniques' a, GetTechnique a ~ Technique) => a -> a
 moltoSulPont = set (techniques . stringPos) MoltoSulPont
 sulPont = set (techniques . stringPos) SulPont
 posNat = set (techniques . stringPos) PosNat
 sulTasto = set (techniques . stringPos) SulTasto
 moltoSulTasto = set (techniques . stringPos) MoltoSulTasto
 
-naturale :: (HasTechniques' a, GetTechnique a ~ SomeTechnique) => a -> a
+naturale :: (HasTechniques' a, GetTechnique a ~ Technique) => a -> a
 naturale = senzaLegno . posNat . unmuted
 
-colLegno, colLegnoBatt, senzaLegno :: (HasTechniques' a, GetTechnique a ~ SomeTechnique) => a -> a
+colLegno, colLegnoBatt, senzaLegno :: (HasTechniques' a, GetTechnique a ~ Technique) => a -> a
 colLegno = set (techniques . legno) ColLegnoTratto
 colLegnoBatt = set (techniques . legno) ColLegnoBatt
 senzaLegno = set (techniques . legno) NonLegno
 
-muted, unmuted, conSord, senzaSord :: (HasTechniques' a, GetTechnique a ~ SomeTechnique) => a -> a
+muted, unmuted, conSord, senzaSord :: (HasTechniques' a, GetTechnique a ~ Technique) => a -> a
 muted = set (techniques . stringMute) StringMute
 unmuted = set (techniques . stringMute) NoStringMute
 conSord = set (techniques . stringMute) StringMute

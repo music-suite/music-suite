@@ -1,31 +1,10 @@
-{-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE QuantifiedConstraints #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
-{-# OPTIONS_GHC -fno-warn-unused-top-binds #-}
-
--- FIXME TODO get rid of!
-
--- FIXME
-
-{-
- - TODO get rid of UndecidableInstances by tracking both pitch and interval in the type
- - params of Mode/Scale etc.
- -}
 
 -- | Scales and chords.
 --
@@ -545,13 +524,11 @@ deriving instance Foldable (f v) => Foldable (Voiced f v)
 
 deriving instance Traversable (f v) => Traversable (Voiced f v)
 
--- TODO relax to Bifunctor
-instance Bitraversable f => Bifunctor (Voiced f) where
-  bimap = bimapDefault
+instance Bifunctor f => Bifunctor (Voiced f) where
+  bimap f g (Voiced x ns) = Voiced (bimap f g x) ns
 
--- TODO relax to Bifoldable
-instance Bitraversable f => Bifoldable (Voiced f) where
-  bifoldMap = bifoldMapDefault
+instance Bifoldable f => Bifoldable (Voiced f) where
+  bifoldMap f g (Voiced x _) = bifoldMap f g x
 
 instance Bitraversable f => Bitraversable (Voiced f) where
   bitraverse f g (Voiced xs ns) = Voiced <$> bitraverse f g xs <*> pure ns

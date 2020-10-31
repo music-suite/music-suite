@@ -211,6 +211,7 @@ library
                         FlexibleContexts,
                         FlexibleInstances,
                         GeneralizedNewtypeDeriving,
+                        InstanceSigs,
                         MultiParamTypeClasses,
                         NoMonomorphismRestriction,
                         RankNTypes,
