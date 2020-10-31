@@ -2,11 +2,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Weverything
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# LANGUAGE DefaultSignatures #-}
+{-# OPTIONS_GHC
   -fno-warn-missing-local-signatures
   -fno-warn-unsafe
   -fno-warn-unused-type-patterns

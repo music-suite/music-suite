@@ -14,8 +14,8 @@
 -- Stability   : experimental
 -- Portability : portable
 module Data.Music.MusicXml.Time
-  ( Duration (..),
-    NoteType (..),
+  ( Duration ,
+    NoteType ,
     Divs (..),
     NoteVal (..),
     NoteSize (..),

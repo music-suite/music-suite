@@ -1,10 +1,5 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 -------------------------------------------------------------------------------------
 

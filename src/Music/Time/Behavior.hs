@@ -1,8 +1,4 @@
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
@@ -309,7 +305,7 @@ switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
 
 -- | Sample the given behavior at the given time.
 (!) :: Behavior a -> Time -> a
-b ! t = getBehavior b t
+(!) b t = getBehavior b t
 
 -- | Replace everything outside the given span by 'mempty'.
 trim :: Monoid a => Span -> Behavior a -> Behavior a

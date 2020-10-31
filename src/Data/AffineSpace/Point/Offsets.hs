@@ -1,3 +1,7 @@
+{-# OPTIONS_GHC
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
 module Data.AffineSpace.Point.Offsets
   ( offsetPoints,
     offsetPointsS,

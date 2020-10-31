@@ -16,8 +16,8 @@
 -- Stability   : experimental
 -- Portability : portable
 module Data.Music.MusicXml.Pitch
-  ( Pitch (..),
-    DisplayPitch (..),
+  ( Pitch ,
+    DisplayPitch ,
     PitchClass (..),
     Semitones (..),
     noSemitones,

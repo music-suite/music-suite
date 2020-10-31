@@ -3,15 +3,11 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
   -fno-warn-unused-imports
-  -fno-warn-missing-signatures #-}
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
 
 module Music.Pitch.Common.Internal where
@@ -125,7 +121,7 @@ data Name = C | D | E | F | G | A | B
   deriving (Eq, Ord, Show, Enum)
 
 -- |
--- This type represents standard basis for intervbals.
+-- This type represents standard basis for intervals.
 data IntervalBasis = Chromatic | Diatonic
   deriving (Eq, Ord, Show, Enum)
 
@@ -355,12 +351,12 @@ intervals.
 -- >>> isNegative (-m3)
 -- True
 isNegative :: Interval -> Bool
-isNegative (Interval (a, d)) = d < 0
+isNegative (Interval (_a, d)) = d < 0
 
 -- |
 -- Returns whether the given interval is positive.
 isPositive :: Interval -> Bool
-isPositive x@(Interval (a, d)) = d >= 0 && not (isPerfectUnison x)
+isPositive x@(Interval (_a, d)) = d >= 0 && not (isPerfectUnison x)
 
 instance Show Interval where
   show a
@@ -382,8 +378,8 @@ instance HasBasis Interval where
 
   decompose (Interval (c, d)) = [(Chromatic, fromIntegral c), (Diatonic, fromIntegral d)]
 
-  decompose' (Interval (c, d)) Chromatic = fromIntegral c
-  decompose' (Interval (c, d)) Diatonic = fromIntegral d
+  decompose' (Interval (c, _d)) Chromatic = fromIntegral c
+  decompose' (Interval (_c, d)) Diatonic = fromIntegral d
 
 instance HasQuality Interval where
   quality :: Interval -> Quality
@@ -440,7 +436,7 @@ instance Augmentable Interval where
   diminish i = i ^-^ _A1
 
 instance HasSemitones Interval where
-  semitones (Interval (a, d)) = fromIntegral a -- assuming "semitone" == A1
+  semitones (Interval (a, _d)) = fromIntegral a -- assuming "semitone" == A1
 
 instance ToJSON DiatonicSteps where
   toJSON = toJSON . toInteger
@@ -574,7 +570,7 @@ isCompound x = octaves x /= 0
 -- |
 -- Returns whether the given interval is non-negative. This implies that it is either positive or a perfect unison.
 isNonNegative :: Interval -> Bool
-isNonNegative (Interval (a, d)) = d >= 0
+isNonNegative (Interval (_a, d)) = d >= 0
 
 -- |
 -- Returns whether the given interval a perfect unison.
@@ -606,7 +602,7 @@ isPerfectUnison (Interval (a, d)) = (a, d) == (0, 0)
 -- >>> isLeap _P1
 -- False
 isStep :: Interval -> Bool
-isStep (Interval (a, d)) = (abs d) <= 1
+isStep (Interval (_a, d)) = (abs d) <= 1
 
 -- |
 -- Returns whether the given interval is a leap (larger than a second).
@@ -624,7 +620,7 @@ isStep (Interval (a, d)) = (abs d) <= 1
 -- >>> isLeap _P1
 -- False
 isLeap :: Interval -> Bool
-isLeap (Interval (a, d)) = (abs d) > 1
+isLeap (Interval (_a, d)) = (abs d) > 1
 
 -- |
 -- Intervallic inversion.
@@ -759,8 +755,8 @@ diatonicToChromatic d = fromIntegral $ (octaves * 12) + go restDia
 
 -- | Integer div of intervals: i / di = x, where x is an integer
 intervalDiv :: Interval -> Interval -> Int
-intervalDiv (Interval (a, d)) (Interval (1, 0)) = fromIntegral a
-intervalDiv (Interval (a, d)) (Interval (0, 1)) = fromIntegral d
+intervalDiv (Interval (a, _d)) (Interval (1, 0)) = fromIntegral a
+intervalDiv (Interval (_a, d)) (Interval (0, 1)) = fromIntegral d
 intervalDiv i di
   | (i > _P1) = intervalDivPos i di
   | (i < _P1) = intervalDivNeg i di
@@ -1100,7 +1096,7 @@ qualityToAlteration d qt q = fmap fromIntegral $ go d qt q
     go Downward PerfectType (Augmented n) = Just $ 0 - n
     go Downward PerfectType Perfect = Just $ 0
     go Downward PerfectType (Diminished n) = Just $ 0 + n
-    go _ qt q = Nothing
+    go _ _qt _q = Nothing
 
 -- TODO get rid of HasNumber, make (number :: Interval -> Number)
 -- TODO get rid of HasQuality, make (quality :: Interval -> Quality)

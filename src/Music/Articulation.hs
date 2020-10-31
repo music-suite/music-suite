@@ -17,12 +17,7 @@ module Music.Articulation
   )
 where
 
-import Control.Applicative
-import Control.Monad
-import Data.Either
-import Data.Maybe
 import Data.Monoid.Average
-import Data.Semigroup
 
 type Articulation = (Average Rational, Average Rational)
 {-

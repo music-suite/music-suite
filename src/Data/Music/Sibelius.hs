@@ -37,22 +37,10 @@ module Data.Music.Sibelius
   )
 where
 
-import Control.Applicative
 import Control.Monad.Plus
 import Data.Aeson
 import qualified Data.HashMap.Strict as HashMap
-import Data.Semigroup
 
-{-
-setTitle :: String -> Score a -> Score a
-setTitle = setMeta "title"
-setComposer :: String -> Score a -> Score a
-setComposer = setMeta "composer"
-setInformation :: String -> Score a -> Score a
-setInformation = setMeta "information"
-setMeta :: String -> String -> Score a -> Score a
-setMeta _ _ = id
--}
 
 data SibeliusScore
   = SibeliusScore
@@ -76,6 +64,7 @@ instance FromJSON SibeliusScore where
       <*> v .: "transposing"
       <*> v .: "staves"
       <*> v .: "systemStaff"
+  parseJSON _ = fail "expected object"
 
 data SibeliusSystemStaff
   = SibeliusSystemStaff
@@ -87,6 +76,7 @@ instance FromJSON SibeliusSystemStaff where
   parseJSON (Object v) =
     SibeliusSystemStaff
       <$> v .: "bars"
+  parseJSON _ = fail "expected object"
 
 data SibeliusStaff
   = SibeliusStaff
@@ -103,6 +93,7 @@ instance FromJSON SibeliusStaff where
       <*> v .: "name"
       <*> v .: "shortName"
 
+  parseJSON _ = fail "expected object"
 data SibeliusBar
   = SibeliusBar
       { barElements :: [SibeliusBarObject]
@@ -113,6 +104,7 @@ instance FromJSON SibeliusBar where
   parseJSON (Object v) =
     SibeliusBar
       <$> v .: "elements"
+  parseJSON _ = fail "expected object"
 
 data SibeliusBarObject
   = SibeliusBarObjectText SibeliusText
@@ -129,6 +121,7 @@ data SibeliusBarObject
 
 -- TODO highlights, lyric, barlines, comment, other lines and symbols
 
+isTimeSignature :: SibeliusBarObject -> Bool
 isTimeSignature (SibeliusBarObjectTimeSignature _) = True
 isTimeSignature _ = False
 
@@ -146,6 +139,7 @@ instance FromJSON SibeliusBarObject where
     Just "chord" -> SibeliusBarObjectChord <$> parseJSON x
     Just typ -> SibeliusBarObjectUnknown <$> (return $ show typ)
     _ -> mempty -- failure: no type field
+  parseJSON _ = fail "expected object"
 
 data SibeliusText
   = SibeliusText
@@ -163,6 +157,7 @@ instance FromJSON SibeliusText where
       <*> v .: "position"
       <*> v .: "text"
       <*> v .:? "style"
+  parseJSON _ = fail "expected object"
 
 data SibeliusClef
   = SibeliusClef
@@ -178,6 +173,7 @@ instance FromJSON SibeliusClef where
       <$> v .: "voice"
       <*> v .: "position"
       <*> v .: "style"
+  parseJSON _ = fail "expected object"
 
 data SibeliusSlur
   = SibeliusSlur
@@ -195,6 +191,7 @@ instance FromJSON SibeliusSlur where
       <*> v .: "position"
       <*> v .: "duration"
       <*> v .: "style"
+  parseJSON _ = fail "expected object"
 
 data SibeliusCrescendoLine
   = SibeliusCrescendoLine
@@ -212,6 +209,7 @@ instance FromJSON SibeliusCrescendoLine where
       <*> v .: "position"
       <*> v .: "duration"
       <*> v .: "style"
+  parseJSON _ = fail "expected object"
 
 data SibeliusDiminuendoLine
   = SibeliusDiminuendoLine
@@ -229,6 +227,7 @@ instance FromJSON SibeliusDiminuendoLine where
       <*> v .: "position"
       <*> v .: "duration"
       <*> v .: "style"
+  parseJSON _ = fail "expected object"
 
 data SibeliusTimeSignature
   = SibeliusTimeSignature
@@ -248,6 +247,7 @@ instance FromJSON SibeliusTimeSignature where
       <*> v .: "value"
       <*> v .: "common"
       <*> v .: "allaBreve"
+  parseJSON _ = fail "expected object"
 
 data SibeliusKeySignature
   = SibeliusKeySignature
@@ -267,6 +267,7 @@ instance FromJSON SibeliusKeySignature where
       <*> v .: "major"
       <*> v .: "sharps"
       <*> v .: "isOpen"
+  parseJSON _ = fail "expected object"
 
 data SibeliusTuplet
   = SibeliusTuplet
@@ -286,6 +287,7 @@ instance FromJSON SibeliusTuplet where
       <*> v .: "duration"
       <*> v .: "playedDuration"
       <*> v .: "value"
+  parseJSON _ = fail "expected object"
 
 data SibeliusArticulation
   = UpBow
@@ -341,6 +343,7 @@ instance FromJSON SibeliusChord where
       <*> v .: "acciaccatura"
       <*> v .: "appoggiatura"
       <*> v .: "notes"
+  parseJSON _ = fail "expected object"
 
 data SibeliusNote
   = SibeliusNote
@@ -360,3 +363,4 @@ instance FromJSON SibeliusNote where
       <*> v .: "accidental"
       <*> v .: "tied"
       <*> v .: "style"
+  parseJSON _ = fail "expected object"

@@ -1,3 +1,11 @@
+{-# OPTIONS_GHC -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Werror
+  -fno-warn-name-shadowing
+  -fno-warn-unused-matches
+  -fno-warn-unused-imports #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -21,7 +29,7 @@
 --
 -- /Warning/ Experimental module.
 module Music.Score.Import.Midi
-  ( IsMidi (..),
+  ( IsMidi,
     fromMidi,
     readMidi,
     readMidiMaybe,
@@ -92,8 +100,10 @@ type IsMidi a =
 -- -- |
 -- -- Convert a score from a Midi representation.
 -- --
-fromMidi :: IsMidi a => Midi -> Score a
-fromMidi = error "TODO midi import" . getMidi
+fromMidi :: IsMidi a => Midi.Midi -> Score a
+fromMidi = noConstraintWarning . error "TODO" . getMidi
+  where
+    noConstraintWarning = fmap (const c)
 
 getMidi :: Midi.Midi -> [[Event (Midi.Channel, Midi.Key, Midi.Velocity)]]
 getMidi (Midi.Midi fileType timeDiv tracks) =
@@ -123,6 +133,7 @@ getMidi (Midi.Midi fileType timeDiv tracks) =
     ticksp (Midi.TicksPerBeat n) = 1 / fromIntegral n
     ticksp (Midi.TicksPerSecond _ _) = error "fromMidi: Can not parse TickePerSecond-based files"
 
+getMsg :: (a, Midi.Message) -> Maybe (a, Bool, Midi.Channel, Midi.Key, Midi.Velocity)
 getMsg (t, Midi.NoteOff c p v) = Just (t, False, c, p, v)
 getMsg (t, Midi.NoteOn c p 0) = Just (t, False, c, p, 0)
 getMsg (t, Midi.NoteOn c p v) = Just (t, True, c, p, v)

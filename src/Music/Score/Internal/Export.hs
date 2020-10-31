@@ -3,14 +3,10 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -Wwarn #-}
 {-# OPTIONS_HADDOCK hide #-}
 
@@ -31,14 +27,6 @@ module Music.Score.Internal.Export
     extractBars,
   )
 where
-
--- voiceToBars',
--- -- separateBars,
--- spellPitch,
--- MVoice,
--- -- toMVoice,
--- unvoice,
--- openCommand
 
 import qualified Codec.Midi as Midi
 import Control.Applicative

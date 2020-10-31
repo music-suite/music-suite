@@ -1,13 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
-  -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 module Music.Time.Types
   ( -- * Basic types
@@ -92,10 +85,8 @@ module Music.Time.Types
 where
 
 import Control.Applicative
-import Control.Applicative.Backwards
 import Control.Lens hiding
   ( (<|),
-    Indexable,
     Level,
     below,
     index,
@@ -111,16 +102,13 @@ import qualified Data.Aeson as JSON
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.AffineSpace.Point.Offsets
-import Data.List (mapAccumL, mapAccumR)
+import Data.List (mapAccumR)
 import Data.Ratio
-import Data.Semigroup
 import Data.Typeable
 import Data.VectorSpace
 import GHC.Generics (Generic)
 import Music.Score.Internal.Util (unRatio)
 import Music.Time.Internal.Util (showRatio)
-
--- import           Data.Fixed
 
 -- $convert
 --
@@ -715,9 +703,9 @@ a `isBefore` b = (_onsetS a `max` _offsetS a) <= (_onsetS b `min` _offsetS b)
 
 -- TODO resolve this so we can use actual onset/offset etc in the above definitions
 -- Same as (onset, offset), defined here for bootstrapping reasons
-_onsetS (view onsetAndOffset -> (t1, t2)) = t1
+_onsetS (view onsetAndOffset -> (t1, _t2)) = t1
 
-_offsetS (view onsetAndOffset -> (t1, t2)) = t2
+_offsetS (view onsetAndOffset -> (_t1, t2)) = t2
 
 _midpointS s = _onsetS s .+^ _durationS s / 2
 

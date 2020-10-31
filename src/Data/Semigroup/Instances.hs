@@ -2,13 +2,13 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Data.Semigroup.Instances
   (
   )
 where
 
-import Control.Applicative
 import Data.AffineSpace
 import Data.Orphans ()
 import Data.Semigroup

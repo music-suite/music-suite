@@ -7,6 +7,10 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_HADDOCK hide #-}
+{-# OPTIONS_GHC
+  -fno-warn-name-shadowing
+  -fno-warn-redundant-constraints
+  -fno-warn-unused-imports #-}
 
 -------------------------------------------------------------------------------------
 
@@ -35,6 +39,11 @@ module Music.Score.Internal.Quantize
     -- * Utility
     drawRhythm,
     testQuantize,
+
+    -- * Internals
+    splitTupletIfLongEnough,
+    realize,
+    match,
   )
 where
 
@@ -91,11 +100,11 @@ instance Transformable (Rhythm a) where
   transform s (Tuplet n r) = Tuplet n (transform s r)
 
 getBeatValue :: Rhythm a -> a
-getBeatValue (Beat d a) = a
+getBeatValue (Beat _d a) = a
 getBeatValue _ = error "getBeatValue: Not a beat"
 
 getBeatDuration :: Rhythm a -> Duration
-getBeatDuration (Beat d a) = d
+getBeatDuration (Beat d _a) = d
 getBeatDuration _ = error "getBeatValue: Not a beat"
 
 -- TODO return voice
@@ -120,13 +129,13 @@ realize (Tuplet n r) = n `stretch` realize r
 rhythmToTree :: Rhythm a -> Tree String
 rhythmToTree = go
   where
-    go (Beat d a) = Node ("" ++ showD d) []
+    go (Beat d _a) = Node ("" ++ showD d) []
     go (Group rs) = Node ("") (fmap rhythmToTree rs)
     go (Dotted n r) = Node (replicate n '.') [rhythmToTree r]
     go (Tuplet n r) = Node ("*^ " ++ showD n) [rhythmToTree r]
     showD = (\x -> show (numerator x) ++ "/" ++ show (denominator x)) . toRational
 
-drawRhythm :: Show a => Rhythm a -> String
+drawRhythm :: Rhythm a -> String
 drawRhythm = drawTree . rhythmToTree
 
 mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
@@ -139,13 +148,14 @@ mapWithDur f = go
     go (Tuplet m r) = Tuplet m (mapWithDur f r)
 
 instance Semigroup (Rhythm a) where
-  (<>) = mappend
+  (<>) = appendRhythm
 
 -- Catenates using 'Group'
 instance Monoid (Rhythm a) where
-
   mempty = Group []
 
+appendRhythm :: Rhythm a -> Rhythm a -> Rhythm a
+appendRhythm = mappend where
   Group as `mappend` Group bs = Group (as <> bs)
   r `mappend` Group bs = Group ([r] <> bs)
   Group as `mappend` r = Group (as <> [r])
@@ -170,7 +180,7 @@ instance VectorSpace (Rhythm a) where
   type Scalar (Rhythm a) = Duration
 
   a *^ Beat d x = Beat (a * d) x
-  a *^ _ = error "instance VectorSpace (Rhythm a): Can only scale beats"
+  _ *^ _ = error "instance VectorSpace (Rhythm a): Can only scale beats"
 
 -- TODO partial, and might not preserve the invariant?
 -- This is probably a good reason to get rid of this instance
@@ -202,6 +212,7 @@ instance VectorSpace (Rhythm a) where
 rewrite :: Rhythm a -> Rhythm a
 rewrite = rewriteR . rewrite1
 
+rewriteR :: Rhythm a -> Rhythm a
 rewriteR = go
   where
     go (Beat d a) = Beat d a
@@ -209,16 +220,17 @@ rewriteR = go
     go (Dotted n r) = Dotted n ((rewriteR . rewrite1) r)
     go (Tuplet n r) = Tuplet n ((rewriteR . rewrite1) r)
 
+rewrite1 :: Rhythm a -> Rhythm a
 rewrite1 = tupletDot . {-splitTupletIfLongEnough .-} singleGroup
 
 -- | Removes single-note groups
 singleGroup :: Rhythm a -> Rhythm a
-singleGroup orig@(Group [x]) = x
+singleGroup (Group [x]) = x
 singleGroup orig = orig
 
 -- | Removes dotted notes in 2/3 tuplets.
 tupletDot :: Rhythm a -> Rhythm a
-tupletDot orig@(Tuplet ((unRatio . realToFrac) -> (2, 3)) (Dotted 1 x)) = x
+tupletDot (Tuplet ((unRatio . realToFrac @Duration @Rational) -> (2, 3)) (Dotted 1 x)) = x
 tupletDot orig = orig
 
 splitTupletIfLongEnough :: Rhythm a -> Rhythm a
@@ -294,11 +306,11 @@ konstMaxTupletNest = 1
 
 data RhythmContext
   = RhythmContext
-      { -- Time scaling of the current note (from dots and tuplets).
+      { -- | Time scaling of the current note (from dots and tuplets).
         timeMod :: Duration,
-        -- Time subtracted from the current rhythm (from ties).
+        -- | Time subtracted from the current rhythm (from ties).
         timeSub :: Duration,
-        -- Number of tuplets above the current note (default 0).
+        -- | Number of tuplets above the current note (default 0).
         tupleDepth :: Int
       }
 
@@ -340,13 +352,6 @@ rhythm' =
     <|> dotted
     <|> tuplet
 
--- Matches a beat divisible by 2 (notated)
--- beat :: Tiable a => RhythmParser a (Rhythm a)
--- beat = do
---     RhythmContext tm ts _ <- getState
---     (\d -> (d^/tm) `subDur` ts) <$> match (\d _ ->
---         d - ts > 0  &&  isPowerOf 2 (d / tm - ts))
-
 beat :: Tiable a => RhythmParser a (Rhythm a)
 beat = do
   RhythmContext tm ts _ <- getState
@@ -359,17 +364,17 @@ dotted :: Tiable a => RhythmParser a (Rhythm a)
 dotted = msum . fmap dotted' $ konstNumDotsAllowed
 
 -- | Matches a bound rhythm
--- TODO this should be abolished, see below!
 bound :: Tiable a => RhythmParser a (Rhythm a)
-bound = msum $ fmap bound' $ konstBounds
-
--- bound = msum $ fmap bound' $ (konstBounds <> fmap (*(3/2)) konstBounds)
-
 {-
+TODO this should be abolished!
 What this should really do is to split the rhythm into two rhythms where the first have the bound duration...
 -}
+bound = msum $ fmap bound' $ konstBounds
 
--- | Matches a tuplet
+
+-- | Look for a common tuplet.
+--
+-- See @tuplet'@ for abitrary tuplets.
 tuplet :: Tiable a => RhythmParser a (Rhythm a)
 tuplet = msum . fmap tuplet' $ konstTuplets
 
@@ -405,7 +410,14 @@ bound' d = do
         -- if isPowerOf2 d then Beat d c else if isPowerOf2 (d*(2/3)) then Dotted 1 (Beat (d*(2/3)) c) else (error "Bad bound rhythm")
       ]
 
--- tuplet' 2/3 for triplet, 4/5 for quintuplet etc
+-- |
+-- Look for a tuplet.
+--
+-- * @2/3@ for triplet
+--
+-- * @4/5@ for quintuplet
+--
+-- etc.
 tuplet' :: Tiable a => Duration -> RhythmParser a (Rhythm a)
 tuplet' d = do
   RhythmContext _ _ depth <- getState
@@ -433,7 +445,7 @@ tuplet' d = do
 match :: Tiable a => (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
 match p = tokenPrim show next test
   where
-    show x = ""
+    show _ = ""
     next pos _ _ = updatePosChar pos 'x'
     test (d, x) = if p d x then Just (Beat d x) else Nothing
 
@@ -441,7 +453,7 @@ match p = tokenPrim show next test
 match' :: Tiable a => (Duration -> a -> Maybe (Duration, b)) -> RhythmParser a (Rhythm b)
 match' f = tokenPrim show next test
   where
-    show x = ""
+    show _ = ""
     next pos _ _ = updatePosChar pos 'x'
     test (d, x) = case f d x of
       Nothing -> Nothing
@@ -465,29 +477,23 @@ onlyIf b p = if b then p else mzero
 assuming :: a -> Bool -> Maybe a
 assuming x b = if b then Just x else Nothing
 
-{-
-isDivisibleBy2 :: RealFrac a => a -> Bool
-isDivisibleBy2 x = isInt x && even (round x)
-
-isInt :: RealFrac a => a -> Bool
-isInt x = x == fromInteger (round x)
--}
-
 logBaseR :: forall a. (RealFloat a, Floating a) => Rational -> Rational -> a
 logBaseR k n | isInfinite (fromRational n :: a) = logBaseR k (n / k) + 1
 logBaseR k n | isDenormalized (fromRational n :: a) = logBaseR k (n * k) - 1
 logBaseR k n | otherwise = logBase (fromRational k) (fromRational n)
 
--- divides     = isDivisibleBy
--- divisibleBy = flip isDivisibleBy
 
 -- As it sounds, do NOT use infix
 -- Only works for simple n such as 2 or 3, TODO determine
 -- isPowerOf :: Duration -> Duration -> Bool
-isPowerOf n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
+isPowerOf :: forall a a1. (Real a, Real a1) => a -> a1 -> Bool
+isPowerOf n = (== (0.0 :: Double)) . snd
+  . properFraction @Double @Integer
+  . logBaseR (toRational n)
+  . toRational
 
--- isPowerOf2 :: Duration -> Bool
-isPowerOf2 = isPowerOf 2
+isPowerOf2 :: forall a. Real a => a -> Bool
+isPowerOf2 = isPowerOf @Integer 2
 
 greatestSmallerPowerOf2 :: Integer -> Integer
 greatestSmallerPowerOf2 x
@@ -495,10 +501,9 @@ greatestSmallerPowerOf2 x
   | isPowerOf2 x = x
   | otherwise = greatestSmallerPowerOf2 (x - 1)
 
-{-
-An "emergency" quantizer that ignores input durations and outputs a single beat sequence
-with all notes in the same length.
--}
+-- |
+-- An "emergency" quantizer that ignores input durations and outputs a single beat sequence
+-- with all notes in the same length.
 quSimp :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
 quSimp = Right . qu1 1
   where
@@ -520,11 +525,5 @@ quSimp = Right . qu1 1
 -- (1/n) = (p/np)
 -- (1/n) = (1/n)
 
--- subDur :: forall a. Rhythm a -> Duration -> Rhythm a
-rewriteR :: forall a. Rhythm a -> Rhythm a
 
-rewrite1 :: forall a. Rhythm a -> Rhythm a
 
-isPowerOf :: forall a a1. (Real a, Real a1) => a -> a1 -> Bool
-
-isPowerOf2 :: forall a. Real a => a -> Bool

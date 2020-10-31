@@ -26,13 +26,8 @@ where
 
 import Control.Applicative
 import Control.Comonad
-import Control.Lens (Rewrapped (..), Wrapped (..), iso)
+import Control.Lens (Rewrapped, Wrapped (..), iso)
 import Data.Bifunctor
-import Data.Foldable
-import Data.Functor.Identity
-import Data.Functor.Product
-import Data.Semigroup
-import Data.Traversable
 import Data.Typeable
 
 -- |
@@ -119,10 +114,10 @@ instance (Monoid b, Bounded a) => Bounded (Twain b a) where
 --
 
 instance Eq a => Eq (Twain b a) where
-  Twain (b, a) == Twain (b', a') = a == a'
+  Twain (_b, a) == Twain (_b', a') = a == a'
 
 instance Ord a => Ord (Twain b a) where
-  Twain (b, a) <= Twain (b', a') = a < a'
+  Twain (_b, a) <= Twain (_b', a') = a < a'
 
 instance (Monoid b, Real a, Enum a, Integral a) => Integral (Twain b a) where
 

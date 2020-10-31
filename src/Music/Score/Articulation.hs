@@ -2,19 +2,15 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wall
-  -Wcompat
-  -Wincomplete-record-updates
-  -Wincomplete-uni-patterns
-  -Werror
+{-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+  -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 -- |  Provides functions for manipulating articulation.
 module Music.Score.Articulation
   ( -- ** Articulation type functions
-    Articulation,
+    GetArticulation,
     SetArticulation,
     Accentuation,
     Separation,
@@ -85,25 +81,25 @@ import Music.Time.Internal.Transform
 
 -- |
 -- Articulations type.
-type family Articulation (s :: Type) :: Type
+type family GetArticulation (s :: Type) :: Type
 
 -- |
 -- Articulation type.
 type family SetArticulation (b :: Type) (s :: Type) :: Type
 
 type ArticulationLensLaws' s t a b =
-  ( Articulation (SetArticulation a s) ~ a,
-    SetArticulation (Articulation t) s ~ t,
+  ( GetArticulation (SetArticulation a s) ~ a,
+    SetArticulation (GetArticulation t) s ~ t,
     SetArticulation a (SetArticulation b s) ~ SetArticulation a s
   )
 
-type ArticulationLensLaws s t = ArticulationLensLaws' s t (Articulation s) (Articulation t)
+type ArticulationLensLaws s t = ArticulationLensLaws' s t (GetArticulation s) (GetArticulation t)
 
 -- |
 -- Class of types that provide a single articulation.
 class (HasArticulations s t) => HasArticulation s t where
   -- | Articulation type.
-  articulation :: Lens s t (Articulation s) (Articulation t)
+  articulation :: Lens s t (GetArticulation s) (GetArticulation t)
 
 -- |
 -- Class of types that provide a articulation traversal.
@@ -112,7 +108,7 @@ class
   ) =>
   HasArticulations s t where
   -- | Articulation type.
-  articulations :: Traversal s t (Articulation s) (Articulation t)
+  articulations :: Traversal s t (GetArticulation s) (GetArticulation t)
 
 type HasArticulation' a = HasArticulation a a
 
@@ -120,51 +116,51 @@ type HasArticulations' a = HasArticulations a a
 
 -- |
 -- Articulation type.
-articulation' :: (HasArticulation s t, s ~ t) => Lens' s (Articulation s)
+articulation' :: (HasArticulation s t, s ~ t) => Lens' s (GetArticulation s)
 articulation' = articulation
 
 -- |
 -- Articulation type.
-articulations' :: (HasArticulations s t, s ~ t) => Traversal' s (Articulation s)
+articulations' :: (HasArticulations s t, s ~ t) => Traversal' s (GetArticulation s)
 articulations' = articulations
 
-type instance Articulation (c, a) = Articulation a
+type instance GetArticulation (c, a) = GetArticulation a
 
 type instance SetArticulation b (c, a) = (c, SetArticulation b a)
 
-type instance Articulation [a] = Articulation a
+type instance GetArticulation [a] = GetArticulation a
 
 type instance SetArticulation b [a] = [SetArticulation b a]
 
-type instance Articulation (Maybe a) = Articulation a
+type instance GetArticulation (Maybe a) = GetArticulation a
 
 type instance SetArticulation b (Maybe a) = Maybe (SetArticulation b a)
 
-type instance Articulation (Either c a) = Articulation a
+type instance GetArticulation (Either c a) = GetArticulation a
 
 type instance SetArticulation b (Either c a) = Either c (SetArticulation b a)
 
-type instance Articulation (Event a) = Articulation a
+type instance GetArticulation (Event a) = GetArticulation a
 
 type instance SetArticulation g (Event a) = Event (SetArticulation g a)
 
-type instance Articulation (Placed a) = Articulation a
+type instance GetArticulation (Placed a) = GetArticulation a
 
 type instance SetArticulation g (Placed a) = Placed (SetArticulation g a)
 
-type instance Articulation (Note a) = Articulation a
+type instance GetArticulation (Note a) = GetArticulation a
 
 type instance SetArticulation g (Note a) = Note (SetArticulation g a)
 
-type instance Articulation (Voice a) = Articulation a
+type instance GetArticulation (Voice a) = GetArticulation a
 
 type instance SetArticulation b (Voice a) = Voice (SetArticulation b a)
 
-type instance Articulation (Track a) = Articulation a
+type instance GetArticulation (Track a) = GetArticulation a
 
 type instance SetArticulation b (Track a) = Track (SetArticulation b a)
 
-type instance Articulation (Score a) = Articulation a
+type instance GetArticulation (Score a) = GetArticulation a
 
 type instance SetArticulation b (Score a) = Score (SetArticulation b a)
 
@@ -217,23 +213,23 @@ instance HasArticulations a b => HasArticulations (Track a) (Track b) where
 instance HasArticulations a b => HasArticulations (Score a) (Score b) where
   articulations = traverse . articulations
 
-type instance Articulation (Couple c a) = Articulation a
+type instance GetArticulation (Couple c a) = GetArticulation a
 
 type instance SetArticulation g (Couple c a) = Couple c (SetArticulation g a)
 
-type instance Articulation (TextT a) = Articulation a
+type instance GetArticulation (TextT a) = GetArticulation a
 
 type instance SetArticulation g (TextT a) = TextT (SetArticulation g a)
 
-type instance Articulation (HarmonicT a) = Articulation a
+type instance GetArticulation (HarmonicT a) = GetArticulation a
 
 type instance SetArticulation g (HarmonicT a) = HarmonicT (SetArticulation g a)
 
-type instance Articulation (TieT a) = Articulation a
+type instance GetArticulation (TieT a) = GetArticulation a
 
 type instance SetArticulation g (TieT a) = TieT (SetArticulation g a)
 
-type instance Articulation (SlideT a) = Articulation a
+type instance GetArticulation (SlideT a) = GetArticulation a
 
 type instance SetArticulation g (SlideT a) = SlideT (SetArticulation g a)
 
@@ -299,46 +295,46 @@ instance (AffineSpace a, AffineSpace b, Fractional a, Fractional b) => Articulat
 
   separation = _2
 
-accent :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
+accent :: (HasPhrases' s b, HasArticulations' b, GetArticulation b ~ a, Articulated a) => s -> s
 accent = set (phrases . _head . articulations . accentuation) 1
 
-marcato :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
+marcato :: (HasPhrases' s b, HasArticulations' b, GetArticulation b ~ a, Articulated a) => s -> s
 marcato = set (phrases . _head . articulations . accentuation) 2
 
-accentLast :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
+accentLast :: (HasPhrases' s b, HasArticulations' b, GetArticulation b ~ a, Articulated a) => s -> s
 accentLast = set (phrases . _last . articulations . accentuation) 1
 
-marcatoLast :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
+marcatoLast :: (HasPhrases' s b, HasArticulations' b, GetArticulation b ~ a, Articulated a) => s -> s
 marcatoLast = set (phrases . _last . articulations . accentuation) 2
 
-accentAll :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+accentAll :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 accentAll = set (articulations . accentuation) 1
 
-marcatoAll :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+marcatoAll :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 marcatoAll = set (articulations . accentuation) 2
 
-tenuto :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+tenuto :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 tenuto = legato -- TODO
 
-spiccato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+spiccato :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 spiccato = legato -- TODO
 
-legatissimo :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+legatissimo :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 legatissimo = set (articulations . separation) (-2)
 
-legato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+legato :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 legato = set (articulations . separation) (-1)
 
-separated :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+separated :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 separated = set (articulations . separation) 0
 
-portato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+portato :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 portato = set (articulations . separation) 0.5
 
-staccato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+staccato :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 staccato = set (articulations . separation) 1
 
-staccatissimo :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+staccatissimo :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 staccatissimo = set (articulations . separation) 2
 
 newtype ArticulationT n a = ArticulationT {getArticulationT :: (n, a)}
@@ -434,7 +430,7 @@ instance Wrapped (ArticulationT p a) where
 
 instance Rewrapped (ArticulationT p a) (ArticulationT p' b)
 
-type instance Articulation (ArticulationT p a) = p
+type instance GetArticulation (ArticulationT p a) = p
 
 type instance SetArticulation p' (ArticulationT p a) = ArticulationT p' a
 
@@ -459,8 +455,8 @@ addArtCon ::
   ( HasPhrases s t a b,
     HasArticulation' a,
     HasArticulation a b,
-    Articulation a ~ d,
-    Articulation b ~ Ctxt d
+    GetArticulation a ~ d,
+    GetArticulation b ~ Ctxt d
   ) =>
   s ->
   t
@@ -468,5 +464,5 @@ addArtCon = over (phrases . varticulation) withContext
 
 varticulation ::
   (HasArticulation s s, HasArticulation s t) =>
-  Lens (Voice s) (Voice t) (Voice (Articulation s)) (Voice (Articulation t))
+  Lens (Voice s) (Voice t) (Voice (GetArticulation s)) (Voice (GetArticulation t))
 varticulation = lens (fmap $ view articulation) (flip $ zipVoiceWithNoScale (set articulation))
