@@ -121,7 +121,7 @@ data Name = C | D | E | F | G | A | B
   deriving (Eq, Ord, Show, Enum)
 
 -- |
--- This type represents standard basis for intervbals.
+-- This type represents standard basis for intervals.
 data IntervalBasis = Chromatic | Diatonic
   deriving (Eq, Ord, Show, Enum)
 
