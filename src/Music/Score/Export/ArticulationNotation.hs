@@ -1,20 +1,4 @@
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
+
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
@@ -50,8 +34,6 @@ import Music.Score.Articulation (Accentuation, Articulated (..), GetArticulation
 import qualified Music.Score.Articulation
 import Music.Score.Ties (Tiable (..))
 import Music.Time (Transformable (..))
-
--- TODO need NoSlur etc?
 
 data Slur = NoSlur | BeginSlur | EndSlur
   deriving (Eq, Ord, Show)
@@ -187,7 +169,8 @@ allMarks y =
     <> getSeparationMarks (realToFrac $ y ^. separation)
     <> getAccentMarks (realToFrac $ y ^. accentuation)
 
-notateArticulation :: (Ord a, Articulated a, Real (Separation a), Real (Accentuation a)) => Ctxt a -> ArticulationNotation
+notateArticulation
+  :: (Ord a, Articulated a, Real (Separation a), Real (Accentuation a)) => Ctxt a -> ArticulationNotation
 notateArticulation (getCtxt -> x) = go x
   where
     go (Nothing, y, Nothing) = ArticulationNotation ([], allMarks y)
