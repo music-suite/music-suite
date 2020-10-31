@@ -45,7 +45,7 @@ pkgs.stdenv.mkDerivation {
     pkgs.lilypond
     pkgs.timidity
     pkgs.cabal-install
-    # pkgs.haskell.packages.ghc865.ormolu
+    pkgs.haskell.packages.ghc883.ormolu
     # pkgs.haskell.packages.ghc865.cabal-install
     (
     pkgs.haskellPackages.ghcWithPackages (pkgs:
