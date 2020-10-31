@@ -31,7 +31,6 @@ haddock2
 newtyp/
 sketches/docs
 src/private
-test*
 test.pdf
 wiki
 cabal.project.local*
