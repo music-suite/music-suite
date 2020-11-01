@@ -57,7 +57,6 @@ where
 
 import Control.Applicative
 import Control.Lens
-import Control.Monad.Plus
 import qualified Data.Char
 import Data.Functor.Contravariant (Equivalence (..), contramap)
 import qualified Data.List
