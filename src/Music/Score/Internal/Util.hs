@@ -50,7 +50,6 @@ where
 
 import Control.Applicative
 import Control.Lens
-import Control.Monad.Plus
 import qualified Data.Char
 import qualified Data.List
 import qualified Data.Monoid
