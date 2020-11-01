@@ -57,6 +57,8 @@ pkgs.stdenv.mkDerivation {
     )
    ];
   shellHook = ''
-  export PS1="m> "
+    export LOCALE_ARCHIVE="${pkgs.glibcLocales}/lib/locale/locale-archive"
+    export LANG=en_US.UTF-8
+    export PS1="m> "
   '';
 }

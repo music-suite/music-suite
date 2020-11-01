@@ -3,7 +3,7 @@
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
--- |
+-- |
 -- Provides a way to query a value for its 'position'.
 module Music.Time.Position
   ( module Music.Time.Duration,
