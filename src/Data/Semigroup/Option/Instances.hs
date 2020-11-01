@@ -27,14 +27,14 @@ instance Integral a => Integral (Option a) where
 
   quotRem x y = unzipR $ liftA2 quotRem x y
 
-  toInteger = toInteger . get where get = (head . toListOf traverse)
+  toInteger = toInteger . get where get = head . toListOf traverse
 
 instance Real a => Real (Option a) where
-  toRational = toRational . get where get = (head . toListOf traverse)
+  toRational = toRational . get where get = head . toListOf traverse
 
 instance Enum a => Enum (Option a) where
 
-  fromEnum = fromEnum . get where get = (head . toListOf traverse)
+  fromEnum = fromEnum . get where get = head . toListOf traverse
 
   toEnum = pure . toEnum
 
@@ -58,10 +58,10 @@ instance Integral a => Integral (First a) where
 
   quotRem x y = unzipR $ liftA2 quotRem x y
 
-  toInteger = toInteger . get where get = (head . toListOf traverse)
+  toInteger = toInteger . get where get = head . toListOf traverse
 
 instance Real a => Real (First a) where
-  toRational = toRational . get where get = (head . toListOf traverse)
+  toRational = toRational . get where get = head . toListOf traverse
 
 unzipR :: Functor f => f (a, b) -> (f a, f b)
 unzipR x = (fmap fst x, fmap snd x)

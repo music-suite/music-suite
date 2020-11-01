@@ -61,19 +61,19 @@ instance Alterable Double where
 
   sharpen = (+ 1)
 
-  flatten = (subtract 1)
+  flatten = subtract 1
 
 instance Alterable Integer where
 
   sharpen = (+ 1)
 
-  flatten = (subtract 1)
+  flatten = subtract 1
 
 instance Integral a => Alterable (Ratio a) where
 
   sharpen = (+ 1)
 
-  flatten = (subtract 1)
+  flatten = subtract 1
 
 instance Alterable a => Alterable [a] where
 

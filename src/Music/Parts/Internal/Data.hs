@@ -184,7 +184,7 @@ getInstrumentData =
   let d = Data.ByteString.Lazy.fromStrict $(embedFile "data/instruments.csv")
    in case Data.Csv.decode Data.Csv.HasHeader d of
         Left e -> error $ "Could not read data/instruments.csv " ++ show e
-        Right (x) -> toListOf traverse x
+        Right x -> toListOf traverse x
 
 splitBy :: Char -> String -> [String]
 splitBy sep = fmap Data.Text.unpack . Data.Text.split (== sep) . Data.Text.pack

@@ -389,37 +389,37 @@ instance HasQuality Interval where
       -- complex way to produce the perfect/major/minor/etc. intervals that
       -- we are used to reading.
       go (Interval (a, d))
-        | (a < 0) && (d == 0) = diminish $ go (Interval ((a + 1), d))
+        | (a < 0) && (d == 0) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (0, 0) = Perfect
-        | (a > 0) && (d == 0) = augment $ go (Interval ((a - 1), d))
-        | (a < 1) && (d == 1) = diminish $ go (Interval ((a + 1), d))
+        | (a > 0) && (d == 0) = augment $ go (Interval (a - 1, d))
+        | (a < 1) && (d == 1) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (1, 1) = Minor
         | (a, d) == (2, 1) = Major
-        | (a > 2) && (d == 1) = augment $ go (Interval ((a - 1), d))
-        | (a < 3) && (d == 2) = diminish $ go (Interval ((a + 1), d))
+        | (a > 2) && (d == 1) = augment $ go (Interval (a - 1, d))
+        | (a < 3) && (d == 2) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (3, 2) = Minor
         | (a, d) == (4, 2) = Major
-        | (a > 4) && (d == 2) = augment $ go (Interval ((a - 1), d))
-        | (a < 5) && (d == 3) = diminish $ go (Interval ((a + 1), d))
+        | (a > 4) && (d == 2) = augment $ go (Interval (a - 1, d))
+        | (a < 5) && (d == 3) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (5, 3) = Perfect
-        | (a > 5) && (d == 3) = augment $ go (Interval ((a - 1), d))
-        | (a < 7) && (d == 4) = diminish $ go (Interval ((a + 1), d))
+        | (a > 5) && (d == 3) = augment $ go (Interval (a - 1, d))
+        | (a < 7) && (d == 4) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (7, 4) = Perfect
-        | (a > 7) && (d == 4) = augment $ go (Interval ((a - 1), d))
-        | (a < 8) && (d == 5) = diminish $ go (Interval ((a + 1), d))
+        | (a > 7) && (d == 4) = augment $ go (Interval (a - 1, d))
+        | (a < 8) && (d == 5) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (8, 5) = Minor
         | (a, d) == (9, 5) = Major
-        | (a > 9) && (d == 5) = augment $ go (Interval ((a - 1), d))
-        | (a < 10) && (d == 6) = diminish $ go (Interval ((a + 1), d))
+        | (a > 9) && (d == 5) = augment $ go (Interval (a - 1, d))
+        | (a < 10) && (d == 6) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (10, 6) = Minor
         | (a, d) == (11, 6) = Major
-        | (a > 11) && (d == 6) = augment $ go (Interval ((a - 1), d))
-        | (a < 12) && (d == 7) = diminish $ go (Interval ((a + 1), d))
+        | (a > 11) && (d == 6) = augment $ go (Interval (a - 1, d))
+        | (a < 12) && (d == 7) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (12, 7) = Perfect
-        | (a > 12) && (d == 7) = augment $ go (Interval ((a - 1), d))
+        | (a > 12) && (d == 7) = augment $ go (Interval (a - 1, d))
         -- note: these last two cases *have* to be this way round, otherwise
         -- infinite loop occurs.
-        | (a > 12) || (d > 7) = go (Interval ((a - 12), (d - 7)))
+        | (a > 12) || (d > 7) = go (Interval (a - 12, d - 7))
         | (a < 0) || (d < 0) = go (Interval ((- a), (- d)))
         | otherwise = error "Impossible (TODO prove)"
 

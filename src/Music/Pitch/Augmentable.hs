@@ -49,19 +49,19 @@ instance Augmentable Double where
 
   augment = (+ 1)
 
-  diminish = (subtract 1)
+  diminish = subtract 1
 
 instance Augmentable Integer where
 
   augment = (+ 1)
 
-  diminish = (subtract 1)
+  diminish = subtract 1
 
 instance Integral a => Augmentable (Ratio a) where
 
   augment = (+ 1)
 
-  diminish = (subtract 1)
+  diminish = subtract 1
 
 instance Augmentable a => Augmentable [a] where
 

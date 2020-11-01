@@ -63,7 +63,7 @@ instance Fractional Value where
 
   recip = noOverloading "recip"
 
-  fromRational = (toValue . toDouble)
+  fromRational = toValue . toDouble
 
 instance Show Value where
   show (Value a) = show a
