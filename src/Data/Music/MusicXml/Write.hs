@@ -229,14 +229,14 @@ instance WriteMusicXml Attributes where
         [ unode "fifths" (show $ getFifths fifths),
           unode "mode" (writeMode mode)
         ]
-  write (Time (CommonTime)) =
+  write (Time CommonTime) =
     single $ addAttr (uattr "symbol" "common") $
       unode
         "time"
         [ unode "beats" (show @Integer 4),
           unode "beat-type" (show @Integer 4)
         ]
-  write (Time (CutTime)) =
+  write (Time CutTime) =
     single $ addAttr (uattr "symbol" "cut") $
       unode
         "time"

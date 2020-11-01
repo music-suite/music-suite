@@ -103,7 +103,7 @@ parseMeasure :: Element -> Maybe (MeasureAttrs, Music)
 parseMeasure measure =
   (,)
     <$> ( MeasureAttrs (attr "implicit" measure == Just "yes")
-            <$> (attr "number" measure)
+            <$> attr "number" measure
         )
     <*> (Music <$> dispatch supportedElems measure)
 
@@ -185,11 +185,11 @@ parseNote note = do
   fullNote <- parseFullNote note
   let ties = fromMaybe [] $ traverse parseStartStop (children "tie" note)
   noteProps <- parseNoteProps note
-  ((GraceNote fullNote ties noteProps) <$ child "grace" note)
+  (GraceNote fullNote ties noteProps <$ child "grace" note)
     <|> ( do
             duration <- parseDuration note
-            ((CueNote fullNote duration noteProps) <$ child "cue" note)
-              <|> (pure (Note fullNote duration ties noteProps))
+            (CueNote fullNote duration noteProps <$ child "cue" note)
+              <|> pure (Note fullNote duration ties noteProps)
         )
 
 parseFullNote :: Element -> Maybe FullNote
@@ -371,7 +371,7 @@ parseOrnament :: (Element, [Element]) -> Maybe (Ornament, [Accidental])
 parseOrnament (ornament, accidentals) =
   (,)
     <$> (lookup (getName ornament) supportedOrnaments >>= ($ ornament))
-    <*> (traverse parseAccidental accidentals)
+    <*> traverse parseAccidental accidentals
 
 supportedOrnaments :: [(String, Element -> Maybe Ornament)]
 supportedOrnaments =
@@ -435,7 +435,7 @@ supportedDirections =
     ("words", fmap Words . getText),
     ("coda", const (pure Coda)),
     ("dynamics", fmap Dynamics . parseDynamics),
-    ("dashes", \dashes -> Dashes (parseLevel dashes) <$> (parseStartStop dashes)),
+    ("dashes", \dashes -> Dashes (parseLevel dashes) <$> parseStartStop dashes),
     ( "pedal",
       fmap Pedal
         . ( attr "type" >=> \case
@@ -502,7 +502,7 @@ dispatch :: [(String, Element -> Maybe a)] -> Element -> Maybe [a]
 dispatch parsers parent =
   pure $
     mapMaybe
-      (\e -> fromMaybe (const Nothing) (lookup (getName e) parsers) $ e)
+      (\e -> fromMaybe (const Nothing) (lookup (getName e) parsers) e)
       (elChildren parent)
 
 bare :: Applicative f => a -> b -> f a

@@ -211,7 +211,7 @@ instance (Monoid b, Bounded a) => Bounded (Couple b a) where
   maxBound = pure maxBound
 
 instance (Eq b, Eq a) => Eq (Couple b a) where
-  Couple ((b, a)) == Couple (b', a') = (b, a) == (b', a')
+  Couple (b, a) == Couple (b', a') = (b, a) == (b', a')
 
 instance (Ord b, Ord a) => Ord (Couple b a) where
   Couple (b, a) <= Couple (b', a') = (b, a) < (b', a')
