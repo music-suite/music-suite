@@ -1,18 +1,14 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
@@ -280,8 +276,7 @@ import Music.Score.Technique (HasTechniques (techniques), Technique, TechniqueT 
 import qualified Music.Score.Technique
 import Music.Score.Text (TextT, runTextT)
 import qualified Music.Score.Ties
-import Music.Score.Ties (Tiable (..))
-import Music.Score.Ties (TieT (..))
+import Music.Score.Ties (Tiable (..), TieT (..))
 import Music.Score.Tremolo (TremoloT, runTremoloT)
 import Music.Time
 import Music.Time.Meta (meta)
@@ -862,7 +857,7 @@ movementAssureSameNumberOfBars (Movement i ss st) =
     addSystemBars n = take n . (++ repeat emptySystemBar)
     n = maximum $ 0 : numBars
     -- numSystemBars :: Int = length ss
-    numBars :: [Int] = fmap (length . _bars) $ toList st
+    numBars :: [Int] = length . _bars <$> toList st
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -945,7 +940,7 @@ type Template = String
 -- TODO>>> expand "me : $(name)" (Map.fromList [("name","Hans")])
 -- "me : Hans"
 expandTemplate :: Template -> Map String String -> String
-expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
+expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys vs) t
   where
     expander vs k = replace ("$(" ++ k ++ ")") (Data.Maybe.fromJust $ Data.Map.lookup k vs)
     composed = foldr (.) id
@@ -989,7 +984,7 @@ toLy opts work = do
     Just x -> return x
   let headerTempl =
         Data.Map.fromList
-          [ ("title", (firstMovement ^. movementInfo . movementTitle)),
+          [ ("title", firstMovement ^. movementInfo . movementTitle),
             ( "composer",
               Data.Maybe.fromMaybe "" $
                 firstMovement ^. movementInfo . movementAttribution . at "composer"
@@ -1001,7 +996,7 @@ toLy opts work = do
         LilypondInline -> $(embedFile "data/ly_inline.ly")
   let header = Data.ByteString.Char8.unpack headerData `expandTemplate` headerTempl
   say "Lilypond: Converting music"
-  music <- toLyMusic $ firstMovement
+  music <- toLyMusic firstMovement
   return (header, music)
 
 toLyMusic :: (LilypondExportM m) => Movement -> m Lilypond.Music
@@ -1100,7 +1095,7 @@ toLyLayer (Beat d x) = toLyChord d x
 toLyLayer (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
 toLyLayer (Dotted _n _) = error "Lilypond export: (Dotted x) requires x to be (Beat _)"
 toLyLayer (Group rs) = Lilypond.Sequential <$> traverse toLyLayer rs
-toLyLayer (Tuplet m r) = Lilypond.Times (realToFrac m) <$> (toLyLayer r)
+toLyLayer (Tuplet m r) = Lilypond.Times (realToFrac m) <$> toLyLayer r
 
 {-
 TODO _arpeggioNotation::Maybe ArpeggioNotation,
@@ -1261,7 +1256,7 @@ rcomposed = Music.Score.Internal.Util.composed . reverse
 
 toLyStaffGroup ::
   (LilypondExportM m) =>
-  LabelTree BracketType (Lilypond.Music) ->
+  LabelTree BracketType Lilypond.Music ->
   m Lilypond.Music
 toLyStaffGroup = return . foldLabelTree id g
   where
@@ -1311,7 +1306,6 @@ toXml work = do
   say "MusicXML: Generating bar content"
   partWise <- movementToPartwiseXml firstMovement
   return $ MusicXml.fromParts title composer partList partWise
-  where
 
 {-
   Returns the part list, specifying instruments, staves and gruops
@@ -1401,7 +1395,7 @@ movementToPartwiseXml movement = music
           where
             unOF = fmap getFirst . getOption
             -- TODO recognize common/cut
-            expTS Nothing = (mempty :: MusicXml.Music)
+            expTS Nothing = mempty :: MusicXml.Music
             expTS (Just ts) =
               let (ms, n) = Music.Score.Meta.Time.getTimeSignature ts
                in MusicXml.time (fromIntegral $ sum ms) (fromIntegral n)
@@ -1484,7 +1478,7 @@ movementToPartwiseXml movement = music
             Right d -> do
               let layers =
                     zipWith
-                      (\voiceN music -> MusicXml.setVoice voiceN music)
+                      MusicXml.setVoice
                       [1 ..]
                       (fmap renderPitchLayer (bar ^. pitchLayers))
                   clefs =
@@ -1495,7 +1489,7 @@ movementToPartwiseXml movement = music
           where
             atPosition :: Duration -> X.Music -> X.Music
             atPosition 0 x = x
-            atPosition d x = (MusicXml.forward $ durToXmlDur d) <> x
+            atPosition d x = MusicXml.forward (durToXmlDur d) <> x
             durToXmlDur :: Duration -> MusicXml.Duration
             durToXmlDur d = round (realToFrac MusicXml.defaultDivisionsVal * d)
         renderPitchLayer :: PitchLayer -> MusicXml.Music
@@ -1560,11 +1554,11 @@ movementToPartwiseXml movement = music
                   MusicXml.dynamic
                     ( fromDynamics
                         ( DynamicsL
-                            ((fixLevel . realToFrac $ lvl), Nothing)
+                            (fixLevel . realToFrac $ lvl, Nothing)
                         )
                     )
             fixLevel :: Double -> Double
-            fixLevel x = fromIntegral @Integer (round (x - 0.5)) + 0.5
+            fixLevel x = fromIntegral @Integer (floor x) + 0.5
         -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
         -- rcomposed = composed . reverse
 
@@ -1939,7 +1933,7 @@ partitionIntervals :: forall a b. Ord a => Map (a, a) b -> [Map (a, a) b]
 partitionIntervals xs = fmap (Data.Map.fromList . toList) $ snd $ (`runState` []) $ for sorted $ \ev@((start, _stop), _val) -> do
   -- Out list of state is the voices/resources
   -- Inner non-empty list is the spans in chronological order
-  currentResources :: [NonEmpty (((a, a), b))] <- get
+  currentResources :: [NonEmpty ((a, a), b)] <- get
   let currentEndTimes :: [a] = fmap (snd . fst . Data.List.NonEmpty.head) currentResources
   let nextVoice :: Maybe Int = findIndex (<= start) currentEndTimes
   case nextVoice of
@@ -1948,7 +1942,7 @@ partitionIntervals xs = fmap (Data.Map.fromList . toList) $ snd $ (`runState` []
       modify (++ [pure ev])
     -- This fits in current voice n (0-index)
     Just n ->
-      modify (update n $ (Data.List.NonEmpty.cons ev))
+      modify (update n $ Data.List.NonEmpty.cons ev)
   where
     sorted :: [((a, a), b)]
     sorted = Data.Map.toAscList xs
@@ -1983,7 +1977,7 @@ fmap list1 .
 
 -- TODO move
 scoreToMap :: Score a -> Map (Time, Time) a
-scoreToMap = Data.Map.fromList . fmap (first (view onsetAndOffset) . (view (from event))) . view events
+scoreToMap = Data.Map.fromList . fmap (first (view onsetAndOffset) . view (from event)) . view events
 
 mapToScore :: Map (Time, Time) a -> Score a
 mapToScore = view score . fmap (view event . first (view $ from onsetAndOffset)) . Data.Map.toList
@@ -2160,31 +2154,31 @@ singleStaff part bars = Staff info (fmap aspectsToBar bars)
     info =
       id
         $ transposition
-          .~ (part ^. (Music.Parts.instrument) . (to Music.Parts.transposition))
+          .~ (part ^. Music.Parts.instrument . to Music.Parts.transposition)
         $ instrumentDefaultClef
           .~ Data.Maybe.fromMaybe
             Music.Pitch.trebleClef
-            (part ^. (Music.Parts.instrument) . (to Music.Parts.standardClef))
+            (part ^. Music.Parts.instrument . to Music.Parts.standardClef)
         $ instrumentShortName
-          .~ Data.Maybe.fromMaybe "" (part ^. (Music.Parts.instrument) . (to Music.Parts.shortName))
+          .~ Data.Maybe.fromMaybe "" (part ^. Music.Parts.instrument . to Music.Parts.shortName)
         $ instrumentFullName
           .~ (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr])
         $ mempty
       where
-        soloStr = if (part ^. (Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
-        nameStr = (part ^. (Music.Parts.instrument) . (to Music.Parts.fullName))
-        subpartStr = Just $ show (part ^. (Music.Parts.subpart))
+        soloStr = if (part ^. Music.Parts._solo) == Music.Parts.Solo then Just "Solo" else Nothing
+        nameStr = part ^. Music.Parts.instrument . to Music.Parts.fullName
+        subpartStr = Just $ show (part ^. Music.Parts.subpart)
 
 -- | Group all parts in the default way (e.g. a standard orchestral score with woodwinds
 -- on top, followed by brass, etc).
 partDefault :: [(Music.Parts.Part, a)] -> ScoreLayout (Music.Parts.Part, a)
-partDefault xs = Music.Parts.groupDefault $ fmap (\(p, x) -> (p ^. (Music.Parts.instrument), (p, x))) xs
+partDefault xs = Music.Parts.groupDefault $ fmap (\(p, x) -> (p ^. Music.Parts.instrument, (p, x))) xs
 
 -- | Transform the staff grouping representation from `Music.Parts` into the one
 -- used by 'Work'.
 scoreLayoutToLabelTree :: ScoreLayout a -> LabelTree BracketType a
 scoreLayoutToLabelTree (Single (_, a)) = Leaf a
-scoreLayoutToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap scoreLayoutToLabelTree xs))
+scoreLayoutToLabelTree (Many gt _ xs) = Branch (k gt) (fmap scoreLayoutToLabelTree xs)
   where
     k Music.Parts.Bracket = Bracket
     k Music.Parts.Invisible = NoBracket
@@ -2197,9 +2191,9 @@ aspectsToChord Nothing = mempty
 aspectsToChord (Just asp) =
   id
     $ ties .~ (Any endTie, Any beginTie)
-    $ dynamicNotation .~ (asp ^. (Music.Score.Dynamics.dynamic))
-    $ articulationNotation .~ (asp ^. (Music.Score.Articulation.articulation))
-    $ pitches .~ (asp ^.. (Music.Score.Pitch.pitches))
+    $ dynamicNotation .~ (asp ^. Music.Score.Dynamics.dynamic)
+    $ articulationNotation .~ (asp ^. Music.Score.Articulation.articulation)
+    $ pitches .~ (asp ^.. Music.Score.Pitch.pitches)
     $ chordText .~ TN.textualNotations (asp ^. Music.Score.Technique.technique)
     -- TODO: $ harmonicNotation .~ _ asp
     $ mempty

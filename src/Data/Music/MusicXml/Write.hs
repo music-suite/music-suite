@@ -199,8 +199,8 @@ instance WriteMusicXml MusicElem where
   write (MusicAttributes x) = single $ unode "attributes" $ concatMap write x
   write (MusicNote x) = single $ unode "note" $ write x
   write (MusicDirection x) = single $ unode "direction" (unode "direction-type" $ write x)
-  write (MusicBackup d) = single $ unode "backup" (unode "duration" $ show $ getDivs $ d)
-  write (MusicForward d) = single $ unode "forward" (unode "duration" $ show $ getDivs $ d)
+  write (MusicBackup d) = single $ unode "backup" (unode "duration" $ show $ getDivs d)
+  write (MusicForward d) = single $ unode "forward" (unode "duration" $ show $ getDivs d)
   write (MusicBarline x) = write x
 
 -- ----------------------------------------------------------------------------------

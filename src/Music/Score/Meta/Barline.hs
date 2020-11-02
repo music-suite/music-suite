@@ -1,11 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -76,4 +72,4 @@ barline c x = case _era x of
 
 -- | Add a barline to the given score.
 barlineDuring :: HasMeta a => Span -> Barline -> a -> a
-barlineDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
+barlineDuring s c = addMetaNote $ view event (s, Option $ Just $ Last c)

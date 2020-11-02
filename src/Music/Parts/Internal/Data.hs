@@ -6,7 +6,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# OPTIONS_HADDOCK hide #-}
 
 module Music.Parts.Internal.Data
@@ -25,7 +24,6 @@ import Control.Lens ((^.), toListOf)
 import Control.Monad.Plus
 import qualified Data.Text
 import Data.AffineSpace
-import qualified Data.ByteString.Lazy
 import qualified Data.ByteString.Lazy
 import qualified Data.ByteString.Lazy.Char8
 import Data.Csv
@@ -142,25 +140,25 @@ so they are transitively exported by all modules depending on the Suite!
 Drats!
 -}
 instance FromField [Int] where
-  parseField v = fmap (mcatMaybes . map safeRead) $ fmap (splitBy ',') $ parseField v
+  parseField v = mcatMaybes . map safeRead . splitBy ',' <$> parseField v
     where
       safeRead :: Read a => String -> Maybe a
       safeRead = fmap fst . Data.Maybe.listToMaybe . reads
 
 instance FromField Pitch where
-  parseField v = mcatMaybes $ fmap pitchFromScientificPitchNotation $ parseField v
+  parseField v = mcatMaybes $ pitchFromScientificPitchNotation <$> parseField v
 
 instance {-# OVERLAPPING #-} FromField (Maybe (Ambitus Interval Pitch)) where
-  parseField v = fmap (listToAmbitus . mcatMaybes . map pitchFromScientificPitchNotation) $ fmap (splitBy '-') $ parseField v
+  parseField v = listToAmbitus . mcatMaybes . map pitchFromScientificPitchNotation . splitBy '-' <$> parseField v
     where
       listToAmbitus [a, b] = Just $ Ambitus a b
       listToAmbitus _ = Nothing
 
 instance FromField Clef where
-  parseField v = mcatMaybes $ fmap readClef $ parseField v
+  parseField v = mcatMaybes $ readClef <$> parseField v
 
 instance FromField [Clef] where
-  parseField v = fmap (mcatMaybes . map readClef) $ fmap (splitBy ',') $ parseField v
+  parseField v = mcatMaybes . map readClef . splitBy ',' <$> parseField v
 
 instance FromRecord InstrumentDef where
   parseRecord v =

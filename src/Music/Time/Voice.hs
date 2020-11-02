@@ -185,7 +185,7 @@ instance FromJSON a => FromJSON (Voice a) where
   -- TODO change to include meta
   parseJSON (JSON.Object x) = parseNL =<< (x JSON..: "notes")
     where
-      parseNL (JSON.Array xs) = fmap ((^. voice) . toList) $ traverse parseJSON xs
+      parseNL (JSON.Array xs) = (^. voice) . toList <$> traverse parseJSON xs
       parseNL _ = empty
       toList = toListOf traverse
   parseJSON _ = empty
@@ -678,8 +678,8 @@ zipVoiceWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a 
 zipVoiceWith'
   f
   g
-  ((unzip . view pairs) -> (ad, as))
-  ((unzip . view pairs) -> (bd, bs)) =
+  (unzip . view pairs -> (ad, as))
+  (unzip . view pairs -> (bd, bs)) =
     let cd = zipWith f ad bd
         cs = zipWith g as bs
      in view (from pairsIgnoringMeta) (zip cd cs)
@@ -858,7 +858,7 @@ durations = view durationsV
 -- >>> rotateDurations 1 [(1,'c'), (2, 'd'), (1, 'e')]
 -- [(2,'c'), (1, 'd'), (1, 'e')]
 rotateDurations :: Int -> Voice a -> Voice a
-rotateDurations n x = view voice $ fmap (view note) $ zip (rotate n ds) vs
+rotateDurations n x = view voice $ view note <$> zip (rotate n ds) vs
   where
     (ds, vs) = unzip $ fmap (view $ from note) $ view notes x
 

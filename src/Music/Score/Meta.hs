@@ -74,7 +74,7 @@ mapAfter t f x = let (y, n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2, _)
 -- Each "update chunk" of the meta-info is processed separately
 
 runScoreMeta :: forall a b. (HasMeta a, AttributeClass b) => a -> Reactive b
-runScoreMeta = fromMetaReactive . (view meta)
+runScoreMeta = fromMetaReactive . view meta
 
 -- TODO move
 noteToReactive :: Monoid a => Event a -> Reactive a

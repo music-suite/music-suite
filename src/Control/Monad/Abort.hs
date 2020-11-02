@@ -3,7 +3,7 @@
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
 
-{-# LANGUAGE DerivingStrategies, DerivingVia, FlexibleInstances #-}
+{-# LANGUAGE DerivingVia, FlexibleInstances #-}
 
 module Control.Monad.Abort where
 

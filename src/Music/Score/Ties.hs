@@ -213,7 +213,7 @@ instance Wrapped (TieT a) where
 instance Rewrapped (TieT a) (TieT b)
 
 isTieEndBeginning :: TieT a -> (Bool, Bool)
-isTieEndBeginning (TieT (ties, _)) = over both getAny $ ties
+isTieEndBeginning (TieT (ties, _)) = over both getAny ties
 
 -- |
 -- Split all voice into bars, using the given bar durations. Music that does not
@@ -227,7 +227,7 @@ splitTiesAt' :: Tiable a => [Duration] -> [(Duration, a)] -> [[(Duration, a)]]
 splitTiesAt' [] _ = []
 splitTiesAt' _ [] = []
 splitTiesAt' (barDur : rbarDur) occs = case splitDurFor barDur occs of
-  (barOccs, []) -> barOccs : []
+  (barOccs, []) -> [barOccs]
   (barOccs, restOccs) -> barOccs : splitTiesAt' rbarDur restOccs
 
 -- |

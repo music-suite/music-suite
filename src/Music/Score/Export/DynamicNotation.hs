@@ -1,20 +1,11 @@
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
@@ -111,7 +102,7 @@ dynamicLevel = _Wrapped' . _2
 notateDynamic :: (Ord a, Real a) => Ctxt a -> DynamicNotation
 notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case getCtxt x of
   (Nothing, _, Nothing) -> ([], True)
-  (Nothing, y, Just z) -> case (y `compare` z) of
+  (Nothing, y, Just z) -> case y `compare` z of
     LT -> ([BeginCresc], True)
     EQ -> ([], True)
     GT -> ([BeginDim], True)
@@ -125,7 +116,7 @@ notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ 
     (EQ, EQ) -> ([], False)
     (LT, GT) -> ([EndCresc, BeginDim], True)
     (GT, LT) -> ([EndDim, BeginCresc], True)
-  (Just x, y, Nothing) -> case (x `compare` y) of
+  (Just x, y, Nothing) -> case x `compare` y of
     LT -> ([EndCresc], True)
     EQ -> ([], False)
     GT -> ([EndDim], True)

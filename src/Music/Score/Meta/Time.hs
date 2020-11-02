@@ -1,11 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -110,7 +106,7 @@ instance Num TimeSignature where
       TimeSignature (m1, n) `concatFrac` TimeSignature (m2, _) = TimeSignature (m1 <> m2, n)
 
   x * y
-    | isSimple y = mapNums (fmap (* (getSimple y))) x
+    | isSimple y = mapNums (fmap (* getSimple y)) x
     | otherwise = liftRational2 (*) x y
 
   negate = liftRational negate
@@ -126,7 +122,7 @@ instance Fractional TimeSignature where
   fromRational (unRatio -> (m, n)) = TimeSignature ([m], n)
 
   x / y
-    | isSimple y = mapDenom (* (getSimple y)) x
+    | isSimple y = mapDenom (* getSimple y) x
     | otherwise = liftRational2 (/) x y
 
 instance Real TimeSignature where
