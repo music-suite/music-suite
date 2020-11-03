@@ -110,9 +110,7 @@ getSplitPoint d xs =
 splitAt :: Duration -> Voice a -> (Voice a, Voice a)
 splitAt d xs = split $ getSplitPoint d xs
   where
-    split (SplitAtState { remainingDur, notesEaten })
-      = ( splitNotesAt notesEaten remainingDur xs
-        )
+    split SplitAtState{remainingDur, notesEaten} = splitNotesAt notesEaten remainingDur xs
 
 --
 modDur :: Duration -> Duration -> Duration
@@ -134,7 +132,7 @@ newtype Lunga a = Lunga { getLunga :: [Aligned a] }
   deriving (Functor, Foldable, Traversable, Transformable, Semigroup, Monoid)
 
 instance (HasDuration a, Transformable a) => HasPosition (Lunga a) where
-  _era (Lunga xs) = case foldMap (NonEmptyInterval . _era1) $ xs of
+  _era (Lunga xs) = case foldMap (NonEmptyInterval . _era1) xs of
     EmptyInterval -> Nothing
     NonEmptyInterval x -> Just x
 

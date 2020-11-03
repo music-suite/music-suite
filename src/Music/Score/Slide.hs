@@ -20,7 +20,6 @@ import Control.Applicative
 import Control.Comonad
 import Control.Lens hiding (transform)
 import Data.Foldable
-import Data.Foldable
 import Data.Functor.Couple
 import Data.Ratio
 import Data.Semigroup

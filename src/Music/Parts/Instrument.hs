@@ -169,7 +169,6 @@ shortName = Data._shortName . fetchInstrumentDef
 -- | Transposition interval.
 transposition :: Instrument -> Interval
 transposition = Data._transposition . fetchInstrumentDef
-  where
 
 -- | A string representing transposition such as "Bb" or "F".
 transpositionString :: Instrument -> String

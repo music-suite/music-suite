@@ -66,7 +66,6 @@ import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Score.Harmonics
 import Music.Score.Part
-import Music.Score.Part
 import Music.Score.Phrases
 import Music.Score.Slide
 import Music.Score.Text

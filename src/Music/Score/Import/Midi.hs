@@ -8,7 +8,6 @@
   -fno-warn-unused-imports #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
@@ -44,7 +43,6 @@ import Control.Lens
 import Control.Monad.Plus
 import qualified Data.List as List
 import Data.Map (Map)
-import qualified Data.Map as Map
 import qualified Data.Map as Map
 import qualified Data.Maybe
 import Data.Monoid

@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE DefaultSignatures #-}
 {-# OPTIONS_GHC
   -fno-warn-missing-local-signatures
   -fno-warn-unsafe
@@ -726,7 +725,7 @@ stitchWith f a b
     tailV = over notes tail
     lastPitch a = lastV a ^?! pitches
     headPitch b = headV b ^?! pitches
-    diff = (lastPitch a .-. headPitch b)
+    diff = lastPitch a .-. headPitch b
 
 type instance Pitch Common.Pitch = Common.Pitch
 

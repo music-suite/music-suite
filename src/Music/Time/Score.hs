@@ -1,7 +1,6 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# OPTIONS_GHC
@@ -78,14 +77,12 @@ import qualified Data.Map as Map
 import qualified Data.Ord as Ord
 import Data.Ratio
 import Data.Semigroup
-import Data.Semigroup hiding ()
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.String
 import Data.Traversable (Traversable)
 import qualified Data.Traversable as T
 import Data.Typeable
-import Data.VectorSpace
 import Data.VectorSpace hiding (Sum (..))
 import Iso.Deriving hiding (Iso, Iso')
 import Music.Dynamics.Literal
@@ -181,7 +178,7 @@ instance FromJSON a => FromJSON (Score a) where
   -- TODO change to include meta
   parseJSON (JSON.Object x) = parseEL =<< (x JSON..: "events")
     where
-      parseEL (JSON.Array xs) = fmap ((^. score) . toList) $ traverse parseJSON xs
+      parseEL (JSON.Array xs) = (^. score) . toList <$> traverse parseJSON xs
       parseEL _ = empty
       toList = toListOf traverse
   parseJSON _ = empty

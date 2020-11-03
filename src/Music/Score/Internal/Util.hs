@@ -61,7 +61,7 @@ import qualified Data.Ratio
 divideList :: Int -> [a] -> [[a]]
 divideList n xs
   | length xs <= n = [xs]
-  | otherwise = [take n xs] ++ (divideList n $ drop n xs)
+  | otherwise = take n xs : divideList n (drop n xs)
 
 -- | Group a list into sublists whereever a predicate holds. The matched element
 --   is the first in the sublist.

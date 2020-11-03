@@ -515,7 +515,7 @@ note' isChord pitch dur dots =
       (Pitched isChord pitch)
       (defaultDivisionsVal `div` denom)
       noTies
-      (setNoteValP val $ addDots $ def)
+      (setNoteValP val $ addDots def)
   where
     addDots = foldl (.) id (replicate dots dotP)
     -- I.e. given a 1/4 note
@@ -523,8 +523,8 @@ note' isChord pitch dur dots =
     -- denom ~ 4
 
     -- num = numerator $ toRational $ dur
-    denom = fromIntegral $ denominator $ toRational $ dur
-    val = NoteVal $ toRational $ dur
+    denom = fromIntegral $ denominator $ toRational dur
+    val = NoteVal $ toRational dur
 
 separateDots :: NoteVal -> (NoteVal, Int)
 separateDots = separateDots' [2 / 3, 6 / 7, 14 / 15, 30 / 31, 62 / 63]
@@ -621,7 +621,7 @@ endTie' = Music . fmap endTie'' . getMusic
 beginTie'' (MusicNote (Note full dur ties props)) = MusicNote (Note full dur (ties ++ [Start]) props)
 beginTie'' x = x
 
-endTie'' (MusicNote (Note full dur ties props)) = MusicNote (Note full dur ([Stop] ++ ties) props)
+endTie'' (MusicNote (Note full dur ties props)) = MusicNote (Note full dur (Stop : ties) props)
 endTie'' x = x
 
 setNoteValP v x = x {noteType = Just (v, Nothing)}
@@ -894,7 +894,7 @@ mapMusic :: (Attributes -> Attributes) -> (Note -> Note) -> (Direction -> Direct
 mapMusic fa fn fd = foldMusic (MusicAttributes . fmap fa) (MusicNote . fn) (MusicDirection . fd) (Music . return)
 
 foldMusic :: Monoid m => ([Attributes] -> r) -> (Note -> r) -> (Direction -> r) -> (r -> m) -> Music -> m
-foldMusic fa fn fd f = mconcat . fmap f . (foldMusic' $ fmap (foldMusicElem fa fn fd))
+foldMusic fa fn fd f = mconcat . fmap f . foldMusic' (fmap $ foldMusicElem fa fn fd)
 
 foldMusic' :: ([MusicElem] -> r) -> Music -> r
 foldMusic' f (Music x) = f x

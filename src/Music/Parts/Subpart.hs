@@ -126,7 +126,7 @@ or similar
 -}
 
 instance Show Subpart where
-  show (Subpart ps) = Data.List.intercalate "." $ mapFR showDivisionR showDivision $ ps
+  show (Subpart ps) = Data.List.intercalate "." $ mapFR showDivisionR showDivision ps
     where
       mapFR f g (x NonEmpty.:| xs) = f x : fmap g xs
 
