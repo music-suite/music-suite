@@ -76,4 +76,4 @@ barline c x = case _era x of
 
 -- | Add a barline to the given score.
 barlineDuring :: HasMeta a => Span -> Barline -> a -> a
-barlineDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
+barlineDuring s c = addMetaNote $ view event (s, (Just $ Last c))

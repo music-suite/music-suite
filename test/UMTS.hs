@@ -168,7 +168,7 @@ umts_01b =
     $ Movement (movementTitle .~ "Various pitches and interval sizes" $ mempty) sysStaff
     $ Leaf staff
   where
-    sysStaff = (timeSignature .~ (Option $ Just $ First $ 2 / 4) $ mempty) : cycle [mempty]
+    sysStaff = (timeSignature .~ (Just $ First $ 2 / 4) $ mempty) : cycle [mempty]
     staff = Staff mempty $ fmap (\chords -> Bar mempty [PitchLayer $ rh4 chords]) chs
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1 / 4)) cs
@@ -322,7 +322,7 @@ umts_02b =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = [timeSignature .~ (Option $ Just $ First (5 / 4)) $ mempty]
+    sysStaff = [timeSignature .~ (Just $ First (5 / 4)) $ mempty]
     staff = Staff mempty [Bar mempty [PitchLayer $ Group $ fmap (\dur -> Beat dur mempty) durs]]
     durs = fmap (/ 4) [1, 1, 1, 1, 1] :: [Duration]
     -- TODO use this info
@@ -352,7 +352,7 @@ umts_02d =
     $ Staff mempty bars
   where
     sysStaff :: SystemStaff
-    sysStaff = map (\ts -> timeSignature .~ (Option $ fmap First ts) $ mempty) timeSigs2
+    sysStaff = map (\ts -> timeSignature .~ (fmap First ts) $ mempty) timeSigs2
     bars :: [Bar]
     bars = fmap (\d -> Bar mempty [PitchLayer $ quant (pitches .~ [] $ mempty) d]) durs
     quant :: a -> Duration -> Rhythm a
@@ -390,11 +390,11 @@ umts_03a =
     $ Staff mempty bars
   where
     sysStaff =
-      [ timeSignature .~ (Option $ Just $ First (16 / 4)) $ mempty,
+      [ timeSignature .~ (Just $ First (16 / 4)) $ mempty,
         mempty,
-        timeSignature .~ (Option $ Just $ First (24 / 4)) $ mempty,
+        timeSignature .~ (Just $ First (24 / 4)) $ mempty,
         mempty,
-        timeSignature .~ (Option $ Just $ First (28 / 4)) $ mempty,
+        timeSignature .~ (Just $ First (28 / 4)) $ mempty,
         mempty
       ]
     bars :: [Bar]
@@ -490,7 +490,7 @@ umts_11a =
     $ Staff mempty bars
   where
     sysStaff :: SystemStaff
-    sysStaff = map (\ts -> timeSignature .~ (Option $ Just $ First ts) $ mempty) timeSigs
+    sysStaff = map (\ts -> timeSignature .~ (Just $ First ts) $ mempty) timeSigs
     bars :: [Bar]
     bars = fmap (\d -> Bar mempty [PitchLayer $ quant tie (pitches .~ [P.c'] $ mempty) d]) durs
     tie ::
@@ -620,7 +620,7 @@ umts_12b =
     -- I feel all meta-types should implement this natively (see above)
     -- I.e. there is the "empty time signature" called mempty
     -- and also all the other variants (which can always be written as a fractional number)
-    sysStaff = (timeSignature .~ (Option $ Just $ First $ 4 / 4) $ mempty) : cycle [mempty]
+    sysStaff = (timeSignature .~ (Just $ First $ 4 / 4) $ mempty) : cycle [mempty]
     staff = Staff mempty $ [bar, bar]
     bar = Bar mempty [PitchLayer $ rh4 [singleNoteChord $ Music.Pitch.Literal.c]]
     rh4 :: [Chord] -> Rhythm Chord
@@ -701,7 +701,7 @@ umts_21b =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = [timeSignature .~ (Option $ Just $ First (1 / 4)) $ mempty, mempty]
+    sysStaff = [timeSignature .~ (Just $ First (1 / 4)) $ mempty, mempty]
     staff :: Staff
     staff = Staff mempty [bar, bar]
     -- Same in both bars
@@ -725,7 +725,7 @@ umts_21c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = [timeSignature .~ (Option $ Just $ First (1 / 4)) $ mempty, mempty]
+    sysStaff = [timeSignature .~ (Just $ First (1 / 4)) $ mempty, mempty]
     staff :: Staff
     staff = Staff mempty [bar1, bar2]
     bar1 = Bar mempty [PitchLayer notes1]
@@ -785,7 +785,7 @@ umts_23a =
     $ pure bar1
   where
     sysBar1 :: SystemBar
-    sysBar1 = timeSignature .~ (Option $ Just $ First $ 14 / 4) $ mempty
+    sysBar1 = timeSignature .~ (Just $ First $ 14 / 4) $ mempty
     bar1 :: Bar
     bar1 =
       Bar mempty $ pure $ PitchLayer $
@@ -853,7 +853,7 @@ umts_23b =
     $ bars
   where
     sysBar1 :: SystemBar
-    sysBar1 = timeSignature .~ (Option $ Just $ First $ 5 / 4) $ mempty
+    sysBar1 = timeSignature .~ (Just $ First $ 5 / 4) $ mempty
     bars :: [Bar]
     bars =
       [ Bar mempty $ pure $ PitchLayer $
@@ -898,7 +898,7 @@ umts_23c =
     $ Staff mempty
     $ bars
   where
-    sysStaff = (timeSignature .~ (Option $ Just $ First $ 4 / 4) $ mempty) : repeat mempty
+    sysStaff = (timeSignature .~ (Just $ First $ 4 / 4) $ mempty) : repeat mempty
     bars :: [Bar]
     bars =
       [ Bar mempty $ pure $ PitchLayer $
@@ -942,7 +942,7 @@ umts_23d =
     $ Staff mempty
     $ bars
   where
-    sysStaff = (timeSignature .~ (Option $ Just $ First $ 2 / 4) $ mempty) : repeat mempty
+    sysStaff = (timeSignature .~ (Just $ First $ 2 / 4) $ mempty) : repeat mempty
     bars :: [Bar]
     bars =
       [ Bar mempty $ pure $ PitchLayer $
@@ -1029,7 +1029,7 @@ umts_31a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = (timeSignature .~ (Option $ Just $ First $ 4 / 4) $ mempty) : repeat mempty
+    sysStaff = (timeSignature .~ (Just $ First $ 4 / 4) $ mempty) : repeat mempty
     staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 4 chords
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1 / 4)) cs
@@ -1297,7 +1297,7 @@ umts_33a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = (timeSignature .~ (Option $ Just $ First $ 3 / 4) $ mempty) : repeat mempty
+    sysStaff = (timeSignature .~ (Just $ First $ 3 / 4) $ mempty) : repeat mempty
     staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 3 chords
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1 / 4)) cs
@@ -1793,7 +1793,7 @@ umts_43a =
     $ Movement mempty sysStaff
     $ staves
   where
-    sysStaff = [timeSignature .~ (Option $ Just $ First $ 4 / 4) $ mempty]
+    sysStaff = [timeSignature .~ (Just $ First $ 4 / 4) $ mempty]
     staves =
       Branch
         Brace
@@ -1880,7 +1880,7 @@ umts_46c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = (timeSignature .~ (Option $ Just $ First $ 4 / 4) $ mempty) : cycle [mempty]
+    sysStaff = (timeSignature .~ (Just $ First $ 4 / 4) $ mempty) : cycle [mempty]
     staff =
       Staff
         mempty

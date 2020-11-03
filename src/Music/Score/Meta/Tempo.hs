@@ -202,7 +202,7 @@ reactiveIn :: Span -> Reactive a -> [Note a]
 reactiveIn s r
     | _duration s <= 0 = error "reactiveIn: Needs positive duration"
     | otherwise       = let r2 = trimR s (fmap optionFirst r)
-    in fmap (fmap $ fromJust . unOptionFirst) $ case updates r2 of
+    in fmap (fmap $ fromJust . getFirst) $ case updates r2 of
         -- We have at least 2 value because of trim
         (frl -> ((t,x),[],(u,_))) -> [view note (t <-> u, x)] -- one note
         (frl -> ((t0,x0), unzip -> (tn,xn), (tl,_))) -> let
