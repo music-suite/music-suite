@@ -95,4 +95,4 @@ instance Splittable a => Splittable (Maybe a) where
 chunks :: (Transformable a, Splittable a) => Duration -> a -> [a]
 chunks d xs = chunks' d xs
   where
-    chunks' d (split d -> (x, xs)) = [x] ++ chunks d xs
+    chunks' d (split d -> (x, xs)) = x : chunks d xs

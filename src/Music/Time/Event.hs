@@ -102,7 +102,7 @@ eventSpan = from event . _1
 
 -- | View the value in the event.
 eventee :: (Transformable a, Transformable b) => Lens (Event a) (Event b) a b
-eventee = from event `dependingOn` (transformed)
+eventee = from event `dependingOn` transformed
 
 -- | Event as a span with a trivial value.
 spanEvent :: Iso' Span (Event ())

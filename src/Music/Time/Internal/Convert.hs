@@ -1,10 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
@@ -57,7 +53,7 @@ import Music.Time.Types
 import Music.Time.Voice
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a
-reactiveToVoice' (view onsetAndOffset -> (u, v)) r = (^. voice) $ fmap (^. note) $ durs `zip` (fmap (r `atTime`) times)
+reactiveToVoice' (view onsetAndOffset -> (u, v)) r = (^. voice) $ fmap (^. note) $ durs `zip` fmap (r `atTime`) times
   where
     times = 0 : filter (\t -> u < t && t < v) (occs r)
     durs = toRelativeTimeN' v times

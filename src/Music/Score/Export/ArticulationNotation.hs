@@ -1,17 +1,9 @@
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
@@ -179,7 +171,7 @@ getAccentMarks x
   | otherwise = []
 
 hasSlur :: (Real (Separation t), Articulated t) => t -> Bool
-hasSlur y = hasSlur' (realToFrac $ view separation $ y)
+hasSlur y = hasSlur' (realToFrac $ view separation y)
 
 allMarks :: (Real (Separation t), Real (Accentuation t), Articulated t) => t -> [Mark]
 allMarks y =

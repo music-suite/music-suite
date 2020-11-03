@@ -1,15 +1,10 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
@@ -48,7 +43,6 @@ import Control.Monad.Plus
 import Data.Foldable (Foldable)
 import qualified Data.Foldable as F
 import qualified Data.List as List
-import qualified Data.List
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
@@ -79,11 +73,11 @@ instance Show Fifths where
 
 instance IsPitch Fifths where
   fromPitch p =
-    case ( Data.List.findIndex (== norm p) (take 12 cofU),
-           Data.List.findIndex (== norm p) (take 12 cofD)
+    case ( List.findIndex (== norm p) (take 12 cofU),
+           List.findIndex (== norm p) (take 12 cofD)
          ) of
-      (Just n, _) -> fromIntegral $ n
-      (Nothing, Just n) -> fromIntegral $ (- n)
+      (Just n, _) -> fromIntegral n
+      (Nothing, Just n) -> fromIntegral (- n)
       _ -> error "Pitch not in the circle of fifths"
     where
       cofU = fmap toFirstOctave $ iterate (up _P5) c
