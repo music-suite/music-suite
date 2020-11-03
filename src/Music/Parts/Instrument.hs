@@ -56,7 +56,6 @@ import qualified Data.List
 import Data.Map (Map)
 import qualified Data.Maybe
 import Data.Semigroup
-import Data.Semigroup.Option.Instances
 import Data.Set (Set)
 import qualified Data.Set
 import Data.Traversable (traverse)

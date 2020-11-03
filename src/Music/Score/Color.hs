@@ -78,7 +78,7 @@ instance HasColor a => HasColor (PartT n a)
 
 instance HasColor a => HasColor (TieT a)
 
-newtype ColorT a = ColorT {getColorT :: Couple (Option (Last (Colour Double))) a}
+newtype ColorT a = ColorT {getColorT :: Couple (Maybe (Last (Colour Double))) a}
   deriving (Eq {-Ord,-}, Show, Functor, Foldable, Traversable {-Typeable,-}, Applicative, Monad, Comonad)
 
 runColorT :: ColorT a -> (Colour Double, a)
@@ -96,7 +96,7 @@ deriving instance Bounded a => Bounded (ColorT a)
 
 instance Wrapped (ColorT a) where
 
-  type Unwrapped (ColorT a) = Couple (Option (Last (Colour Double))) a
+  type Unwrapped (ColorT a) = Couple (Maybe (Last (Colour Double))) a
 
   _Wrapped' = iso getColorT ColorT
 
@@ -105,7 +105,7 @@ instance Rewrapped (ColorT a) (ColorT b)
 instance HasColor (ColorT a) where
   setColor s (ColorT (Couple (t, x))) = ColorT $ Couple (t <> wrap s, x)
     where
-      wrap = Option . Just . Last
+      wrap = Just . Last
 
 instance Semigroup a => Semigroup (ColorT a) where
   (<>) = liftA2 (<>)

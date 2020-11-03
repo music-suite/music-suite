@@ -24,7 +24,7 @@ source-repository head
     location:         	git://github.com/music-suite/music-suite.git
 
 library
-    build-depends:      base,
+    build-depends:      base >= 4.11,
                         lens,
                         text,
                         split,
@@ -76,7 +76,6 @@ library
                         Music.Dynamics.Common
                         Music.Dynamics.Balance
                         Music.Dynamics.Literal
-                        Data.Semigroup.Option.Instances
                         Music.Parts
                         Music.Parts.Division
                         Music.Parts.Subpart

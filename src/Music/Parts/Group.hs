@@ -13,7 +13,6 @@ import Data.Default
 import qualified Data.List
 import Data.Maybe
 import Data.Semigroup
-import Data.Semigroup.Option.Instances
 import Data.Traversable (traverse)
 import Data.Typeable
 import Music.Parts.Division

@@ -26,7 +26,6 @@ import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Maybe
 import Data.Semigroup
-import Data.Semigroup.Option.Instances
 import Data.Set (Set)
 import Data.Traversable (traverse)
 import Data.Typeable

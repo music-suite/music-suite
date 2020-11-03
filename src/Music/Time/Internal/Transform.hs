@@ -11,7 +11,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
 
@@ -60,7 +59,6 @@ module Music.Time.Internal.Transform
   )
 where
 
-import Control.Applicative
 import Control.Lens hiding
   ( (<|),
     Indexable,
@@ -74,7 +72,6 @@ import Control.Lens hiding
     (|>),
   )
 import Data.AffineSpace
-import Data.AffineSpace.Point
 import Data.Functor.Couple
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -82,7 +79,6 @@ import Data.Ratio
 import Data.Semigroup
 import Data.Semigroup.Instances ()
 import Data.Sequence (Seq)
-import qualified Data.Sequence as Seq
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.VectorSpace hiding (Sum (..))
@@ -142,9 +138,6 @@ instance Transformable Span where
   transform = (<>)
 
 instance Transformable a => Transformable (Maybe a) where
-  transform s = fmap (transform s)
-
-instance Transformable a => Transformable (Option a) where
   transform s = fmap (transform s)
 
 instance Transformable a => Transformable (Last a) where

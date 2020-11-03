@@ -433,7 +433,6 @@ Consider switching to a decentralized issue tracker such as:
   - [X] pseq, ppar
   - [ ] Rename rcat to pdiv (or similar)
 
-- Replace (Option :. Last/First) with Maybe now that Semigroup is a superclass of Monoid
   - Though note in Score.Meta, all types should be refactored to be monoids in
     themselves, rendering the wrapper obsolete.
 
@@ -598,8 +597,6 @@ Consider switching to a decentralized issue tracker such as:
 
 
 - Replace Aeson with typed serialization (or just GHC.Generic/Typeable instances)
-
-- Get rid of Data.Semigroup.Option (can use Maybe/First/Last from Data.Monoid now)
 
 - Piano/multi-stave/automatic voice separation support.
   Test cases:

@@ -349,11 +349,11 @@ data SystemBar
 
       Actually I'm pretty sure this is the right approach. See also #242
       -}
-      { _barNumbers :: Option (First BarNumber),
-        _timeSignature :: Option (First TimeSignature),
+      { _barNumbers :: Maybe (First BarNumber),
+        _timeSignature :: Maybe (First TimeSignature),
         _keySignature :: KeySignature,
-        _rehearsalMark :: Option (First RehearsalMark),
-        _tempoMark :: Option (First TempoMark)
+        _rehearsalMark :: Maybe (First RehearsalMark),
+        _tempoMark :: Maybe (First TempoMark)
         -- ,_barLines :: BarLines
         -- Tricky because of ambiguity. Use balanced pair
         -- or an alt-list in SystemStaff.
@@ -558,7 +558,7 @@ data Chord
         -- I'd like to put dynamics in a separate layer, but neither Lily nor MusicXML thinks this way
         _dynamicNotation :: DynamicNotation,
         _fermata :: Fermata,
-        _chordColor :: Option (First (Colour Double)),
+        _chordColor :: Maybe (First (Colour Double)),
         _chordText :: [String],
         _harmonicNotation :: HarmonicNotation,
         _slideNotation :: SlideNotation,
@@ -1079,12 +1079,12 @@ addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just (ton
 addKeySignature (Music.Score.Meta.Key.KeySignature (Data.Monoid.First Nothing)) = id
 
 addTimeSignature ::
-  Option (First TimeSignature) ->
+  Maybe (First TimeSignature) ->
   [Lilypond.Music] ->
   [Lilypond.Music]
-addTimeSignature (Option (Just (First (Music.Score.Meta.Time.getTimeSignature -> (ms, n))))) =
+addTimeSignature (Just (First (Music.Score.Meta.Time.getTimeSignature -> (ms, n)))) =
   (Lilypond.Time (sum ms) n :)
-addTimeSignature (Option Nothing) = id
+addTimeSignature Nothing = id
 
 lySeq :: [Lilypond.Music] -> Lilypond.Music
 lySeq [x] = x
@@ -1191,9 +1191,9 @@ notateSlur slurs = case slurs of
 
 -- TODO This syntax might change in future Lilypond versions
 -- TODO handle any color
-notateColor :: Option (First (Colour Double)) -> Lilypond.Music -> Lilypond.Music
-notateColor (Option Nothing) = id
-notateColor (Option (Just (First color))) = \x ->
+notateColor :: Maybe (First (Colour Double)) -> Lilypond.Music -> Lilypond.Music
+notateColor Nothing = id
+notateColor (Just (First color)) = \x ->
   Lilypond.Sequential
     [ Lilypond.Override
         "NoteHead#' color"
@@ -1393,7 +1393,7 @@ movementToPartwiseXml movement = music
         timeSignatures_ :: [MusicXml.Music]
         timeSignatures_ = fmap (expTS . unOF) $ fmap (^. timeSignature) (movement ^. systemStaff)
           where
-            unOF = fmap getFirst . getOption
+            unOF = fmap getFirst
             -- TODO recognize common/cut
             expTS Nothing = mempty :: MusicXml.Music
             expTS (Just ts) =
@@ -2095,7 +2095,7 @@ toStandardNotation sc' = do
     systemStaff =
       fmap
         ( \(_dur, ts, ks) ->
-            timeSignature .~ Option (fmap First ts)
+            timeSignature .~ fmap First ts
               $ keySignature .~ maybe mempty id ks
               $ mempty
         )
