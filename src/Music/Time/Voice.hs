@@ -337,7 +337,7 @@ mapWithOffsetRelative t f = mapWithSpanRelative t (\s x -> f (s ^. offset) x)
 mapWithOnsetRelative :: Time -> (Time -> a -> b) -> Voice a -> Voice b
 mapWithOnsetRelative t f = mapWithSpanRelative t (\s x -> f (s ^. onset) x)
 
--- >>> mapWithSpanRelative 0 (\s x -> s) $ asVoice $ mconcat [c,d^*2,e]
+-- >>> mapWithSpanRelative 0 (\s x -> s) $ asVoice $ mconcat [c,d^*2,e]
 -- [(1,0 <-> 1)^.note,(2,1 <-> 3)^.note,(1,3 <-> 4)^.note]^.voice
 mapWithSpanRelative :: Time -> (Span -> a -> b) -> Voice a -> Voice b
 mapWithSpanRelative t f v = set valuesV newValues v

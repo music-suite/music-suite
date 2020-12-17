@@ -111,7 +111,7 @@ instance (HasDuration v, Transformable v) => HasPosition1 (Aligned v) where
 instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
   _era = Just . _era1
 
--- |  Change the alignment of a value without moving it.
+-- | Change the alignment of a value without moving it.
 --
 --  @
 --  x^.'era' = ('realign' l x)^.'era'
