@@ -141,7 +141,6 @@ import qualified Data.Stream.Infinite as Stream
 import Data.VectorSpace
 import Music.Pitch.Common
 import Music.Pitch.Literal
-import Music.Pitch.Literal
 import Music.Score.Pitch (HasPitches (..))
 import qualified Music.Score.Pitch as S
 
@@ -263,7 +262,7 @@ instance FiniteSequence NonEmpty where
       NonEmpty.iterate left xs NonEmpty.!! fromInteger n
     | n == 0 = xs
     | n < 0 =
-      NonEmpty.iterate right xs NonEmpty.!! (negate $ fromInteger n)
+      NonEmpty.iterate right xs NonEmpty.!! negate (fromInteger n)
     | otherwise = error "impossible"
     where
       left (x :| []) = x :| []

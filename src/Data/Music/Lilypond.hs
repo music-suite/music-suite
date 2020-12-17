@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-unused-matches #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -353,7 +352,7 @@ instance Pretty Note where
   prettyList = hsep . fmap pretty
 
 instance IsPitch Note where
-  fromPitch = (\p -> (NotePitch p Nothing)) . fromPitch
+  fromPitch = (\p -> NotePitch p Nothing) . fromPitch
 
 data Clef
   = Treble
@@ -660,13 +659,13 @@ sequential :: Music -> Music -> Music
 Sequential as `sequential` Sequential bs = Sequential (as <> bs)
 Sequential as `sequential` b = Sequential (as <> [b])
 a `sequential` Sequential bs = Sequential ([a] <> bs)
-a `sequential` b = Sequential ([a, b])
+a `sequential` b = Sequential [a, b]
 
 simultaneous :: Music -> Music -> Music
 Simultaneous s as `simultaneous` Simultaneous t bs = Simultaneous True (as <> bs)
 Simultaneous s as `simultaneous` b = Simultaneous s (as <> [b])
 a `simultaneous` Simultaneous t bs = Simultaneous t ([a] <> bs)
-a `simultaneous` b = Simultaneous True ([a, b])
+a `simultaneous` b = Simultaneous True [a, b]
 
 addPost :: PostEvent -> Music -> Music
 addPost a = foldMusic' (addPost' a) id (addPost a)
@@ -904,7 +903,7 @@ logBaseR k n
 logBaseR k n = logBase (fromRational k) (fromRational n)
 
 isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
-isDivisibleBy n = (equalTo 0.0) . snd . properFraction @Double @Integer . logBaseR (toRational n) . toRational
+isDivisibleBy n = equalTo 0.0 . snd . properFraction @Double @Integer . logBaseR (toRational n) . toRational
 
 equalTo :: Eq a => a -> a -> Bool
 equalTo = (==)

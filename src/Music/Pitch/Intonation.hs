@@ -56,19 +56,19 @@ basis_d2 = basisValue Diatonic
 
 synTune :: (Interval, Double) -> (Interval, Double) -> Interval -> Double
 synTune (i1, i1rat) (i2, i2rat) (view (from intervalAlterationSteps) -> (a1, d2)) =
-  ((makeA1 (i1, i1rat) (i2, i2rat)) ** (fromIntegral a1)) * ((maked2 (i1, i1rat) (i2, i2rat)) ** (fromIntegral d2))
+  (makeA1 (i1, i1rat) (i2, i2rat) ** fromIntegral a1) * (maked2 (i1, i1rat) (i2, i2rat) ** fromIntegral d2)
   where
     makeA1 = makeBasis basis_A1
     maked2 = makeBasis basis_d2
 
 makeBasis :: Interval -> (Interval, Double) -> (Interval, Double) -> Double
-makeBasis i (i1, r1) (i2, r2) = case (convertBasisFloat i i1 i2) of
+makeBasis i (i1, r1) (i2, r2) = case convertBasisFloat i i1 i2 of
   Just (x, y) -> (r1 ** x) * (r2 ** y)
-  Nothing -> error ("Cannot use intervals " ++ (show i1) ++ " and " ++ (show i2) ++ " as basis pair to represent " ++ (show i))
+  Nothing -> error ("Cannot use intervals " ++ show i1 ++ " and " ++ show i2 ++ " as basis pair to represent " ++ show i)
 
 -- | Turn a tuning into an intonation by picking a reference pitch and frequency.
 intone :: AffinePair v p => Hertz -> p -> Tuning v -> Intonation p
-intone f b (Tuning t) = Intonation $ int
+intone f b (Tuning t) = Intonation int
   where
     int p = f .+^ (t i) where i = p .-. b
 
@@ -130,7 +130,7 @@ just :: Tuning Interval
 just = Tuning justT'
 
 justT' :: Floating a => Interval -> a
-justT' i = 2 ** (fromIntegral o) * go (spell usingSharps s)
+justT' i = 2 ** fromIntegral o * go (spell usingSharps s)
   where
     (o, s) = separate i
     go i
@@ -145,7 +145,7 @@ justT' i = 2 ** (fromIntegral o) * go (spell usingSharps s)
       | i == _A2 = (15 / 8) * (5 / 4) / 2 -- or minor third
       | i == _A4 = (9 / 8) * (5 / 4)
       | i == _A5 = (5 / 4) * (5 / 4)
-      | i == _A6 = (7 / 4)
+      | i == _A6 = 7 / 4
       | otherwise = error $ "justT got" ++ show i
 {-
 Possible instances for numeric types based on standard intonation.

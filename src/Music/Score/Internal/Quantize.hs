@@ -1,7 +1,4 @@
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -59,7 +56,6 @@ import Data.Ord (comparing)
 import Data.Ratio
 import Data.Semigroup
 import Data.Traversable (Traversable (..))
-import Data.Traversable
 import Data.Tree
 import Data.VectorSpace
 import Music.Score.Internal.Util
@@ -130,7 +126,7 @@ rhythmToTree :: Rhythm a -> Tree String
 rhythmToTree = go
   where
     go (Beat d _a) = Node ("" ++ showD d) []
-    go (Group rs) = Node ("") (fmap rhythmToTree rs)
+    go (Group rs) = Node "" (fmap rhythmToTree rs)
     go (Dotted n r) = Node (replicate n '.') [rhythmToTree r]
     go (Tuplet n r) = Node ("*^ " ++ showD n) [rhythmToTree r]
     showD = (\x -> show (numerator x) ++ "/" ++ show (denominator x)) . toRational
@@ -230,7 +226,7 @@ singleGroup orig = orig
 
 -- | Removes dotted notes in 2/3 tuplets.
 tupletDot :: Rhythm a -> Rhythm a
-tupletDot (Tuplet ((unRatio . realToFrac @Duration @Rational) -> (2, 3)) (Dotted 1 x)) = x
+tupletDot (Tuplet (unRatio . realToFrac @Duration @Rational -> (2, 3)) (Dotted 1 x)) = x
 tupletDot orig = orig
 
 splitTupletIfLongEnough :: Rhythm a -> Rhythm a
@@ -514,7 +510,7 @@ quSimp = Right . qu1 1
     qu1 totDur xs =
       if isPowerOf2 n
         then Group (fmap (\(_, a) -> Beat (totDur / fromIntegral n) a) xs)
-        else Tuplet (q) (Group (fmap (\(_, a) -> Beat (totDur / fromIntegral p) a) xs))
+        else Tuplet q (Group (fmap (\(_, a) -> Beat (totDur / fromIntegral p) a) xs))
       where
         q = fromIntegral p / fromIntegral n :: Duration
         p = greatestSmallerPowerOf2 n :: Integer

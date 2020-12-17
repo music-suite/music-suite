@@ -1,11 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -81,4 +77,4 @@ clef c x = case _era x of
 
 -- | Set clef of the given part of a score.
 clefDuring :: HasMeta a => Span -> Clef -> a -> a
-clefDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
+clefDuring s c = addMetaNote $ view event (s, Just $ Last c)

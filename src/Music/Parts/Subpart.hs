@@ -26,7 +26,6 @@ import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Maybe
 import Data.Semigroup
-import Data.Semigroup.Option.Instances
 import Data.Set (Set)
 import Data.Traversable (traverse)
 import Data.Typeable
@@ -127,7 +126,7 @@ or similar
 -}
 
 instance Show Subpart where
-  show (Subpart ps) = Data.List.intercalate "." $ mapFR showDivisionR showDivision $ ps
+  show (Subpart ps) = Data.List.intercalate "." $ mapFR showDivisionR showDivision ps
     where
       mapFR f g (x NonEmpty.:| xs) = f x : fmap g xs
 

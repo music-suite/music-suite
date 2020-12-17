@@ -1,11 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -74,4 +70,4 @@ fermata c x = case _era x of
 
 -- | Add a fermata to the given score.
 fermataAt :: HasMeta a => Time -> Fermata -> a -> a
-fermataAt s c = addMetaNote $ view event (s <-> s, (Option $ Just $ Last c))
+fermataAt s c = addMetaNote $ view event (s <-> s, Option $ Just $ Last c)

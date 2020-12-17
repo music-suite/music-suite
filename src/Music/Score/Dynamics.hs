@@ -368,7 +368,7 @@ compressUp th r = over dynamics (relative th $ \x -> if x < 0 then x else x ^* r
 -- >>> compressDown 0 1.5 (-0.2 :: Amplitude)
 -- Amplitude {getAmplitude = -0.30000000000000004}
 compressDown ::
-  (Attenuable l d a, Ord (l), Num (l)) =>
+  (Attenuable l d a, Ord l, Num l) =>
   -- | Threshold
   d ->
   -- | Ratio
@@ -379,11 +379,11 @@ compressDown ::
 compressDown th r = over dynamics (relative th $ \x -> if x > 0 then x else x ^* r)
 
 compressor ::
-  (Attenuable l d a, Ord (l), Num (l)) =>
+  (Attenuable l d a, Ord l, Num l) =>
   -- | Threshold
   d ->
   -- | Ratio
-  Scalar (l) ->
+  Scalar l ->
   -- | Value to compress
   a ->
   a

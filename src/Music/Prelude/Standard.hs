@@ -1,6 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_GHC
@@ -148,7 +146,7 @@ stripSuffix xs
 
 -- | Orchestrate in the given parts.
 singleParts :: (Monoid a, Semigroup a, HasPosition a, Transformable a, HasParts' a) => [Music.Score.Part.Part a] -> [a] -> a
-singleParts ens = ppar . zipWith (set parts') (reverse $ ens)
+singleParts ens = ppar . zipWith (set parts') (reverse ens)
 
 -- TODO move
 

@@ -56,7 +56,6 @@ import qualified Data.List
 import Data.Map (Map)
 import qualified Data.Maybe
 import Data.Semigroup
-import Data.Semigroup.Option.Instances
 import Data.Set (Set)
 import qualified Data.Set
 import Data.Traversable (traverse)
@@ -170,7 +169,6 @@ shortName = Data._shortName . fetchInstrumentDef
 -- | Transposition interval.
 transposition :: Instrument -> Interval
 transposition = Data._transposition . fetchInstrumentDef
-  where
 
 -- | A string representing transposition such as "Bb" or "F".
 transpositionString :: Instrument -> String

@@ -83,9 +83,9 @@ instance AffineSpace Hertz where
 
   type Diff Hertz = Double
 
-  (.-.) f1 f2 = (getHertz f1) / (getHertz f2)
+  (.-.) f1 f2 = getHertz f1 / getHertz f2
 
-  (.+^) f x = Hertz $ (getHertz f) * x
+  (.+^) f x = Hertz $ getHertz f * x
 
 class HasFrequency a where
   frequency :: a -> Hertz
