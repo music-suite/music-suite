@@ -12,6 +12,23 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
+- [ ] Add snapTo
+
+    {-
+    -- |
+    -- Compose sequentially by aligning the nominal position of each value to the
+    -- first available time value.
+    --
+    -- TODO this requires another constraint for nominal position. For (Aligned ((t,_),_))
+    -- the nominal position is t.
+    --
+    -- @
+    -- length xs = length (snapTo ts xs)
+    -- @
+    snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]
+    -}
+
+
 - [ ] Rescue this comment?
 
     -- TODO: resture _position to HasPosition, then restore this comment:

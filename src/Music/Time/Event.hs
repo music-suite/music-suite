@@ -81,7 +81,6 @@ instance (Show a) => Show (Event a) where
   show x = show (x ^. from event) ++ "^.event"
 
 instance ToJSON a => ToJSON (Event a) where
-  -- TODO meta
   toJSON a = JSON.object [("span", toJSON s), ("value", toJSON x)]
     where
       (s, x) = a ^. from event
@@ -89,7 +88,7 @@ instance ToJSON a => ToJSON (Event a) where
 instance FromJSON a => FromJSON (Event a) where
   parseJSON (JSON.Object x) = liftA2 (\x y -> (x, y) ^. event) era value
     where
-      era = x JSON..: "span" -- TODO should change this name
+      era = x JSON..: "span"
       value = x JSON..: "value"
   parseJSON _ = empty
 
