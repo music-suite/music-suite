@@ -265,10 +265,10 @@ instance (HasDynamic a b) => HasDynamic (TextT a) (TextT b) where
   dynamic = _Wrapped . dynamic
 
 instance (HasDynamics a b) => HasDynamics (HarmonicT a) (HarmonicT b) where
-  dynamics = _Wrapped . dynamics
+  dynamics = traverse . dynamics
 
 instance (HasDynamic a b) => HasDynamic (HarmonicT a) (HarmonicT b) where
-  dynamic = _Wrapped . dynamic
+  dynamic = iso getHarmonicT HarmonicT . dynamic
 
 instance (HasDynamics a b) => HasDynamics (TieT a) (TieT b) where
   dynamics = _Wrapped . dynamics

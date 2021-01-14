@@ -1,5 +1,4 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE TupleSections #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
@@ -83,19 +82,11 @@ instance HasHarmonic a => HasHarmonic [a]
 
 instance HasHarmonic a => HasHarmonic (Score a)
 
-instance Wrapped (HarmonicT a) where
-
-  type Unwrapped (HarmonicT a) = Couple (Any, Sum Int) a
-
-  _Wrapped' = iso getHarmonicT HarmonicT
-
-instance Rewrapped (HarmonicT a) (HarmonicT b)
-
 instance HasHarmonic (HarmonicT a) where
 
-  setNatural b = over (_Wrapped' . _Wrapped') $ \((_, n), x) -> ((Any b, n), x)
+  setNatural b = over (iso getHarmonicT HarmonicT . _Wrapped') $ \((_, n), x) -> ((Any b, n), x)
 
-  setHarmonic n = over (_Wrapped' . _Wrapped') $ \((nat, _), x) -> ((nat, Sum n), x)
+  setHarmonic n = over (iso getHarmonicT HarmonicT . _Wrapped') $ \((nat, _), x) -> ((nat, Sum n), x)
 
 deriving instance Num a => Num (HarmonicT a)
 

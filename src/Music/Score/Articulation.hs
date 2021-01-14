@@ -236,10 +236,10 @@ instance (HasArticulation a b) => HasArticulation (TextT a) (TextT b) where
   articulation = _Wrapped . articulation
 
 instance (HasArticulations a b) => HasArticulations (HarmonicT a) (HarmonicT b) where
-  articulations = _Wrapped . articulations
+  articulations = traverse . articulations
 
 instance (HasArticulation a b) => HasArticulation (HarmonicT a) (HarmonicT b) where
-  articulation = _Wrapped . articulation
+  articulation = iso getHarmonicT HarmonicT . articulation
 
 instance (HasArticulations a b) => HasArticulations (TieT a) (TieT b) where
   articulations = _Wrapped . articulations

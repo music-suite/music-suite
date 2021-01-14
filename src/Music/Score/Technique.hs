@@ -74,7 +74,7 @@ import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Music.Pitch.Literal
 import Music.Score.Color (ColorT)
-import Music.Score.Harmonics (HarmonicT)
+import Music.Score.Harmonics (HarmonicT(..))
 import Music.Score.Internal.Util (through)
 import Music.Score.Part
 import Music.Score.Phrases
@@ -334,7 +334,7 @@ instance (HasTechniques a b) => HasTechniques (HarmonicT a) (HarmonicT b) where
   techniques = traverse . techniques
 
 instance (HasTechnique a b) => HasTechnique (HarmonicT a) (HarmonicT b) where
-  technique = _Wrapped . technique
+  technique = iso getHarmonicT HarmonicT . technique
 
 instance (HasTechniques a b) => HasTechniques (TieT a) (TieT b) where
   techniques = traverse . techniques
