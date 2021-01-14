@@ -12,6 +12,114 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
+- [ ] More Span combinators:
+
+    {-
+    afterOnset :: Time -> Span -> Bool
+    t `afterOnset` s = t >= _onsetS s
+
+    strictlyAfterOnset :: Time -> Span -> Bool
+    t `strictlyAfterOnset` s = t > _onsetS s
+
+    beforeOnset :: Time -> Span -> Bool
+    t `beforeOnset` s = t <= _onsetS s
+
+    strictlyBeforeOnset :: Time -> Span -> Bool
+    t `strictlyBeforeOnset` s = t < _onsetS s
+
+    afterOffset :: Time -> Span -> Bool
+    t `afterOffset` s = t >= _offsetS s
+
+    strictlyAfterOffset :: Time -> Span -> Bool
+    t `strictlyAfterOffset` s = t > _offsetS s
+
+    beforeOffset :: Time -> Span -> Bool
+    t `beforeOffset` s = t <= _offsetS s
+
+    strictlyBeforeOffset :: Time -> Span -> Bool
+    t `strictlyBeforeOffset` s = t < _offsetS s
+    -}
+    -- Param order OK
+
+    {-
+    -- Name?
+    startsWhenStarts :: Span -> Span -> Bool
+    a `startsWhenStarts` b = _onsetS a == _onsetS b
+
+    -- Name?
+    startsWhenStops :: Span -> Span -> Bool
+    a `startsWhenStops` b = _onsetS a == _offsetS b
+
+    -- Name?
+    stopsWhenStops :: Span -> Span -> Bool
+    a `stopsWhenStops` b = _offsetS a == _offsetS b
+
+    -- Name?
+    stopsWhenStarts :: Span -> Span -> Bool
+    a `stopsWhenStarts` b = _offsetS a == _onsetS b
+
+    startsBefore :: Span -> Span -> Bool
+    a `startsBefore` b = _onsetS a < _onsetS b
+
+    startsLater :: Span -> Span -> Bool
+    a `startsLater` b = _onsetS a > _onsetS b
+
+    stopsAtTheSameTime :: Span -> Span -> Bool
+    a `stopsAtTheSameTime` b = _offsetS a == _offsetS b
+
+    stopsBefore :: Span -> Span -> Bool
+    a `stopsBefore` b = _offsetS a < _offsetS b
+
+    stopsLater :: Span -> Span -> Bool
+    a `stopsLater` b = _offsetS a > _offsetS b
+    -}
+    {-
+    contains
+    curtails
+    delays
+    happensDuring
+    intersects
+    trisects
+    isCongruentTo
+    overlapsAllOf
+    overlapsOnlyOnsetOf
+    overlapsOnlyOffsetOf
+    overlapsOnsetOf
+    overlapsOffsetOf
+
+
+
+    -}
+
+    -- timespantools.timespan_2_starts_during_timespan_1
+    -- timespantools.timespan_2_starts_when_timespan_1_starts
+    -- timespantools.timespan_2_starts_when_timespan_1_stops
+    -- timespantools.timespan_2_stops_after_timespan_1_starts
+    -- timespantools.timespan_2_stops_after_timespan_1_stops
+    -- timespantools.timespan_2_stops_before_timespan_1_starts
+    -- timespantools.timespan_2_stops_before_timespan_1_stops
+    -- timespantools.timespan_2_stops_during_timespan_1
+    -- timespantools.timespan_2_stops_when_timespan_1_starts
+    -- timespantools.timespan_2_stops_when_timespan_1_stops
+    -- timespantools.timespan_2_trisects_timespan_1
+
+    {-
+    Two alternative definitions for midpoint:
+
+    midpoint x = onset x + duration x / 2
+    midpoint x = (onset x + offset x) / 2
+
+    Both equivalent. Proof:
+
+      let d = b - a
+      (a + b)/2 = a + d/2
+      (a + b)/2 = a + (b - a)/2
+      a + b     = 2a + (b - a)
+      a + b     = a + b
+    -}
+
+
+
 - [ ] More voice combinators:
 
     -- changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
