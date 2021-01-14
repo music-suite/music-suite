@@ -12,6 +12,194 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
+- [ ] Proper velcoity table for e.g. MIDI backend
+
+{-
+    ppp -42    -36
+    pp  -36    -36
+    p   -30    -24
+    mp  ?
+    mf  -24    -18
+    f   -18    -12
+    ff  -18    -12
+
+
+
+
+    Midi velocities according to Apple:
+        16  32  48  64  80  96  112  127
+        ppp pp  p   mp  mf  f   ff   fff
+
+    Nakamura (1987) The communication of dynamics between musicians and listeners through musical performance
+-}
+
+- [ ] Better articulation type
+{-
+
+  References
+
+    Keller: Phrasing and Articulation: A Contribution to a Rhetoric of Music
+
+      Keller distinguishes between articulation and phrasing:
+        - Phrasing is related to the structure or grammar of the music,
+          how hierarchical relationsship emerges.
+        - Articulation is "everything else", the individual interpretation of
+          the melodic line.
+        - Keller consider phrasing objective. (It is at least non-deterministic!)
+
+    http://www.speech.kth.se/publications/masterprojects/2004/Jerkert.pdf
+
+      - Articulation is a *local* alteration of other properties
+        - There are multiple interacting hierarchical relationships
+        - Articulation has to do with *emphasis*: alteration of properties leads
+          to more or less emphasis (compare Laws of Perception)
+      - Most common:
+        - Time (common: stacatissimo, staccato, portato, legato)
+          - "articulation ratio", i.e. duration/IOI
+          - "relative IOI", i.e. prolongation of a note
+        - Dynamics (common: accent, marcato)
+          - fp/sharp attacks etc (i.e. in wind, string)
+          - Relative level (i.e. in piano music)
+        - Pitch
+          - Vibrato, local adjustments (i.e. brighter notes), "slide-in"
+        - Timbre
+          - Dryness/spectral richness (i.e. more overtones)
+
+    http://www.jbiomech.com/article/S0021-9290%2898%2900113-4/abstract
+-}
+
+{-
+
+From music21:
+  Accent
+  Bowing
+  BrassIndication
+  BreathMark
+  Caesura
+  DetachedLegato
+  Doit
+  DoubleTongue
+  DownBow
+  DynamicArticulation
+  Falloff
+  FretBend
+  FretIndication
+  FretTap
+  FrettedPluck
+  HammerOn
+  Harmonic
+  HarpFingerNails
+  HarpIndication
+  IndeterminantSlide
+  LengthArticulation
+  NailPizzicato
+  OpenString
+  OrganHeel
+  OrganIndication
+  OrganToe
+  PitchArticulation
+  Pizzicato
+  Plop
+  PullOff
+  Scoop
+  SnapPizzicato
+  Spiccato
+  Staccatissimo
+  Staccato
+  Stopped
+  Stress
+  StringFingering
+  StringHarmonic
+  StringIndication
+  StringThumbPosition
+  StrongAccent
+  TechnicalIndication
+  Tenuto
+  TimbreArticulation
+  TonguingIndication
+  TripleTongue
+  Unstress
+  UpBow
+  WindIndication
+  WoodwindIndication
+
+
+
+
+
+
+----------------
+
+
+  Stress
+  Unstress
+  Accent
+  StrongAccent
+
+  Tenuto
+  Spiccato
+  Staccato
+  Staccatissimo
+
+  Harmonic
+  OpenString
+  Stopped
+  HammerOn
+  PullOff
+
+  OrganIndication
+  OrganHeel
+  OrganToe
+  UpBow
+  DownBow
+
+  DetachedLegato (laisser vibrer)
+  IndeterminantSlide
+
+
+
+  Doit (grace?)
+  Falloff?
+  StringFingering
+  HarpFingerNails
+
+  NailPizzicato
+  Pizzicato
+  SnapPizzicato
+
+  Bowing?
+
+  TonguingIndication
+  DoubleTongue
+  TripleTongue
+
+
+  HarpIndication
+  FretIndication
+  FrettedPluck
+  FretTap
+  LengthArticulation
+  StringIndication
+  StringThumbPosition
+
+
+  Plop
+  Scoop
+
+  FretBend
+
+  WindIndication
+  BrassIndication
+  WoodwindIndication
+  TechnicalIndication
+  TimbreArticulation
+
+  BreathMark
+  Caesura
+
+-}
+
+
 - [X] MusicXML Parser
   - [X] Make all tests pass (music-suite-test-xml-parser)
   - [ ] Full ornament support, see https://github.com/hanshoglund/music-suite/pull/22#issuecomment-633314407
