@@ -1,7 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
+
 module Data.AffineSpace.Point.Offsets
   ( offsetPoints,
     offsetPointsS,
@@ -12,16 +9,17 @@ module Data.AffineSpace.Point.Offsets
   )
 where
 
--- offsetted,
-
 import Data.AffineSpace
-import Data.AffineSpace.Point
 import Data.List
 import Data.Stream.Infinite (Stream)
 import qualified Data.Stream.Infinite as Stream
 import Data.VectorSpace
 
--- TODO move to separate module
+-- |
+-- An affine space of /points/ with an associated vector space.
+--
+-- Vectors represent distances between points, for example the
+-- distance between @(0,0)@ and @(0,1)@ is @1@.
 type AffinePair v p = (VectorSpace v, AffineSpace p, Diff p ~ v)
 
 -- | Lay out a series of vectors from a given point. Return all intermediate points.
@@ -60,7 +58,3 @@ offsetVs p = tail . offsetPoints p
 
 distanceVs :: AffineSpace p => p -> [p] -> [Diff p]
 distanceVs p = tail . pointOffsets p
-{-
-offsetted :: AffineSpace p => p -> Iso' [Diff p] [p]
-offsetted = iso distanceVs offsetVs
--}
