@@ -1,7 +1,3 @@
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
@@ -100,6 +96,9 @@ extractBars x = case _era x of
   Nothing -> []
   Just e -> extractBarsInEra e x
 
+extractBarsInEra :: HasMeta a
+                 => Span -> a
+                 -> [(Duration, Maybe TimeSignature, Maybe KeySignature)]
 extractBarsInEra era x = zip3 dss tss kss
   where
     dss :: [Duration]
@@ -127,7 +126,7 @@ extractBarsInEra era x = zip3 dss tss kss
 
 -- | Extract the time signature meta-track, using the given default.
 getTimeSignatures :: HasMeta a => TimeSignature -> a -> Reactive TimeSignature
-getTimeSignatures def = fmap (fromMaybe def . fmap getLast . getOption) . fromMetaReactive . (view meta)
+getTimeSignatures def = fmap (fromMaybe def . fmap getLast) . fromMetaReactive . (view meta)
 
 -- | Extract the key signature meta-track
 getKeySignatures :: HasMeta a => a -> Reactive KeySignature

@@ -17,7 +17,6 @@ import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson
 import Data.Default
 import Data.Semigroup
-import Data.Semigroup.Option.Instances
 import Data.Traversable (traverse)
 import Data.Typeable
 import Text.Numeral.Roman (toRoman)

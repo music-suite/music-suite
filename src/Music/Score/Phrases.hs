@@ -168,7 +168,7 @@ mVoicePVoiceIgnoringMeta = iso mvoiceToPVoice pVoiceToMVoice
 
     voiceToPhrase :: MVoice a -> Phrase a
     voiceToPhrase = fmap fromJust
-    pVoiceToMVoice :: (PVoice a) -> MVoice a
+    pVoiceToMVoice :: PVoice a -> MVoice a
     pVoiceToMVoice = mconcat . fmap (either restToVoice phraseToVoice)
     restToVoice :: Duration -> MVoice a
     restToVoice d = stretch d $ pure Nothing
@@ -218,7 +218,7 @@ pVoiceTVoice :: Lens (PVoice a) (PVoice b) (TVoice a) (TVoice b)
 pVoiceTVoice = lens pVoiceToTVoice (flip tVoiceToPVoice)
   where
     pVoiceToTVoice :: PVoice a -> TVoice a
-    pVoiceToTVoice x = mkTrack $ rights $ map (sequenceA) $ firsts (offsetPoints (0 :: Time)) (withDurationR x)
+    pVoiceToTVoice x = mkTrack $ rights $ map sequenceA $ firsts (offsetPoints (0 :: Time)) (withDurationR x)
     -- TODO assert no overlapping
     tVoiceToPVoice :: TVoice a -> PVoice b -> PVoice a
     tVoiceToPVoice tv pv = set _rights newPhrases pv

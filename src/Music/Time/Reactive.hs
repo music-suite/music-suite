@@ -70,7 +70,6 @@ import Music.Dynamics.Literal
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 import Music.Pitch.Literal
-import Music.Pitch.Literal
 import Music.Time.Behavior
 import Music.Time.Event
 import Music.Time.Juxtapose

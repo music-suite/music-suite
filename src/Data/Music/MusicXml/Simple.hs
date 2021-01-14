@@ -266,7 +266,7 @@ fromPart title composer partName music =
 fromParts :: String -> String -> PartList -> [[Music]] -> Score
 fromParts title composer partList music =
   Partwise
-    (def)
+    def
     (header title composer partList)
     (addPartwiseAttributes music)
 
@@ -478,8 +478,8 @@ rest' :: NoteVal -> Music
 rest' dur = Music . single $ MusicNote (Note def (defaultDivisionsVal `div` denom) noTies (setNoteValP val def))
   where
     -- num = fromIntegral $ numerator $ toRational $ dur
-    denom = fromIntegral $ denominator $ toRational $ dur
-    val = NoteVal $ toRational $ dur
+    denom = fromIntegral $ denominator $ toRational dur
+    val = NoteVal $ toRational dur
 
 -- |
 -- Create a single note.
@@ -512,10 +512,10 @@ note' :: Bool -> Pitch -> NoteVal -> Int -> Music
 note' isChord pitch dur dots =
   Music . single $ MusicNote $
     Note
-      (Pitched isChord $ pitch)
+      (Pitched isChord pitch)
       (defaultDivisionsVal `div` denom)
       noTies
-      (setNoteValP val $ addDots $ def)
+      (setNoteValP val $ addDots def)
   where
     addDots = foldl (.) id (replicate dots dotP)
     -- I.e. given a 1/4 note
@@ -523,8 +523,8 @@ note' isChord pitch dur dots =
     -- denom ~ 4
 
     -- num = numerator $ toRational $ dur
-    denom = fromIntegral $ denominator $ toRational $ dur
-    val = NoteVal $ toRational $ dur
+    denom = fromIntegral $ denominator $ toRational dur
+    val = NoteVal $ toRational dur
 
 separateDots :: NoteVal -> (NoteVal, Int)
 separateDots = separateDots' [2 / 3, 6 / 7, 14 / 15, 30 / 31, 62 / 63]
@@ -618,10 +618,10 @@ beginTie' = Music . fmap beginTie'' . getMusic
 
 endTie' = Music . fmap endTie'' . getMusic
 
-beginTie'' (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties ++ [Start]) props))
+beginTie'' (MusicNote (Note full dur ties props)) = MusicNote (Note full dur (ties ++ [Start]) props)
 beginTie'' x = x
 
-endTie'' (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop] ++ ties) props))
+endTie'' (MusicNote (Note full dur ties props)) = MusicNote (Note full dur (Stop : ties) props)
 endTie'' x = x
 
 setNoteValP v x = x {noteType = Just (v, Nothing)}
@@ -636,15 +636,15 @@ continueBeamP n x = x {noteBeam = Just (n, ContinueBeam)}
 
 endBeamP n x = x {noteBeam = Just (n, EndBeam)}
 
-dotP x@(NoteProps {noteDots = n@_}) = x {noteDots = succ n}
+dotP x@NoteProps {noteDots = n} = x {noteDots = succ n}
 
-addNotationP n x@(NoteProps {noteNotations = ns@_}) = x {noteNotations = (mergeNotations $ ns ++ [n])}
+addNotationP n x@NoteProps {noteNotations = ns@_} = x {noteNotations = mergeNotations $ ns ++ [n]}
 
-mapNotationsP f x@(NoteProps {noteNotations = ns@_}) = x {noteNotations = (f ns)}
+mapNotationsP f x@NoteProps {noteNotations = ns@_} = x {noteNotations = f ns}
 
-mapStemP f x@(NoteProps {noteStem = a@_}) = x {noteNotations = (f a)}
+mapStemP f x@NoteProps {noteStem = a@_} = x {noteNotations = f a}
 
-mapNoteHeadP f x@(NoteProps {noteNoteHead = a@_}) = x {noteNoteHead = (f a)}
+mapNoteHeadP f x@NoteProps {noteNoteHead = a@_} = x {noteNoteHead = f a}
 
 -- ----------------------------------------------------------------------------------
 
@@ -787,10 +787,10 @@ dimTo x = \m -> dim m <> dynamic x
 dimFromTo x y = \m -> dynamic x <> dim m <> dynamic y
 
 beginCresc, endCresc, beginDim, endDim :: Music
-beginCresc = Music $ [MusicDirection $ Crescendo Start]
-endCresc = Music $ [MusicDirection $ Crescendo Stop]
-beginDim = Music $ [MusicDirection $ Diminuendo Start]
-endDim = Music $ [MusicDirection $ Diminuendo Stop]
+beginCresc = Music [MusicDirection $ Crescendo Start]
+endCresc = Music [MusicDirection $ Crescendo Stop]
+beginDim = Music [MusicDirection $ Diminuendo Start]
+endDim = Music [MusicDirection $ Diminuendo Stop]
 
 dynamic :: Dynamics -> Music
 dynamic level = Music $ [MusicDirection $ Dynamics level]
@@ -817,7 +817,7 @@ scaleDur x =
 beam :: Music -> Music
 beam (Music []) = Music []
 beam (Music [xs]) = Music [xs]
-beam (Music xs) = (as <> bs <> cs)
+beam (Music xs) = as <> bs <> cs
   where
     as = beginBeam $ Music [head xs]
     bs = continueBeam $ Music (init (tail xs))
@@ -826,7 +826,7 @@ beam (Music xs) = (as <> bs <> cs)
 slur :: Music -> Music
 slur (Music []) = Music []
 slur (Music [xs]) = Music [xs]
-slur (Music xs) = (as <> bs <> cs)
+slur (Music xs) = as <> bs <> cs
   where
     as = beginSlur $ Music [head xs]
     bs = Music $ init (tail xs)
@@ -894,7 +894,7 @@ mapMusic :: (Attributes -> Attributes) -> (Note -> Note) -> (Direction -> Direct
 mapMusic fa fn fd = foldMusic (MusicAttributes . fmap fa) (MusicNote . fn) (MusicDirection . fd) (Music . return)
 
 foldMusic :: Monoid m => ([Attributes] -> r) -> (Note -> r) -> (Direction -> r) -> (r -> m) -> Music -> m
-foldMusic fa fn fd f = mconcat . fmap f . (foldMusic' $ fmap (foldMusicElem fa fn fd))
+foldMusic fa fn fd f = mconcat . fmap f . foldMusic' (fmap $ foldMusicElem fa fn fd)
 
 foldMusic' :: ([MusicElem] -> r) -> Music -> r
 foldMusic' f (Music x) = f x
@@ -919,7 +919,7 @@ logBaseR k n
 logBaseR k n = logBase (fromRational k) (fromRational n)
 
 isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
-isDivisibleBy n = (equalTo 0.0) . snd . properFraction @Double @Integer . logBaseR (toRational n) . toRational
+isDivisibleBy n = equalTo 0.0 . snd . properFraction @Double @Integer . logBaseR (toRational n) . toRational
 
 single x = [x]
 

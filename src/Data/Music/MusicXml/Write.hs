@@ -199,8 +199,8 @@ instance WriteMusicXml MusicElem where
   write (MusicAttributes x) = single $ unode "attributes" $ concatMap write x
   write (MusicNote x) = single $ unode "note" $ write x
   write (MusicDirection x) = single $ unode "direction" (unode "direction-type" $ write x)
-  write (MusicBackup d) = single $ unode "backup" (unode "duration" $ show $ getDivs $ d)
-  write (MusicForward d) = single $ unode "forward" (unode "duration" $ show $ getDivs $ d)
+  write (MusicBackup d) = single $ unode "backup" (unode "duration" $ show $ getDivs d)
+  write (MusicForward d) = single $ unode "forward" (unode "duration" $ show $ getDivs d)
   write (MusicBarline x) = write x
 
 -- ----------------------------------------------------------------------------------
@@ -229,14 +229,14 @@ instance WriteMusicXml Attributes where
         [ unode "fifths" (show $ getFifths fifths),
           unode "mode" (writeMode mode)
         ]
-  write (Time (CommonTime)) =
+  write (Time CommonTime) =
     single $ addAttr (uattr "symbol" "common") $
       unode
         "time"
         [ unode "beats" (show @Integer 4),
           unode "beat-type" (show @Integer 4)
         ]
-  write (Time (CutTime)) =
+  write (Time CutTime) =
     single $ addAttr (uattr "symbol" "cut") $
       unode
         "time"

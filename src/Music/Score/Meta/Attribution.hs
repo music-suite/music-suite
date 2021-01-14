@@ -1,11 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -92,23 +88,23 @@ import Music.Time.Reactive
 -- > year
 -- > copyright
 -- > information
-newtype Attribution = Attribution (Map String (Option (Last String)))
+newtype Attribution = Attribution (Map String (Maybe (Last String)))
   deriving (Typeable, Monoid, Semigroup)
 
 instance Show Attribution where
-  show (Attribution a) = "attributions " ++ show (Map.toList (fmap (fromJust . fmap getLast . getOption) $ a))
+  show (Attribution a) = "attributions " ++ show (Map.toList (fmap (fromJust . fmap getLast) $ a))
 
 -- | Make an 'Attribution' from keys and values.
 attributions :: [(String, String)] -> Attribution
-attributions = Attribution . fmap (Option . Just . Last) . Map.fromList
+attributions = Attribution . fmap (Just . Last) . Map.fromList
 
 -- | Make an 'Attribution' a single key and value.
 attribution :: String -> String -> Attribution
-attribution k v = Attribution . fmap (Option . Just . Last) $ Map.singleton k v
+attribution k v = Attribution . fmap (Just . Last) $ Map.singleton k v
 
 -- | Extract an the given attributions value. Semantic function.
 getAttribution :: Attribution -> String -> Maybe String
-getAttribution (Attribution a) k = join $ k `Map.lookup` (fmap (fmap getLast . getOption) $ a)
+getAttribution (Attribution a) k = join $ k `Map.lookup` (fmap (fmap getLast) $ a)
 
 -- | Set the given attribution in the given score.
 attribute :: (HasMeta a, HasPosition a) => Attribution -> a -> a

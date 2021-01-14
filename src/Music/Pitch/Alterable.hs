@@ -1,4 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
@@ -61,19 +60,19 @@ instance Alterable Double where
 
   sharpen = (+ 1)
 
-  flatten = (subtract 1)
+  flatten = subtract 1
 
 instance Alterable Integer where
 
   sharpen = (+ 1)
 
-  flatten = (subtract 1)
+  flatten = subtract 1
 
 instance Integral a => Alterable (Ratio a) where
 
   sharpen = (+ 1)
 
-  flatten = (subtract 1)
+  flatten = subtract 1
 
 instance Alterable a => Alterable [a] where
 
@@ -91,7 +90,7 @@ deriving instance (Alterable a) => Alterable (Couple b a)
 
 alter :: Alterable a => Int -> a -> a
 alter n x
-  | n < 0 = iterate flatten x !! (abs n)
+  | n < 0 = iterate flatten x !! abs n
   | n == 0 = x
   | n > 0 = iterate sharpen x !! n
   | otherwise = error "impossible"

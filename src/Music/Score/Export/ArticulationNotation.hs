@@ -1,4 +1,13 @@
 
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
@@ -161,7 +170,7 @@ getAccentMarks x
   | otherwise = []
 
 hasSlur :: (Real (Separation t), Articulated t) => t -> Bool
-hasSlur y = hasSlur' (realToFrac $ view separation $ y)
+hasSlur y = hasSlur' (realToFrac $ view separation y)
 
 allMarks :: (Real (Separation t), Real (Accentuation t), Articulated t) => t -> [Mark]
 allMarks y =

@@ -19,7 +19,6 @@ import Data.AdditiveGroup
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson
 import Data.AffineSpace
-import Data.AffineSpace.Point
 import Data.AffineSpace.Point (relative)
 import Data.Basis
 import qualified Data.Char as Char
@@ -389,38 +388,38 @@ instance HasQuality Interval where
       -- complex way to produce the perfect/major/minor/etc. intervals that
       -- we are used to reading.
       go (Interval (a, d))
-        | (a < 0) && (d == 0) = diminish $ go (Interval ((a + 1), d))
+        | (a < 0) && (d == 0) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (0, 0) = Perfect
-        | (a > 0) && (d == 0) = augment $ go (Interval ((a - 1), d))
-        | (a < 1) && (d == 1) = diminish $ go (Interval ((a + 1), d))
+        | (a > 0) && (d == 0) = augment $ go (Interval (a - 1, d))
+        | (a < 1) && (d == 1) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (1, 1) = Minor
         | (a, d) == (2, 1) = Major
-        | (a > 2) && (d == 1) = augment $ go (Interval ((a - 1), d))
-        | (a < 3) && (d == 2) = diminish $ go (Interval ((a + 1), d))
+        | (a > 2) && (d == 1) = augment $ go (Interval (a - 1, d))
+        | (a < 3) && (d == 2) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (3, 2) = Minor
         | (a, d) == (4, 2) = Major
-        | (a > 4) && (d == 2) = augment $ go (Interval ((a - 1), d))
-        | (a < 5) && (d == 3) = diminish $ go (Interval ((a + 1), d))
+        | (a > 4) && (d == 2) = augment $ go (Interval (a - 1, d))
+        | (a < 5) && (d == 3) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (5, 3) = Perfect
-        | (a > 5) && (d == 3) = augment $ go (Interval ((a - 1), d))
-        | (a < 7) && (d == 4) = diminish $ go (Interval ((a + 1), d))
+        | (a > 5) && (d == 3) = augment $ go (Interval (a - 1, d))
+        | (a < 7) && (d == 4) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (7, 4) = Perfect
-        | (a > 7) && (d == 4) = augment $ go (Interval ((a - 1), d))
-        | (a < 8) && (d == 5) = diminish $ go (Interval ((a + 1), d))
+        | (a > 7) && (d == 4) = augment $ go (Interval (a - 1, d))
+        | (a < 8) && (d == 5) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (8, 5) = Minor
         | (a, d) == (9, 5) = Major
-        | (a > 9) && (d == 5) = augment $ go (Interval ((a - 1), d))
-        | (a < 10) && (d == 6) = diminish $ go (Interval ((a + 1), d))
+        | (a > 9) && (d == 5) = augment $ go (Interval (a - 1, d))
+        | (a < 10) && (d == 6) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (10, 6) = Minor
         | (a, d) == (11, 6) = Major
-        | (a > 11) && (d == 6) = augment $ go (Interval ((a - 1), d))
-        | (a < 12) && (d == 7) = diminish $ go (Interval ((a + 1), d))
+        | (a > 11) && (d == 6) = augment $ go (Interval (a - 1, d))
+        | (a < 12) && (d == 7) = diminish $ go (Interval (a + 1, d))
         | (a, d) == (12, 7) = Perfect
-        | (a > 12) && (d == 7) = augment $ go (Interval ((a - 1), d))
+        | (a > 12) && (d == 7) = augment $ go (Interval (a - 1, d))
         -- note: these last two cases *have* to be this way round, otherwise
         -- infinite loop occurs.
-        | (a > 12) || (d > 7) = go (Interval ((a - 12), (d - 7)))
-        | (a < 0) || (d < 0) = go (Interval ((- a), (- d)))
+        | (a > 12) || (d > 7) = go (Interval (a - 12, d - 7))
+        | (a < 0) || (d < 0) = go (Interval (- a, - d))
         | otherwise = error "Impossible (TODO prove)"
 
 instance HasNumber Interval where
@@ -596,7 +595,7 @@ isPerfectUnison (Interval (a, d)) = (a, d) == (0, 0)
 -- >>> isLeap _P1
 -- False
 isStep :: Interval -> Bool
-isStep (Interval (_a, d)) = (abs d) <= 1
+isStep (Interval (_a, d)) = abs d <= 1
 
 -- |
 -- Returns whether the given interval is a leap (larger than a second).
@@ -614,7 +613,7 @@ isStep (Interval (_a, d)) = (abs d) <= 1
 -- >>> isLeap _P1
 -- False
 isLeap :: Interval -> Bool
-isLeap (Interval (_a, d)) = (abs d) > 1
+isLeap (Interval (_a, d)) = abs d > 1
 
 -- |
 -- Intervallic inversion.
@@ -695,9 +694,9 @@ intervalAlterationSteps =
         e = error "Impossible (TODO prove)"
 
 mkIntervalS :: Quality -> Number -> Maybe Interval
-mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> (pure $ fromIntegral $ view diatonicSteps n)
+mkIntervalS q n = mkInterval' <$> (fromIntegral <$> diff) <*> pure (fromIntegral . view diatonicSteps $ n)
   where
-    diff = qualityToAlteration (numberDirection n) (expectedQualityType n) (q)
+    diff = qualityToAlteration (numberDirection n) (expectedQualityType n) q
 
 -- TODO rename numberToDiatonicSteps? Compare other Isos
 
@@ -752,18 +751,18 @@ intervalDiv :: Interval -> Interval -> Int
 intervalDiv (Interval (a, _d)) (Interval (1, 0)) = fromIntegral a
 intervalDiv (Interval (_a, d)) (Interval (0, 1)) = fromIntegral d
 intervalDiv i di
-  | (i > _P1) = intervalDivPos i di
-  | (i < _P1) = intervalDivNeg i di
+  | i > _P1 = intervalDivPos i di
+  | i < _P1 = intervalDivNeg i di
   | otherwise = 0 :: Int
   where
     intervalDivPos i di
-      | (i < _P1) = error "Impossible (TODO prove)"
+      | i < _P1 = error "Impossible (TODO prove)"
       | (i ^-^ di) < _P1 = 0
-      | otherwise = 1 + (intervalDiv (i ^-^ di) di)
+      | otherwise = 1 + intervalDiv (i ^-^ di) di
     intervalDivNeg i di
-      | (i > _P1) = error "Impossible (TODO prove)"
+      | i > _P1 = error "Impossible (TODO prove)"
       | (i ^+^ di) > _P1 = 0
-      | otherwise = 1 + (intervalDiv (i ^+^ di) di)
+      | otherwise = 1 + intervalDiv (i ^+^ di) di
 
 -- | Represent an interval i in a new basis (j, k).
 --
@@ -776,7 +775,7 @@ convertBasis ::
   Interval ->
   Maybe (Int, Int)
 convertBasis i j k
-  | (p == 0) = Nothing
+  | p == 0 = Nothing
   | not $ p `divides` r = Nothing
   | not $ p `divides` q = Nothing
   | otherwise = Just (r `div` p, q `div` p)
@@ -784,9 +783,9 @@ convertBasis i j k
     Interval (fromIntegral -> m, fromIntegral -> n) = i
     Interval (fromIntegral -> a, fromIntegral -> b) = j
     Interval (fromIntegral -> c, fromIntegral -> d) = k
-    p = (a * d - b * c)
-    q = (a * n - b * m)
-    r = (d * m - c * n)
+    p = a * d - b * c
+    q = a * n - b * m
+    r = d * m - c * n
     divides :: Integral a => a -> a -> Bool
     x `divides` y = (y `rem` x) == 0
 
@@ -800,15 +799,15 @@ convertBasisFloat ::
   Interval ->
   Maybe (t, t)
 convertBasisFloat i j k
-  | (p == 0) = Nothing
+  | p == 0 = Nothing
   | otherwise = Just (r / p, q / p)
   where
     Interval (fromIntegral -> m, fromIntegral -> n) = i
     Interval (fromIntegral -> a, fromIntegral -> b) = j
     Interval (fromIntegral @_ @Integer -> c, fromIntegral -> d) = k
-    p = fromIntegral $ (a * d - b * c)
-    q = fromIntegral $ (a * n - b * m)
-    r = fromIntegral $ (d * m - c * n)
+    p = fromIntegral (a * d - b * c)
+    q = fromIntegral (a * n - b * m)
+    r = fromIntegral (d * m - c * n)
 
 instance HasOctaves Interval where
   octaves :: Interval -> Octaves
@@ -1074,21 +1073,21 @@ data Direction = Upward | Downward
 -- >>> qualityToAlteration Upward PerfectType Major
 -- Nothing
 qualityToAlteration :: Direction -> QualityType -> Quality -> Maybe ChromaticSteps
-qualityToAlteration d qt q = fmap fromIntegral $ go d qt q
+qualityToAlteration d qt q = fromIntegral <$> go d qt q
   where
     go Upward MajorMinorType (Augmented n) = Just $ 0 + n
-    go Upward MajorMinorType Major = Just $ 0
-    go Upward MajorMinorType Minor = Just $ (-1)
+    go Upward MajorMinorType Major = Just 0
+    go Upward MajorMinorType Minor = Just (-1)
     go Upward MajorMinorType (Diminished n) = Just $ - (1 + n)
     go Downward MajorMinorType (Augmented n) = Just $ - (1 + n)
     go Downward MajorMinorType Major = Just $ -1
-    go Downward MajorMinorType Minor = Just $ 0
+    go Downward MajorMinorType Minor = Just 0
     go Downward MajorMinorType (Diminished n) = Just $ 0 + n
     go Upward PerfectType (Augmented n) = Just $ 0 + n
-    go Upward PerfectType Perfect = Just $ 0
-    go Upward PerfectType (Diminished n) = Just $ 0 - n
-    go Downward PerfectType (Augmented n) = Just $ 0 - n
-    go Downward PerfectType Perfect = Just $ 0
+    go Upward PerfectType Perfect = Just 0
+    go Upward PerfectType (Diminished n) = Just $ negate n
+    go Downward PerfectType (Augmented n) = Just $ negate n
+    go Downward PerfectType Perfect = Just 0
     go Downward PerfectType (Diminished n) = Just $ 0 + n
     go _ _qt _q = Nothing
 
@@ -1696,19 +1695,19 @@ a'''' = fromPitch $ viaPitchL (5, 0, 4)
 
 b'''' = fromPitch $ viaPitchL (6, 0, 4)
 
-cb'''' = fromPitch $ viaPitchL (0, (-1), 4)
+cb'''' = fromPitch $ viaPitchL (0, -1, 4)
 
-db'''' = fromPitch $ viaPitchL (1, (-1), 4)
+db'''' = fromPitch $ viaPitchL (1, -1, 4)
 
-eb'''' = fromPitch $ viaPitchL (2, (-1), 4)
+eb'''' = fromPitch $ viaPitchL (2, -1, 4)
 
-fb'''' = fromPitch $ viaPitchL (3, (-1), 4)
+fb'''' = fromPitch $ viaPitchL (3, -1, 4)
 
-gb'''' = fromPitch $ viaPitchL (4, (-1), 4)
+gb'''' = fromPitch $ viaPitchL (4, -1, 4)
 
-ab'''' = fromPitch $ viaPitchL (5, (-1), 4)
+ab'''' = fromPitch $ viaPitchL (5, -1, 4)
 
-bb'''' = fromPitch $ viaPitchL (6, (-1), 4)
+bb'''' = fromPitch $ viaPitchL (6, -1, 4)
 
 cs''' = fromPitch $ viaPitchL (0, 1, 3)
 
@@ -1738,19 +1737,19 @@ a''' = fromPitch $ viaPitchL (5, 0, 3)
 
 b''' = fromPitch $ viaPitchL (6, 0, 3)
 
-cb''' = fromPitch $ viaPitchL (0, (-1), 3)
+cb''' = fromPitch $ viaPitchL (0, -1, 3)
 
-db''' = fromPitch $ viaPitchL (1, (-1), 3)
+db''' = fromPitch $ viaPitchL (1, -1, 3)
 
-eb''' = fromPitch $ viaPitchL (2, (-1), 3)
+eb''' = fromPitch $ viaPitchL (2, -1, 3)
 
-fb''' = fromPitch $ viaPitchL (3, (-1), 3)
+fb''' = fromPitch $ viaPitchL (3, -1, 3)
 
-gb''' = fromPitch $ viaPitchL (4, (-1), 3)
+gb''' = fromPitch $ viaPitchL (4, -1, 3)
 
-ab''' = fromPitch $ viaPitchL (5, (-1), 3)
+ab''' = fromPitch $ viaPitchL (5, -1, 3)
 
-bb''' = fromPitch $ viaPitchL (6, (-1), 3)
+bb''' = fromPitch $ viaPitchL (6, -1, 3)
 
 cs'' = fromPitch $ viaPitchL (0, 1, 2)
 
@@ -1780,19 +1779,19 @@ a'' = fromPitch $ viaPitchL (5, 0, 2)
 
 b'' = fromPitch $ viaPitchL (6, 0, 2)
 
-cb'' = fromPitch $ viaPitchL (0, (-1), 2)
+cb'' = fromPitch $ viaPitchL (0, -1, 2)
 
-db'' = fromPitch $ viaPitchL (1, (-1), 2)
+db'' = fromPitch $ viaPitchL (1, -1, 2)
 
-eb'' = fromPitch $ viaPitchL (2, (-1), 2)
+eb'' = fromPitch $ viaPitchL (2, -1, 2)
 
-fb'' = fromPitch $ viaPitchL (3, (-1), 2)
+fb'' = fromPitch $ viaPitchL (3, -1, 2)
 
-gb'' = fromPitch $ viaPitchL (4, (-1), 2)
+gb'' = fromPitch $ viaPitchL (4, -1, 2)
 
-ab'' = fromPitch $ viaPitchL (5, (-1), 2)
+ab'' = fromPitch $ viaPitchL (5, -1, 2)
 
-bb'' = fromPitch $ viaPitchL (6, (-1), 2)
+bb'' = fromPitch $ viaPitchL (6, -1, 2)
 
 cs' = fromPitch $ viaPitchL (0, 1, 1)
 
@@ -1822,19 +1821,19 @@ a' = fromPitch $ viaPitchL (5, 0, 1)
 
 b' = fromPitch $ viaPitchL (6, 0, 1)
 
-cb' = fromPitch $ viaPitchL (0, (-1), 1)
+cb' = fromPitch $ viaPitchL (0, -1, 1)
 
-db' = fromPitch $ viaPitchL (1, (-1), 1)
+db' = fromPitch $ viaPitchL (1, -1, 1)
 
-eb' = fromPitch $ viaPitchL (2, (-1), 1)
+eb' = fromPitch $ viaPitchL (2, -1, 1)
 
-fb' = fromPitch $ viaPitchL (3, (-1), 1)
+fb' = fromPitch $ viaPitchL (3, -1, 1)
 
-gb' = fromPitch $ viaPitchL (4, (-1), 1)
+gb' = fromPitch $ viaPitchL (4, -1, 1)
 
-ab' = fromPitch $ viaPitchL (5, (-1), 1)
+ab' = fromPitch $ viaPitchL (5, -1, 1)
 
-bb' = fromPitch $ viaPitchL (6, (-1), 1)
+bb' = fromPitch $ viaPitchL (6, -1, 1)
 
 cs = fromPitch $ viaPitchL (0, 1, 0)
 
@@ -1864,19 +1863,19 @@ a = fromPitch $ viaPitchL (5, 0, 0)
 
 b = fromPitch $ viaPitchL (6, 0, 0)
 
-cb = fromPitch $ viaPitchL (0, (-1), 0)
+cb = fromPitch $ viaPitchL (0, -1, 0)
 
-db = fromPitch $ viaPitchL (1, (-1), 0)
+db = fromPitch $ viaPitchL (1, -1, 0)
 
-eb = fromPitch $ viaPitchL (2, (-1), 0)
+eb = fromPitch $ viaPitchL (2, -1, 0)
 
-fb = fromPitch $ viaPitchL (3, (-1), 0)
+fb = fromPitch $ viaPitchL (3, -1, 0)
 
-gb = fromPitch $ viaPitchL (4, (-1), 0)
+gb = fromPitch $ viaPitchL (4, -1, 0)
 
-ab = fromPitch $ viaPitchL (5, (-1), 0)
+ab = fromPitch $ viaPitchL (5, -1, 0)
 
-bb = fromPitch $ viaPitchL (6, (-1), 0)
+bb = fromPitch $ viaPitchL (6, -1, 0)
 
 cs_ = fromPitch $ viaPitchL (0, 1, -1)
 
@@ -1906,19 +1905,19 @@ a_ = fromPitch $ viaPitchL (5, 0, -1)
 
 b_ = fromPitch $ viaPitchL (6, 0, -1)
 
-cb_ = fromPitch $ viaPitchL (0, (-1), -1)
+cb_ = fromPitch $ viaPitchL (0, -1, -1)
 
-db_ = fromPitch $ viaPitchL (1, (-1), -1)
+db_ = fromPitch $ viaPitchL (1, -1, -1)
 
-eb_ = fromPitch $ viaPitchL (2, (-1), -1)
+eb_ = fromPitch $ viaPitchL (2, -1, -1)
 
-fb_ = fromPitch $ viaPitchL (3, (-1), -1)
+fb_ = fromPitch $ viaPitchL (3, -1, -1)
 
-gb_ = fromPitch $ viaPitchL (4, (-1), -1)
+gb_ = fromPitch $ viaPitchL (4, -1, -1)
 
-ab_ = fromPitch $ viaPitchL (5, (-1), -1)
+ab_ = fromPitch $ viaPitchL (5, -1, -1)
 
-bb_ = fromPitch $ viaPitchL (6, (-1), -1)
+bb_ = fromPitch $ viaPitchL (6, -1, -1)
 
 cs__ = fromPitch $ viaPitchL (0, 1, -2)
 
@@ -1948,19 +1947,19 @@ a__ = fromPitch $ viaPitchL (5, 0, -2)
 
 b__ = fromPitch $ viaPitchL (6, 0, -2)
 
-cb__ = fromPitch $ viaPitchL (0, (-1), -2)
+cb__ = fromPitch $ viaPitchL (0, -1, -2)
 
-db__ = fromPitch $ viaPitchL (1, (-1), -2)
+db__ = fromPitch $ viaPitchL (1, -1, -2)
 
-eb__ = fromPitch $ viaPitchL (2, (-1), -2)
+eb__ = fromPitch $ viaPitchL (2, -1, -2)
 
-fb__ = fromPitch $ viaPitchL (3, (-1), -2)
+fb__ = fromPitch $ viaPitchL (3, -1, -2)
 
-gb__ = fromPitch $ viaPitchL (4, (-1), -2)
+gb__ = fromPitch $ viaPitchL (4, -1, -2)
 
-ab__ = fromPitch $ viaPitchL (5, (-1), -2)
+ab__ = fromPitch $ viaPitchL (5, -1, -2)
 
-bb__ = fromPitch $ viaPitchL (6, (-1), -2)
+bb__ = fromPitch $ viaPitchL (6, -1, -2)
 
 cs___ = fromPitch $ viaPitchL (0, 1, -3)
 
@@ -1990,19 +1989,19 @@ a___ = fromPitch $ viaPitchL (5, 0, -3)
 
 b___ = fromPitch $ viaPitchL (6, 0, -3)
 
-cb___ = fromPitch $ viaPitchL (0, (-1), -3)
+cb___ = fromPitch $ viaPitchL (0, -1, -3)
 
-db___ = fromPitch $ viaPitchL (1, (-1), -3)
+db___ = fromPitch $ viaPitchL (1, -1, -3)
 
-eb___ = fromPitch $ viaPitchL (2, (-1), -3)
+eb___ = fromPitch $ viaPitchL (2, -1, -3)
 
-fb___ = fromPitch $ viaPitchL (3, (-1), -3)
+fb___ = fromPitch $ viaPitchL (3, -1, -3)
 
-gb___ = fromPitch $ viaPitchL (4, (-1), -3)
+gb___ = fromPitch $ viaPitchL (4, -1, -3)
 
-ab___ = fromPitch $ viaPitchL (5, (-1), -3)
+ab___ = fromPitch $ viaPitchL (5, -1, -3)
 
-bb___ = fromPitch $ viaPitchL (6, (-1), -3)
+bb___ = fromPitch $ viaPitchL (6, -1, -3)
 
 cs____ = fromPitch $ viaPitchL (0, 1, -4)
 
@@ -2032,19 +2031,19 @@ a____ = fromPitch $ viaPitchL (5, 0, -4)
 
 b____ = fromPitch $ viaPitchL (6, 0, -4)
 
-cb____ = fromPitch $ viaPitchL (0, (-1), -4)
+cb____ = fromPitch $ viaPitchL (0, -1, -4)
 
-db____ = fromPitch $ viaPitchL (1, (-1), -4)
+db____ = fromPitch $ viaPitchL (1, -1, -4)
 
-eb____ = fromPitch $ viaPitchL (2, (-1), -4)
+eb____ = fromPitch $ viaPitchL (2, -1, -4)
 
-fb____ = fromPitch $ viaPitchL (3, (-1), -4)
+fb____ = fromPitch $ viaPitchL (3, -1, -4)
 
-gb____ = fromPitch $ viaPitchL (4, (-1), -4)
+gb____ = fromPitch $ viaPitchL (4, -1, -4)
 
-ab____ = fromPitch $ viaPitchL (5, (-1), -4)
+ab____ = fromPitch $ viaPitchL (5, -1, -4)
 
-bb____ = fromPitch $ viaPitchL (6, (-1), -4)
+bb____ = fromPitch $ viaPitchL (6, -1, -4)
 
 class IsInterval a where
   fromInterval :: Interval -> a
