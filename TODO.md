@@ -12,6 +12,36 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
+- [ ] More voice combinators:
+
+    -- changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
+    --
+    -- changeCrossingBy :: Ord b => (a -> b) -> Voice a -> Voice a -> (Voice a, Voice a)
+    --
+    -- processExactOverlaps :: (a -> a -> (a, a)) -> Voice a -> Voice a -> (Voice a, Voice a)
+    --
+    -- processExactOverlaps' :: (a -> b -> Either (a,b) (b,a)) -> Voice a -> Voice b -> (Voice (Either b a), Voice (Either a b))
+
+    -- TODO could also use (zipVoiceWith' max) or (zipVoiceWith' min)
+
+    -- -- |
+    -- -- Split all notes of the latter voice at the onset/offset of the former.
+    -- --
+    -- -- >>> ["a",(2,"b")^.note,"c"]^.voice
+    -- -- [(1,"a")^.note,(2,"b")^.note,(1,"c")^.note]^.voice
+    -- --
+    -- splitLatterToAssureSameDuration :: Voice b -> Voice b -> Voice b
+    -- splitLatterToAssureSameDuration = splitLatterToAssureSameDurationWith dup
+    --   where
+    --     dup x = (x,x)
+    --
+    -- splitLatterToAssureSameDurationWith :: (b -> (b, b)) -> Voice b -> Voice b -> Voice b
+
+    -- polyToHomophonic      :: [Voice a] -> Maybe (Voice [a])
+    --
+    -- polyToHomophonicForce :: [Voice a] -> Voice [a]
+
+
 - [ ] Proper velcoity table for e.g. MIDI backend
 
 {-
