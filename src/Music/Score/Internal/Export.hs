@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports

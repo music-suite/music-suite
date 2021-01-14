@@ -6,10 +6,6 @@
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 
 -------------------------------------------------------------------------------------
 

@@ -11,9 +11,6 @@ module Music.Score.Internal.VoiceSeparation
   )
 where
 
--- import Math.Combinat.Partitions.Set ()
-
--- import BasePrelude
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Logic (Logic, observe, observeAll)

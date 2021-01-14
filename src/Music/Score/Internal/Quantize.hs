@@ -1,8 +1,3 @@
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_HADDOCK hide #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing

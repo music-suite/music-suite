@@ -7,12 +7,6 @@
   -fno-warn-unused-matches
   -fno-warn-unused-top-binds
   -fno-warn-unused-imports #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Music.Score.Import.Sibelius
   ( IsSibelius,
