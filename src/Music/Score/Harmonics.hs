@@ -97,7 +97,6 @@ instance HasHarmonic (HarmonicT a) where
 
   setHarmonic n = over (_Wrapped' . _Wrapped') $ \((nat, _), x) -> ((nat, Sum n), x)
 
--- Lifted instances
 deriving instance Num a => Num (HarmonicT a)
 
 deriving instance Fractional a => Fractional (HarmonicT a)
@@ -117,8 +116,6 @@ deriving instance (Real a, Enum a, Integral a) => Integral (HarmonicT a)
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 harmonic :: HasHarmonic a => Int -> a -> a
 harmonic n = setNatural True . setHarmonic n
-
--- TODO verify this can actually be played
 
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).

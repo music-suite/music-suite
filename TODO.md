@@ -12,6 +12,8 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
+- [ ] Verify that harmonics can be played
+
 - [ ] Add snapTo
 
     {-

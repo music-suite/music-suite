@@ -309,16 +309,6 @@ instance (IsDynamics a, Monoid n) => IsDynamics (PartT n a) where
 instance Tiable a => Tiable (PartT n a) where
   toTied (PartT (v, a)) = (PartT (v, b), PartT (v, c)) where (b, c) = toTied a
 
--- type instance Part (Behavior a) = Behavior (Part a)
---
--- type instance SetPart (Behavior g) (Behavior a) = Behavior (SetPart g a)
---
--- instance (HasPart a a, HasPart a b) => HasParts (Behavior a) (Behavior b) where
---   parts = through part part
---
--- instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
---   part = through part part
-
 type instance Part (Score a) = Part a
 
 type instance SetPart g (Score a) = Score (SetPart g a)
@@ -340,8 +330,6 @@ infixl 5 </>
 rcat :: (Monoid a, HasParts' a, HasSubpart (Part a)) => [a] -> a
 rcat = List.foldl (</>) mempty
 
--- |
--- TODO document semantics, see TODO.md
 (</>) :: forall a. (Semigroup a, HasParts' a, HasSubpart (Part a)) => a -> a -> a
 a </> b = a <> next b
   where
