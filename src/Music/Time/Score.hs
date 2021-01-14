@@ -157,25 +157,14 @@ instance MonadPlus Score where
 
   mplus = mappend
 
-{-
-instance FunctorWithIndex Span Score where
-  imap f = over (_Wrapped._2) $ imap f
-
-instance FoldableWithIndex Span Score where
-  ifoldMap f (Score (m,x)) = ifoldMap f x
-
-instance TraversableWithIndex Span Score where
-  itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
--}
-
+-- | Up to meta-data.
 instance ToJSON a => ToJSON (Score a) where
-  -- TODO meta
   toJSON x = JSON.object [("events", toJSON es)]
     where
       es = x ^. events
 
+-- | Up to meta-data.
 instance FromJSON a => FromJSON (Score a) where
-  -- TODO change to include meta
   parseJSON (JSON.Object x) = parseEL =<< (x JSON..: "events")
     where
       parseEL (JSON.Array xs) = (^. score) . toList <$> traverse parseJSON xs
@@ -185,12 +174,6 @@ instance FromJSON a => FromJSON (Score a) where
 
 instance Transformable (Score a) where
   transform t (Score (m, x)) = Score (transform t m, transform t x)
-
--- instance Splittable a => Splittable (Score a) where
--- split t (Score (m,x)) = (Score (m1,x1), Score (m2,x2))
--- where
--- (m1, m2) = split t m
--- (x1, x2) = split t x
 
 instance HasPosition (Score a) where
   _era = _era . snd . getScore
@@ -251,7 +234,6 @@ deriving via
     Monad Score'
 
 instance Inject (WriterT Span [] x) (Score' x) where
-  -- TODO zero-cost version
   inj (WriterT xs) = Score' (fmap (view event . swap) xs)
 
 instance Project (WriterT Span [] x) (Score' x) where
@@ -281,16 +263,6 @@ instance HasPosition (Score' a) where
   _era x = case foldMap (NonEmptyInterval . _era1) $ getScore' x of
     EmptyInterval -> Nothing
     NonEmptyInterval x -> Just x
-
-{-
-  (f x, g x) ^. from onsetAndOffset
-    where
-      f, g :: Score' a -> Time
-      f = safeMinimum . fmap ((^. onset) . normalizeSpan) . toListOf (each . era) . getScore'
-      g = safeMaximum . fmap ((^. offset) . normalizeSpan) . toListOf (each . era) . getScore'
-      safeMinimum xs = if null xs then 0 else minimum xs
-      safeMaximum xs = if null xs then 0 else maximum xs
--}
 
 -- | Create a score from a list of events.
 score :: Getter [Event a] (Score a)
@@ -425,9 +397,6 @@ reset x = case _era x of
 removeRests :: Score (Maybe a) -> Score a
 removeRests = mcatMaybes
 
--- TODO version that reverses the values where appropriate
--- Use over (events . each) normalizeEvent or similar
-
 -- |
 -- Print all eras of the given score.
 --
@@ -436,7 +405,6 @@ removeRests = mcatMaybes
 eras :: Traversal' (Score a) Span
 eras = events . each . era
 
--- TODO rename and expose this
 -- We have an (Iso (Score a) (TMap Span [a])), with [] as default value
 chordEvents :: Transformable a => Span -> Score a -> [a]
 chordEvents s = fmap extract . filter ((== s) . view era) . view events
@@ -444,9 +412,6 @@ chordEvents s = fmap extract . filter ((== s) . view era) . view events
 simultaneous' :: Transformable a => Score a -> Score [a]
 simultaneous' sc = (^. from triplesIgnoringMeta) vs
   where
-    -- es :: [Era]
-    -- evs :: [[a]]
-    -- vs :: [(Time, Duration, [a])]
     es = List.nub $ toListOf eras sc
     evs = fmap (`chordEvents` sc) es
     vs = zipWith (\(view onsetAndDuration -> (t, d)) a -> (t, d, a)) es evs
@@ -473,8 +438,6 @@ anyDistinctOverlaps :: [Span] -> Bool
 anyDistinctOverlaps xs = hasDuplicates xs || anyOverlaps xs
   where
     anyOverlaps = foldr (||) False . combined overlaps
-
--- If the span list has duplicates, we have overlaps.
 
 combined :: Eq a => (a -> a -> b) -> [a] -> [b]
 combined f as = mcatMaybes [if x == y then Nothing else Just (x `f` y) | x <- as, y <- as]
