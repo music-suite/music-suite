@@ -69,14 +69,6 @@ import Data.VectorSpace hiding (Sum)
 import Music.Time.Duration
 import Music.Time.Internal.Util
 
--- TODO: resture _position to HasPosition, then restore this comment:
---
--- Many values such as notes, envelopes etc can in fact have many positions such as onset,
--- attack point, offset, decay point time etc. Rather than having separate methods for a
--- fixed set of cases, this class provides an interpolation from a /local/ position to
--- a /global/ position. While the local position goes from zero to one, the global position
--- goes from the 'onset' to the 'offset' of the value.
-
 -- |
 -- Class of values that have a position in time.
 --
@@ -203,13 +195,6 @@ stretchTo d x = case _era x of
   Nothing -> x
   Just e -> (d ^/ _duration e) `stretch` x
 {-# INLINE stretchTo #-}
-
-{-
-_onset, _offset :: (HasPosition a, Transformable a) => a -> Time
-_onset = (`_position` 0)
-_offset = (`_position` 1.0)
-
--}
 
 -- |
 -- Place a value over the given span.

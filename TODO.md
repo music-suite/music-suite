@@ -12,6 +12,18 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
+- [ ] Rescue this comment?
+
+    -- TODO: resture _position to HasPosition, then restore this comment:
+    --
+    -- Many values such as notes, envelopes etc can in fact have many positions such as onset,
+    -- attack point, offset, decay point time etc. Rather than having separate methods for a
+    -- fixed set of cases, this class provides an interpolation from a /local/ position to
+    -- a /global/ position. While the local position goes from zero to one, the global position
+    -- goes from the 'onset' to the 'offset' of the value.
+
+
+
 - [ ] Semantics of Reactive/Behavior
 
     {-
