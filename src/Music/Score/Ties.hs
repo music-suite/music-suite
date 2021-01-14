@@ -93,10 +93,6 @@ instance Tiable a => Tiable [a] where
 instance Tiable a => Tiable (Behavior a) where
   toTied = unzipR . fmap toTied
 
---
--- There is no (HasPart ChordT) instance, so PartT must be outside ChordT in the stack
--- This restriction assures all chord notes are in the same part
---
 instance Tiable a => Tiable (c, a) where
   toTied = unzipR . fmap toTied
 
@@ -114,8 +110,6 @@ instance Tiable a => Tiable (Sum a) where
 
 instance Tiable a => Tiable (Product a) where
   toTied = unzipR . fmap toTied
-
--- Lifted instances
 
 instance IsPitch a => IsPitch (TieT a) where
   fromPitch = pure . fromPitch
