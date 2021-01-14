@@ -198,31 +198,44 @@ library
                         Music.Prelude
                         Music.Prelude.Standard
                         Music.Prelude.Inspectable
-    hs-source-dirs:     src, vendor
+    hs-source-dirs:     src,
+                        vendor
     default-language:   Haskell2010
     default-extensions: BangPatterns,
+                        ConstrainedClassMethods,
                         ConstraintKinds,
                         DeriveDataTypeable,
                         DeriveFoldable,
                         DeriveFunctor,
+                        DeriveLift,
                         DeriveTraversable,
                         DerivingStrategies,
+                        EmptyDataDecls,
+                        EmptyDataDeriving,
+                        ExistentialQuantification,
+                        ExplicitForAll,
                         FlexibleContexts,
                         FlexibleInstances,
+                        GADTSyntax,
+                        GeneralisedNewtypeDeriving,
                         GeneralizedNewtypeDeriving,
                         InstanceSigs,
+                        KindSignatures,
                         MultiParamTypeClasses,
+                        NamedFieldPuns,
                         NoMonomorphismRestriction,
+                        OverloadedStrings,
+                        PolyKinds,
                         RankNTypes,
                         ScopedTypeVariables,
                         StandaloneDeriving,
+                        StarIsType,
                         TupleSections,
+                        TypeApplications,
                         TypeFamilies,
                         TypeOperators,
-                        TypeApplications,
-                        ViewPatterns,
-                        NamedFieldPuns,
-                        OverloadedStrings
+                        TypeSynonymInstances,
+                        ViewPatterns
   ghc-options:
     -Wall
     -Wcompat
