@@ -96,8 +96,6 @@ type NoteValue = Duration
 data Tempo = Tempo (Maybe String) (Maybe Duration) Duration
   deriving (Eq, Ord, Typeable)
 
--- The internal representation is actually: maybeName maybeDisplayNoteValue scalingFactor
-
 instance Num Tempo where
 
   (+) = error "Num Tempo: No implementation"
@@ -119,11 +117,6 @@ instance Show Tempo where
       showR' ((unRatio -> (x, 1))) = show x
       showR' ((unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
 
-{-
-instance Default Tempo where
-    def = mempty
--}
-
 instance Semigroup Tempo where
   a <> b
     | a == mempty = b
@@ -138,20 +131,6 @@ instance Monoid Tempo where
 --   For example @metronome (1/2) 48@ means 48 half notes per minute.
 metronome :: Duration -> Bpm -> Tempo
 metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
-
--- TODO use lenses
---
--- noteValue :: Lens' Tempo (Maybe NoteValue)
--- noteValue = lens g s
---   where
---     g (Tempo n nv d)    = nv
---     s (Tempo n _  d) nv = Tempo n nv d
---
--- bpm :: Lens' Tempo Bpm
--- bpm = lens g s
---   where
---     g (Tempo n nv d)    = nv
---     s (Tempo n _  d) nv = Tempo n nv d
 
 -- | Get the note value indicated by a tempo.
 tempoNoteValue :: Tempo -> Maybe NoteValue
@@ -188,107 +167,107 @@ tempoDuring :: HasMeta a => Span -> Tempo -> a -> a
 tempoDuring s c = addMetaNote $ view event (s, c)
 
 {-
-inSpan' (view onsetAndOffset -> (t,u)) x = t <= x && x < u
-mkNote s x = view note (s, x)
+        inSpan' (view onsetAndOffset -> (t,u)) x = t <= x && x < u
+        mkNote s x = view note (s, x)
 
--- | Split a reactive into notes, as well as the values before and after the first/last update
--- TODO fails if not positive
--- TODO consolidate
-reactiveIn :: Span -> Reactive a -> [Note a]
-reactiveIn s r
-    | _duration s <= 0 = error "reactiveIn: Needs positive duration"
-    | otherwise       = let r2 = trimR s (fmap optionFirst r)
-    in fmap (fmap $ fromJust . getFirst) $ case updates r2 of
-        -- We have at least 2 value because of trim
-        (frl -> ((t,x),[],(u,_))) -> [view note (t <-> u, x)] -- one note
-        (frl -> ((t0,x0), unzip -> (tn,xn), (tl,_))) -> let
-            times  = [t0] ++ tn
-            spans  = mapWithNext (\t mu -> t <-> fromMaybe tl mu) times
-            values = [x0] ++ xn
-            in zipWith mkNote spans values
+        -- | Split a reactive into notes, as well as the values before and after the first/last update
+        -- TODO fails if not positive
+        -- TODO consolidate
+        reactiveIn :: Span -> Reactive a -> [Note a]
+        reactiveIn s r
+            | _duration s <= 0 = error "reactiveIn: Needs positive duration"
+            | otherwise       = let r2 = trimR s (fmap optionFirst r)
+            in fmap (fmap $ fromJust . getFirst) $ case updates r2 of
+                -- We have at least 2 value because of trim
+                (frl -> ((t,x),[],(u,_))) -> [view note (t <-> u, x)] -- one note
+                (frl -> ((t0,x0), unzip -> (tn,xn), (tl,_))) -> let
+                    times  = [t0] ++ tn
+                    spans  = mapWithNext (\t mu -> t <-> fromMaybe tl mu) times
+                    values = [x0] ++ xn
+                    in zipWith mkNote spans values
 
-renderTempo sc =
-    flip composed sc $ fmap renderTempoScore
-        $ tempoRegions (_era sc)
-        $ tempoRegions0 (_era sc)
-        $ getTempoChanges defTempo sc
+        renderTempo sc =
+            flip composed sc $ fmap renderTempoScore
+                $ tempoRegions (_era sc)
+                $ tempoRegions0 (_era sc)
+                $ getTempoChanges defTempo sc
 
-renderTempoTest :: Score a -> [TempoRegion]
-renderTempoTest sc = id
-    $ tempoRegions (_era sc)
-    $ tempoRegions0 (_era sc)
-    $ getTempoChanges defTempo sc
-
-
--- | Standard tempo
---
--- > tempoToDuration defTempo == 1
-defTempo :: Tempo
-defTempo = metronome (1/1) 60
-
-getTempoChanges :: Tempo -> Score a -> Reactive Tempo
-getTempoChanges def = fmap (fromMaybe def . unOptionFirst) . fromMetaReactive (Nothing::Maybe Int) . (view meta)
+        renderTempoTest :: Score a -> [TempoRegion]
+        renderTempoTest sc = id
+            $ tempoRegions (_era sc)
+            $ tempoRegions0 (_era sc)
+            $ getTempoChanges defTempo sc
 
 
--- | Get all tempo regions for the given span.
-tempoRegions0 :: Span -> Reactive Tempo -> [TempoRegion0]
-tempoRegions0 s r = fmap f $ s `reactiveIn` r
-    where
-        f (view (from note) -> (view delta -> (t,u),x)) = TempoRegion0 t u (tempoToDuration x)
+        -- | Standard tempo
+        --
+        -- > tempoToDuration defTempo == 1
+        defTempo :: Tempo
+        defTempo = metronome (1/1) 60
 
-tempoRegions :: Span -> [TempoRegion0] -> [TempoRegion]
-tempoRegions s = snd . List.mapAccumL f (s^.onset, s^.onset) -- XXX offset?
-    where
-        f (nt,st) (TempoRegion0 _ d x) = ((nt .+^ d, st .+^ (d*x)),
-            TempoRegion nt (nt .+^ d) st x
-            )
+        getTempoChanges :: Tempo -> Score a -> Reactive Tempo
+        getTempoChanges def = fmap (fromMaybe def . unOptionFirst) . fromMetaReactive (Nothing::Maybe Int) . (view meta)
 
 
+        -- | Get all tempo regions for the given span.
+        tempoRegions0 :: Span -> Reactive Tempo -> [TempoRegion0]
+        tempoRegions0 s r = fmap f $ s `reactiveIn` r
+            where
+                f (view (from note) -> (view delta -> (t,u),x)) = TempoRegion0 t u (tempoToDuration x)
+
+        tempoRegions :: Span -> [TempoRegion0] -> [TempoRegion]
+        tempoRegions s = snd . List.mapAccumL f (s^.onset, s^.onset) -- XXX offset?
+            where
+                f (nt,st) (TempoRegion0 _ d x) = ((nt .+^ d, st .+^ (d*x)),
+                    TempoRegion nt (nt .+^ d) st x
+                    )
 
 
 
--- | Return the sounding position of the given notated position, given its tempo region.
---   Does nothing if the given point is outside the given region.
-renderTempoTime :: TempoRegion -> Time -> Time
-renderTempoTime (TempoRegion notRegOn notRegOff soRegOn str) t
-    | notRegOn <= t && t < notRegOff = soRegOn .+^ (t .-. notRegOn) ^* str
-    | otherwise                      = t
-
-renderTempoTime' (TempoRegion notRegOn notRegOff soRegOn str) t  = soRegOn .+^ ((t .-. notRegOn) ^* str)
-
-renderTempoSpan :: TempoRegion -> Span -> Span
-renderTempoSpan tr = over onsetAndOffset $ \(t,u) ->
-    if inSpan' (tempoRegionNotated tr) t
-        then (renderTempoTime' tr t, renderTempoTime' tr u)
-        else (t, u)
-
--- TODO use lens
-renderTempoScore :: TempoRegion -> Score a -> Score a
-renderTempoScore tr = over notes $ fmap $ over (from note . _1) $ renderTempoSpan tr
 
 
-data TempoRegion0 =
-    TempoRegion0 {
-        notatedOnset0    :: Time,
-        notatedDuration0 :: Duration,
-        stretching0      :: Duration
-    }
-    deriving (Eq, Ord, Show)
+        -- | Return the sounding position of the given notated position, given its tempo region.
+        --   Does nothing if the given point is outside the given region.
+        renderTempoTime :: TempoRegion -> Time -> Time
+        renderTempoTime (TempoRegion notRegOn notRegOff soRegOn str) t
+            | notRegOn <= t && t < notRegOff = soRegOn .+^ (t .-. notRegOn) ^* str
+            | otherwise                      = t
 
-data TempoRegion =
-    TempoRegion {
-        notatedOnset  :: Time,           -- same
-        notatedOffset :: Time,          -- notOns + notDur
-        soundingOnset :: Time,          -- sum of previous sounding durations
-        stretching    :: Duration          -- same
-    }
-    deriving (Eq, Ord, Show)
+        renderTempoTime' (TempoRegion notRegOn notRegOff soRegOn str) t  = soRegOn .+^ ((t .-. notRegOn) ^* str)
 
-tempoRegionNotated (TempoRegion t u _ _) = t <-> u
+        renderTempoSpan :: TempoRegion -> Span -> Span
+        renderTempoSpan tr = over onsetAndOffset $ \(t,u) ->
+            if inSpan' (tempoRegionNotated tr) t
+                then (renderTempoTime' tr t, renderTempoTime' tr u)
+                else (t, u)
 
-frl []  = error "frl: No value"
-frl [x] = error "frl: Just one value"
-frl xs  = (head xs, (tail.init) xs, last xs)
+        -- TODO use lens
+        renderTempoScore :: TempoRegion -> Score a -> Score a
+        renderTempoScore tr = over notes $ fmap $ over (from note . _1) $ renderTempoSpan tr
+
+
+        data TempoRegion0 =
+            TempoRegion0 {
+                notatedOnset0    :: Time,
+                notatedDuration0 :: Duration,
+                stretching0      :: Duration
+            }
+            deriving (Eq, Ord, Show)
+
+        data TempoRegion =
+            TempoRegion {
+                notatedOnset  :: Time,           -- same
+                notatedOffset :: Time,          -- notOns + notDur
+                soundingOnset :: Time,          -- sum of previous sounding durations
+                stretching    :: Duration          -- same
+            }
+            deriving (Eq, Ord, Show)
+
+        tempoRegionNotated (TempoRegion t u _ _) = t <-> u
+
+        frl []  = error "frl: No value"
+        frl [x] = error "frl: Just one value"
+        frl xs  = (head xs, (tail.init) xs, last xs)
 
 -}
 

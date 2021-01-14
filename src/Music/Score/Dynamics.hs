@@ -209,13 +209,6 @@ instance HasDynamics a b => HasDynamics (Voice a) (Voice b) where
 instance HasDynamics a b => HasDynamics (Track a) (Track b) where
   dynamics = traverse . dynamics
 
-{-
-type instance Dynamic (Chord a)       = Dynamic a
-type instance SetDynamic b (Chord a)  = Chord (SetDynamic b a)
-instance HasDynamics a b => HasDynamics (Chord a) (Chord b) where
-  dynamics = traverse . dynamics
--}
-
 instance (HasDynamics a b) => HasDynamics (Score a) (Score b) where
   dynamics = traverse . dynamics
 
@@ -533,14 +526,6 @@ instance (Monoid n, Bounded a) => Bounded (DynamicT n a) where
 
   maxBound = pure maxBound
 
--- instance (Monoid n, Num a, Ord a, Real a) => Real (DynamicT n a) where
---     toRational = toRational . extract
---
--- instance (Monoid n, Real a, Enum a, Integral a) => Integral (DynamicT n a) where
---     quot = liftA2 quot
---     rem = liftA2 rem
---     toInteger = toInteger . extract
-
 instance Wrapped (DynamicT p a) where
 
   type Unwrapped (DynamicT p a) = (p, a)
@@ -572,16 +557,13 @@ instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
       (a1, a2) = toTied a
       (d1, d2) = toTied d
 
--- JUNK
 
 -- |
 -- View just the dynamices in a voice.
 vdynamic ::
-  ({-SetDynamic (Dynamic t) s ~ t,-} HasDynamic' a, HasDynamic a b) =>
+  (HasDynamic' a, HasDynamic a b) =>
   Lens (Voice a) (Voice b) (Voice (GetDynamic a)) (Voice (GetDynamic b))
 vdynamic = lens (fmap $ view dynamic) (flip $ zipVoiceWithNoScale (set dynamic))
-
--- vdynamic = through dynamic dynamic
 
 addDynCon ::
   ( HasPhrases s t a b,
@@ -593,9 +575,3 @@ addDynCon ::
   s ->
   t
 addDynCon = over (phrases . vdynamic) withContext
-{-
--- | Specialized verion of 'phrases' for
-phrasesVoice :: Traversal (MVoice a) (MVoice b) (Phrase a) (Phrase b)
-phrasesVoice  =
-  mVoicePVoice . each . _Right
--}
