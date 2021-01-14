@@ -38,12 +38,6 @@ import Music.Time (Transformable (..))
 data Slur = NoSlur | BeginSlur | EndSlur
   deriving (Eq, Ord, Show)
 
-{-
-TODO
-  dashed slur
-  trill
-  8va and variants
--}
 data Mark
   = NoMark
   | Staccato
