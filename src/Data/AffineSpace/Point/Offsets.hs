@@ -20,6 +20,7 @@ import Data.VectorSpace
 --
 -- Vectors represent distances between points, for example the
 -- distance between @(0,0)@ and @(0,1)@ is @1@.
+--
 type AffinePair v p = (VectorSpace v, AffineSpace p, Diff p ~ v)
 
 -- | Lay out a series of vectors from a given point. Return all intermediate points.
@@ -46,13 +47,9 @@ pointOffsets or = (zeroV :) . snd . mapAccumL g or
   where
     g prev p = (p, p .-. prev)
 
--- How they should really have been defined
--- See https://www.reddit.com/r/haskell/comments/f7h1xn/why_do_scanr_and_scanl_change_the_size_of_the_list/
-
--- |
--- For all p
 -- > offsetVs p . distanceVs p = id
 -- > distanceVs p . offsetVs p = id
+
 offsetVs :: AffineSpace p => p -> [Diff p] -> [p]
 offsetVs p = tail . offsetPoints p
 
