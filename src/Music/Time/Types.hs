@@ -121,19 +121,6 @@ import Music.Time.Internal.Util (showRatio)
 -- for 'Fractional' and 'RealFrac'.
 type TimeBase = Rational
 
-{-
-type TimeBase = Fixed E12
-
-instance HasResolution a => AdditiveGroup (Fixed a) where
-  zeroV = 0
-  negateV = negate
-  (^+^) = (+)
-
-instance Floating TimeBase where
-deriving instance Floating Time
-deriving instance Floating Duration
--}
-
 -- | 'Alignment' is a synonym for 'Duration'.
 --
 -- See "Music.Time.Aligned" for its intended use.
@@ -159,7 +146,6 @@ instance Show Duration where
   show = showRatio . toRational
 
 instance ToJSON Duration where
-  -- toJSON = JSON.Number . realToFrac
   toJSON x = let (a, b) = unRatio (toRational x) in toJSON [a, b]
 
 instance FromJSON Duration where
@@ -294,6 +280,8 @@ toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 newtype Span = Span {getSpan :: (Time, Duration)}
   deriving (Eq, Ord, Typeable)
 
+-- $spanConstructors
+--
 -- You can create a span using the constructors '<->', '<-<' and '>->'. Note that:
 --
 -- > a >-> b = a         <-> (a .+^ b)
@@ -328,8 +316,6 @@ newtype Span = Span {getSpan :: (Time, Duration)}
 instance Show Span where
   show = showOnsetAndOffset
 
--- Which form should we use?
-
 instance ToJSON Span where
   toJSON (view onsetAndOffset -> (a, b)) = JSON.object [("onset", toJSON a), ("offset", toJSON b)]
 
@@ -359,13 +345,6 @@ instance VectorSpace Span where
   type Scalar Span = Duration
 
   x *^ Span (t, d) = Span (x *^ t, x *^ d)
-
---
--- a >-> b = a         <-> (a .+^ b)
--- a <-< b = (b .-^ a) <-> b
--- a <-> b = a         >-> (b .-. a)
--- (b .-^ a) <-> b = a <-< b
---
 
 infixl 6 <->
 
@@ -441,8 +420,6 @@ fixedOnsetSpan :: Prism' Span Duration
 fixedOnsetSpan = prism' (\d -> view (from onsetAndDuration) (0, d)) $ \x -> case view onsetAndDuration x of
   (0, d) -> Just d
   _ -> Nothing
-
---
 
 -- $forwardBackWardEmpty
 --
@@ -610,21 +587,19 @@ a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 isBefore :: Span -> Span -> Bool
 a `isBefore` b = (_onsetS a `max` _offsetS a) <= (_onsetS b `min` _offsetS b)
 
--- TODO resolve this so we can use actual onset/offset etc in the above definitions
--- Same as (onset, offset), defined here for bootstrapping reasons
+_onsetS :: Span -> Time
 _onsetS (view onsetAndOffset -> (t1, _t2)) = t1
 
+_offsetS :: Span -> Time
 _offsetS (view onsetAndOffset -> (_t1, t2)) = t2
 
+_midpointS :: Span -> Time
 _midpointS s = _onsetS s .+^ _durationS s / 2
 
+_durationS :: Span -> Duration
 _durationS s = _offsetS s .-. _onsetS s
 
 
-_onsetS :: Span -> Time
 
-_offsetS :: Span -> Time
 
-_midpointS :: Span -> Time
 
-_durationS :: Span -> Duration
