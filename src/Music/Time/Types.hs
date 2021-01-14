@@ -39,8 +39,6 @@ module Music.Time.Types
     isDegenerateSpan,
     isForwardSpan,
     isBackwardSpan,
-    -- delayComponent,
-    -- stretchComponent,
 
     -- ** Combine
     hull,
@@ -56,26 +54,6 @@ module Music.Time.Types
     properlyEncloses,
     overlaps,
     isBefore,
-    -- afterOnset,
-    -- strictlyAfterOnset,
-    -- beforeOnset,
-    -- strictlyBeforeOnset,
-    -- afterOffset,
-    -- strictlyAfterOffset,
-    -- beforeOffset,
-    -- strictlyBeforeOffset,
-    -- startsWhenStarts,
-    -- startsWhenStops,
-    -- stopsWhenStops,
-    -- stopsWhenStarts,
-    -- startsBefore,
-    -- startsLater,
-    -- stopsAtTheSameTime,
-    -- stopsBefore,
-    -- stopsLater,
-    -- union/hull
-    -- intersection (alt name 'overlap')
-    -- difference (would actually become a split)
 
     -- ** Read/Show
     showOnsetAndOffset,
@@ -462,8 +440,6 @@ reflectSpan p = over (onsetAndOffset . both) (reflectThrough p)
 -- @
 normalizeSpan :: Span -> Span
 normalizeSpan s = if isForwardSpan s then s else reverseSpan s
-
--- TODO Duplicate as normalizeNoteSpan
 
 infixl 5 `inside`
 
