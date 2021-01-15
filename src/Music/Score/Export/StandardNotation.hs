@@ -1,4 +1,3 @@
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
@@ -188,6 +187,7 @@ import Control.Lens.TH (makeLenses)
 import Control.Monad.Except
 import Control.Monad.Plus
 import Control.Monad.State
+import Control.Monad.Log
 import Control.Monad.Writer hiding ((<>), First (..))
 import Data.AffineSpace
 import Data.Bifunctor (bimap, first, second)
@@ -852,16 +852,6 @@ movementAssureSameNumberOfBars (Movement i ss st) =
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
--- | A weaker form of 'MonadWriter' which also supports imperative logging.
-class Monad m => MonadLog w m | m -> w where
-
-  logger :: (a, w) -> m a
-  logger ~(a, w) = do
-    say w
-    return a
-
-  say :: w -> m ()
-  say w = logger ((), w)
 
 -- |
 -- Basic monad for exporting music.

@@ -131,6 +131,7 @@ library
                         Data.Semigroup.Instances
                         Control.Monad.Abort
                         Control.Monad.Compose
+                        Control.Monad.Log
                         Music.Time
                         Music.Time.Types
                         Music.Time.Transform
