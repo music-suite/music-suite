@@ -24,73 +24,61 @@ source-repository head
     location:         	git://github.com/music-suite/music-suite.git
 
 library
-    build-depends:      base >= 4.11,
-                        lens,
-                        text,
-                        split,
-                        containers,
-                        comonad,
-                        streams,
-                        vector-space,
-                        process,
-                        filepath,
-                        optparse-applicative,
-                        average,
-                        semigroups,
-                        monadplus,
-                        transformers,
-                        unordered-containers,
-                        base-orphans,
-                        data-default,
-                        file-embed,
+    build-depends:
+                        base >= 4.11,
                         aeson,
-                        roman-numerals,
+                        average,
+                        base-orphans,
+                        base-prelude,
                         bytestring,
                         cassava,
-                        mtl,
-                        contravariant,
-                        base-prelude,
-                        NumInstances,
-                        MonadRandom,
                         colour,
-                        iso-deriving,
-                        logict,
-                        parsec,
-                        directory,
-                        prettify,
-                        HCodecs,
+                        comonad,
+                        containers,
+                        contravariant,
+                        data-default,
                         data-interval,
-                        positive,
-                        type-unary,
-                        xml,
-                        random,
-                        neat-interpolation,
+                        directory,
+                        file-embed,
+                        filepath,
+                        HCodecs,
+                        iso-deriving,
+                        lens,
+                        logict,
                         modular-arithmetic,
-                        random-shuffle
+                        monadplus,
+                        MonadRandom,
+                        mtl,
+                        neat-interpolation,
+                        NumInstances,
+                        optparse-applicative,
+                        parsec,
+                        positive,
+                        prettify,
+                        process,
+                        random,
+                        random-shuffle,
+                        roman-numerals,
+                        semigroups,
+                        split,
+                        streams,
+                        text,
+                        transformers,
+                        type-unary,
+                        unordered-containers,
+                        vector-space,
+                        xml
     if !os(windows)
       build-depends:    unix
 
-    exposed-modules:    Music.Articulation
-                        Music.Dynamics
-                        Music.Dynamics.Absolute
-                        Music.Dynamics.Common
-                        Music.Dynamics.Balance
-                        Music.Dynamics.Literal
-                        Music.Parts
-                        Music.Parts.Division
-                        Music.Parts.Subpart
-                        Music.Parts.Solo
-                        Music.Parts.Part
-                        Music.Parts.Group
-                        Music.Parts.Instrument
-                        Music.Parts.Instrument.Strings
-                        Music.Parts.Instrument.Woodwind
-                        Music.Parts.Instrument.Brass
-                        Music.Parts.Instrument.Percussion
-                        Music.Parts.Instrument.Keyboard
-                        Music.Parts.Instrument.Vocal
-                        Music.Parts.Internal.Data
-                        Music.Pitch.Absolute
+    exposed-modules:
+                        Control.Monad.Abort
+                        Control.Monad.Compose
+                        Control.Monad.Log
+                        Data.AffineSpace.Point
+                        Data.AffineSpace.Point.Offsets
+                        Data.Functor.Context
+                        Data.Functor.Couple
                         Data.Music.Lilypond
                         Data.Music.Lilypond.Dynamics
                         Data.Music.Lilypond.Pitch
@@ -103,58 +91,73 @@ library
                         Data.Music.MusicXml.Simple
                         Data.Music.MusicXml.Time
                         Data.Music.MusicXml.Write
+                        Data.Music.Sibelius
+                        Data.Semigroup.Instances
+                        Music.Articulation
+                        Music.Dynamics
+                        Music.Dynamics.Absolute
+                        Music.Dynamics.Balance
+                        Music.Dynamics.Common
+                        Music.Dynamics.Literal
+                        Music.Parts
+                        Music.Parts.Division
+                        Music.Parts.Group
+                        Music.Parts.Instrument
+                        Music.Parts.Instrument.Brass
+                        Music.Parts.Instrument.Keyboard
+                        Music.Parts.Instrument.Percussion
+                        Music.Parts.Instrument.Strings
+                        Music.Parts.Instrument.Vocal
+                        Music.Parts.Instrument.Woodwind
+                        Music.Parts.Internal.Data
+                        Music.Parts.Part
+                        Music.Parts.Solo
+                        Music.Parts.Subpart
                         Music.Pitch
-                        Music.Pitch.Equal
+                        Music.Pitch.Absolute
+                        Music.Pitch.Alterable
+                        Music.Pitch.Ambitus
+                        Music.Pitch.Augmentable
+                        Music.Pitch.Clef
                         Music.Pitch.Common
-                        Music.Pitch.Common.Types
+                        Music.Pitch.Common.Harmony
                         Music.Pitch.Common.Internal
-                        Music.Pitch.Common.Quality
-                        Music.Pitch.Common.Number
                         Music.Pitch.Common.Interval
+                        Music.Pitch.Common.Names
+                        Music.Pitch.Common.Number
                         Music.Pitch.Common.Pitch
+                        Music.Pitch.Common.Quality
                         Music.Pitch.Common.Semitones
                         Music.Pitch.Common.Spell
-                        Music.Pitch.Common.Harmony
-                        Music.Pitch.Common.Names
-                        Music.Pitch.Ambitus
-                        Music.Pitch.Scale
-                        Music.Pitch.Clef
+                        Music.Pitch.Common.Types
+                        Music.Pitch.Equal
                         Music.Pitch.Intonation
                         Music.Pitch.Literal
-                        Music.Pitch.Literal.Pitch
                         Music.Pitch.Literal.Interval
-                        Music.Pitch.Augmentable
-                        Music.Pitch.Alterable
-                        Data.AffineSpace.Point.Offsets
-                        Data.Functor.Couple
-                        Data.Functor.Context
-                        Data.Semigroup.Instances
-                        Control.Monad.Abort
-                        Control.Monad.Compose
-                        Control.Monad.Log
-                        Music.Time
-                        Music.Time.Types
-                        Music.Time.Transform
-                        Music.Time.Duration
-                        Music.Time.Position
-                        Music.Time.Split
-                        Music.Time.Juxtapose
-                        Music.Time.Rest
-                        Music.Time.Aligned
-                        Music.Time.Note
-                        Music.Time.Placed
-                        Music.Time.Event
-                        Music.Time.Track
-                        Music.Time.Voice
-                        Music.Time.Score
-                        Music.Time.Pattern
-                        Music.Time.Behavior
-                        Music.Time.Reactive
-                        Music.Time.Meta
+                        Music.Pitch.Literal.Pitch
+                        Music.Pitch.Scale
+                        Music.Prelude
+                        Music.Prelude.Inspectable
+                        Music.Prelude.Standard
                         Music.Score
-                        Music.Score.Ties
-                        Music.Score.Part
-                        Music.Score.Phrases
+                        Music.Score.Articulation
+                        Music.Score.Color
+                        Music.Score.Dynamics
+                        Music.Score.Export.ArticulationNotation
+                        Music.Score.Export.DynamicNotation
+                        Music.Score.Export.Meta
+                        Music.Score.Export.StandardNotation
+                        Music.Score.Export.TechniqueNotation
+                        Music.Score.Harmonics
+                        Music.Score.Import.Abc
+                        Music.Score.Import.Lilypond
+                        Music.Score.Import.Midi
+                        Music.Score.Import.Sibelius
+                        Music.Score.Internal.Export
+                        Music.Score.Internal.Instances
+                        Music.Score.Internal.Quantize
+                        Music.Score.Internal.Util
+                        Music.Score.Internal.VoiceSeparation
                         Music.Score.Meta
                         Music.Score.Meta.Annotations
                         Music.Score.Meta.Attribution
@@ -166,39 +169,38 @@ library
                         Music.Score.Meta.Tempo
                         Music.Score.Meta.Time
                         Music.Score.Meta.Title
-                        Music.Score.Export.Meta
+                        Music.Score.Part
+                        Music.Score.Phrases
                         Music.Score.Pitch
-                        Music.Score.Articulation
-                        Music.Score.Dynamics
-                        Music.Score.Technique
                         Music.Score.Slide
-                        Music.Score.Tremolo
                         Music.Score.StaffNumber
+                        Music.Score.Technique
                         Music.Score.Text
-                        Music.Score.Harmonics
-                        Music.Score.Color
-                        Music.Score.Export.ArticulationNotation
-                        Music.Score.Export.TechniqueNotation
-                        Music.Score.Export.DynamicNotation
-                        Music.Score.Export.StandardNotation
-                        Music.Score.Import.Abc
-                        Music.Score.Import.Lilypond
-                        Music.Score.Import.Midi
+                        Music.Score.Ties
+                        Music.Score.Tremolo
+                        Music.Time
+                        Music.Time.Aligned
+                        Music.Time.Behavior
+                        Music.Time.Duration
+                        Music.Time.Event
                         Music.Time.Internal.Convert
-                        Music.Time.Internal.Util
-                        Music.Time.Internal.Transform
-                        Music.Score.Internal.Quantize
-                        Music.Score.Internal.VoiceSeparation
-                        Music.Score.Internal.Instances
-                        Music.Score.Internal.Util
-                        Music.Score.Internal.Export
                         Music.Time.Internal.Preliminaries
-                        Data.Music.Sibelius
-                        Data.AffineSpace.Point
-                        Music.Score.Import.Sibelius
-                        Music.Prelude
-                        Music.Prelude.Standard
-                        Music.Prelude.Inspectable
+                        Music.Time.Internal.Transform
+                        Music.Time.Internal.Util
+                        Music.Time.Juxtapose
+                        Music.Time.Meta
+                        Music.Time.Note
+                        Music.Time.Pattern
+                        Music.Time.Placed
+                        Music.Time.Position
+                        Music.Time.Reactive
+                        Music.Time.Rest
+                        Music.Time.Score
+                        Music.Time.Split
+                        Music.Time.Track
+                        Music.Time.Transform
+                        Music.Time.Types
+                        Music.Time.Voice
     hs-source-dirs:     src,
                         vendor
     default-language:   Haskell2010
