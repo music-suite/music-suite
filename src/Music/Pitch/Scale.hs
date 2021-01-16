@@ -1,10 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedLists #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 
 -- | Scales and chords.
 --
@@ -114,11 +111,9 @@ module Music.Pitch.Scale
   )
 where
 
-import Control.Lens (Lens, Lens', coerced)
-import Data.AffineSpace
+import Control.Lens (Lens')
 import Data.AffineSpace.Point.Offsets
   ( AffinePair,
-    distanceVs,
     offsetPoints,
     offsetPointsS,
   )
