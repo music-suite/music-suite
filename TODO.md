@@ -909,6 +909,14 @@ From music21:
   - Graphical backends
     - Piano roll
 
+- [ ] Make AddMeta more similar to PartT, ArticulationT, etc
+  - Style: move towards separating *types with exposed implementation* and *types with hidden implementations*
+    - Former is useful for structural typing, flag module hierarchies, type driven development etc
+      - Should export Generic
+      - Can be used with Coercible, iso-deriving etc
+    - Latter is useful for performance and runtime verification
+      - Should not export Generic/unwrapping etc
+
 - [X] Bug: TimeSignatures and similar only show up if providing span
   E.g. timeSignatureDuring works, timeSignature does not
   - Can not reproduce on cb0cdd1a5adb6d9e7f23659beda603450f66ddc0

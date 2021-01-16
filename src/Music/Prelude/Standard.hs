@@ -145,7 +145,7 @@ stripSuffix xs
 -- TODO move
 
 -- | Orchestrate in the given parts.
-singleParts :: (Monoid a, Semigroup a, HasPosition a, Transformable a, HasParts' a) => [Music.Score.Part.GetPart a] -> [a] -> a
+singleParts :: (Monoid a, Semigroup a, HasPosition a, Transformable a, HasParts' a) => [GetPart a] -> [a] -> a
 singleParts ens = ppar . zipWith (set parts') (reverse ens)
 
 -- TODO move
@@ -153,11 +153,11 @@ singleParts ens = ppar . zipWith (set parts') (reverse ens)
 -- | Orchestrate by doubling the given music in all given parts.
 --
 -- >>> doublePartsInOctave [violins,flutes] $ pseq[c,d,e]
-doubleParts :: (Monoid a, HasParts' a) => [Music.Score.Part.GetPart a] -> a -> a
+doubleParts :: (Monoid a, HasParts' a) => [GetPart a] -> a -> a
 doubleParts ps x = mconcat $ fmap (\p -> set parts' p x) ps
 
 -- TODO move
-doublePartsF :: (Monoid (f a), HasParts' a, Functor f) => [Music.Score.Part.GetPart a] -> f a -> f a
+doublePartsF :: (Monoid (f a), HasParts' a, Functor f) => [GetPart a] -> f a -> f a
 doublePartsF ps x = mconcat $ fmap (\p -> set (mapped . parts') p x) ps
 
 -- TODO move
@@ -165,5 +165,5 @@ doublePartsF ps x = mconcat $ fmap (\p -> set (mapped . parts') p x) ps
 -- | Orchestrate by doubling in all given parts.
 --
 -- >>> doublePartsInOctave [(violins,0),(flutes,1)] $ pseq[c,d,e]
-doublePartsInOctave :: (Monoid a, Transposable a, HasParts' a) => [(Music.Score.Part.GetPart a, Int)] -> a -> a
+doublePartsInOctave :: (Monoid a, Transposable a, HasParts' a) => [(GetPart a, Int)] -> a -> a
 doublePartsInOctave ps x = mconcat $ fmap (\(p, n) -> set parts' p $ octavesUp (fromIntegral n) x) ps
