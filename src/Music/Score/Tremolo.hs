@@ -36,7 +36,7 @@ import Music.Time
 --
 -- [/set-set/]
 --
---    @'setTrem' n ('setTrem' n x) = 'setTrem' n x@
+--    @'setTrem' n ('setTrem' m x) = 'setTrem' n x@
 class HasTremolo a where
 
   setTrem :: Int -> a -> a
@@ -134,6 +134,9 @@ instance (HasArticulations a b) => HasArticulations (TremoloT a) (TremoloT b) wh
 instance (HasArticulation a b) => HasArticulation (TremoloT a) (TremoloT b) where
   articulation = mapTremoloT . articulation
 
+-- | Map over a 'TremoloT' using a 'Functor'.
+--
+-- This function is a 'Lens'.
 mapTremoloT :: Functor f => (a -> f b) -> TremoloT a -> f (TremoloT b)
 mapTremoloT f (TremoloT (Couple (n, a))) = fmap (\x -> TremoloT (Couple (n, x))) (f a)
 
