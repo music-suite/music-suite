@@ -67,16 +67,8 @@ newtype TremoloT a = TremoloT {getTremoloT :: Couple (Max Word) a}
 -- Preferably we would use Natural but unfortunately this is not an instance of Bounded
 --
 
-instance Wrapped (TremoloT a) where
-
-  type Unwrapped (TremoloT a) = Couple (Max Word) a
-
-  _Wrapped' = iso getTremoloT TremoloT
-
-instance Rewrapped (TremoloT a) (TremoloT b)
-
 instance HasTremolo (TremoloT a) where
-  setTrem n = set (_Wrapped . _Wrapped . _1) (Max $ fromIntegral n)
+  setTrem n (TremoloT (Couple (_, a))) = TremoloT (Couple (fromIntegral n, a))
 
 deriving instance Num a => Num (TremoloT a)
 
@@ -125,16 +117,16 @@ type instance GetArticulation (TremoloT a) = GetArticulation a
 type instance SetArticulation g (TremoloT a) = TremoloT (SetArticulation g a)
 
 instance (HasPitches a b) => HasPitches (TremoloT a) (TremoloT b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (TremoloT a) (TremoloT b) where
-  pitch = _Wrapped . pitch
+  pitch f (TremoloT (Couple (n, a))) = fmap (\x -> TremoloT (Couple (n, x))) (pitch f a)
 
 instance (HasDynamics a b) => HasDynamics (TremoloT a) (TremoloT b) where
-  dynamics = _Wrapped . dynamics
+  dynamics = traverse . dynamics
 
 instance (HasDynamic a b) => HasDynamic (TremoloT a) (TremoloT b) where
-  dynamic = _Wrapped . dynamic
+  dynamic f (TremoloT (Couple (n, a))) = fmap (\x -> TremoloT (Couple (n, x))) (dynamic f a)
 
 instance (HasArticulations a b) => HasArticulations (TremoloT a) (TremoloT b) where
   articulations = _Wrapped . articulations
