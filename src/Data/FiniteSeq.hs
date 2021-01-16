@@ -6,7 +6,7 @@ module Data.FiniteSeq (FiniteSeq, singleton, fromMaybe, parseList, toList) where
 import Data.Proxy
 import GHC.TypeNats
 
--- | A sequence of @x@ elements where @0 <= x <= n@.
+-- | A sequence of at most @n@ elements.
 newtype FiniteSeq (n :: Nat) a = UnsafeFiniteSeq {_getUnsafeFiniteSeq :: [a]}
   deriving (Functor, Foldable, Traversable)
 
