@@ -1,8 +1,4 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
 
 module Music.Score.Tremolo
   ( -- * Tremolo
@@ -15,15 +11,11 @@ module Music.Score.Tremolo
   )
 where
 
-import Control.Applicative
 import Control.Comonad
 import Control.Lens hiding (transform)
-import Data.Foldable
 import Data.Functor.Couple
-import Data.Ratio
 import Data.Semigroup
 import Data.Typeable
-import Data.Word
 import Music.Dynamics.Literal
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
@@ -31,9 +23,6 @@ import Music.Pitch.Literal
 import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Harmonics
-import Music.Score.Meta
-import Music.Score.Part
-import Music.Score.Phrases
 import Music.Score.Pitch
 import Music.Score.Slide
 import Music.Score.Text
