@@ -911,11 +911,13 @@ From music21:
 
 - [ ] Make AddMeta more similar to PartT, ArticulationT, etc
   - Style: move towards separating *types with exposed implementation* and *types with hidden implementations*
-    - Former is useful for structural typing, flag module hierarchies, type driven development etc
+    - Former is useful for structural typing, flat module hierarchies, type driven development etc
       - Should export Generic
       - Can be used with Coercible, iso-deriving etc
+      - Prefer whenever possible
     - Latter is useful for performance and runtime verification
       - Should not export Generic/unwrapping etc
+      - Only use when necessary
 
 - [X] Bug: TimeSignatures and similar only show up if providing span
   E.g. timeSignatureDuring works, timeSignature does not
