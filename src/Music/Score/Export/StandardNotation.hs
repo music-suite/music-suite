@@ -4,7 +4,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
 -- |
@@ -178,9 +177,7 @@ import Control.Lens
     from,
     over,
     preview,
-    set,
     to,
-    under,
     view,
   )
 import Control.Lens.Operators hiding ((|>))
@@ -191,18 +188,15 @@ import Control.Monad.State
 import Control.Monad.Log
 import Control.Monad.Writer hiding ((<>), First (..))
 import Data.AffineSpace
-import Data.Bifunctor (bimap, first, second)
+import Data.Bifunctor (first)
 import qualified Data.ByteString.Char8
-import qualified Data.Char
 import Data.Colour (Colour)
 import Data.Colour.Names
 import Data.FileEmbed
 import Data.FiniteSeq (FiniteSeq)
 import qualified Data.FiniteSeq
 import Data.Functor.Couple
-import Data.Functor.Identity (Identity (..))
 import qualified Data.List
-import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty
 import qualified Data.List.Split
 import Data.Map (Map)
@@ -219,7 +213,6 @@ import Data.VectorSpace hiding (Sum)
 import Music.Articulation (Articulation)
 import Music.Dynamics (Dynamics)
 import Music.Dynamics.Literal (DynamicsL (..), fromDynamics)
-import qualified Music.Dynamics.Literal as D
 import Music.Parts (Instrument, Part, ScoreLayout (..))
 import qualified Music.Parts
 import qualified Music.Pitch
@@ -232,9 +225,7 @@ import Music.Score.Color (ColorT, runColorT)
 import qualified Music.Score.Dynamics
 import Music.Score.Dynamics (DynamicT (..))
 import qualified Music.Score.Export.ArticulationNotation
-import Music.Score.Export.ArticulationNotation (marks, slurs)
 import qualified Music.Score.Export.ArticulationNotation as AN
-import Music.Score.Export.DynamicNotation (crescDim, dynamicLevel)
 import qualified Music.Score.Export.DynamicNotation
 import qualified Music.Score.Export.DynamicNotation as DN
 import qualified Music.Score.Export.TechniqueNotation as TN
@@ -272,7 +263,6 @@ import qualified Music.Score.Ties
 import Music.Score.Ties (Tiable (..), TieT (..))
 import Music.Score.Tremolo (TremoloT, runTremoloT)
 import Music.Time
-import Music.Time.Meta (meta)
 
 -- Annotated tree
 data LabelTree b a = Branch b [LabelTree b a] | Leaf a
