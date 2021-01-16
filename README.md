@@ -39,7 +39,7 @@ m> cabal build
 #### Property tests
 
 ```
-m> cabal test --test-show-details=streaming
+m> cabal test --test-show-details=streaming --test-options=--color=always
 ```
 
 To run individual tests:
@@ -48,16 +48,15 @@ To run individual tests:
 m> cabal run TEST_NAME -- TEST_ARGS...
 ```
 
+e.g.
+
+```
+cabal run music-suite-test-xml-parser
+```
+
 #### Doctests
 
-```
-m> cabal build && cabal exec --package music-suite -- cabal run doctester PATHS
-```
-
-where `PATHS` is a list of Haskell files or directories containing Haskell files.
-
-For now, `default-extensions` is not recognized, so you must list the extensions
-explicitly in each file using a `LANGUAGE` pragma.
+TODO
 
 ### Development shell
 
@@ -65,13 +64,17 @@ explicitly in each file using a `LANGUAGE` pragma.
 m> cabal build music-suite && cabal exec --package music-suite ghci
 ```
 
+or
+
+```
+m> cabal repl
+```
+
 ### Build the documentation
 
 #### User Guide
 
-```
-m> cabal build music-suite transf hslinks && (cd docs && make)
-```
+TODO
 
 The output appears in `docs/build`. You can point a HTTP server to this directory.
 
@@ -80,6 +83,14 @@ The output appears in `docs/build`. You can point a HTTP server to this director
 ```
 m> cabal haddock
 ```
+
+
+### Run example
+
+```
+cabal exec runhaskell -- examples/chopin.hs -f ly -o t.ly
+```
+
 
 
 ## How to upgrade the compiler/Nixpkgs
