@@ -196,6 +196,7 @@ import qualified Data.Char
 import Data.Colour (Colour)
 import Data.Colour.Names
 import Data.FileEmbed
+import Data.FiniteSeq
 import Data.Functor.Couple
 import Data.Functor.Identity (Identity (..))
 import qualified Data.List
@@ -1875,30 +1876,7 @@ type Asp = Score Asp1
 
 type StandardNotationExportM m = (MonadLog String m, MonadError String m)
 
--- TODO move and hide constructor.
--- TODO generalize
 
--- | List with 0 to 4 elements.
-newtype List0To4 a = UnsafeList0To4 {_unsafeGetList0To4 :: [a]}
-  deriving (Functor, Foldable, Traversable)
-
--- list0 :: List0To4 a
--- list1 :: a -> List0To4 a
--- list2 :: a -> a -> List0To4 a
--- list3 :: a -> a -> a -> List0To4 a
--- list4 :: a -> a -> a -> a -> List0To4 a
--- list0 = UnsafeList0To4 []
--- list1 x = UnsafeList0To4 [x]
--- list2 x y = UnsafeList0To4 [x,y]
--- list3 x y z = UnsafeList0To4 [x,y,z]
--- list4 x y z a = UnsafeList0To4 [x,y,z,a]
-
-parseList :: [a] -> Maybe (List0To4 a)
-parseList xs
-  | length xs <= 4 = Just $ UnsafeList0To4 xs
-  | otherwise = Nothing
-
--- TODO move
 
 -- |
 -- Partition intervals into non-overlapping subsets.
@@ -2125,8 +2103,8 @@ generateStaffGrouping :: [(Part, a)] -> LabelTree BracketType (Part, a)
 generateStaffGrouping = scoreLayoutToLabelTree . partDefault
 
 aspectsToStaff :: (Music.Parts.Part, List0To4 [Rhythm (Maybe Asp3)]) -> [Staff]
-aspectsToStaff (part, UnsafeList0To4 voices) =
-  fmap (singleStaff part) voices
+aspectsToStaff (part, voices) =
+  fmap (singleStaff part) (toList0To4 voices)
 
 singleStaff :: Part -> [Rhythm (Maybe Asp3)] -> Staff
 singleStaff part bars = Staff info (fmap aspectsToBar bars)
