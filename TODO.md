@@ -426,7 +426,7 @@ From music21:
   - [X] Dynamics
   - [X] Articulation
   - [X] Technique
-  - [ ] Part
+  - [X] Part
   - Also rename SomeTechnique -> Music.Technique.Technique or similar (a la pitch et al)
 
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
