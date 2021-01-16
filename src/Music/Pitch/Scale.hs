@@ -37,29 +37,13 @@ module Music.Pitch.Scale
     Mode,
     leadingInterval,
     invertMode,
-
-    -- * Chord types
-    ChordType,
-    complementInterval,
-
-    -- * Conversions
-    chordToScale,
-    scaleToChord,
-    chordTypeToMode,
-    modeToChordType,
-    reorient,
-    chordToList,
-    scaleToList,
-
-    -- * Common
-
-    -- ** Major-Minor/Common practice modes
+    -- ** Common
+    -- *** Major-Minor/Common practice
     majorScale,
     pureMinorScale,
     harmonicMinorScale,
     melodicMinorScaleUp,
-
-    -- ** Church/Gregorian modes
+    -- *** Church modes
     aeolian,
     locrian,
     ionian,
@@ -67,8 +51,7 @@ module Music.Pitch.Scale
     phrygian,
     lydian,
     mixolydian,
-
-    -- ** Other modes
+    -- *** Other modes
     majorPentaTonic,
     minorPentaTonic,
     bluesMinor,
@@ -77,16 +60,11 @@ module Music.Pitch.Scale
     wholeTone,
     octatonic,
 
-    -- ** Modes of limited transposition
-    firstMode,
-    secondMode,
-    thirdMode,
-    fourthMode,
-    fifthMode,
-    sixthMode,
-    seventhMode,
-
-    -- ** Triadic/Common practice chord types
+    -- * Chord types
+    ChordType,
+    complementInterval,
+    -- ** Common
+    -- *** Major-Minor/Common practice
     majorTriad,
     minorTriad,
     augmentedChord,
@@ -99,13 +77,33 @@ module Music.Pitch.Scale
     minorMajorSeventhChord,
     frenchSixthChord,
     germanSixthChord,
-
-    -- ** Non-triadic chord types
+    -- *** Clusters
     repeating,
     chromaticCluster,
     wholeToneCluster,
     quartal,
     quintal,
+    -- ** Modes of limited transposition
+    firstMode,
+    secondMode,
+    thirdMode,
+    fourthMode,
+    fifthMode,
+    sixthMode,
+    seventhMode,
+
+
+    -- * Conversions
+    chordToScale,
+    scaleToChord,
+    chordTypeToMode,
+    modeToChordType,
+    reorient,
+    chordToList,
+    scaleToList,
+
+
+
 
     -- * Voicing
     Voiced (..),
