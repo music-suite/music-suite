@@ -456,14 +456,14 @@ instance Tiable Music.Pitch.Pitch where
 instance Transformable Music.Parts.Part where
   transform _ = id
 
-type instance Part Music.Parts.Part = Music.Parts.Part
+type instance GetPart Music.Parts.Part = Music.Parts.Part
 
 type instance SetPart a Music.Parts.Part = a
 
-instance (Transformable a, a ~ Part a) => HasPart Music.Parts.Part a where
+instance (Transformable a, a ~ GetPart a) => HasPart Music.Parts.Part a where
   part = ($)
 
-instance (Transformable a, a ~ Part a) => HasParts Music.Parts.Part a where
+instance (Transformable a, a ~ GetPart a) => HasParts Music.Parts.Part a where
   parts = ($)
 
 instance HasDuration Common.Pitch where

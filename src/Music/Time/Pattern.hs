@@ -174,7 +174,7 @@ type instance SetPitch b (Pattern a) = Pattern (SetPitch b a)
 instance HasPitches a b => HasPitches (Pattern a) (Pattern b) where
   pitches = traverse . pitches
 
-type instance Part (Pattern a) = Part a
+type instance GetPart (Pattern a) = GetPart a
 
 type instance SetPart b (Pattern a) = Pattern (SetPart b a)
 
