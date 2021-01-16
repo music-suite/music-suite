@@ -10,7 +10,7 @@
 --
 module Music.Pitch.Scale
   (
-    -- * The ScaleChord type
+    -- * Basic types
     Orientation (..),
     Rooting (..),
     ScaleChord (..),
@@ -25,7 +25,7 @@ module Music.Pitch.Scale
     invertChord,
     repeatingInterval,
 
-    -- ** Scales and chords as sets
+    -- * Scales and chords as sets
     -- ** Generator
     generator,
     -- ** Indexing
@@ -83,7 +83,7 @@ module Music.Pitch.Scale
     wholeToneCluster,
     quartal,
     quintal,
-    -- ** Modes of limited transposition
+    -- *** Limited transposition
     firstMode,
     secondMode,
     thirdMode,
