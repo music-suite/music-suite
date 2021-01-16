@@ -6,8 +6,8 @@ module Data.FiniteSeq (FiniteSeq, parseList, toList) where
 import Data.Proxy
 import GHC.TypeNats
 
--- | A sequence of @x@ elements where @0 <= x <= n@.
-newtype FiniteSeq (n :: Nat) a = UnsafeList0To4 {_unsafeGetList0To4 :: [a]}
+-- | A sequence of at most @n@ elements.
+newtype FiniteSeq (n :: Nat) a = UnsafeFiniteSeq {_getUnsafeFiniteSeq :: [a]}
   deriving (Functor, Foldable, Traversable)
 
 parseList :: forall (n :: Nat) a .
@@ -15,11 +15,18 @@ parseList :: forall (n :: Nat) a .
   [a] -> Maybe (FiniteSeq n a)
 parseList xs
   | length xs <= fromIntegral (natVal (Proxy :: Proxy n))
-    = Just $ UnsafeList0To4 xs
+    = Just $ UnsafeFiniteSeq xs
   | otherwise = Nothing
 
+fromMaybe :: Maybe a -> FiniteSeq 1 a
+fromMaybe Nothing = UnsafeFiniteSeq []
+fromMaybe (Just x) = UnsafeFiniteSeq [x]
+
+singleton :: a -> FiniteSeq 1 a
+singleton x = UnsafeFiniteSeq [x]
+
 toList :: FiniteSeq n a -> [a]
-toList (UnsafeList0To4 xs) = xs
+toList (UnsafeFiniteSeq xs) = xs
 
 
 
