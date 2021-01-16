@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC
@@ -196,7 +197,8 @@ import qualified Data.Char
 import Data.Colour (Colour)
 import Data.Colour.Names
 import Data.FileEmbed
-import Data.FiniteSeq
+import Data.FiniteSeq (FiniteSeq)
+import qualified Data.FiniteSeq
 import Data.Functor.Couple
 import Data.Functor.Identity (Identity (..))
 import qualified Data.List
@@ -1912,8 +1914,8 @@ update n f xs = take n xs ++ rest
       [] -> []
       x : xs -> f x : xs
 
-toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (List0To4 (MVoice a))
-toLayer p xs = case parseList $ partitionIntervals $ scoreToMap xs of
+toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (FiniteSeq 4 (MVoice a))
+toLayer p xs = case Data.FiniteSeq.parseList $ partitionIntervals $ scoreToMap xs of
   Nothing -> throwError $ "Part has more than four overlapping events: " ++ show p
   Just xs -> pure $ fmap (maybe (error bug) id . preview Music.Score.Phrases.singleMVoice . mapToScore) xs
   where
@@ -1991,7 +1993,7 @@ toStandardNotation sc' = do
 
   -}
   say "Separating voices"
-  postVoiceSeparation :: [(Part, List0To4 (MVoice Asp2))] <-
+  postVoiceSeparation :: [(Part, FiniteSeq 4 (MVoice Asp2))] <-
     traverse
       ( \a@(p, _) ->
           -- TODO VS: Do actual voice separation here
@@ -2002,7 +2004,7 @@ toStandardNotation sc' = do
   -- This changes the aspect type again
   say "Notating dynamics, articulation and playing techniques"
   let postContextSensitiveNotationRewrite ::
-        [(Part, List0To4 (MVoice Asp3))] =
+        [(Part, FiniteSeq 4 (MVoice Asp3))] =
           (fmap . fmap . fmap) asp2ToAsp3 $ postVoiceSeparation
   -- postContextSensitiveNotationRewrite :: [(Music.Parts.Part,Voice (Maybe Asp3))]
 
@@ -2010,19 +2012,19 @@ toStandardNotation sc' = do
   -- Resulting list is list of bars, there is no layering (yet)
   say "Dividing the score into bars"
   let postTieSplit ::
-        [(Part, List0To4 [Voice (Maybe Asp3)])] =
+        [(Part, FiniteSeq 4 [Voice (Maybe Asp3)])] =
           (fmap . fmap . fmap) (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
   -- For each bar, quantize all layers. This is where tuplets/note values are generated.
   say "Rewriting rhythms"
   postQuantize ::
-    [(Part, List0To4 [Rhythm (Maybe Asp3)])] <-
+    [(Part, FiniteSeq 4 [Rhythm (Maybe Asp3)])] <-
     traverse (traverse (traverse (traverse quantizeBar))) postTieSplit
   -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
 
   -- Group staves, generating brackets and braces
   say "Generate staff groups"
   let postStaffGrouping ::
-        LabelTree BracketType (Part, List0To4 [Rhythm (Maybe Asp3)]) =
+        LabelTree BracketType (Part, FiniteSeq 4 [Rhythm (Maybe Asp3)]) =
           generateStaffGrouping postQuantize
   -- All staves with brackets/braces, with one staff generated per voice
   -- We fold those into the LabelTree using SubBracket
@@ -2102,9 +2104,9 @@ quantizeBar = fmap rewrite . quantize' . view Music.Time.pairs
 generateStaffGrouping :: [(Part, a)] -> LabelTree BracketType (Part, a)
 generateStaffGrouping = scoreLayoutToLabelTree . partDefault
 
-aspectsToStaff :: (Music.Parts.Part, List0To4 [Rhythm (Maybe Asp3)]) -> [Staff]
+aspectsToStaff :: (Music.Parts.Part, FiniteSeq 4 [Rhythm (Maybe Asp3)]) -> [Staff]
 aspectsToStaff (part, voices) =
-  fmap (singleStaff part) (toList0To4 voices)
+  fmap (singleStaff part) (Data.FiniteSeq.toList voices)
 
 singleStaff :: Part -> [Rhythm (Maybe Asp3)] -> Staff
 singleStaff part bars = Staff info (fmap aspectsToBar bars)

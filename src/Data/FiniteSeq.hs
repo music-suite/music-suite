@@ -1,19 +1,25 @@
 
-module Data.FiniteSeq (List0To4, parseList, toList0To4) where
+{-# LANGUAGE DataKinds #-}
 
+module Data.FiniteSeq (FiniteSeq, parseList, toList) where
 
--- | A sequence of @n@ elements where @0 <= n <= 4@.
-newtype List0To4 a = UnsafeList0To4 {_unsafeGetList0To4 :: [a]}
+import Data.Proxy
+import GHC.TypeNats
+
+-- | A sequence of @x@ elements where @0 <= x <= n@.
+newtype FiniteSeq (n :: Nat) a = UnsafeList0To4 {_unsafeGetList0To4 :: [a]}
   deriving (Functor, Foldable, Traversable)
 
-parseList :: [a] -> Maybe (List0To4 a)
+parseList :: forall (n :: Nat) a .
+  KnownNat n =>
+  [a] -> Maybe (FiniteSeq n a)
 parseList xs
-  | length xs <= 4 = Just $ UnsafeList0To4 xs
+  | length xs <= fromIntegral (natVal (Proxy :: Proxy n))
+    = Just $ UnsafeList0To4 xs
   | otherwise = Nothing
 
--- | Equivalent to 'toList', but more effiecient.
-toList0To4 :: List0To4 a -> [a]
-toList0To4 (UnsafeList0To4 xs) = xs
+toList :: FiniteSeq n a -> [a]
+toList (UnsafeList0To4 xs) = xs
 
 
 
