@@ -7,12 +7,12 @@ module Music.Score.Tremolo
 
     -- ** Tremolo note transformer
     TremoloT (..),
+    mapTremoloT,
     runTremoloT,
   )
 where
 
 import Control.Comonad
-import Control.Lens hiding (transform)
 import Data.Functor.Couple
 import Data.Semigroup
 import Data.Typeable
@@ -120,19 +120,22 @@ instance (HasPitches a b) => HasPitches (TremoloT a) (TremoloT b) where
   pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (TremoloT a) (TremoloT b) where
-  pitch f (TremoloT (Couple (n, a))) = fmap (\x -> TremoloT (Couple (n, x))) (pitch f a)
+  pitch = mapTremoloT . pitch
 
 instance (HasDynamics a b) => HasDynamics (TremoloT a) (TremoloT b) where
   dynamics = traverse . dynamics
 
 instance (HasDynamic a b) => HasDynamic (TremoloT a) (TremoloT b) where
-  dynamic f (TremoloT (Couple (n, a))) = fmap (\x -> TremoloT (Couple (n, x))) (dynamic f a)
+  dynamic = mapTremoloT . dynamic
 
 instance (HasArticulations a b) => HasArticulations (TremoloT a) (TremoloT b) where
-  articulations = _Wrapped . articulations
+  articulations = traverse . articulations
 
 instance (HasArticulation a b) => HasArticulation (TremoloT a) (TremoloT b) where
-  articulation = _Wrapped . articulation
+  articulation = mapTremoloT . articulation
+
+mapTremoloT :: Functor f => (a -> f b) -> TremoloT a -> f (TremoloT b)
+mapTremoloT f (TremoloT (Couple (n, a))) = fmap (\x -> TremoloT (Couple (n, x))) (f a)
 
 -- |
 -- Get the number of tremolo divisions.

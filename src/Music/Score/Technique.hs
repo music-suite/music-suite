@@ -78,7 +78,7 @@ import Music.Score.Slide (SlideT)
 import Music.Score.StaffNumber (StaffNumberT)
 import Music.Score.Text (TextT)
 import Music.Score.Ties (Tiable (..), TieT)
-import Music.Score.Tremolo (TremoloT)
+import Music.Score.Tremolo (TremoloT, mapTremoloT)
 import Music.Time
 import Music.Time.Internal.Transform
 
@@ -159,7 +159,7 @@ instance HasTechniques a b => HasTechniques (TremoloT a) (TremoloT b) where
   techniques = traverse . techniques
 
 instance HasTechnique a b => HasTechnique (TremoloT a) (TremoloT b) where
-  technique = _Wrapped . technique
+  technique = mapTremoloT . technique
 
 type instance GetTechnique (ColorT a) = GetTechnique a
 
