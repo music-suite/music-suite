@@ -26,6 +26,7 @@ module Music.Pitch.Scale
     -- ** Generator
     generator,
     -- ** Indexing
+    root,
     index,
     member,
     tabulate,
@@ -260,7 +261,7 @@ isHeadOf a (b Stream.:> _) = a == b
 invertMode :: AffinePair v p => Integer -> Mode v p -> Mode v p
 invertMode n (Mode xs) = Mode (rotate n xs)
 
--- TODO move
+-- TODO move FiniteSequence
 
 -- |
 -- Class of types representing finite sequences.
@@ -304,7 +305,14 @@ scaleToList (ScaleChord tonic (Mode leaps)) = init $ offsetPoints tonic $ toList
 -- example a pentatonic scale @s@ has a generator of length 5.
 generator :: ScaleChord o r v p -> NonEmpty v
 generator (Mode x) = x
-generator (ScaleChord _ (Mode x)) = x
+generator (ScaleChord _ xs) = generator xs
+{-# INLINEABLE generator #-}
+
+-- |
+-- Returns the root of a 'Scale' or 'Chord'.
+root :: ScaleChord o 'Root v p -> p
+root (ScaleChord r _) = r
+{-# INLINEABLE root #-}
 
 reorient :: ScaleChord o r v p -> ScaleChord o' r v p
 reorient (Mode xs) = Mode xs
