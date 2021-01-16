@@ -16,7 +16,6 @@ description:
 
 extra-source-files:     README.md,
                         examples/*.hs,
-                        examples/*.scm
                         data/*.ly
 
 source-repository head
@@ -36,6 +35,7 @@ library
                         comonad,
                         containers,
                         contravariant,
+                        doctest,
                         data-default,
                         data-interval,
                         directory,
