@@ -1,7 +1,3 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
 
 -------------------------------------------------------------------------------------
 
@@ -30,7 +26,6 @@ where
 import Control.Lens -- ()
 import Data.AffineSpace
 import Data.Functor.Context
-import Data.Semigroup
 import Music.Score.Dynamics
 import Music.Score.Phrases
 import Music.Score.Ties
@@ -90,7 +85,7 @@ dynamicLevel = _Wrapped' . _2
 --   1) Whether we should begin or end a crescendo or diminuendo
 --   2) Whether we should display the current dynamic value
 --
-notateDynamic :: (Ord a, Real a) => Ctxt a -> DynamicNotation
+notateDynamic :: Real a => Ctxt a -> DynamicNotation
 notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case getCtxt x of
   (Nothing, _, Nothing) -> ([], True)
   (Nothing, y, Just z) -> case y `compare` z of
@@ -112,7 +107,7 @@ notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ 
     EQ -> ([], False)
     GT -> ([EndDim], True)
 
-removeCloseDynMarks :: forall s a. (HasPhrases' s a, HasDynamics' a, GetDynamic a ~ DynamicNotation, a ~ SetDynamic (GetDynamic a) a) => s -> s
+removeCloseDynMarks :: forall s a. (HasPhrases' s a, HasDynamics' a, GetDynamic a ~ DynamicNotation) => s -> s
 removeCloseDynMarks = mapPhrasesWithPrevAndCurrentOnset f
   where
     f :: Maybe (Time, Phrase a) -> Time -> Phrase a -> Phrase a
@@ -123,5 +118,5 @@ removeCloseDynMarks = mapPhrasesWithPrevAndCurrentOnset f
         then x
         else over (_head . mapped) removeDynMark x
 
-removeDynMark :: (HasDynamics' a, GetDynamic a ~ DynamicNotation, a ~ SetDynamic (GetDynamic a) a) => a -> a
+removeDynMark :: (HasDynamics' a, GetDynamic a ~ DynamicNotation) => a -> a
 removeDynMark x = set (dynamics' . _Wrapped' . _2) Nothing x
