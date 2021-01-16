@@ -609,6 +609,7 @@ From music21:
       - Requires storing (checked-in) the *old output* with its input and output has
 
 - Use modern type-level nats in Music.Pitch.Equal
+  - E.g. KnownNat
 
 - Fix all compiler warnings
 
