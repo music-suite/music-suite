@@ -1,9 +1,4 @@
 
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
-
 -------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
@@ -28,10 +23,7 @@ where
 
 import Control.Lens -- ()
 import Data.Functor.Context
-import Data.Semigroup
-import qualified Music.Articulation
 import Music.Score.Articulation (Accentuation, Articulated (..), GetArticulation, Separation)
-import qualified Music.Score.Articulation
 import Music.Score.Ties (Tiable (..))
 import Music.Time (Transformable (..))
 
@@ -164,7 +156,7 @@ allMarks y =
     <> getAccentMarks (realToFrac $ y ^. accentuation)
 
 notateArticulation
-  :: (Ord a, Articulated a, Real (Separation a), Real (Accentuation a)) => Ctxt a -> ArticulationNotation
+  :: (Articulated a, Real (Separation a), Real (Accentuation a)) => Ctxt a -> ArticulationNotation
 notateArticulation (getCtxt -> x) = go x
   where
     go (Nothing, y, Nothing) = ArticulationNotation ([], allMarks y)
