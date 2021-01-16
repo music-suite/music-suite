@@ -39,7 +39,7 @@ m> cabal build
 #### Property tests
 
 ```
-m> cabal test
+m> cabal test --test-show-details=streaming
 ```
 
 To run individual tests:
