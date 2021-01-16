@@ -94,3 +94,26 @@ m> cabal haddock
 - Restore `reject-unconstrained-dependencies`
 - Commit changes to Nix and Cabal files
 
+
+# Developer notes
+
+## Module hierarchy
+
+- The high-level DSL:
+  - `Music.Time`: high-level DSL for time and rhythm
+  - `Music.Pitch`: high-level DSL for pitch (common, scientific)
+  - `Music.Dynamics`: high-level DSL for dynamics
+  - `Music.Articulation`: high-level DSL for musical articulation
+  - `Music.Part`: high-level DSL for instruments and parts
+  - `Music.Prelude.Standard`: prelude/standard library for the Music Suite DSL
+
+- The notation DSL:
+  - `Music.Notation.Standard`: DSL for representing Common/Western music notation
+
+- Import & Export:
+  - `Data.Music.Lilypond`: AST, parsing and pretty-printing for the Lilypond language
+  - `Data.Music.MusicXml`: AST, parsing and pretty-printing for MusicXML
+
+- Utility
+  - `Control.*`: miscellaneous algorithms and utilities
+  - `Data.*`: miscellaneous data structures
