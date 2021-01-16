@@ -8,46 +8,39 @@
 
 -- | Scales and chords.
 --
--- Semantically is little distinction between a Scale and a Chord. Thus the 'Chord' and 'Scale'
--- types are synonyms. We use a newtype wrapper to get a more idiomatic 'Inspectable' instance.
---
--- Semantically @Chord p@ and @Scale p@ are countable subsets of some pitch space p.
---
--- A 'Mode' (or 'ChordType) is like a Chord/Scale that has forgotten its origin.
 module Music.Pitch.Scale
-  ( -- * TODO NEW
+  (
+    -- * The ScaleChord type
     Orientation (..),
     Rooting (..),
     ScaleChord (..),
-    generator,
-    index,
-    member,
-    tabulate,
-
-    -- * Modes and Chord types
-    Mode,
-    ChordType,
-    -- modeIntervals,
-    -- chordTypeIntervals,
-    leadingInterval,
-    complementInterval,
-    invertMode,
 
     -- * Scales
     Scale,
     scale,
-    scaleToList,
-    -- scaleTonic,
-    -- scaleMode,
 
     -- * Chords
     Chord,
     chord,
-    chordToList,
-    -- chordTonic,
-    -- chordType,
     invertChord,
     repeatingInterval,
+
+    -- ** Scales and chords as sets
+    -- ** Generator
+    generator,
+    -- ** Indexing
+    index,
+    member,
+    tabulate,
+
+    -- * Modes
+    Mode,
+    leadingInterval,
+    invertMode,
+
+    -- * Chord types
+    ChordType,
+    complementInterval,
 
     -- * Conversions
     chordToScale,
@@ -55,8 +48,10 @@ module Music.Pitch.Scale
     chordTypeToMode,
     modeToChordType,
     reorient,
+    chordToList,
+    scaleToList,
 
-    -- * Common modes, scales and chords
+    -- * Common
 
     -- ** Major-Minor/Common practice modes
     majorScale,
@@ -112,7 +107,7 @@ module Music.Pitch.Scale
     quartal,
     quintal,
 
-    -- * Voiced chords/scales
+    -- * Voicing
     Voiced (..),
     getVoiced,
     voiced,
