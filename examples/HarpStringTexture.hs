@@ -237,7 +237,7 @@ p5 = newPattern $ view voice $ [c__, g__, e_, c, e_, g__] |/ 12
 p5_1 :: IsPitch a => Pattern a
 p5_1 = newPattern $ view voice $ [c__, g__, c_, e_, e, c, g_, c_] |/ 16
 
-type Aspects a = (IsPitch a, HasParts' a, S.Part a ~ Part, Transposable a)
+type Aspects a = (IsPitch a, HasParts' a, S.GetPart a ~ Part, Transposable a)
 
 windAgile :: (Aspects a) => Pattern (Maybe a)
 windAgile = phasePatterns fluteOboeDiv6 y z
@@ -316,7 +316,7 @@ stringSustain :: Aspects a => Pattern a
 stringSustain = straightPatterns stringsDiv6NoBass [a,g,f,e,d,c]
 
 
-phasePattern :: (Aspects a, Monoid a, Transformable a, S.Part a ~ Part)
+phasePattern :: (Aspects a, Monoid a, Transformable a, S.GetPart a ~ Part)
   => [Part] -> [Span] -> a -> a
 phasePattern ps s pat = phasePatterns ps s (repeat pat)
 
@@ -445,7 +445,7 @@ stringsDiv8, stringsDiv8NoBass :: [Part]
 stringsDiv8       = [violins1_1,violins1_2,violins2_1,violins2_2,violas,cellos1,cellos2,basses]
 stringsDiv8NoBass = [violins1_1,violins1_2,violins2_1,violins2_2,violas1,violas2,cellos1,cellos2]
 
-high3ToLow3 :: (HasParts' a, S.Part a ~ Part) => a -> a
+high3ToLow3 :: (HasParts' a, S.GetPart a ~ Part) => a -> a
 high3ToLow3 = replaceParts [(violins1,cellos1),(violins2,cellos2),(violas,doubleBasses)]
 
 [_flutes1,_flutes2,flutes3] = divide 3 flutes

@@ -9,7 +9,7 @@
 
 -- | Provides functions for manipulating parts.
 module Music.Score.Part
-  ( -- ** Articulation type functions
+  ( -- ** Part type functions
     GetPart,
     SetPart,
 
