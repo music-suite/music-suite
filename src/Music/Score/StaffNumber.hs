@@ -23,7 +23,6 @@ import Data.Functor.Couple
 import Data.Monoid
 import Data.Ratio
 import Data.Typeable
-import Data.Word
 import Music.Dynamics.Literal
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
@@ -70,11 +69,6 @@ staffNumber = setStaffNumber
 newtype StaffNumberT a = StaffNumberT {getStaffNumberT :: Couple (First Natural) a}
   deriving (Eq, Show, Ord, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad)
 
---
--- We use Word instead of Int to get (mempty = Max 0), as (Max.mempty = Max minBound)
--- Preferably we would use Natural but unfortunately this is not an instance of Bounded
---
-
 instance Wrapped (StaffNumberT a) where
 
   type Unwrapped (StaffNumberT a) = Couple (First Natural) a
@@ -86,7 +80,6 @@ instance Rewrapped (StaffNumberT a) (StaffNumberT b)
 instance HasStaffNumber (StaffNumberT a) where
   setStaffNumber n = set (_Wrapped . _Wrapped . _1) (First $ Just n)
 
--- Lifted instances
 deriving instance Num a => Num (StaffNumberT a)
 
 deriving instance Fractional a => Fractional (StaffNumberT a)
@@ -153,11 +146,3 @@ instance (HasArticulation a b) => HasArticulation (StaffNumberT a) (StaffNumberT
 
 runStaffNumberT :: StaffNumberT a -> (Natural, a)
 runStaffNumberT (StaffNumberT (Couple (First n, a))) = (maybe 0 id n, a)
-{-
-TODO
-  - Add Tecnique as a polymorphic transformer
-  - See if the approach for dynamics can be copied exactly for contextual notation
-    (see asp2ToAsp3!)
-  - Will this be partwise?
-
--}

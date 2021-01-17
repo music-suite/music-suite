@@ -1,7 +1,3 @@
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC
@@ -74,7 +70,7 @@ import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Music.Pitch.Literal
 import Music.Score.Color (ColorT)
-import Music.Score.Harmonics (HarmonicT)
+import Music.Score.Harmonics (HarmonicT(..))
 import Music.Score.Internal.Util (through)
 import Music.Score.Part
 import Music.Score.Phrases
@@ -82,7 +78,7 @@ import Music.Score.Slide (SlideT)
 import Music.Score.StaffNumber (StaffNumberT)
 import Music.Score.Text (TextT)
 import Music.Score.Ties (Tiable (..), TieT)
-import Music.Score.Tremolo (TremoloT)
+import Music.Score.Tremolo (TremoloT, mapTremoloT)
 import Music.Time
 import Music.Time.Internal.Transform
 
@@ -163,7 +159,7 @@ instance HasTechniques a b => HasTechniques (TremoloT a) (TremoloT b) where
   techniques = traverse . techniques
 
 instance HasTechnique a b => HasTechnique (TremoloT a) (TremoloT b) where
-  technique = _Wrapped . technique
+  technique = mapTremoloT . technique
 
 type instance GetTechnique (ColorT a) = GetTechnique a
 
@@ -275,13 +271,6 @@ instance HasTechnique a b => HasTechnique (PartT p a) (PartT p b) where
 instance HasTechniques a b => HasTechniques (PartT p a) (PartT p b) where
   techniques = traverse . techniques
 
-{-
-type instance Technique (Chord a)       = GetTechnique a
-type instance SetTechnique b (Chord a)  = Chord (SetTechnique b a)
-instance HasTechniques a b => HasTechniques (Chord a) (Chord b) where
-  techniques = traverse . techniques
--}
-
 instance (HasTechniques a b) => HasTechniques (Score a) (Score b) where
   techniques = traverse . techniques
 
@@ -341,7 +330,7 @@ instance (HasTechniques a b) => HasTechniques (HarmonicT a) (HarmonicT b) where
   techniques = traverse . techniques
 
 instance (HasTechnique a b) => HasTechnique (HarmonicT a) (HarmonicT b) where
-  technique = _Wrapped . technique
+  technique = iso getHarmonicT HarmonicT . technique
 
 instance (HasTechniques a b) => HasTechniques (TieT a) (TieT b) where
   techniques = traverse . techniques
@@ -432,14 +421,6 @@ instance (Monoid n, Bounded a) => Bounded (TechniqueT n a) where
 
   maxBound = pure maxBound
 
--- instance (Monoid n, Num a, Ord a, Real a) => Real (TechniqueT n a) where
---     toRational = toRational . extract
---
--- instance (Monoid n, Real a, Enum a, Integral a) => Integral (TechniqueT n a) where
---     quot = liftA2 quot
---     rem = liftA2 rem
---     toInteger = toInteger . extract
-
 instance Wrapped (TechniqueT p a) where
 
   type Unwrapped (TechniqueT p a) = Couple p a
@@ -463,17 +444,6 @@ deriving instance (IsPitch a, Monoid n) => IsPitch (TechniqueT n a)
 deriving instance (IsInterval a, Monoid n) => IsInterval (TechniqueT n a)
 
 deriving instance (Tiable a) => Tiable (TechniqueT n a)
-
-{-
--- TODO move?
-data InstrType = Winds | Strings | Brass | Perc | Keyboard | Vocal
-
-data Technique :: '[InstrType] -> Type where
-  Pizz :: Bool -> Technique Strings
-
-data Technique where
-  Technique :: forall ts . Technique ts -> Technique
--}
 
 data PizzArco = Arco | Pizz
   deriving (Show, Enum, Bounded, Eq, Ord)
@@ -573,11 +543,10 @@ senzaSord = set (techniques . stringMute) NoStringMute
 -- |
 -- View just the techniquees in a voice.
 vtechnique ::
-  ({-SetTechnique (Technique t) s ~ t,-} HasTechnique a a, HasTechnique a b) =>
+  (HasTechnique a a, HasTechnique a b) =>
   Lens (Voice a) (Voice b) (Voice (GetTechnique a)) (Voice (GetTechnique b))
 vtechnique = lens (fmap $ view technique) (flip $ zipVoiceWithNoScale (set technique))
 
--- vtechnique = through technique technique
 
 addTechniqueCon ::
   ( HasPhrases s t a b,

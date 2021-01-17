@@ -12,6 +12,384 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
+- [ ] Verify that harmonics can be played
+
+- [ ] Add snapTo
+
+    {-
+    -- |
+    -- Compose sequentially by aligning the nominal position of each value to the
+    -- first available time value.
+    --
+    -- TODO this requires another constraint for nominal position. For (Aligned ((t,_),_))
+    -- the nominal position is t.
+    --
+    -- @
+    -- length xs = length (snapTo ts xs)
+    -- @
+    snapTo :: (HasPosition a, Transformable a) => Stream Time -> [a] -> [a]
+    -}
+
+
+- [ ] Rescue this comment?
+
+    -- TODO: resture _position to HasPosition, then restore this comment:
+    --
+    -- Many values such as notes, envelopes etc can in fact have many positions such as onset,
+    -- attack point, offset, decay point time etc. Rather than having separate methods for a
+    -- fixed set of cases, this class provides an interpolation from a /local/ position to
+    -- a /global/ position. While the local position goes from zero to one, the global position
+    -- goes from the 'onset' to the 'offset' of the value.
+
+
+
+- [ ] Semantics of Reactive/Behavior
+
+    {-
+      TODO Semantic fuzz
+
+      Reactive implies that values change at switchpoints, but should not make assumptions about what the value is *at* the
+      switchpoint.
+
+      Behavior represents continous values, so it knows the value at each switchpoint (semantically: Time -> a).
+      Hence the combinator (switch' :: Time -> B a -> B a -> B a -> B a) makes sense.
+
+      Reactive can do this as well (i.e. with the current semantics: ([Time], Behavior a)), however this is not necessarily
+      desirable.
+
+      Bad:
+          updates - Promotes association of Time with value (though it makes no assumption that the Reactive *is* this value at the given time).
+          discrete/atTime/continous - Forces implementation to choose arbitrary value at switchpoint
+    -}
+
+
+
+- [ ] More Span combinators:
+
+    {-
+    afterOnset :: Time -> Span -> Bool
+    t `afterOnset` s = t >= _onsetS s
+
+    strictlyAfterOnset :: Time -> Span -> Bool
+    t `strictlyAfterOnset` s = t > _onsetS s
+
+    beforeOnset :: Time -> Span -> Bool
+    t `beforeOnset` s = t <= _onsetS s
+
+    strictlyBeforeOnset :: Time -> Span -> Bool
+    t `strictlyBeforeOnset` s = t < _onsetS s
+
+    afterOffset :: Time -> Span -> Bool
+    t `afterOffset` s = t >= _offsetS s
+
+    strictlyAfterOffset :: Time -> Span -> Bool
+    t `strictlyAfterOffset` s = t > _offsetS s
+
+    beforeOffset :: Time -> Span -> Bool
+    t `beforeOffset` s = t <= _offsetS s
+
+    strictlyBeforeOffset :: Time -> Span -> Bool
+    t `strictlyBeforeOffset` s = t < _offsetS s
+    -}
+    -- Param order OK
+
+    {-
+    -- Name?
+    startsWhenStarts :: Span -> Span -> Bool
+    a `startsWhenStarts` b = _onsetS a == _onsetS b
+
+    -- Name?
+    startsWhenStops :: Span -> Span -> Bool
+    a `startsWhenStops` b = _onsetS a == _offsetS b
+
+    -- Name?
+    stopsWhenStops :: Span -> Span -> Bool
+    a `stopsWhenStops` b = _offsetS a == _offsetS b
+
+    -- Name?
+    stopsWhenStarts :: Span -> Span -> Bool
+    a `stopsWhenStarts` b = _offsetS a == _onsetS b
+
+    startsBefore :: Span -> Span -> Bool
+    a `startsBefore` b = _onsetS a < _onsetS b
+
+    startsLater :: Span -> Span -> Bool
+    a `startsLater` b = _onsetS a > _onsetS b
+
+    stopsAtTheSameTime :: Span -> Span -> Bool
+    a `stopsAtTheSameTime` b = _offsetS a == _offsetS b
+
+    stopsBefore :: Span -> Span -> Bool
+    a `stopsBefore` b = _offsetS a < _offsetS b
+
+    stopsLater :: Span -> Span -> Bool
+    a `stopsLater` b = _offsetS a > _offsetS b
+    -}
+    {-
+    contains
+    curtails
+    delays
+    happensDuring
+    intersects
+    trisects
+    isCongruentTo
+    overlapsAllOf
+    overlapsOnlyOnsetOf
+    overlapsOnlyOffsetOf
+    overlapsOnsetOf
+    overlapsOffsetOf
+
+
+
+    -}
+
+    -- timespantools.timespan_2_starts_during_timespan_1
+    -- timespantools.timespan_2_starts_when_timespan_1_starts
+    -- timespantools.timespan_2_starts_when_timespan_1_stops
+    -- timespantools.timespan_2_stops_after_timespan_1_starts
+    -- timespantools.timespan_2_stops_after_timespan_1_stops
+    -- timespantools.timespan_2_stops_before_timespan_1_starts
+    -- timespantools.timespan_2_stops_before_timespan_1_stops
+    -- timespantools.timespan_2_stops_during_timespan_1
+    -- timespantools.timespan_2_stops_when_timespan_1_starts
+    -- timespantools.timespan_2_stops_when_timespan_1_stops
+    -- timespantools.timespan_2_trisects_timespan_1
+
+    {-
+    Two alternative definitions for midpoint:
+
+    midpoint x = onset x + duration x / 2
+    midpoint x = (onset x + offset x) / 2
+
+    Both equivalent. Proof:
+
+      let d = b - a
+      (a + b)/2 = a + d/2
+      (a + b)/2 = a + (b - a)/2
+      a + b     = 2a + (b - a)
+      a + b     = a + b
+    -}
+
+
+
+- [ ] More voice combinators:
+
+    -- changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
+    --
+    -- changeCrossingBy :: Ord b => (a -> b) -> Voice a -> Voice a -> (Voice a, Voice a)
+    --
+    -- processExactOverlaps :: (a -> a -> (a, a)) -> Voice a -> Voice a -> (Voice a, Voice a)
+    --
+    -- processExactOverlaps' :: (a -> b -> Either (a,b) (b,a)) -> Voice a -> Voice b -> (Voice (Either b a), Voice (Either a b))
+
+    -- TODO could also use (zipVoiceWith' max) or (zipVoiceWith' min)
+
+    -- -- |
+    -- -- Split all notes of the latter voice at the onset/offset of the former.
+    -- --
+    -- -- >>> ["a",(2,"b")^.note,"c"]^.voice
+    -- -- [(1,"a")^.note,(2,"b")^.note,(1,"c")^.note]^.voice
+    -- --
+    -- splitLatterToAssureSameDuration :: Voice b -> Voice b -> Voice b
+    -- splitLatterToAssureSameDuration = splitLatterToAssureSameDurationWith dup
+    --   where
+    --     dup x = (x,x)
+    --
+    -- splitLatterToAssureSameDurationWith :: (b -> (b, b)) -> Voice b -> Voice b -> Voice b
+
+    -- polyToHomophonic      :: [Voice a] -> Maybe (Voice [a])
+    --
+    -- polyToHomophonicForce :: [Voice a] -> Voice [a]
+
+
+- [ ] Proper velcoity table for e.g. MIDI backend
+
+{-
+    ppp -42    -36
+    pp  -36    -36
+    p   -30    -24
+    mp  ?
+    mf  -24    -18
+    f   -18    -12
+    ff  -18    -12
+
+
+
+
+    Midi velocities according to Apple:
+        16  32  48  64  80  96  112  127
+        ppp pp  p   mp  mf  f   ff   fff
+
+    Nakamura (1987) The communication of dynamics between musicians and listeners through musical performance
+-}
+
+- [ ] Better articulation type
+{-
+
+  References
+
+    Keller: Phrasing and Articulation: A Contribution to a Rhetoric of Music
+
+      Keller distinguishes between articulation and phrasing:
+        - Phrasing is related to the structure or grammar of the music,
+          how hierarchical relationsship emerges.
+        - Articulation is "everything else", the individual interpretation of
+          the melodic line.
+        - Keller consider phrasing objective. (It is at least non-deterministic!)
+
+    http://www.speech.kth.se/publications/masterprojects/2004/Jerkert.pdf
+
+      - Articulation is a *local* alteration of other properties
+        - There are multiple interacting hierarchical relationships
+        - Articulation has to do with *emphasis*: alteration of properties leads
+          to more or less emphasis (compare Laws of Perception)
+      - Most common:
+        - Time (common: stacatissimo, staccato, portato, legato)
+          - "articulation ratio", i.e. duration/IOI
+          - "relative IOI", i.e. prolongation of a note
+        - Dynamics (common: accent, marcato)
+          - fp/sharp attacks etc (i.e. in wind, string)
+          - Relative level (i.e. in piano music)
+        - Pitch
+          - Vibrato, local adjustments (i.e. brighter notes), "slide-in"
+        - Timbre
+          - Dryness/spectral richness (i.e. more overtones)
+
+    http://www.jbiomech.com/article/S0021-9290%2898%2900113-4/abstract
+-}
+
+{-
+
+From music21:
+  Accent
+  Bowing
+  BrassIndication
+  BreathMark
+  Caesura
+  DetachedLegato
+  Doit
+  DoubleTongue
+  DownBow
+  DynamicArticulation
+  Falloff
+  FretBend
+  FretIndication
+  FretTap
+  FrettedPluck
+  HammerOn
+  Harmonic
+  HarpFingerNails
+  HarpIndication
+  IndeterminantSlide
+  LengthArticulation
+  NailPizzicato
+  OpenString
+  OrganHeel
+  OrganIndication
+  OrganToe
+  PitchArticulation
+  Pizzicato
+  Plop
+  PullOff
+  Scoop
+  SnapPizzicato
+  Spiccato
+  Staccatissimo
+  Staccato
+  Stopped
+  Stress
+  StringFingering
+  StringHarmonic
+  StringIndication
+  StringThumbPosition
+  StrongAccent
+  TechnicalIndication
+  Tenuto
+  TimbreArticulation
+  TonguingIndication
+  TripleTongue
+  Unstress
+  UpBow
+  WindIndication
+  WoodwindIndication
+
+
+
+
+
+
+----------------
+
+
+  Stress
+  Unstress
+  Accent
+  StrongAccent
+
+  Tenuto
+  Spiccato
+  Staccato
+  Staccatissimo
+
+  Harmonic
+  OpenString
+  Stopped
+  HammerOn
+  PullOff
+
+  OrganIndication
+  OrganHeel
+  OrganToe
+  UpBow
+  DownBow
+
+  DetachedLegato (laisser vibrer)
+  IndeterminantSlide
+
+
+
+  Doit (grace?)
+  Falloff?
+  StringFingering
+  HarpFingerNails
+
+  NailPizzicato
+  Pizzicato
+  SnapPizzicato
+
+  Bowing?
+
+  TonguingIndication
+  DoubleTongue
+  TripleTongue
+
+
+  HarpIndication
+  FretIndication
+  FrettedPluck
+  FretTap
+  LengthArticulation
+  StringIndication
+  StringThumbPosition
+
+
+  Plop
+  Scoop
+
+  FretBend
+
+  WindIndication
+  BrassIndication
+  WoodwindIndication
+  TechnicalIndication
+  TimbreArticulation
+
+  BreathMark
+  Caesura
+
+-}
+
+
 - [X] MusicXML Parser
   - [X] Make all tests pass (music-suite-test-xml-parser)
   - [ ] Full ornament support, see https://github.com/hanshoglund/music-suite/pull/22#issuecomment-633314407
@@ -33,11 +411,12 @@ Consider switching to a decentralized issue tracker such as:
         - src/Control
         - src/Data
         - src/Music/Pitch
+        - src/Music/Part
         - src/Music/Dynamics
         - src/Music/Articulation
         - src/Music/Score/Export
     - [ ] Try property-based testing (see doctest/README)
-  - Run in CI
+  - [ ] Run in CI
 
 - [ ] Assure a script to run *all* builds, tests and doc gens *from scratch*
   - Should ideally be invoked in CI
@@ -48,7 +427,7 @@ Consider switching to a decentralized issue tracker such as:
   - [X] Dynamics
   - [X] Articulation
   - [X] Technique
-  - [ ] Part
+  - [X] Part
   - Also rename SomeTechnique -> Music.Technique.Technique or similar (a la pitch et al)
 
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
@@ -231,6 +610,7 @@ Consider switching to a decentralized issue tracker such as:
       - Requires storing (checked-in) the *old output* with its input and output has
 
 - Use modern type-level nats in Music.Pitch.Equal
+  - E.g. KnownNat
 
 - Fix all compiler warnings
 
@@ -530,6 +910,16 @@ Consider switching to a decentralized issue tracker such as:
     - TidalCycles
   - Graphical backends
     - Piano roll
+
+- [ ] Make AddMeta more similar to PartT, ArticulationT, etc
+  - Style: move towards separating *types with exposed implementation* and *types with hidden implementations*
+    - Former is useful for structural typing, flat module hierarchies, type driven development etc
+      - Should export Generic
+      - Can be used with Coercible, iso-deriving etc
+      - Prefer whenever possible
+    - Latter is useful for performance and runtime verification
+      - Should not export Generic/unwrapping etc
+      - Only use when necessary
 
 - [X] Bug: TimeSignatures and similar only show up if providing span
   E.g. timeSignatureDuring works, timeSignature does not

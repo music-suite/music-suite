@@ -1,10 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
@@ -64,13 +57,6 @@ import Music.Time.Reactive
 data RehearsalMark = RehearsalMark
   deriving (Eq, Ord, Show, Typeable)
 
--- name level(0=standard)
-
-{-
-instance Default RehearsalMark where
-    def = RehearsalMark Nothing 0
--}
-
 instance Semigroup RehearsalMark where
   RehearsalMark <> RehearsalMark = RehearsalMark
 
@@ -79,9 +65,6 @@ instance Monoid RehearsalMark where
   mempty = RehearsalMark
 
   mappend = (<>)
-
--- metronome :: Duration -> Bpm -> Tempo
--- metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
 
 rehearsalMark :: (HasMeta a, HasPosition a, Transformable a) => a -> a
 rehearsalMark x = case _era x of

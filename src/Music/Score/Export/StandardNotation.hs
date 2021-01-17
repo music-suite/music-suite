@@ -1,20 +1,9 @@
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
 -- |
@@ -188,9 +177,7 @@ import Control.Lens
     from,
     over,
     preview,
-    set,
     to,
-    under,
     view,
   )
 import Control.Lens.Operators hiding ((|>))
@@ -198,18 +185,18 @@ import Control.Lens.TH (makeLenses)
 import Control.Monad.Except
 import Control.Monad.Plus
 import Control.Monad.State
+import Control.Monad.Log
 import Control.Monad.Writer hiding ((<>), First (..))
 import Data.AffineSpace
-import Data.Bifunctor (bimap, first, second)
+import Data.Bifunctor (first)
 import qualified Data.ByteString.Char8
-import qualified Data.Char
 import Data.Colour (Colour)
 import Data.Colour.Names
 import Data.FileEmbed
+import Data.FiniteSeq (FiniteSeq)
+import qualified Data.FiniteSeq
 import Data.Functor.Couple
-import Data.Functor.Identity (Identity (..))
 import qualified Data.List
-import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty
 import qualified Data.List.Split
 import Data.Map (Map)
@@ -226,7 +213,6 @@ import Data.VectorSpace hiding (Sum)
 import Music.Articulation (Articulation)
 import Music.Dynamics (Dynamics)
 import Music.Dynamics.Literal (DynamicsL (..), fromDynamics)
-import qualified Music.Dynamics.Literal as D
 import Music.Parts (Instrument, Part, ScoreLayout (..))
 import qualified Music.Parts
 import qualified Music.Pitch
@@ -239,9 +225,7 @@ import Music.Score.Color (ColorT, runColorT)
 import qualified Music.Score.Dynamics
 import Music.Score.Dynamics (DynamicT (..))
 import qualified Music.Score.Export.ArticulationNotation
-import Music.Score.Export.ArticulationNotation (marks, slurs)
 import qualified Music.Score.Export.ArticulationNotation as AN
-import Music.Score.Export.DynamicNotation (crescDim, dynamicLevel)
 import qualified Music.Score.Export.DynamicNotation
 import qualified Music.Score.Export.DynamicNotation as DN
 import qualified Music.Score.Export.TechniqueNotation as TN
@@ -279,7 +263,6 @@ import qualified Music.Score.Ties
 import Music.Score.Ties (Tiable (..), TieT (..))
 import Music.Score.Tremolo (TremoloT, runTremoloT)
 import Music.Time
-import Music.Time.Meta (meta)
 
 -- Annotated tree
 data LabelTree b a = Branch b [LabelTree b a] | Leaf a
@@ -862,16 +845,6 @@ movementAssureSameNumberOfBars (Movement i ss st) =
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
--- | A weaker form of 'MonadWriter' which also supports imperative logging.
-class Monad m => MonadLog w m | m -> w where
-
-  logger :: (a, w) -> m a
-  logger ~(a, w) = do
-    say w
-    return a
-
-  say :: w -> m ()
-  say w = logger ((), w)
 
 -- |
 -- Basic monad for exporting music.
@@ -1895,30 +1868,7 @@ type Asp = Score Asp1
 
 type StandardNotationExportM m = (MonadLog String m, MonadError String m)
 
--- TODO move and hide constructor.
--- TODO generalize
 
--- | List with 0 to 4 elements.
-newtype List0To4 a = UnsafeList0To4 {_unsafeGetList0To4 :: [a]}
-  deriving (Functor, Foldable, Traversable)
-
--- list0 :: List0To4 a
--- list1 :: a -> List0To4 a
--- list2 :: a -> a -> List0To4 a
--- list3 :: a -> a -> a -> List0To4 a
--- list4 :: a -> a -> a -> a -> List0To4 a
--- list0 = UnsafeList0To4 []
--- list1 x = UnsafeList0To4 [x]
--- list2 x y = UnsafeList0To4 [x,y]
--- list3 x y z = UnsafeList0To4 [x,y,z]
--- list4 x y z a = UnsafeList0To4 [x,y,z,a]
-
-parseList :: [a] -> Maybe (List0To4 a)
-parseList xs
-  | length xs <= 4 = Just $ UnsafeList0To4 xs
-  | otherwise = Nothing
-
--- TODO move
 
 -- |
 -- Partition intervals into non-overlapping subsets.
@@ -1954,8 +1904,8 @@ update n f xs = take n xs ++ rest
       [] -> []
       x : xs -> f x : xs
 
-toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (List0To4 (MVoice a))
-toLayer p xs = case parseList $ partitionIntervals $ scoreToMap xs of
+toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (FiniteSeq 4 (MVoice a))
+toLayer p xs = case Data.FiniteSeq.parseList $ partitionIntervals $ scoreToMap xs of
   Nothing -> throwError $ "Part has more than four overlapping events: " ++ show p
   Just xs -> pure $ fmap (maybe (error bug) id . preview Music.Score.Phrases.singleMVoice . mapToScore) xs
   where
@@ -2033,7 +1983,7 @@ toStandardNotation sc' = do
 
   -}
   say "Separating voices"
-  postVoiceSeparation :: [(Part, List0To4 (MVoice Asp2))] <-
+  postVoiceSeparation :: [(Part, FiniteSeq 4 (MVoice Asp2))] <-
     traverse
       ( \a@(p, _) ->
           -- TODO VS: Do actual voice separation here
@@ -2044,7 +1994,7 @@ toStandardNotation sc' = do
   -- This changes the aspect type again
   say "Notating dynamics, articulation and playing techniques"
   let postContextSensitiveNotationRewrite ::
-        [(Part, List0To4 (MVoice Asp3))] =
+        [(Part, FiniteSeq 4 (MVoice Asp3))] =
           (fmap . fmap . fmap) asp2ToAsp3 $ postVoiceSeparation
   -- postContextSensitiveNotationRewrite :: [(Music.Parts.Part,Voice (Maybe Asp3))]
 
@@ -2052,19 +2002,19 @@ toStandardNotation sc' = do
   -- Resulting list is list of bars, there is no layering (yet)
   say "Dividing the score into bars"
   let postTieSplit ::
-        [(Part, List0To4 [Voice (Maybe Asp3)])] =
+        [(Part, FiniteSeq 4 [Voice (Maybe Asp3)])] =
           (fmap . fmap . fmap) (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
   -- For each bar, quantize all layers. This is where tuplets/note values are generated.
   say "Rewriting rhythms"
   postQuantize ::
-    [(Part, List0To4 [Rhythm (Maybe Asp3)])] <-
+    [(Part, FiniteSeq 4 [Rhythm (Maybe Asp3)])] <-
     traverse (traverse (traverse (traverse quantizeBar))) postTieSplit
   -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
 
   -- Group staves, generating brackets and braces
   say "Generate staff groups"
   let postStaffGrouping ::
-        LabelTree BracketType (Part, List0To4 [Rhythm (Maybe Asp3)]) =
+        LabelTree BracketType (Part, FiniteSeq 4 [Rhythm (Maybe Asp3)]) =
           generateStaffGrouping postQuantize
   -- All staves with brackets/braces, with one staff generated per voice
   -- We fold those into the LabelTree using SubBracket
@@ -2144,9 +2094,9 @@ quantizeBar = fmap rewrite . quantize' . view Music.Time.pairs
 generateStaffGrouping :: [(Part, a)] -> LabelTree BracketType (Part, a)
 generateStaffGrouping = scoreLayoutToLabelTree . partDefault
 
-aspectsToStaff :: (Music.Parts.Part, List0To4 [Rhythm (Maybe Asp3)]) -> [Staff]
-aspectsToStaff (part, UnsafeList0To4 voices) =
-  fmap (singleStaff part) voices
+aspectsToStaff :: (Music.Parts.Part, FiniteSeq 4 [Rhythm (Maybe Asp3)]) -> [Staff]
+aspectsToStaff (part, voices) =
+  fmap (singleStaff part) (Data.FiniteSeq.toList voices)
 
 singleStaff :: Part -> [Rhythm (Maybe Asp3)] -> Staff
 singleStaff part bars = Staff info (fmap aspectsToBar bars)

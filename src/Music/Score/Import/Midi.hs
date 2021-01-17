@@ -6,10 +6,6 @@
   -fno-warn-name-shadowing
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 
 -------------------------------------------------------------------------------------
 
@@ -71,8 +67,8 @@ type IsMidi a =
   ( -- TODO
     IsPitch a,
     HasPart' a,
-    Ord (Part a),
-    Enum (Part a),
+    Ord (GetPart a),
+    Enum (GetPart a),
     -- HasPitch a,
     Num (Pitch a),
     HasTremolo a,

@@ -10,7 +10,6 @@ module Music.Score.Meta
     -- * Meta-events
     addMetaNote,
     fromMetaReactive,
-    -- metaAt,
     metaAtStart,
     withMeta,
   )
@@ -50,37 +49,27 @@ withMeta f x =
             $ mapAfter u (f c)
             $ x
 
--- TODO move
 withTime :: Score a -> Score (Time, a)
 withTime = mapWithSpan (\s x -> (s ^. onset, x))
 
--- TODO move
 inSpan :: Time -> Span -> Bool
 inSpan t' (view onsetAndOffset -> (t, u)) = t <= t' && t' < u
 
--- TODO move
 mapBefore :: Time -> (Score a -> Score a) -> Score a -> Score a
 mapBefore t f x = let (y, n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2, _) -> t2 < t) (withTime x) in (f y <> n)
 
--- TODO move
 mapDuring :: Span -> (Score a -> Score a) -> Score a -> Score a
 mapDuring s f x = let (y, n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t, _) -> t `inSpan` s) (withTime x) in (f y <> n)
 
--- TODO move
 mapAfter :: Time -> (Score a -> Score a) -> Score a -> Score a
 mapAfter t f x = let (y, n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2, _) -> t2 >= t) (withTime x) in (f y <> n)
-
--- Transform the score with the current value of some meta-information
--- Each "update chunk" of the meta-info is processed separately
 
 runScoreMeta :: forall a b. (HasMeta a, AttributeClass b) => a -> Reactive b
 runScoreMeta = fromMetaReactive . view meta
 
--- TODO move
 noteToReactive :: Monoid a => Event a -> Reactive a
 noteToReactive n = (pure <$> n) `activate` pure mempty
 
--- TODO move
 activate :: Event (Reactive a) -> Reactive a -> Reactive a
 activate (view (from event) -> (view onsetAndOffset -> (start, stop), x)) y = y `turnOn` (x `turnOff` y)
   where

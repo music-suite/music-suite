@@ -342,13 +342,13 @@ So far we have written our musical expressions in terms of pre-defined operators
 The most common type of functions are named functions. They are introduced by an equality sign at the top-level of the file:
 
 ```haskell
-addTen x = x + 10 
+addTen x = x + 10
 ```
 
 In the interpreter functions (like all other definitions) have to be prefixed with `let`:
 
 ```haskell
->>> let addTen x = x + 10 
+>>> let addTen x = x + 10
 
 >>> addTen 1
 11
@@ -436,16 +436,54 @@ Types may be written out explicitly or [inferred](https://en.wikipedia.org/wiki/
 "hi" + "there"
 ```
 
-### Numeric types
+### Numeric types and strings
+
+
 ### Lists
+
+```haskell
+[1,2,3] :: List Integer
+```
+
 ### Tuples
+
+```haskell
+(1,2,3) :: List Integer
+```
+
 ### Records
+
+```haskell
+{ foo = 1, bar = 2 } :: { foo : Natural, bar : Natural }
+
+x.foo
+x.foo.bar
+
+e{ foo = 2 }
+e{ foo.bar = 2 }
+```
+
 ### Maps
+
+```haskell
+Map.empty
+[ foo = 1, bar = 2 ] :: Map Text Integer
+
+>>> x.foo
+Just 2
+
+>>> x.fox
+Nothing
+```
+
 ### Custom types
+
+
+
 
 ## Immutability
 
-Music Suite is also a *functional language*. Side effects are disallowed by default and all values are *immutable*. 
+Music Suite is also a *functional language*. Side effects are disallowed by default and all values are *immutable*.
 
 Despite this, we will often talk about *changing* or *modifying* values. This is accomplished by [creating new values](https://www.infoq.com/presentations/Value-Values/) instead of doing in-place mutation. For example, the `List.delete` function  can be used to remove an element from a list:
 
@@ -709,7 +747,7 @@ We can *apply* a transformation to a time point using [transform][ref-transform]
 
 ```haskell
 >>> transform (0 >-> 2) 1
-2 
+2
 
 >>> transform (1 >-> 3) 0
 1
@@ -1042,7 +1080,7 @@ We can *rotate* the durations or elements of a voice:
 ```
 
 ```haskell
->>> Voice.rotateValues  2 ([c,d,e].voice) 
+>>> Voice.rotateValues  2 ([c,d,e].voice)
 [(1,d).note,(1,e).note,(1,c).note].voice
 ```
 
@@ -1051,7 +1089,7 @@ We can *rotate* the durations or elements of a voice:
 The [fuse][ref-fuse] function merges consecutive equal notes.
 
 ```haskell
->>> Voice.fuse  ([c,c,d].voice) 
+>>> Voice.fuse  ([c,c,d].voice)
 [(2,c).note,(1,d).note].voice
 
 >>> Voice.fuseRests  ([c,rest,rest,c]^.voice)
@@ -1393,9 +1431,9 @@ inspectableToMusic bachCMajChords
 
 ## Signals
 
-The time structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points*. For example voices and scores contain notes and events with well defined *onset* and *offset* points. 
+The time structures we have been dealing with so far are all discrete, capturing some (potentially infinite) set of *time points*. For example voices and scores contain notes and events with well defined *onset* and *offset* points.
 
-In constrast [Signals][ref-Signals] represents a *time-varying values*, or functions of time. 
+In constrast [Signals][ref-Signals] represents a *time-varying values*, or functions of time.
 
 Signals are *continuous*. This means that this means that they are defined at *any point in time*. It also means that they *can change* at any point in time. No matter how closely we look at a singal, it is always possible to discover more change.
 
@@ -1407,9 +1445,9 @@ Signals are commonly visualized as a graph with time on the horizontal axis. For
 
 Humans percieve *audio* as amplitude (or loudness) over time. We can describe this as $Signal _{Amplitude}$ for mono or $Signal_{Amplitude^2}$ for stereo.
 
-Computer music systems such as [Max](https://cycling74.com/) or [SuperCollider](https://supercollider.github.io/) often a notion of *signals* or *generators* for the purpose of describing real-time audio or video. These signalstypically use fixed sample rates to obtain predictable  performance on standard hardware. While the signals in Music Suite can be used for audio synthesis, they are not primarily optimized for this behavior. 
+Computer music systems such as [Max](https://cycling74.com/) or [SuperCollider](https://supercollider.github.io/) often a notion of *signals* or *generators* for the purpose of describing real-time audio or video. These signalstypically use fixed sample rates to obtain predictable  performance on standard hardware. While the signals in Music Suite can be used for audio synthesis, they are not primarily optimized for this behavior.
 
-In signal processing terms, we can think of them as *control signals*. 
+In signal processing terms, we can think of them as *control signals*.
 
 ### Basic signals
 
@@ -2525,7 +2563,7 @@ staccatissimo (seq [c,d,e,f,g]|/8)
 
 ### Accents
 
-An accent represents a stronger *relative* emphasis, usually in the form of loudness. 
+An accent represents a stronger *relative* emphasis, usually in the form of loudness.
 
 Adding accents is similar to regular articulations:
 
@@ -2546,7 +2584,7 @@ accentAll (seq [c,d,e,f,g]|/8)
 ### Tenuto and portato
 
  Tenuto and portato indicate a combined emphasis and separation of notes. They can be added like this:
- 
+
 ```haskell
 tenuto
   </>
@@ -3050,7 +3088,7 @@ Standard mutes are similarly to string mutes:
 The default is without mute.
 
 ```haskell+music
-set parts trombones $ (1/2) *| seq [ 
+set parts trombones $ (1/2) *| seq [
   conSord g,
   senzaSord g
   ]
@@ -3174,7 +3212,7 @@ In previous chapters we have been concerned with structure and sound of music. H
 
 The distinction between ordinary musical data and meta-data is not always clear-cut. As a rule of thumb, meta-informatio does not directly affect how the represented music *sounds*, but may greatly affect the appearance of the notation. There are some exceptions to this rule, notably tempo.
 
-Meta-information is global, rather than attached to a specific part. All meta-data types are monoids, meaning the have a sensible default value and can be overlayed. For example the default key signature is $4/4$. Thanks to the default, adding meta-information is always *optional*. 
+Meta-information is global, rather than attached to a specific part. All meta-data types are monoids, meaning the have a sensible default value and can be overlayed. For example the default key signature is $4/4$. Thanks to the default, adding meta-information is always *optional*.
 
 Meta-information does not have to be constant. We use the [StepSignal][ref-StepSignal] type to represent key changes, time signature changes and so on.
 
@@ -3351,7 +3389,7 @@ TODO representation should be: meta-mark at the first strong beat *after* the fe
 fermata StandardFermata (par [c,e,g])
 ```
 
-Note that a fermata attaches to a specific point known as the *sustain point*. The beginning of score to which the [fermata][ref-fermata] function is applied is used by default. 
+Note that a fermata attaches to a specific point known as the *sustain point*. The beginning of score to which the [fermata][ref-fermata] function is applied is used by default.
 
 [ref-fermata]: x
 
@@ -3764,7 +3802,7 @@ canon </> renderAlignedVoice rh
 Traversals are a special case of a more general concept called optics. Other notable types of optics include:
 - *Lenses*, which are akin to traversal targeting exactly one element
 - *Prisms*, which are akin to traversls targeting at most one element and support creation ofsingle-element values.
-- *Isomorphisms*, which allow conversions between two types with no loss of information. 
+- *Isomorphisms*, which allow conversions between two types with no loss of information.
 
 
 
@@ -4022,14 +4060,15 @@ In other words, scores with events before time 0 should be treated as pickups an
 
 Music Suite is based on GHCs version of Haskell2010, but changes some defaults.
 
-- Extensions enabled by default: `RecordDotSyntax`, `OverloadedStrings`,  `MonadComprehensions`
-- Extended defaulting to include `Music` type
-- Custom prelude: 
-  - `Data.List` availible `List` etc.
+- Extensions enabled by default: `RecordDotSyntax`, `NoFieldSelectors`, `OverloadedStrings`,  `MonadComprehensions`
+- Extended defaulting to include `Music` type (?)
+- Custom prelude:
+  - `Data.List` is available as `List` etc.
   - Included dependencies: `containers`, `text`, `Debug.Trace`
   - Aliases `fmap` as `map`, `mempty` as `empty` (`Monoid.empty`), etc.
-  - Numeric hierarchy: `Semigroup < Monoid < Group`. (VectorSpace/AffineSpace?).
-  - `seq` and `par` means different things
+  - Includes `Group` from `group-theory`?
+  - Includes anonymous records, using `RecordDotSyntax`
+  - Hides `seq` and `par` from the regular prelude
   - No `IO` functions, except `putStrLn` and `print`
 
 ## Acknowledgements

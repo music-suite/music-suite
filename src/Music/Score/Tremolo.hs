@@ -1,8 +1,4 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
 
 module Music.Score.Tremolo
   ( -- * Tremolo
@@ -11,19 +7,15 @@ module Music.Score.Tremolo
 
     -- ** Tremolo note transformer
     TremoloT (..),
+    mapTremoloT,
     runTremoloT,
   )
 where
 
-import Control.Applicative
 import Control.Comonad
-import Control.Lens hiding (transform)
-import Data.Foldable
 import Data.Functor.Couple
-import Data.Ratio
 import Data.Semigroup
 import Data.Typeable
-import Data.Word
 import Music.Dynamics.Literal
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
@@ -31,9 +23,6 @@ import Music.Pitch.Literal
 import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Harmonics
-import Music.Score.Meta
-import Music.Score.Part
-import Music.Score.Phrases
 import Music.Score.Pitch
 import Music.Score.Slide
 import Music.Score.Text
@@ -47,7 +36,7 @@ import Music.Time
 --
 -- [/set-set/]
 --
---    @'setTrem' n ('setTrem' n x) = 'setTrem' n x@
+--    @'setTrem' n ('setTrem' m x) = 'setTrem' n x@
 class HasTremolo a where
 
   setTrem :: Int -> a -> a
@@ -78,16 +67,8 @@ newtype TremoloT a = TremoloT {getTremoloT :: Couple (Max Word) a}
 -- Preferably we would use Natural but unfortunately this is not an instance of Bounded
 --
 
-instance Wrapped (TremoloT a) where
-
-  type Unwrapped (TremoloT a) = Couple (Max Word) a
-
-  _Wrapped' = iso getTremoloT TremoloT
-
-instance Rewrapped (TremoloT a) (TremoloT b)
-
 instance HasTremolo (TremoloT a) where
-  setTrem n = set (_Wrapped . _Wrapped . _1) (Max $ fromIntegral n)
+  setTrem n (TremoloT (Couple (_, a))) = TremoloT (Couple (fromIntegral n, a))
 
 deriving instance Num a => Num (TremoloT a)
 
@@ -136,22 +117,28 @@ type instance GetArticulation (TremoloT a) = GetArticulation a
 type instance SetArticulation g (TremoloT a) = TremoloT (SetArticulation g a)
 
 instance (HasPitches a b) => HasPitches (TremoloT a) (TremoloT b) where
-  pitches = _Wrapped . pitches
+  pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (TremoloT a) (TremoloT b) where
-  pitch = _Wrapped . pitch
+  pitch = mapTremoloT . pitch
 
 instance (HasDynamics a b) => HasDynamics (TremoloT a) (TremoloT b) where
-  dynamics = _Wrapped . dynamics
+  dynamics = traverse . dynamics
 
 instance (HasDynamic a b) => HasDynamic (TremoloT a) (TremoloT b) where
-  dynamic = _Wrapped . dynamic
+  dynamic = mapTremoloT . dynamic
 
 instance (HasArticulations a b) => HasArticulations (TremoloT a) (TremoloT b) where
-  articulations = _Wrapped . articulations
+  articulations = traverse . articulations
 
 instance (HasArticulation a b) => HasArticulation (TremoloT a) (TremoloT b) where
-  articulation = _Wrapped . articulation
+  articulation = mapTremoloT . articulation
+
+-- | Map over a 'TremoloT' using a 'Functor'.
+--
+-- This function is a 'Lens'.
+mapTremoloT :: Functor f => (a -> f b) -> TremoloT a -> f (TremoloT b)
+mapTremoloT f (TremoloT (Couple (n, a))) = fmap (\x -> TremoloT (Couple (n, x))) (f a)
 
 -- |
 -- Get the number of tremolo divisions.

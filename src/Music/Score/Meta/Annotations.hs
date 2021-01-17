@@ -1,10 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
@@ -69,11 +62,11 @@ annotateSpan :: Span -> String -> Score a -> Score a
 annotateSpan span str x = addMetaNote (transform span $ return $ Annotation [str]) x
 
 -- | Show all annotations in the score.
-showAnnotations :: (HasParts' a, Ord (Part a), HasText a) => Score a -> Score a
+showAnnotations :: (HasParts' a, Ord (GetPart a), HasText a) => Score a -> Score a
 showAnnotations = showAnnotations' ":"
 
 -- | Show all annotations in the score using the given prefix.
-showAnnotations' :: (HasParts' a, Ord (Part a), HasText a) => String -> Score a -> Score a
+showAnnotations' :: (HasParts' a, Ord (GetPart a), HasText a) => String -> Score a -> Score a
 showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix ++)) s)
 
 -- | Handle the annotations in a score.

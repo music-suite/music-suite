@@ -42,5 +42,5 @@ music =
           ]
       )
 
-klangfarben :: HasParts' a => [Music.Score.Part a] -> Voice a -> Voice a
+klangfarben :: HasParts' a => [GetPart a] -> Voice a -> Voice a
 klangfarben ps v = (^. voice) $ zipWith (set parts') ps (v ^. notes)

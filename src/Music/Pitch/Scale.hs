@@ -1,70 +1,47 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedLists #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 
 -- | Scales and chords.
 --
--- Semantically is little distinction between a Scale and a Chord. Thus the 'Chord' and 'Scale'
--- types are synonyms. We use a newtype wrapper to get a more idiomatic 'Inspectable' instance.
---
--- Semantically @Chord p@ and @Scale p@ are countable subsets of some pitch space p.
---
--- A 'Mode' (or 'ChordType) is like a Chord/Scale that has forgotten its origin.
 module Music.Pitch.Scale
-  ( -- * TODO NEW
+  (
+    -- * Basic types
     Orientation (..),
     Rooting (..),
     ScaleChord (..),
-    generator,
-    index,
-    member,
-    tabulate,
-
-    -- * Modes and Chord types
-    Mode,
-    ChordType,
-    -- modeIntervals,
-    -- chordTypeIntervals,
-    leadingInterval,
-    complementInterval,
-    invertMode,
 
     -- * Scales
     Scale,
     scale,
-    scaleToList,
-    -- scaleTonic,
-    -- scaleMode,
 
     -- * Chords
     Chord,
     chord,
-    chordToList,
-    -- chordTonic,
-    -- chordType,
     invertChord,
     repeatingInterval,
 
-    -- * Conversions
-    chordToScale,
-    scaleToChord,
-    chordTypeToMode,
-    modeToChordType,
-    reorient,
+    -- * Scales and chords as sets
+    -- ** Generator
+    generator,
+    -- ** Indexing
+    root,
+    index,
+    member,
+    tabulate,
 
-    -- * Common modes, scales and chords
-
-    -- ** Major-Minor/Common practice modes
+    -- * Modes
+    Mode,
+    leadingInterval,
+    invertMode,
+    -- ** Common
+    -- *** Major-Minor/Common practice
     majorScale,
     pureMinorScale,
     harmonicMinorScale,
     melodicMinorScaleUp,
-
-    -- ** Church/Gregorian modes
+    -- *** Church modes
     aeolian,
     locrian,
     ionian,
@@ -72,8 +49,7 @@ module Music.Pitch.Scale
     phrygian,
     lydian,
     mixolydian,
-
-    -- ** Other modes
+    -- *** Other modes
     majorPentaTonic,
     minorPentaTonic,
     bluesMinor,
@@ -82,16 +58,11 @@ module Music.Pitch.Scale
     wholeTone,
     octatonic,
 
-    -- ** Modes of limited transposition
-    firstMode,
-    secondMode,
-    thirdMode,
-    fourthMode,
-    fifthMode,
-    sixthMode,
-    seventhMode,
-
-    -- ** Triadic/Common practice chord types
+    -- * Chord types
+    ChordType,
+    complementInterval,
+    -- ** Common
+    -- *** Major-Minor/Common practice
     majorTriad,
     minorTriad,
     augmentedChord,
@@ -104,15 +75,35 @@ module Music.Pitch.Scale
     minorMajorSeventhChord,
     frenchSixthChord,
     germanSixthChord,
-
-    -- ** Non-triadic chord types
+    -- *** Clusters
     repeating,
     chromaticCluster,
     wholeToneCluster,
     quartal,
     quintal,
+    -- *** Limited transposition
+    firstMode,
+    secondMode,
+    thirdMode,
+    fourthMode,
+    fifthMode,
+    sixthMode,
+    seventhMode,
 
-    -- * Voiced chords/scales
+
+    -- * Conversions
+    chordToScale,
+    scaleToChord,
+    chordTypeToMode,
+    modeToChordType,
+    reorient,
+    chordToList,
+    scaleToList,
+
+
+
+
+    -- * Voicing
     Voiced (..),
     getVoiced,
     voiced,
@@ -121,11 +112,9 @@ module Music.Pitch.Scale
   )
 where
 
-import Control.Lens (Lens, Lens', coerced)
-import Data.AffineSpace
+import Control.Lens (Lens')
 import Data.AffineSpace.Point.Offsets
   ( AffinePair,
-    distanceVs,
     offsetPoints,
     offsetPointsS,
   )
@@ -144,10 +133,21 @@ import Music.Pitch.Literal
 import Music.Score.Pitch (HasPitches (..))
 import qualified Music.Score.Pitch as S
 
+-- | This is used to distinguish between a 'Scale' and a 'Chord', and between a 'Mode' and 'ChordType'.
 data Orientation = Seq | Par
 
+-- | This is used to distinguish between a 'Scale' and a 'Mode', and between a 'Chord' and a 'ChordType'.
 data Rooting = NoRoot | Root
 
+-- | Represents a repeating set of notes. It has for parameters:
+--
+-- * 'Orientation'
+-- * 'Rooting'
+-- * Pitch type (usually 'Pitch')
+-- * Interval type (usually 'Interval')
+--
+-- You may want work with a more specific type such as 'Scale' or 'Chord'.
+--
 data ScaleChord :: Orientation -> Rooting -> Type -> Type -> Type where
   Mode :: NonEmpty v -> ScaleChord a 'NoRoot v p
   ScaleChord ::
@@ -155,12 +155,32 @@ data ScaleChord :: Orientation -> Rooting -> Type -> Type -> Type where
     ScaleChord o 'NoRoot v p ->
     ScaleChord o 'Root v p
 
+-- | A repeating set of notes without a root.
+--
+-- Examples:
+--
+-- * 'dorian',
+-- * 'majorScale',
+-- * 'melodicMinorScaleUp'
 type Mode = ScaleChord 'Seq 'NoRoot
 
+-- | A repeating set of notes with a root.
+--
+-- Examples:
+--
+-- * 'scale' 'd' 'dorian'
 type Scale = ScaleChord 'Seq 'Root
 
 type ChordType = ScaleChord 'Par 'NoRoot
 
+-- | A repeating set of notes without a root.
+--
+-- This represents a chord in the abstract sense without a specific voicing.
+-- For voiced chords, see 'Voiced'.
+--
+-- Example:
+--
+-- * 'chord' 'g' 'dominantSeventhChord'
 type Chord = ScaleChord 'Par 'Root
 
 deriving instance (Eq v, Eq p) => Eq (ScaleChord o r v p)
@@ -198,6 +218,13 @@ mode = Mode
 modeIntervals :: Lens' (Mode v p) (NonEmpty v)
 modeIntervals f (Mode is) = fmap (\is -> Mode is) $ f is
 
+-- | Build a scale from a root and mode.
+--
+-- >>> scale c majorScale
+-- ScaleChord c (Mode (_M2 :| [_M2,m2,_M2,_M2,_M2,m2]))
+--
+-- >>> scale f lydian
+-- ScaleChord f (Mode (_M2 :| [_M2,_M2,m2,_M2,_M2,m2]))
 scale :: AffinePair v p => p -> Mode v p -> Scale v p
 scale = ScaleChord
 
@@ -236,7 +263,7 @@ isHeadOf a (b Stream.:> _) = a == b
 invertMode :: AffinePair v p => Integer -> Mode v p -> Mode v p
 invertMode n (Mode xs) = Mode (rotate n xs)
 
--- TODO move
+-- TODO move FiniteSequence
 
 -- |
 -- Class of types representing finite sequences.
@@ -274,14 +301,20 @@ scaleToList :: AffinePair v p => Scale v p -> [p]
 scaleToList (ScaleChord tonic (Mode leaps)) = init $ offsetPoints tonic $ toList leaps
 
 -- |
--- Returns the interval sequenc that generates the given mode.
+-- Returns the interval sequence that generates the given 'ScaleChord'.
 --
--- The length of this sequence gives the number of notes in the scale,
--- e.g. for a pentatonic (5-note) scale @s@, @length (generator s) == 5@,
--- for a heptatonic (7-note) scale it is 7, and so on.
+-- The length of this sequence gives the number of notes in the scale.  For
+-- example a pentatonic scale @s@ has a generator of length 5.
 generator :: ScaleChord o r v p -> NonEmpty v
 generator (Mode x) = x
-generator (ScaleChord _ (Mode x)) = x
+generator (ScaleChord _ xs) = generator xs
+{-# INLINEABLE generator #-}
+
+-- |
+-- Returns the root of a 'Scale' or 'Chord'.
+root :: ScaleChord o 'Root v p -> p
+root (ScaleChord r _) = r
+{-# INLINEABLE root #-}
 
 reorient :: ScaleChord o r v p -> ScaleChord o' r v p
 reorient (Mode xs) = Mode xs
@@ -299,6 +332,25 @@ scaleToChord = reorient
 chordToScale :: Chord v p -> Scale v p
 chordToScale = reorient
 
+-- | View a 'Scale' or a 'Chord' as a countably infinite set of pitches.
+--
+-- You can use this to enumerate a scale upwards , starting
+-- from the root.
+--
+-- @
+-- fmap (scale d dorian `index`) [0..]
+-- @
+--
+-- @
+-- fmap (scale d dorian `index`) [0,-1,..]
+-- @
+--
+-- @index 0 scale@ returns the root of the scale, for example:
+--
+-- >>> index (scale c majorScale) 0
+-- c
+--
+-- See also 'tabulate'.
 index :: AffinePair v p => ScaleChord o 'Root v p -> Integer -> p
 index s n = case fromIntegral n of
   n
@@ -309,8 +361,15 @@ index s n = case fromIntegral n of
   where
     (neg, z, pos) = tabulate s
 
-member :: (Ord p, AffinePair v p) => ScaleChord o 'Root v p -> p -> Bool
-member s p = case p of
+-- | Check if a pitch is a member of the given 'Scale' or 'Chord'.
+--
+-- >>> c'' `member` scale d dorian
+-- True
+--
+-- >>> cs'' `member` scale d dorian
+-- False
+member :: (Ord p, AffinePair v p) => p -> ScaleChord o 'Root v p -> Bool
+member p s = case p of
   p
     | p > z -> p `isHeadOf` Stream.dropWhile (< p) pos
     | p == z -> True
@@ -319,7 +378,10 @@ member s p = case p of
   where
     (neg, z, pos) = tabulate s
 
--- Could be generalized to ScaleChord o Root (TODO flip type params!)
+-- | Returns the root of a 'Scale' or 'Chord', along with the infinite
+-- streams of pitches downward and upward.
+--
+-- See also 'index'.
 tabulate :: AffinePair v p => ScaleChord o 'Root v p -> (Stream p, p, Stream p)
 tabulate (ScaleChord tonic (Mode leaps)) =
   ( Stream.tail $ offsetPointsS tonic $ fmap negateV $ Stream.cycle $ NonEmpty.reverse leaps,
@@ -327,6 +389,16 @@ tabulate (ScaleChord tonic (Mode leaps)) =
     Stream.tail $ offsetPointsS tonic $ Stream.cycle leaps
   )
 
+-- | Build a chord from a root and a chord type.
+--
+-- >>> chord c minorTriad
+-- ScaleChord c (Mode (m3 :| [_M3,_P4]))
+--
+-- >>> chord c dominantSeventhChord
+-- ScaleChord c (Mode (_M3 :| [m3,m3,_M2]))
+--
+-- >>> chord d halfDiminishedChord
+-- ScaleChord d (Mode (m3 :| [m3,_M3,_M2]))
 chord :: AffinePair v p => p -> ChordType v p -> Chord v p
 chord = ScaleChord
 
@@ -353,11 +425,10 @@ complementInterval (Mode xs) = NonEmpty.last xs
 invertChord :: AffinePair v p => Integer -> ChordType v p -> ChordType v p
 invertChord n (Mode xs) = Mode (rotate n xs)
 
--- | Returns a single inversion of the given chord (no repeats!).
+-- TODO semantically suspect!
 chordToList :: AffinePair v p => Chord v p -> [p]
 chordToList (ScaleChord tonic (Mode leaps)) = init $ offsetPoints tonic $ toList leaps
 
--- Common scales
 
 majorScale :: Mode Interval Pitch
 majorScale = Mode [_M2, _M2, m2, _M2, _M2, _M2, m2]

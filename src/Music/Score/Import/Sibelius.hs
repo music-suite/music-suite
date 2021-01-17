@@ -7,12 +7,6 @@
   -fno-warn-unused-matches
   -fno-warn-unused-top-binds
   -fno-warn-unused-imports #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Music.Score.Import.Sibelius
   ( IsSibelius,
@@ -38,7 +32,7 @@ import Music.Pitch.Literal (IsPitch)
 import qualified Music.Pitch.Literal as Pitch
 import qualified Music.Prelude
 import qualified Music.Score as S
-import Music.Score hiding (Interval, Part, Pitch)
+import Music.Score hiding (Interval, GetPart, Pitch)
 
 -- |
 -- Read a Sibelius score from a file. Fails if the file could not be read or if a parsing
@@ -421,7 +415,7 @@ type IsSibelius a =
   ( HasPitches' a,
     IsPitch a,
     HasPart' a,
-    S.Part a ~ Part,
+    S.GetPart a ~ Part,
     HasArticulation' a,
     GetArticulation a ~ Articulation,
     HasDynamic' a,

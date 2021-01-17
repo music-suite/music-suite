@@ -1,5 +1,4 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE TupleSections #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
@@ -83,21 +82,12 @@ instance HasHarmonic a => HasHarmonic [a]
 
 instance HasHarmonic a => HasHarmonic (Score a)
 
-instance Wrapped (HarmonicT a) where
-
-  type Unwrapped (HarmonicT a) = Couple (Any, Sum Int) a
-
-  _Wrapped' = iso getHarmonicT HarmonicT
-
-instance Rewrapped (HarmonicT a) (HarmonicT b)
-
 instance HasHarmonic (HarmonicT a) where
 
-  setNatural b = over (_Wrapped' . _Wrapped') $ \((_, n), x) -> ((Any b, n), x)
+  setNatural b = over (iso getHarmonicT HarmonicT . _Wrapped') $ \((_, n), x) -> ((Any b, n), x)
 
-  setHarmonic n = over (_Wrapped' . _Wrapped') $ \((nat, _), x) -> ((nat, Sum n), x)
+  setHarmonic n = over (iso getHarmonicT HarmonicT . _Wrapped') $ \((nat, _), x) -> ((nat, Sum n), x)
 
--- Lifted instances
 deriving instance Num a => Num (HarmonicT a)
 
 deriving instance Fractional a => Fractional (HarmonicT a)
@@ -117,8 +107,6 @@ deriving instance (Real a, Enum a, Integral a) => Integral (HarmonicT a)
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 harmonic :: HasHarmonic a => Int -> a -> a
 harmonic n = setNatural True . setHarmonic n
-
--- TODO verify this can actually be played
 
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).

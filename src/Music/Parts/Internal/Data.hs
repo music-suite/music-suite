@@ -10,7 +10,7 @@
 
 module Music.Parts.Internal.Data
   ( SoundId,
-    -- InstrumentTopCategory(..),
+    InstrumentTopCategory(..),
     InstrumentDef (..),
     getInstrumentData,
     getInstrumentDefById,

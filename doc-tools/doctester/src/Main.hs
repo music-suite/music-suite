@@ -8,6 +8,7 @@ main = do
           "DeriveDataTypeable",
           "DeriveFoldable",
           "DeriveFunctor",
+          "DeriveGeneric",
           "DeriveTraversable",
           "GeneralizedNewtypeDeriving",
           "MultiParamTypeClasses",
@@ -19,6 +20,13 @@ main = do
           "TypeOperators",
           "TypeApplications",
           "ViewPatterns",
+          "DataKinds",
+          "PolyKinds",
+          "InstanceSigs",
+          "NamedFieldPuns",
+          "FlexibleContexts",
+          "ScopedTypeVariables",
+          "FlexibleInstances",
           "OverloadedStrings"
         ]
   -- doctestWithOptions

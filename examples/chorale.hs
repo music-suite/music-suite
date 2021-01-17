@@ -6,7 +6,7 @@ import Control.Lens (set)
 import qualified Music.Score as S
 
 
-chorale :: (IsPitch a, HasParts' a, S.Part a ~ Part) =>
+chorale :: (IsPitch a, HasParts' a, S.GetPart a ~ Part) =>
   [Voice (Maybe Pitch)] -> Score a
 chorale = rcat . fmap renderVoice
   where

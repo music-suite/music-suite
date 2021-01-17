@@ -133,118 +133,175 @@ import Music.Parts.Part
 import Music.Parts.Solo
 import Music.Parts.Subpart
 
+piccoloFlute :: Instrument
 piccoloFlute = fromMidiProgram 72
 
+flute :: Instrument
 flute = fromMidiProgram 73
 
+altoFlute :: Instrument
 altoFlute = fromMusicXmlSoundId "wind.flutes.flute.alto"
 
+bassFlute :: Instrument
 bassFlute = fromMusicXmlSoundId "wind.flutes.flute.bass"
 
+oboe :: Instrument
 oboe = fromMidiProgram 68
 
+corAnglais :: Instrument
 corAnglais = fromMidiProgram 69
 
+heckelphone :: Instrument
 heckelphone = fromMusicXmlSoundId "wind.reed.oboes.heckelphone"
 
+ebClarinet :: Instrument
 ebClarinet = fromMusicXmlSoundId "wind.reed.clarinet.eflat"
 
+clarinet :: Instrument
 clarinet = fromMidiProgram 71
 
+aClarinet :: Instrument
 aClarinet = fromMusicXmlSoundId "wind.reed.clarinet.a"
 
+bassClarinet :: Instrument
 bassClarinet = fromMusicXmlSoundId "wind.reed.clarinet.bass"
 
+sopranoSax :: Instrument
 sopranoSax = fromMidiProgram 64
 
+altoSax :: Instrument
 altoSax = fromMidiProgram 65
 
+tenorSax :: Instrument
 tenorSax = fromMidiProgram 66
 
+baritoneSax :: Instrument
 baritoneSax = fromMidiProgram 67
 
+bassoon :: Instrument
 bassoon = fromMidiProgram 70
 
+contraBassoon :: Instrument
 contraBassoon = fromMusicXmlSoundId "wind.reed.contrabassoon"
 
+horn :: Instrument
 horn = fromMidiProgram 60
 
+piccoloTrumpet :: Instrument
 piccoloTrumpet = fromMusicXmlSoundId "brass.trumpet.piccolo"
 
+trumpet :: Instrument
 trumpet = fromMidiProgram 56
 
+cTrumpet :: Instrument
 cTrumpet = fromMusicXmlSoundId "brass.trumpet.c"
 
+dTrumpet :: Instrument
 dTrumpet = fromMusicXmlSoundId "brass.trumpet.d"
 
+bassTrumpet :: Instrument
 bassTrumpet = fromMusicXmlSoundId "brass.trumpet.bass"
 
+altoTrombone :: Instrument
 altoTrombone = fromMusicXmlSoundId "brass.trombone.alto"
 
+trombone :: Instrument
 trombone = tenorTrombone
 
+tenorTrombone  :: Instrument
 tenorTrombone = fromMidiProgram 57
 
+bassTrombone :: Instrument
 bassTrombone = fromMusicXmlSoundId "brass.trombone.bass"
 
+tuba :: Instrument
 tuba = fromMidiProgram 58
 
+timpani :: Instrument
 timpani = fromMidiProgram 47
 
+snareDrum :: Part
 snareDrum = tutti $ fromMusicXmlSoundId "drum.snare-drum"
 
+kickDrum :: Part
 kickDrum = tutti $ fromMusicXmlSoundId "drum.kick-drum"
 
+baseDrum :: Part
 baseDrum = tutti $ fromMusicXmlSoundId "drum.bass-drum"
 
+crashCymbal :: Part
 crashCymbal = tutti $ fromMusicXmlSoundId "cymbal.crash"
 
+suspendedCymbal :: Part
 suspendedCymbal = crashCymbal
 
+rideCymbal :: Part
 rideCymbal = tutti $ fromMusicXmlSoundId "cymbal.ride"
 
+clashCymbal :: Part
 clashCymbal = tutti $ fromMusicXmlSoundId "cymbal.clash"
 
+orchestralCymbal :: Part
 orchestralCymbal = clashCymbal
 
+piatti :: Part
 piatti = orchestralCymbal
 
+piano :: Instrument
 piano = fromMidiProgram 0
 
+celesta :: Instrument
 celesta = fromMidiProgram 8
 
+glockenspiel :: Instrument
 glockenspiel = fromMidiProgram 9
 
+vibraphone :: Instrument
 vibraphone = fromMidiProgram 11
 
+marimba :: Instrument
 marimba = fromMidiProgram 12
 
+xylophone :: Instrument
 xylophone = fromMidiProgram 13
 
+xylorimba :: Instrument
 xylorimba = fromMusicXmlSoundId "pitched-percussion.xylorimba"
 
+claves :: Part
 claves = tutti $ fromMusicXmlSoundId "wood.claves"
 
+maracas :: Part
 maracas = tutti $ fromMusicXmlSoundId "rattle.maraca"
 
+tubularBells :: Instrument
 tubularBells = fromMidiProgram 14
 
+dulcimer :: Instrument
 dulcimer = fromMidiProgram 15
 
+accordion :: Instrument
 accordion = fromMidiProgram 21
 
+harmonica :: Instrument
 harmonica = fromMidiProgram 22
 
+violin :: Instrument
 violin = fromMidiProgram 40
 
+viola :: Instrument
 viola = fromMidiProgram 41
 
+cello :: Instrument
 cello = fromMidiProgram 42
 
+doubleBass :: Instrument
 doubleBass = fromMidiProgram 43
 
+piccoloFlutes :: Part
 piccoloFlutes = tutti piccoloFlute
 
+flutes :: Part
 flutes = tutti flute
 
 oboes = tutti oboe

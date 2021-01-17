@@ -1,7 +1,3 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
 
 module Music.Time.Split
   ( module Music.Time.Position,
@@ -26,16 +22,8 @@ import Control.Lens hiding
     transform,
     (|>),
   )
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Bifunctor
-import Data.Map (Map)
-import qualified Data.Map as Map
-import Data.Semigroup hiding ()
-import Data.Sequence (Seq)
-import qualified Data.Sequence as Seq
+
 import Data.VectorSpace hiding (Sum (..))
-import Music.Time.Internal.Util
 import Music.Time.Position
 
 -- |
@@ -89,7 +77,7 @@ instance Splittable Duration where
       t' = t `max` 0
 
 instance Splittable a => Splittable (Maybe a) where
-  split d Nothing = (Nothing, Nothing)
+  split _d Nothing = (Nothing, Nothing)
   split d (Just x) = bimap Just Just $ split d x
 
 chunks :: (Transformable a, Splittable a) => Duration -> a -> [a]

@@ -33,20 +33,6 @@ module Music.Time.Reactive
   )
 where
 
--- TODO
--- window,
--- windowed,
-
--- Reactive values, or piecewise functions of time.
---
--- Similar to Conal's definition in <http://conal.net/blog/posts/reactive-normal-form>,
--- but defined in negative time as well. Its semantics function is either 'occs' @&&&@ '?'
--- /or/ 'initial' @&&&@ 'updates', where 'intial' is the value from negative infinity
--- to the first update.
---
--- TODO integrate better in the library
---
-
 import Control.Applicative
 import Control.Lens hiding
   ( (<|),
@@ -79,23 +65,6 @@ import Music.Time.Score
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
 newtype Reactive a = Reactive {getReactive :: ([Time], Behavior a)}
   deriving (Functor, Semigroup, Monoid, Typeable)
-
-{-
-  TODO Semantic fuzz
-
-  Reactive implies that values change at switchpoints, but should not make assumptions about what the value is *at* the
-  switchpoint.
-
-  Behavior represents continous values, so it knows the value at each switchpoint (semantically: Time -> a).
-  Hence the combinator (switch' :: Time -> B a -> B a -> B a -> B a) makes sense.
-
-  Reactive can do this as well (i.e. with the current semantics: ([Time], Behavior a)), however this is not necessarily
-  desirable.
-
-  Bad:
-      updates - Promotes association of Time with value (though it makes no assumption that the Reactive *is* this value at the given time).
-      discrete/atTime/continous - Forces implementation to choose arbitrary value at switchpoint
--}
 
 instance Eq a => Eq (Reactive a) where
   a == b =
@@ -237,16 +206,6 @@ continous :: Reactive (Segment a) -> Behavior a
 continous = join . reactiveToBehavior
   where
     reactiveToBehavior (Reactive (_, b)) = b
-
--- TODO this is actually wrong! (Reactive vs Segment!)
-
--- Fine in the span where 'intermediate' is defined:
--- continous = g
---   where
---     g = \x -> fmap (fromJust.fmap getFirst.getOption) . continousM . fmap (fmap (Option . Just . First)) $ x
---
--- continousM :: Monoid a => Reactive (Behavior a) -> Behavior a
--- continousM = concatB . view score . intermediate
 
 -- | Realize a 'Reactive' value as an continous behavior.
 continousWith :: Segment (a -> b) -> Reactive a -> Behavior b

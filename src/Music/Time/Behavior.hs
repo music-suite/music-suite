@@ -261,15 +261,14 @@ sawtooth = line - fmap floor' line
 impulse :: Num a => Behavior a
 impulse = switch' 0 0 1 0
 
--- > f t | t == 0    = 1
--- >     | otherwise = 0
-
 -- |
 -- A behavior that goes from 0 to 1 at time 0.
+turnOn :: Num a => Behavior a
 turnOn = switch 0 0 1
 
 -- |
 -- A behavior that goes from 1 to 0 at time 0.
+turnOff :: Num a => Behavior a
 turnOff = switch 0 1 0
 
 --
@@ -333,6 +332,3 @@ tau = 2 * pi
 floor' :: RealFrac a => a -> a
 floor' = fromInteger . floor
 
-turnOn :: Num a => Behavior a
-
-turnOff :: Num a => Behavior a

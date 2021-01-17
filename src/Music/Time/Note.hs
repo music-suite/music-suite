@@ -14,8 +14,6 @@ module Music.Time.Note
   )
 where
 
--- noteComplement,
-
 import Control.Applicative
 import Control.Comonad
 import Control.Lens hiding

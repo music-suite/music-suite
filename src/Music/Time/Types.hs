@@ -39,8 +39,6 @@ module Music.Time.Types
     isDegenerateSpan,
     isForwardSpan,
     isBackwardSpan,
-    -- delayComponent,
-    -- stretchComponent,
 
     -- ** Combine
     hull,
@@ -56,26 +54,6 @@ module Music.Time.Types
     properlyEncloses,
     overlaps,
     isBefore,
-    -- afterOnset,
-    -- strictlyAfterOnset,
-    -- beforeOnset,
-    -- strictlyBeforeOnset,
-    -- afterOffset,
-    -- strictlyAfterOffset,
-    -- beforeOffset,
-    -- strictlyBeforeOffset,
-    -- startsWhenStarts,
-    -- startsWhenStops,
-    -- stopsWhenStops,
-    -- stopsWhenStarts,
-    -- startsBefore,
-    -- startsLater,
-    -- stopsAtTheSameTime,
-    -- stopsBefore,
-    -- stopsLater,
-    -- union/hull
-    -- intersection (alt name 'overlap')
-    -- difference (would actually become a split)
 
     -- ** Read/Show
     showOnsetAndOffset,
@@ -121,19 +99,6 @@ import Music.Time.Internal.Util (showRatio)
 -- for 'Fractional' and 'RealFrac'.
 type TimeBase = Rational
 
-{-
-type TimeBase = Fixed E12
-
-instance HasResolution a => AdditiveGroup (Fixed a) where
-  zeroV = 0
-  negateV = negate
-  (^+^) = (+)
-
-instance Floating TimeBase where
-deriving instance Floating Time
-deriving instance Floating Duration
--}
-
 -- | 'Alignment' is a synonym for 'Duration'.
 --
 -- See "Music.Time.Aligned" for its intended use.
@@ -159,7 +124,6 @@ instance Show Duration where
   show = showRatio . toRational
 
 instance ToJSON Duration where
-  -- toJSON = JSON.Number . realToFrac
   toJSON x = let (a, b) = unRatio (toRational x) in toJSON [a, b]
 
 instance FromJSON Duration where
@@ -294,6 +258,8 @@ toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 newtype Span = Span {getSpan :: (Time, Duration)}
   deriving (Eq, Ord, Typeable)
 
+-- $spanConstructors
+--
 -- You can create a span using the constructors '<->', '<-<' and '>->'. Note that:
 --
 -- > a >-> b = a         <-> (a .+^ b)
@@ -328,8 +294,6 @@ newtype Span = Span {getSpan :: (Time, Duration)}
 instance Show Span where
   show = showOnsetAndOffset
 
--- Which form should we use?
-
 instance ToJSON Span where
   toJSON (view onsetAndOffset -> (a, b)) = JSON.object [("onset", toJSON a), ("offset", toJSON b)]
 
@@ -359,13 +323,6 @@ instance VectorSpace Span where
   type Scalar Span = Duration
 
   x *^ Span (t, d) = Span (x *^ t, x *^ d)
-
---
--- a >-> b = a         <-> (a .+^ b)
--- a <-< b = (b .-^ a) <-> b
--- a <-> b = a         >-> (b .-. a)
--- (b .-^ a) <-> b = a <-< b
---
 
 infixl 6 <->
 
@@ -442,8 +399,6 @@ fixedOnsetSpan = prism' (\d -> view (from onsetAndDuration) (0, d)) $ \x -> case
   (0, d) -> Just d
   _ -> Nothing
 
---
-
 -- $forwardBackWardEmpty
 --
 -- A span is either /forward/, /backward/ or /empty/.
@@ -485,8 +440,6 @@ reflectSpan p = over (onsetAndOffset . both) (reflectThrough p)
 -- @
 normalizeSpan :: Span -> Span
 normalizeSpan s = if isForwardSpan s then s else reverseSpan s
-
--- TODO Duplicate as normalizeNoteSpan
 
 infixl 5 `inside`
 
@@ -600,97 +553,6 @@ instance Semigroup TimeInterval where
 instance Monoid TimeInterval where
   mempty = EmptyInterval
 
--- TODO more intuitive param order
-
-{-
-afterOnset :: Time -> Span -> Bool
-t `afterOnset` s = t >= _onsetS s
-
-strictlyAfterOnset :: Time -> Span -> Bool
-t `strictlyAfterOnset` s = t > _onsetS s
-
-beforeOnset :: Time -> Span -> Bool
-t `beforeOnset` s = t <= _onsetS s
-
-strictlyBeforeOnset :: Time -> Span -> Bool
-t `strictlyBeforeOnset` s = t < _onsetS s
-
-afterOffset :: Time -> Span -> Bool
-t `afterOffset` s = t >= _offsetS s
-
-strictlyAfterOffset :: Time -> Span -> Bool
-t `strictlyAfterOffset` s = t > _offsetS s
-
-beforeOffset :: Time -> Span -> Bool
-t `beforeOffset` s = t <= _offsetS s
-
-strictlyBeforeOffset :: Time -> Span -> Bool
-t `strictlyBeforeOffset` s = t < _offsetS s
--}
--- Param order OK
-
-{-
--- Name?
-startsWhenStarts :: Span -> Span -> Bool
-a `startsWhenStarts` b = _onsetS a == _onsetS b
-
--- Name?
-startsWhenStops :: Span -> Span -> Bool
-a `startsWhenStops` b = _onsetS a == _offsetS b
-
--- Name?
-stopsWhenStops :: Span -> Span -> Bool
-a `stopsWhenStops` b = _offsetS a == _offsetS b
-
--- Name?
-stopsWhenStarts :: Span -> Span -> Bool
-a `stopsWhenStarts` b = _offsetS a == _onsetS b
-
-startsBefore :: Span -> Span -> Bool
-a `startsBefore` b = _onsetS a < _onsetS b
-
-startsLater :: Span -> Span -> Bool
-a `startsLater` b = _onsetS a > _onsetS b
-
-stopsAtTheSameTime :: Span -> Span -> Bool
-a `stopsAtTheSameTime` b = _offsetS a == _offsetS b
-
-stopsBefore :: Span -> Span -> Bool
-a `stopsBefore` b = _offsetS a < _offsetS b
-
-stopsLater :: Span -> Span -> Bool
-a `stopsLater` b = _offsetS a > _offsetS b
--}
-{-
-contains
-curtails
-delays
-happensDuring
-intersects
-trisects
-isCongruentTo
-overlapsAllOf
-overlapsOnlyOnsetOf
-overlapsOnlyOffsetOf
-overlapsOnsetOf
-overlapsOffsetOf
-
-
-
--}
-
--- timespantools.timespan_2_starts_during_timespan_1
--- timespantools.timespan_2_starts_when_timespan_1_starts
--- timespantools.timespan_2_starts_when_timespan_1_stops
--- timespantools.timespan_2_stops_after_timespan_1_starts
--- timespantools.timespan_2_stops_after_timespan_1_stops
--- timespantools.timespan_2_stops_before_timespan_1_starts
--- timespantools.timespan_2_stops_before_timespan_1_stops
--- timespantools.timespan_2_stops_during_timespan_1
--- timespantools.timespan_2_stops_when_timespan_1_starts
--- timespantools.timespan_2_stops_when_timespan_1_stops
--- timespantools.timespan_2_trisects_timespan_1
-
 -- |
 -- Whether the given span overlaps.
 overlaps :: Span -> Span -> Bool
@@ -701,35 +563,19 @@ a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 isBefore :: Span -> Span -> Bool
 a `isBefore` b = (_onsetS a `max` _offsetS a) <= (_onsetS b `min` _offsetS b)
 
--- TODO resolve this so we can use actual onset/offset etc in the above definitions
--- Same as (onset, offset), defined here for bootstrapping reasons
+_onsetS :: Span -> Time
 _onsetS (view onsetAndOffset -> (t1, _t2)) = t1
 
+_offsetS :: Span -> Time
 _offsetS (view onsetAndOffset -> (_t1, t2)) = t2
 
+_midpointS :: Span -> Time
 _midpointS s = _onsetS s .+^ _durationS s / 2
 
+_durationS :: Span -> Duration
 _durationS s = _offsetS s .-. _onsetS s
 
-{-
-Two alternative definitions for midpoint:
 
-midpoint x = onset x + duration x / 2
-midpoint x = (onset x + offset x) / 2
 
-Both equivalent. Proof:
 
-  let d = b - a
-  (a + b)/2 = a + d/2
-  (a + b)/2 = a + (b - a)/2
-  a + b     = 2a + (b - a)
-  a + b     = a + b
--}
 
-_onsetS :: Span -> Time
-
-_offsetS :: Span -> Time
-
-_midpointS :: Span -> Time
-
-_durationS :: Span -> Duration

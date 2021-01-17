@@ -36,12 +36,15 @@ import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 import Music.Time.Transform (Transformable (..))
 import Numeric.Positive
+import Test.QuickCheck (Arbitrary(..), CoArbitrary)
+import Test.QuickCheck.Gen (oneof)
+import GHC.Generics (Generic)
 
 -- |
 -- Number of chromatic steps.
 -- May be negative, indicating a downward interval.
 newtype ChromaticSteps = ChromaticSteps {getChromaticSteps :: Integer}
-  deriving (Eq, Ord, Enum, Num, Real, Integral)
+  deriving (Eq, Ord, Enum, Num, Real, Integral, Generic, Arbitrary, CoArbitrary)
 
 instance Show ChromaticSteps where
   show = show . getChromaticSteps
@@ -53,7 +56,7 @@ instance Show DiatonicSteps where
 -- Number of diatonic steps.
 -- May be negative, indicating a downward interval.
 newtype DiatonicSteps = DiatonicSteps {getDiatonicSteps :: Integer}
-  deriving (Eq, Ord, Enum, Num, Real, Integral)
+  deriving (Eq, Ord, Enum, Num, Real, Integral, Arbitrary)
 
 -- |
 -- Number of octaves.
@@ -75,6 +78,9 @@ type Semitones = ChromaticSteps
 -- interval of 1 step, and so on.
 newtype Number = Number {getNumber :: Integer}
   deriving (Eq, Ord, Enum, Real, Integral)
+
+instance Arbitrary Number where
+  arbitrary = (Number . \x -> if x < 1 then x - 1 else x) <$> arbitrary
 
 instance Num Number where
 
@@ -128,6 +134,7 @@ data IntervalBasis = Chromatic | Diatonic
 -- Interval type.
 newtype Interval = Interval {getInterval :: (ChromaticSteps, DiatonicSteps)}
   deriving (Eq, Typeable)
+  deriving newtype (Arbitrary)
 
 -- |
 -- Pitch type.
@@ -1265,15 +1272,29 @@ isMelodicConsonance x = quality x `elem` [Perfect, Major, Minor]
 --
 -- >>> spell modally     tone
 -- _M2
-type Spelling = Semitones -> Number
+data Spelling = UsingSharps | UsingFlats | Modally
+  deriving (Show)
+
+instance Arbitrary Spelling where
+  arbitrary = oneof $ fmap pure [UsingSharps, UsingFlats, Modally]
+
+getSpelling :: Spelling -> Semitones -> Integer
+getSpelling x = case x of
+  UsingSharps -> usingSharpsImpl
+  UsingFlats -> usingFlatsImpl
+  Modally -> modallyImpl
+-- TODO Spelling is semantically a function ([0..11] -> [0..6])
+
 
 -- |
 -- Spell an interval using the given 'Spelling'.
+--
+-- prop> semitones (spell s i) == semitones (i :: Interval)
 spell :: HasSemitones a => Spelling -> a -> Interval
 spell spelling x =
   let -- TODO use Steps etc to remove fromIntegral
       (octaves, steps) = semitones x `divMod` 12
-      num = fromIntegral (spelling steps)
+      num = fromIntegral (getSpelling spelling steps)
       diff = fromIntegral steps - fromInteger (diatonicToChromatic num)
    in (\a b -> (fromInteger a, fromInteger b) ^. intervalAlterationSteps) diff num ^+^ _P8 ^* (fromIntegral octaves)
   where
@@ -1286,11 +1307,18 @@ spell spelling x =
         go 4 = 7
         go 5 = 9
         go 6 = 11
-        go _ = error "TODO: Use mod-12 arith type for argument to Spelling"
+        go 7 = 12
+        go n = error $ "TODO: Use mod-12 arith type for argument to Spelling, got " ++ show n
 
-type Tonic = Pitch
-
-spellPitchRelative :: Tonic -> Spelling -> Pitch -> Pitch
+-- | Spell a pitch relative a given tonic.
+--
+-- >>> spellPitchRelative db modally ab
+-- ab
+--
+-- >>> spellPitchRelative c modally ab
+-- gs
+--
+spellPitchRelative :: Pitch -> Spelling -> Pitch -> Pitch
 spellPitchRelative tonic s p = tonic .+^ spell s (p .-. tonic)
 
 -- |
@@ -1308,7 +1336,9 @@ spelled = flip spell
 --
 -- > c cs d eb e f fs g gs a bb b
 modally :: Spelling
-modally = go
+modally = Modally
+
+modallyImpl = go
   where
     go 0 = 0
     go 1 = 0
@@ -1329,7 +1359,9 @@ modally = go
 --
 -- > c cs d ds e f fs g gs a as b
 usingSharps :: Spelling
-usingSharps = go
+usingSharps = UsingSharps
+
+usingSharpsImpl = go
   where
     go 0 = 0
     go 1 = 0
@@ -1350,7 +1382,9 @@ usingSharps = go
 --
 -- > c db d eb e f gb g ab a bb b
 usingFlats :: Spelling
-usingFlats = go
+usingFlats = UsingFlats
+
+usingFlatsImpl = go
   where
     go 0 = 0
     go 1 = 1
@@ -1395,7 +1429,7 @@ useSimpleQualities i
 -- except the standard ones.
 --
 -- Standard qualities include natural, sharp, flat, double sharp and double flat.
-useStandardAlterations :: Tonic -> Pitch -> Pitch
+useStandardAlterations :: Pitch -> Pitch -> Pitch
 useStandardAlterations tonic p
   | quality i > Perfect && not (ok i) = spellPitchRelative tonic usingSharps p
   | quality i < Perfect && not (ok i) = spellPitchRelative tonic usingFlats p
@@ -1406,7 +1440,7 @@ useStandardAlterations tonic p
 
 -- |
 -- Same as 'useStandardAlterations' but disallow double sharp/flat.
-useSimpleAlterations :: Tonic -> Pitch -> Pitch
+useSimpleAlterations :: Pitch -> Pitch -> Pitch
 useSimpleAlterations tonic p
   | quality i > Perfect && not (ok i) = spellPitchRelative tonic usingSharps p
   | quality i < Perfect && not (ok i) = spellPitchRelative tonic usingFlats p

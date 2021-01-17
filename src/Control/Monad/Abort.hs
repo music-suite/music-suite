@@ -5,7 +5,10 @@
 
 {-# LANGUAGE DerivingVia, FlexibleInstances #-}
 
-module Control.Monad.Abort where
+module Control.Monad.Abort (
+  Abort(..),
+  abort
+) where
 
 import Iso.Deriving
 import Control.Monad.State
@@ -33,9 +36,6 @@ data Abort s a = Abort { runAbort :: s -> (Maybe a, s) }
 -- result will be returned.
 abort :: Abort s a
 abort = Abort $ \s -> (Nothing, s)
-
-quit :: a -> Abort s a
-quit x = Abort $ \s -> (Just x, s)
 
 instance Inject (ExceptT () (State s) a) (Abort s a) where
   inj (ExceptT f) = Abort $ \s -> first eitherToMaybe $ runState f s

@@ -103,7 +103,6 @@ instance HasSlide (SlideT a) where
 
   setEndSlide x = _es .~ Any x
 
--- Lifted instances
 deriving instance Num a => Num (SlideT a)
 
 deriving instance Fractional a => Fractional (SlideT a)

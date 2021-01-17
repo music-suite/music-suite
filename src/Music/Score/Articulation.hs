@@ -41,8 +41,6 @@ module Music.Score.Articulation
     portato,
     legato,
     legatissimo,
-    tenuto,
-    spiccato,
 
     -- * Articulation transformer
     ArticulationT (..),
@@ -199,13 +197,6 @@ instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
 instance HasArticulations a b => HasArticulations (Voice a) (Voice b) where
   articulations = traverse . articulations
 
-{-
-type instance Articulation (Chord a) = Articulation a
-type instance SetArticulation b (Chord a) = Chord (SetArticulation b a)
-instance HasArticulations a b => HasArticulations (Chord a) (Chord b) where
-  articulations = traverse . articulations
--}
-
 instance HasArticulations a b => HasArticulations (Track a) (Track b) where
   articulations = traverse . articulations
 
@@ -245,10 +236,10 @@ instance (HasArticulation a b) => HasArticulation (TextT a) (TextT b) where
   articulation = _Wrapped . articulation
 
 instance (HasArticulations a b) => HasArticulations (HarmonicT a) (HarmonicT b) where
-  articulations = _Wrapped . articulations
+  articulations = traverse . articulations
 
 instance (HasArticulation a b) => HasArticulation (HarmonicT a) (HarmonicT b) where
-  articulation = _Wrapped . articulation
+  articulation = iso getHarmonicT HarmonicT . articulation
 
 instance (HasArticulations a b) => HasArticulations (TieT a) (TieT b) where
   articulations = _Wrapped . articulations
@@ -311,12 +302,6 @@ accentAll = set (articulations . accentuation) 1
 
 marcatoAll :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 marcatoAll = set (articulations . accentuation) 2
-
-tenuto :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
-tenuto = legato -- TODO
-
-spiccato :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
-spiccato = legato -- TODO
 
 legatissimo :: (HasArticulations' s, GetArticulation s ~ a, Articulated a) => s -> s
 legatissimo = set (articulations . separation) (-2)
@@ -413,14 +398,6 @@ instance (Monoid n, Bounded a) => Bounded (ArticulationT n a) where
 
   maxBound = pure maxBound
 
--- instance (Monoid n, Num a, Ord a, Real a) => Real (ArticulationT n a) where
---     toRational = toRational . extract
---
--- instance (Monoid n, Real a, Enum a, Integral a) => Integral (ArticulationT n a) where
---     quot = liftA2 quot
---     rem = liftA2 rem
---     toInteger = toInteger . extract
-
 instance Wrapped (ArticulationT p a) where
 
   type Unwrapped (ArticulationT p a) = (p, a)
@@ -449,7 +426,6 @@ instance (Tiable n, Tiable a) => Tiable (ArticulationT n a) where
       (a1, a2) = toTied a
       (d1, d2) = toTied d
 
--- TODO move
 addArtCon ::
   ( HasPhrases s t a b,
     HasArticulation' a,

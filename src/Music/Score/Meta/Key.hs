@@ -1,10 +1,3 @@
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
@@ -87,45 +80,6 @@ instance IsPitch Fifths where
       toFirstOctave :: P.Pitch -> P.Pitch
       toFirstOctave p = case (name p, accidental p) of
         (n, a) -> mkPitch n a
-
--- fromPitch p = case (name p, accidental p) of
--- (C, flat)    -> 0
--- (C, natural) -> 0
--- (C, natural) -> 0
-
-{-
-instance IsPitch Fifths where
-    fromPitch (PitchL (d, fromMaybe 0 -> c, _)) = case (d,c) of
-        (0,-1) -> (-7)
-        (0, 0) -> 0
-        (0, 1) -> 7
-
-        (1,-1) -> (-5)
-        (1, 0) -> 2
-        (1, 1) -> 9
-
-        (2,-1) -> (-3)
-        (2, 0) -> 4
-        (2, 1) -> 11
-
-        (3,-1) -> (-8)
-        (3, 0) -> (-1)
-        (3, 1) -> 6
-
-        (4,-1) -> (-6)
-        (4, 0) -> 1
-        (4, 1) -> 8
-
-        (5,-1) -> (-4)
-        (5, 0) -> 3
-        (5, 1) -> 10
-
-        (6,-1) -> (-2)
-        (6, 0) -> 5
-        (6, 1) -> 12
-
-        _      -> error "Strange number of Fifths"
--}
 
 -- | A key signature, represented by number of fifths from C and mode.
 newtype KeySignature = KeySignature {getKeySignature :: First (Pitch, MajorMinor)}

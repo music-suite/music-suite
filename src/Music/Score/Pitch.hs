@@ -356,7 +356,7 @@ instance (HasPitches a b) => HasPitches (HarmonicT a) (HarmonicT b) where
   pitches = traverse . pitches
 
 instance (HasPitch a b) => HasPitch (HarmonicT a) (HarmonicT b) where
-  pitch = _Wrapped . pitch
+  pitch = iso getHarmonicT HarmonicT . pitch
 
 instance (HasPitches a b) => HasPitches (TieT a) (TieT b) where
   pitches = traverse . pitches

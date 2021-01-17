@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
@@ -40,7 +39,7 @@ attributionsAt t x =
 titleAt :: HasMeta a => Time -> a -> Maybe Title
 titleAt _ _ = Nothing
 
-partNames :: (HasParts' a, Show (Part a)) => a -> [String]
+partNames :: (HasParts' a, Show (GetPart a)) => a -> [String]
 partNames = fmap show . toListOf parts'
 
 commonMetaAt :: HasMeta a => Time -> a -> [(String, Maybe String)]

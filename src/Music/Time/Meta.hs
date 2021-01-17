@@ -250,23 +250,10 @@ instance Wrapped (AddMeta a) where
 instance Rewrapped (AddMeta a) (AddMeta b)
 
 instance HasMeta (AddMeta a) where
-  -- twain, pair, element
   meta = _Wrapped . _Wrapped . _1
 
 instance Traversable AddMeta where
   traverse = annotated
-
--- instance Eq1 AddMeta where
---   eq1 = (==)
-
--- instance FunctorWithIndex i AddMeta where
--- imap f = over annotated $ imap f
---
--- instance FoldableWithIndex Span Score where
---   ifoldMap f (Score (m,x)) = ifoldMap f x
---
--- instance TraversableWithIndex Span Score where
---   itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
 
 instance Transformable a => Transformable (AddMeta a) where
   transform t = over meta (transform t) . over annotated (transform t)
@@ -313,10 +300,5 @@ unannotated = from annotatedIgnoringMeta
 annotatedIgnoringMeta :: Iso (AddMeta a) (AddMeta b) a b
 annotatedIgnoringMeta = _Wrapped . extracted
 
--- Nice generalizations
--- TODO move
-
 extracted :: (Applicative m, Comonad m) => Iso (m a) (m b) a b
 extracted = iso extract pure
--- extractedRep :: (Representable m, w ~ Rep m, Monoid w) => Iso (m a) (m b) a b
--- extractedRep = iso extractRep pureRep
