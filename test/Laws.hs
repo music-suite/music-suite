@@ -241,18 +241,9 @@ sameType1 _ x = x
 
 instance CoArbitrary Time
 
-instance Arbitrary DiatonicSteps where
-  arbitrary = DiatonicSteps <$> arbitrary
-
-instance Arbitrary ChromaticSteps where
-  arbitrary = ChromaticSteps <$> arbitrary
-
 instance Arbitrary Instrument where
   -- TODO can only select GM instruments!
   arbitrary = fromMidiProgram . (`mod` 128) <$> arbitrary
-
-instance Arbitrary Interval where
-  arbitrary = Interval <$> arbitrary
 
 instance Arbitrary Pitch where
   arbitrary = (c .+^) <$> arbitrary
