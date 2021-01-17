@@ -37,4 +37,4 @@ import Music.Time.Split
 import Music.Time.Track
 import Music.Time.Transform
 import Music.Time.Types
-import Music.Time.Voice
+import Music.Time.Voice hiding (map, traverse)

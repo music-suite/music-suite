@@ -33,7 +33,7 @@ import Music.Time.Aligned
 import Music.Time.Juxtapose
 import Music.Time.Note
 import Music.Time.Score
-import Music.Time.Voice
+import Music.Time.Voice hiding (map, traverse)
 import Control.Monad.State.Strict
 
 

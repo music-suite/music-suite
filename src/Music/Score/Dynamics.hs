@@ -78,7 +78,7 @@ import Music.Time.Event
 import Music.Time.Internal.Transform
 import Music.Time.Note
 import Music.Time.Score
-import Music.Time.Voice
+import Music.Time.Voice hiding (map, traverse)
 
 -- |
 -- Dynamics type.

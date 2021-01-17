@@ -121,7 +121,7 @@ import Music.Time.Note
 import Music.Time.Placed
 import Music.Time.Score
 import Music.Time.Track
-import Music.Time.Voice
+import Music.Time.Voice hiding (map, traverse)
 
 -- | A type function that returns the pitch type associated with a given type.
 --

@@ -9,13 +9,16 @@ module Music.Time.Voice
     Voice,
 
     -- * Construction
-    -- $smartConstructors
+    singleton,
+    fromRhythm,
     voice,
     notes,
     pairs,
     durationsAsVoice,
 
     -- * Map
+    map,
+    traverse,
     mapWithOnsetRelative,
     mapWithOffsetRelative,
     mapWithSpanRelative,
@@ -80,16 +83,18 @@ import Control.Lens hiding
     parts,
     reversed,
     transform,
+    traverse,
     (|>),
   )
+
+import Prelude hiding (map, traverse)
 import Control.Monad
 import Control.Monad.Compose
 import Control.Monad.Zip
-import Data.Aeson (FromJSON (..), ToJSON (..))
-import qualified Data.Aeson as JSON
 import Data.AffineSpace
 import Data.Coerce (coerce)
 import qualified Data.Either
+import qualified Data.Traversable
 import qualified Data.Foldable
 import Data.Functor.Context
 import qualified Data.List
@@ -175,21 +180,6 @@ instance Snoc (Voice a) (Voice b) (Note a) (Note b) where
     Nothing -> Left mempty
     Just (xs, x) -> Right (view voice xs, x)
 
-instance ToJSON a => ToJSON (Voice a) where
-  -- TODO meta
-  toJSON x = JSON.object [("notes", toJSON ns)]
-    where
-      ns = x ^. notes
-
-instance FromJSON a => FromJSON (Voice a) where
-  -- TODO change to include meta
-  parseJSON (JSON.Object x) = parseNL =<< (x JSON..: "notes")
-    where
-      parseNL (JSON.Array xs) = (^. voice) . toList <$> traverse parseJSON xs
-      parseNL _ = empty
-      toList = toListOf traverse
-  parseJSON _ = empty
-
 instance Transformable (Voice a) where
   transform s = over notes (transform s)
 
@@ -268,6 +258,12 @@ instance Num a => Num (Voice a) where
 
   (*) = liftA2 (*)
 
+singleton :: a -> Voice a
+singleton = pure
+
+fromRhythm :: [Duration] -> Voice ()
+fromRhythm = view durationsAsVoice
+
 -- | Create a 'Voice' from a list of 'Note's.
 voice :: Iso' [Note a] (Voice a)
 voice = coerced
@@ -326,10 +322,16 @@ notesIgnoringMeta = iso getVoice Voice
 -- | A score is a list of (duration-value pairs) up to meta-data.
 -- To preserve meta-data, use the more restricted 'pairs'.
 pairsIgnoringMeta :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-pairsIgnoringMeta = iso (map (^. from note) . (^. notes)) ((^. voice) . map (^. note))
+pairsIgnoringMeta = iso (fmap (^. from note) . (^. notes)) ((^. voice) . fmap (^. note))
 
 durationsAsVoice :: Iso' [Duration] (Voice ())
 durationsAsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
+
+map :: (a -> b) -> Voice a -> Voice b
+map = fmap
+
+traverse :: Applicative f => (a -> f b) -> Voice a -> f (Voice b)
+traverse = Data.Traversable.traverse
 
 mapWithOffsetRelative :: Time -> (Time -> a -> b) -> Voice a -> Voice b
 mapWithOffsetRelative t f = mapWithSpanRelative t (\s x -> f (s ^. offset) x)
@@ -724,7 +726,7 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy me
     merge (Just _) Nothing = True
     merge Nothing (Just _) = True
     merge (Just _) (Just _) = False
-    hasOnlyRests = all isNothing $ toListOf traverse x -- norm
+    hasOnlyRests = all isNothing $ toListOf Data.Traversable.traverse x -- norm
 
 -- | Decorate all notes in a voice with their context, i.e. previous and following value
 -- if present.
@@ -736,9 +738,9 @@ durationsV :: Lens' (Voice a) [Duration]
 durationsV = lens getDurs (flip setDurs)
   where
     getDurs :: Voice a -> [Duration]
-    getDurs = map fst . view pairs
+    getDurs = fmap fst . view pairs
     setDurs :: [Duration] -> Voice a -> Voice a
-    setDurs ds as = zipVoiceWith' (\a _b -> a) (\_a b -> b) (mconcat $ map durToVoice ds) as
+    setDurs ds as = zipVoiceWith' (\a _b -> a) (\_a b -> b) (mconcat $ fmap durToVoice ds) as
     durToVoice d = stretch d $ pure ()
 
 -- Warning: Breaks the lens laws, unless the length of the list is unmodified.
@@ -746,10 +748,10 @@ valuesV :: Lens (Voice a) (Voice b) [a] [b]
 valuesV = lens getValues (flip setValues)
   where
     -- getValues :: Voice a -> [a]
-    getValues = map snd . view pairs
+    getValues = fmap snd . view pairs
     -- setValues :: [a] -> Voice b -> Voice a
     setValues as bs = zipVoiceWith' (\_a b -> b) (\a _b -> a) (listToVoice as) bs
-    listToVoice = mconcat . map pure
+    listToVoice = mconcat . fmap pure
 
 -- | Whether two notes have exactly the same duration pattern.
 -- Two empty voices are considered to have the same duration pattern.
