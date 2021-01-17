@@ -19,6 +19,9 @@ main = do
           "TypeOperators",
           "TypeApplications",
           "ViewPatterns",
+          "DataKinds",
+          "PolyKinds",
+          "InstanceSigs",
           "OverloadedStrings"
         ]
   -- doctestWithOptions

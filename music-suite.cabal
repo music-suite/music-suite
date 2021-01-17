@@ -617,3 +617,12 @@ executable "music-suite-examples-salient-melodic-transformations"
 -- TODO HarmPhasing
 -- TODO PianoChords
 -- TODO PopRhythms
+
+executable "doctester"
+    ghc-options: -O3 -threaded
+    build-depends:
+      base,
+      music-suite,
+      doctest
+    hs-source-dirs: doc-tools/doctester/src
+    main-is: Main.hs

@@ -56,7 +56,7 @@ cabal run music-suite-test-xml-parser
 
 #### Doctests
 
-TODO
+cabal build && cabal exec doctester --package music-suite -- src/Music/Pitch
 
 ### Development shell
 
