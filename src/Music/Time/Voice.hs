@@ -804,7 +804,7 @@ erasRelative o v = zipWith (<->) (onsetsRelative o v) (offsetsRelative o v)
 
 -- | Rotate the durations of a voice.
 --
--- >>> rotateDurations 1 [(1,'c'), (2, 'd'), (1, 'e')]
+-- >>> rotateDurations 1 (fromList [(1,'c'), (2, 'd'), (1, 'e')] :: Voice Char)
 -- [(2,'c'), (1, 'd'), (1, 'e')]
 rotateDurations :: Int -> Voice a -> Voice a
 rotateDurations n x = view voice $ view note <$> zip (rotate n ds) vs
