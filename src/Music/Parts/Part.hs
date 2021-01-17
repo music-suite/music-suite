@@ -131,15 +131,15 @@ allDistinct (x : xs) = all (distinctFrom x) xs && allDistinct xs
 
 -- | Returns 'True' iff x and y are completely distinct, i.e. neither contains the other.
 --
--- >>> violins `distinctFrom` trumpets
+-- > violins `distinctFrom` trumpets
 -- True
--- >>> violins `distinctFrom` violins
+-- > violins `distinctFrom` violins
 -- False
--- >>> violins `distinctFrom` violins1
+-- > violins `distinctFrom` violins1
 -- False
--- >>> violins1 `distinctFrom` violins
+-- > violins1 `distinctFrom` violins
 -- False
--- >>> violins1 `distinctFrom` violins2
+-- > violins1 `distinctFrom` violins2
 -- True
 distinctFrom :: Part -> Part -> Bool
 distinctFrom (Part s1 i1 sp1) (Part s2 i2 sp2) = s1 /= s2 || i1 /= i2 || noneSubpart

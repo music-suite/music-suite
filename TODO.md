@@ -411,11 +411,12 @@ From music21:
         - src/Control
         - src/Data
         - src/Music/Pitch
+        - src/Music/Part
         - src/Music/Dynamics
         - src/Music/Articulation
         - src/Music/Score/Export
     - [ ] Try property-based testing (see doctest/README)
-  - Run in CI
+  - [ ] Run in CI
 
 - [ ] Assure a script to run *all* builds, tests and doc gens *from scratch*
   - Should ideally be invoked in CI

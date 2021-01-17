@@ -22,6 +22,10 @@ main = do
           "DataKinds",
           "PolyKinds",
           "InstanceSigs",
+          "NamedFieldPuns",
+          "FlexibleContexts",
+          "ScopedTypeVariables",
+          "FlexibleInstances",
           "OverloadedStrings"
         ]
   -- doctestWithOptions
