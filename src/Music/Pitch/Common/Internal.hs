@@ -1310,9 +1310,15 @@ spell spelling x =
         go 7 = 12
         go n = error $ "TODO: Use mod-12 arith type for argument to Spelling, got " ++ show n
 
-type Tonic = Pitch
-
-spellPitchRelative :: Tonic -> Spelling -> Pitch -> Pitch
+-- | Spell a pitch relative a given tonic.
+--
+-- >>> spellPitchRelative db modally ab
+-- ab
+--
+-- >>> spellPitchRelative c modally ab
+-- gs
+--
+spellPitchRelative :: Pitch -> Spelling -> Pitch -> Pitch
 spellPitchRelative tonic s p = tonic .+^ spell s (p .-. tonic)
 
 -- |
@@ -1423,7 +1429,7 @@ useSimpleQualities i
 -- except the standard ones.
 --
 -- Standard qualities include natural, sharp, flat, double sharp and double flat.
-useStandardAlterations :: Tonic -> Pitch -> Pitch
+useStandardAlterations :: Pitch -> Pitch -> Pitch
 useStandardAlterations tonic p
   | quality i > Perfect && not (ok i) = spellPitchRelative tonic usingSharps p
   | quality i < Perfect && not (ok i) = spellPitchRelative tonic usingFlats p
@@ -1434,7 +1440,7 @@ useStandardAlterations tonic p
 
 -- |
 -- Same as 'useStandardAlterations' but disallow double sharp/flat.
-useSimpleAlterations :: Tonic -> Pitch -> Pitch
+useSimpleAlterations :: Pitch -> Pitch -> Pitch
 useSimpleAlterations tonic p
   | quality i > Perfect && not (ok i) = spellPitchRelative tonic usingSharps p
   | quality i < Perfect && not (ok i) = spellPitchRelative tonic usingFlats p
