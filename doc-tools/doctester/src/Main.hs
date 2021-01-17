@@ -8,6 +8,7 @@ main = do
           "DeriveDataTypeable",
           "DeriveFoldable",
           "DeriveFunctor",
+          "DeriveGeneric",
           "DeriveTraversable",
           "GeneralizedNewtypeDeriving",
           "MultiParamTypeClasses",
