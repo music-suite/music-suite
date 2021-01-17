@@ -221,8 +221,10 @@ modeIntervals f (Mode is) = fmap (\is -> Mode is) $ f is
 -- | Build a scale from a root and mode.
 --
 -- >>> scale c majorScale
+-- ScaleChord c (Mode (_M2 :| [_M2,m2,_M2,_M2,_M2,m2]))
 --
 -- >>> scale f lydian
+-- ScaleChord f (Mode (_M2 :| [_M2,_M2,m2,_M2,_M2,m2]))
 scale :: AffinePair v p => p -> Mode v p -> Scale v p
 scale = ScaleChord
 
@@ -335,13 +337,18 @@ chordToScale = reorient
 -- You can use this to enumerate a scale upwards , starting
 -- from the root.
 --
--- >>> fmap (scale d dorian `index`) [0..]
+-- @
+-- fmap (scale d dorian `index`) [0..]
+-- @
 --
--- >>> fmap (scale d dorian `index`) [0,-1,..]
+-- @
+-- fmap (scale d dorian `index`) [0,-1,..]
+-- @
 --
 -- @index 0 scale@ returns the root of the scale, for example:
 --
--- >>> index 0 (scale c majorScale) == c
+-- >>> index (scale c majorScale) 0
+-- c
 --
 -- See also 'tabulate'.
 index :: AffinePair v p => ScaleChord o 'Root v p -> Integer -> p
@@ -361,8 +368,8 @@ index s n = case fromIntegral n of
 --
 -- >>> cs'' `member` scale d dorian
 -- False
-member :: (Ord p, AffinePair v p) => ScaleChord o 'Root v p -> p -> Bool
-member s p = case p of
+member :: (Ord p, AffinePair v p) => p -> ScaleChord o 'Root v p -> Bool
+member p s = case p of
   p
     | p > z -> p `isHeadOf` Stream.dropWhile (< p) pos
     | p == z -> True
@@ -385,10 +392,13 @@ tabulate (ScaleChord tonic (Mode leaps)) =
 -- | Build a chord from a root and a chord type.
 --
 -- >>> chord c minorTriad
+-- ScaleChord c (Mode (m3 :| [_M3,_P4]))
 --
 -- >>> chord c dominantSeventhChord
+-- ScaleChord c (Mode (_M3 :| [m3,m3,_M2]))
 --
 -- >>> chord d halfDiminishedChord
+-- ScaleChord d (Mode (m3 :| [m3,_M3,_M2]))
 chord :: AffinePair v p => p -> ChordType v p -> Chord v p
 chord = ScaleChord
 
