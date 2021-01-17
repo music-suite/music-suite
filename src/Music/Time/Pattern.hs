@@ -220,6 +220,6 @@ renderPatternsRel = join . fmap (flip renderPattern zeroV)
 -- This means that notes of different onset and duration may trigger a different number of cycles (frequency), with
 -- different starting point in the pattern (phase).
 renderPatternsAbs :: Score (Pattern a) -> Score a
-renderPatternsAbs = join . mapWithSpan (\s -> transform (negateV s) . flip renderPattern s)
+renderPatternsAbs = join . Music.Time.Score.mapWithSpan (\s -> transform (negateV s) . flip renderPattern s)
 -- Note: We can not change the span of a note using mapWithSpan, so we transform the result to position (0<->1)
 -- and trust join to put it back in the same position it was rendered.

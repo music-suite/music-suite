@@ -11,6 +11,7 @@ module Music.Time.Voice
     -- * Construction
     singleton,
     fromRhythm,
+    fromNotes,
     voice,
     notes,
     pairs,
@@ -19,9 +20,9 @@ module Music.Time.Voice
     -- * Map
     map,
     traverse,
-    mapWithOnsetRelative,
-    mapWithOffsetRelative,
-    mapWithSpanRelative,
+    mapWithOnset,
+    mapWithOffset,
+    mapWithSpan,
 
     -- * Points in a voice
     onsetsRelative,
@@ -264,6 +265,9 @@ singleton = pure
 fromRhythm :: [Duration] -> Voice ()
 fromRhythm = view durationsAsVoice
 
+fromNotes :: [Note a] -> Voice a
+fromNotes = view (from notes)
+
 -- | Create a 'Voice' from a list of 'Note's.
 voice :: Iso' [Note a] (Voice a)
 voice = coerced
@@ -333,16 +337,16 @@ map = fmap
 traverse :: Applicative f => (a -> f b) -> Voice a -> f (Voice b)
 traverse = Data.Traversable.traverse
 
-mapWithOffsetRelative :: Time -> (Time -> a -> b) -> Voice a -> Voice b
-mapWithOffsetRelative t f = mapWithSpanRelative t (\s x -> f (s ^. offset) x)
+mapWithOffset:: Time -> (Time -> a -> b) -> Voice a -> Voice b
+mapWithOffset t f = mapWithSpan t (\s x -> f (s ^. offset) x)
 
-mapWithOnsetRelative :: Time -> (Time -> a -> b) -> Voice a -> Voice b
-mapWithOnsetRelative t f = mapWithSpanRelative t (\s x -> f (s ^. onset) x)
+mapWithOnset :: Time -> (Time -> a -> b) -> Voice a -> Voice b
+mapWithOnset t f = mapWithSpan t (\s x -> f (s ^. onset) x)
 
 -- >>> mapWithSpanRelative 0 (\s x -> s) $ asVoice $ mconcat [c,d^*2,e]
 -- [(1,0 <-> 1)^.note,(2,1 <-> 3)^.note,(1,3 <-> 4)^.note]^.voice
-mapWithSpanRelative :: Time -> (Span -> a -> b) -> Voice a -> Voice b
-mapWithSpanRelative t f v = set valuesV newValues v
+mapWithSpan :: Time -> (Span -> a -> b) -> Voice a -> Voice b
+mapWithSpan t f v = set valuesV newValues v
   where
     newValues = zipWith f (erasRelative t v) (v ^. valuesV)
 

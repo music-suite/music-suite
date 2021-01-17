@@ -92,7 +92,7 @@ import Music.Time.Internal.Util
 import Music.Time.Juxtapose
 import Music.Time.Meta
 import Music.Time.Note
-import Music.Time.Voice hiding (map, traverse)
+import Music.Time.Voice hiding (map, traverse, mapWithSpan)
 
 -- $traversals
 -- @
