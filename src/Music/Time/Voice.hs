@@ -259,16 +259,19 @@ instance Num a => Num (Voice a) where
 
   (*) = liftA2 (*)
 
+-- | Construct a voice with a single element.
 singleton :: a -> Voice a
 singleton = pure
 
+-- | Construct a voice from a rhythm.
 fromRhythm :: [Duration] -> Voice ()
 fromRhythm = view durationsAsVoice
 
+-- | Construct a voice from a list of notes.
 fromNotes :: [Note a] -> Voice a
 fromNotes = view (from notes)
 
--- | Create a 'Voice' from a list of 'Note's.
+-- | Construct a voice from a list of notes.
 voice :: Iso' [Note a] (Voice a)
 voice = coerced
 {-# INLINE voice #-}
@@ -331,19 +334,25 @@ pairsIgnoringMeta = iso (fmap (^. from note) . (^. notes)) ((^. voice) . fmap (^
 durationsAsVoice :: Iso' [Duration] (Voice ())
 durationsAsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
 
+-- | Transform this voice by applying a function to every value.
 map :: (a -> b) -> Voice a -> Voice b
 map = fmap
 
+-- Transform this voice by mapping each element to an action, evaluating these actions from left to right, and collecting the results.
 traverse :: Applicative f => (a -> f b) -> Voice a -> f (Voice b)
 traverse = Data.Traversable.traverse
 
+-- | Transform this voice by applying a function to every value.
 mapWithOffset:: Time -> (Time -> a -> b) -> Voice a -> Voice b
 mapWithOffset t f = mapWithSpan t (\s x -> f (s ^. offset) x)
 
+-- | Transform this voice by applying a function to every value.
 mapWithOnset :: Time -> (Time -> a -> b) -> Voice a -> Voice b
 mapWithOnset t f = mapWithSpan t (\s x -> f (s ^. onset) x)
 
--- >>> mapWithSpanRelative 0 (\s x -> s) $ asVoice $ mconcat [c,d^*2,e]
+-- | Transform this voice by applying a function to every value.
+--
+-- >>> mapWithSpan 0 (\s x -> s) $ asVoice $ mconcat [c,d^*2,e]
 -- [(1,0 <-> 1)^.note,(2,1 <-> 3)^.note,(1,3 <-> 4)^.note]^.voice
 mapWithSpan :: Time -> (Span -> a -> b) -> Voice a -> Voice b
 mapWithSpan t f v = set valuesV newValues v
