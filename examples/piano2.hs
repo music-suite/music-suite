@@ -233,7 +233,7 @@ p1 = newPattern ([a |* 3, d, e]^.voice) |/ 8
 p1_1 :: IsPitch a => Pattern a
 p1_1 = newPattern ([f, e, f, d, e, c, d |* 2, d |* 2]^.voice) |/ 8
 
-p1_1i :: (IsPitch a, HasPitches' a, S.Pitch a ~ Pitch) => Pattern a
+p1_1i :: (IsPitch a, HasPitches' a, S.GetPitch a ~ Pitch) => Pattern a
 p1_1i = invertDiatonic e p1_1
 
 p2 :: IsPitch a => Pattern a

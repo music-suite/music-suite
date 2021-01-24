@@ -282,13 +282,13 @@ The possibilities here are really endless, so let's just start with some basics.
 
 -}
 
-numberOfUniquePitches :: forall a p . (HasPitches' a, Music.Score.Pitch.Pitch a ~ p, Ord p) => a -> Int
+numberOfUniquePitches :: forall a p . (HasPitches' a, Music.Score.Pitch.GetPitch a ~ p, Ord p) => a -> Int
 numberOfUniquePitches = length . uniquePitches
 
-uniquePitches :: forall a p . (HasPitches' a, Music.Score.Pitch.Pitch a ~ p, Ord p) => a -> [p]
+uniquePitches :: forall a p . (HasPitches' a, Music.Score.Pitch.GetPitch a ~ p, Ord p) => a -> [p]
 uniquePitches = \x -> Data.List.nub $ Data.List.sort $ toListOf pitches' x
 
-replacePitches :: (HasPitches' a, Music.Score.Pitch.Pitch a ~ Pitch) => [Pitch] -> Score a -> Score a
+replacePitches :: (HasPitches' a, Music.Score.Pitch.GetPitch a ~ Pitch) => [Pitch] -> Score a -> Score a
 replacePitches newPitches texture = ppar $ fmap ($ texture) replacers
   where
     replacers = zipWith (\n o -> set pitches' n . mfilter (\x->x^?!pitches == o)) (cycle newPitches) originalPitches

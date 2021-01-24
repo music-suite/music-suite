@@ -5,7 +5,7 @@ import Music.Prelude
 import Control.Lens (_1, over)
 import qualified Music.Score as Score
 
-markIf :: (HasColor a, HasPitches' a, Score.Pitch a ~ Pitch) => (Interval -> Bool) -> Score a -> Score a
+markIf :: (HasColor a, HasPitches' a, Score.GetPitch a ~ Pitch) => (Interval -> Bool) -> Score a -> Score a
 markIf p     = mapIf (\x -> p $ withOrigin c $ x ^?! pitches) mark
   where
     mark         = colorRed

@@ -9,13 +9,13 @@
 import Music.Prelude hiding (open)
 import qualified Music.Score as S
 
-withTintin :: (HasPitches' a, S.Pitch a ~ Pitch) => Pitch -> Score a -> Score a
+withTintin :: (HasPitches' a, S.GetPitch a ~ Pitch) => Pitch -> Score a -> Score a
 withTintin p x = x <> tintin p x
 
 -- |
 -- Given the a melody voice return the tintinnabuli voice.
 --
-tintin :: (HasPitches' a, S.Pitch a ~ Pitch) => Pitch -> Score a -> Score a
+tintin :: (HasPitches' a, S.GetPitch a ~ Pitch) => Pitch -> Score a -> Score a
 tintin tonic = pitches  %~ relative tonic tintin'
 
 -- |
@@ -43,16 +43,16 @@ mapEvensOdds f g [] = []
 mapEvensOdds f g [a] = [f a]
 mapEvensOdds f g (a : b : cs) = f a : g b : mapEvensOdds f g cs
 
--- mainSubject :: (HasPitch' a, HasPart' a, HasArticulation' a, Enum a, IsPitch a, S.Articulation a ~ Articulation, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
+-- mainSubject :: (HasPitch' a, HasPart' a, HasArticulation' a, Enum a, IsPitch a, S.Articulation a ~ Articulation, S.GetPitch a ~ Pitch, S.Part a ~ Part) => Score a
 mainSubject = stretch (1/6) $ pseq $ mapEvensOdds (accent . (|*2)) id $ concatMap fallingScaleSect [1..30]
 
--- bell :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
+-- bell :: (HasPitch' a, HasParts' a, S.GetPitch a ~ Pitch, S.Part a ~ Part) => Score a
 bell = let
     -- cue :: Score (Maybe a)
     cue = stretchTo 1 (rest |> a)
     in parts' .~ solo tubularBells $ {- text "l.v." $ -} removeRests $ times 40 $ pseq [times 3 $ pseq [cue,rest], rest|*2]
 
--- strings :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
+-- strings :: (HasPitch' a, HasParts' a, S.GetPitch a ~ Pitch, S.Part a ~ Part) => Score a
 strings = ppar [
     parts' .~ violins1     $ up (_P8^*1)   $ stringPart,
     parts' .~ violins2     $ up (_P8^*0)   $ stretch 2 stringPart,
@@ -62,7 +62,7 @@ strings = ppar [
     where
         stringPart = delay (1/2) $ withTintin (down (_P8^*4) $ (a::Pitch)) $ mainSubject
 
--- music :: (HasPitch' a, HasParts' a, S.Pitch a ~ Pitch, S.Part a ~ Part) => Score a
+-- music :: (HasPitch' a, HasParts' a, S.GetPitch a ~ Pitch, S.Part a ~ Part) => Score a
 music :: Music
 music = filterWithTime (\t _ _ -> t < 50) $ meta $ stretch (3/2) $ bell <> delay 6 strings
     where
