@@ -55,7 +55,7 @@ import Music.Articulation
 import Music.Dynamics
 import Music.Parts
 import Music.Pitch
-import Music.Score hiding (Clef (..), Fifths, Interval, Pitch, view)
+import Music.Score hiding (Clef (..), Fifths, view)
 import Music.Score.Export.StandardNotation (Asp1, Asp1a, LilypondLayout (..), LilypondOptions (..), defaultLilypondOptions, runIOExportM, toLy, toMidi, toStandardNotation, toXml)
 import qualified Music.Score.Part
 import qualified System.Environment

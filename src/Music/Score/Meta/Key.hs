@@ -54,7 +54,7 @@ import Music.Pitch.Literal
 import Music.Score.Internal.Util
 import Music.Score.Meta
 import Music.Score.Part
-import Music.Score.Pitch hiding (Pitch)
+import Music.Score.Pitch
 import Music.Time
 import Music.Time.Reactive
 

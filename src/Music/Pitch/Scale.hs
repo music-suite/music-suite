@@ -205,7 +205,7 @@ instance Bitraversable (ScaleChord o r) where
   bitraverse f _ (Mode xs) = Mode <$> traverse f xs
   bitraverse f g (ScaleChord p xs) = ScaleChord <$> g p <*> bitraverse f g xs
 
-type instance S.Pitch (ScaleChord o r v p) = S.Pitch p
+type instance S.GetPitch (ScaleChord o r v p) = S.GetPitch p
 
 type instance S.SetPitch p (ScaleChord o r v p') = ScaleChord o r v (S.SetPitch p p')
 
@@ -603,7 +603,7 @@ instance Bifoldable f => Bifoldable (Voiced f) where
 instance Bitraversable f => Bitraversable (Voiced f) where
   bitraverse f g (Voiced xs ns) = Voiced <$> bitraverse f g xs <*> pure ns
 
-type instance S.Pitch (Voiced f v p) = S.Pitch p
+type instance S.GetPitch (Voiced f v p) = S.GetPitch p
 
 type instance S.SetPitch p (Voiced f v p') = Voiced f v (S.SetPitch p p')
 

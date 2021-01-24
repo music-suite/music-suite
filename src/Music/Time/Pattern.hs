@@ -167,7 +167,7 @@ type instance SetArticulation b (Pattern a) = Pattern (SetArticulation b a)
 instance HasArticulations a b => HasArticulations (Pattern a) (Pattern b) where
   articulations = traverse . articulations
 
-type instance Pitch (Pattern a) = Pitch a
+type instance GetPitch (Pattern a) = GetPitch a
 
 type instance SetPitch b (Pattern a) = Pattern (SetPitch b a)
 

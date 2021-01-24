@@ -422,13 +422,13 @@ From music21:
   - Should ideally be invoked in CI
   - Because of overeager caching in doc gens ($transfCache), requires `rm -rf docs/build` to be reproducible
 
-- Rename Music.Score.Pitch -> GetPitch
-  - [ ] Pitch
+- [ ] Rename Music.Score.Pitch -> GetPitch
+  - [X] Pitch
   - [X] Dynamics
   - [X] Articulation
   - [X] Technique
   - [X] Part
-  - Also rename SomeTechnique -> Music.Technique.Technique or similar (a la pitch et al)
+  - [ ] Also rename SomeTechnique -> Music.Technique.Technique or similar (a la pitch et al)
 
 - Move Music.Pitch.Literal to Music.Pitch.Common (as they rely on Common(Pitch, Interval))
 

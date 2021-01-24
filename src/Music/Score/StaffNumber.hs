@@ -114,7 +114,7 @@ deriving instance Alterable a => Alterable (StaffNumberT a)
 
 deriving instance Augmentable a => Augmentable (StaffNumberT a)
 
-type instance Pitch (StaffNumberT a) = Pitch a
+type instance GetPitch (StaffNumberT a) = GetPitch a
 
 type instance SetPitch g (StaffNumberT a) = StaffNumberT (SetPitch g a)
 
