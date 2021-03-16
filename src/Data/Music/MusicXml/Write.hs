@@ -1,6 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# OPTIONS_GHC -fno-warn-unused-matches #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-} -- TODO
 
 -------------------------------------------------------------------------------------
 
@@ -202,6 +201,7 @@ instance WriteMusicXml MusicElem where
   write (MusicBackup d) = single $ unode "backup" (unode "duration" $ show $ getDivs d)
   write (MusicForward d) = single $ unode "forward" (unode "duration" $ show $ getDivs d)
   write (MusicBarline x) = write x
+  write xs = error $ "Unsupported MusicElem: " ++ show xs
 
 -- ----------------------------------------------------------------------------------
 -- Attributes
@@ -262,7 +262,7 @@ instance WriteMusicXml Attributes where
           Nothing -> []
           Just (OctaveChange n) -> [unode "octave-change" (show n)]
 
-
+  write xs = error $ "Unsupported Attributes: " ++ show xs
 
 -- ----------------------------------------------------------------------------------
 -- Notes
@@ -475,6 +475,7 @@ instance WriteMusicXml Ornament where
   write InvertedMordent = single $ unode "inverted-mordent" ()
   write Schleifer = single $ unode "schleifer" ()
   write (Tremolo num) = single $ unode "tremolo" (show num)
+  write xs = error $ "Unsupported Ornament: " ++ show xs
 
 instance WriteMusicXml Technical where
   write UpBow = single $ unode "up-bow" ()
@@ -541,6 +542,7 @@ instance WriteMusicXml Direction where
         <> [unode "per-minute" (show $ round @Double @Integer $ getTempo tempo)]
   write Bracket = notImplemented "Unsupported directions"
   write (OtherDirection dir) = notImplemented ("OtherDirection " <> dir)
+  write xs = error $ "Unsupported Direction: " ++ show xs
 
 -- ----------------------------------------------------------------------------------
 -- Barline

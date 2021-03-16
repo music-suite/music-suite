@@ -3,9 +3,6 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-unused-top-binds
-  -fno-warn-unused-matches
   -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
 
@@ -40,25 +37,9 @@ module Music.Time.Internal.Util
   )
 where
 
-{-
-    Rules:
-
-        * Functions may depend on any module in the lastest Haskell Platform release
-        * All functions but those in Prelude must be referred to with their full,
-          qualified names (i.e. Data.List.unfoldr).
-        * Each function must have a unique name (so the whole file is a loadable module).
-        * Each function should have a synopisis, like:
-
-            -- | Ordinary Haddock commentary ...
-            -- > category: Categories (please use the common Hackage names)
-            -- > depends : base (all packages in HP that the function depends on)
-
--}
-
 import Control.Applicative
 import Control.Lens
-import qualified Data.Char
-import Data.Functor.Contravariant (Equivalence (..), contramap)
+import Data.Functor.Contravariant (Equivalence (..))
 import qualified Data.List
 import qualified Data.Monoid
 import qualified Data.Ratio
@@ -87,7 +68,7 @@ splitWhile p xs = case splitWhile' p xs of
   [] : xss -> xss
   xss -> xss
   where
-    splitWhile' p [] = [[]]
+    splitWhile' _ [] = [[]]
     splitWhile' p (x : xs) = case splitWhile' p xs of
       (xs : xss) -> if p x then [] : (x : xs) : xss else (x : xs) : xss
       [] -> error "splitWhile"
@@ -231,8 +212,8 @@ partial3 f = curry3 (fmap (view _3) . partial (uncurry3 f))
 -- > category: List
 -- > depends: base
 list :: r -> ([a] -> r) -> [a] -> r
-list z f [] = z
-list z f xs = f xs
+list z _ [] = z
+list _ f xs = f xs
 
 -- | Merge lists.
 -- > category: List
@@ -251,8 +232,8 @@ mergeBy f = mergeBy' $ (fmap . fmap) orderingToBool f
     orderingToBool GT = False
 
 mergeBy' :: (a -> a -> Bool) -> [a] -> [a] -> [a]
-mergeBy' pred xs [] = xs
-mergeBy' pred [] ys = ys
+mergeBy' _    xs [] = xs
+mergeBy' _    [] ys = ys
 mergeBy' pred (x : xs) (y : ys) =
   case pred x y of
     True -> x : mergeBy' pred xs (y : ys)
@@ -316,10 +297,10 @@ swap (x, y) = (y, x)
 -- > category: List
 -- > depends: base
 withNext :: [a] -> [(a, Maybe a)]
-withNext = fmap (\(p, c, n) -> (c, n)) . withPrevNext
+withNext = fmap (\(_, c, n) -> (c, n)) . withPrevNext
 
 withPrev :: [a] -> [(Maybe a, a)]
-withPrev = fmap (\(p, c, n) -> (p, c)) . withPrevNext
+withPrev = fmap (\(p, c, _) -> (p, c)) . withPrevNext
 
 -- withNext = go
 --     where

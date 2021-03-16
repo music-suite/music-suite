@@ -28,12 +28,12 @@ import Control.Lens hiding
     (|>),
   )
 import Control.Monad
-import Control.Monad.Compose
 import Control.Monad.Plus
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.Foldable (Foldable)
 import qualified Data.Foldable as Foldable
+import qualified Data.Traversable
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Ratio
@@ -98,6 +98,8 @@ instance Monad Track where
   return = view _Unwrapped . return . return
 
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
+    where
+      mbind = (concat .) . fmap . (fmap join .) . Data.Traversable.traverse
 
 instance Wrapped (Track a) where
 

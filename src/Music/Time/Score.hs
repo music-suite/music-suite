@@ -61,7 +61,6 @@ import Control.Lens hiding
     (|>),
   )
 import Control.Monad
-import Control.Monad.Compose
 import Control.Monad.Plus
 import Control.Monad.Writer
 import Data.Aeson (FromJSON (..), ToJSON (..))

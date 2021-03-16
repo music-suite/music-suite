@@ -1,8 +1,5 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 -- | Provides colored note heads.
 module Music.Score.Color

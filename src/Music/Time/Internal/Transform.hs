@@ -9,9 +9,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------

@@ -1,7 +1,3 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  #-}
 
 -------------------------------------------------------------------------------------
 
@@ -29,11 +25,6 @@ module Music.Dynamics.Absolute
   )
 where
 
-import Control.Applicative
-import Control.Monad
-import Data.Either
-import Data.Maybe
-import Data.Semigroup
 
 -- |
 -- Amplitude level, where @0@ is silent and @1@ is peak.

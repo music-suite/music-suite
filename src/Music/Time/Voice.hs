@@ -90,10 +90,8 @@ import Control.Lens hiding
 
 import Prelude hiding (map, traverse)
 import Control.Monad
-import Control.Monad.Compose
 import Control.Monad.Zip
 import Data.AffineSpace
-import Data.Coerce (coerce)
 import qualified Data.Either
 import qualified Data.Traversable
 import qualified Data.Foldable
@@ -149,12 +147,16 @@ instance Alternative Voice where
 
   empty = mempty
 
+-- Note: We could also iso-derive this via (WriterT Duration [])
+-- as in Music.Time.Score
 instance Monad Voice where
 
   return = Voice . return . return
 
   (>>=) :: forall a b. Voice a -> (a -> Voice b) -> Voice b
-  xs >>= f = coerce @[Note b] @(Voice b) $ (coerce @(Voice b) @[Note b] . f) `mbind` coerce xs
+  Voice xs >>= f = Voice $ (getVoice . f) `mbind` xs
+    where
+      mbind = (concat .) . fmap . (fmap join .) . Data.Traversable.traverse
 
 instance MonadPlus Voice where
 

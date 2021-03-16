@@ -7,7 +7,7 @@
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+  #-}
 {-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------
@@ -25,8 +25,7 @@
 --
 -- Provides miscellaneous conversions.
 module Music.Time.Internal.Convert
-  ( -- scoreToVoice,
-    reactiveToVoice',
+  ( reactiveToVoice',
   )
 where
 

@@ -1,8 +1,5 @@
 {-# LANGUAGE ViewPatterns #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 module Music.Score.Meta
   ( module Music.Time.Meta,
