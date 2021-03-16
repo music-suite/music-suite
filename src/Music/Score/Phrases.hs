@@ -5,9 +5,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC
-  -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-unused-matches
   -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
@@ -194,7 +192,7 @@ singleMVoice = prism' voiceToScore' scoreToVoice
           . (^. triples)
           $ sc
       where
-        throwTime (t, d, x) = (d, x)
+        throwTime (_, d, x) = (d, x)
         addRests = concat . snd . List.mapAccumL g 0
           where
             g u (t, d, x)
@@ -206,7 +204,8 @@ mapPhrasesWithPrevAndCurrentOnset :: HasPhrases s t a b => (Maybe (Time, Phrase 
 mapPhrasesWithPrevAndCurrentOnset f = over (mvoices . mVoiceTVoice) (withPrevAndCurrentOnset f)
 
 withPrevAndCurrentOnset :: (Maybe (Time, a) -> Time -> a -> b) -> Track a -> Track b
-withPrevAndCurrentOnset f = over placeds (fmap (\(x, y, z) -> fmap (f (fmap placedOnset x) (fst $ placedOnset y)) y) . withPrevNext)
+withPrevAndCurrentOnset f = over placeds (fmap (\(x, y, _)
+  -> fmap (f (fmap placedOnset x) (fst $ placedOnset y)) y) . withPrevNext)
   where
     placedOnset :: Placed a -> (Time, a)
     placedOnset = view (from placed)
@@ -234,7 +233,7 @@ _rights = lens _rightsGet (flip _rightsSet)
     _rightsSet cs = sndMapAccumL f cs
       where
         f cs (Left a) = (cs, Left a)
-        f (c : cs) (Right b) = (cs, Right c)
+        f (c : cs) (Right _) = (cs, Right c)
         f [] (Right _) = error "No more cs"
     sndMapAccumL f z = snd . List.mapAccumL f z
 
@@ -253,7 +252,7 @@ withDurationR = fmap $ \x -> (_duration x, x)
 -- >>> groupDiff (== 0) [0,1,2,3,5,0,0,6,7]
 -- [Right [0], Left [1,2,3,5], Right [0,0], Left [6,7]]
 groupDiff :: (a -> Bool) -> [a] -> [Either [a] [a]]
-groupDiff p [] = []
+groupDiff _ [] = []
 groupDiff p (x : xs)
   | not (p x) = Left (x : List.takeWhile (not . p) xs) : groupDiff p (List.dropWhile (not . p) xs)
   | p x = Right (x : List.takeWhile p xs) : groupDiff p (List.dropWhile p xs)
