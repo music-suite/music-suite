@@ -1,7 +1,3 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-unused-imports #-}
 
 {-# LANGUAGE DerivingVia, FlexibleInstances #-}
 
