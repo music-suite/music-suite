@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-} -- TODO get rid of this!
 {-# LANGUAGE FlexibleContexts #-}
 
 -- | Representation of musical instruments, parts and playing techniques.
@@ -310,15 +309,15 @@ clarinets = tutti clarinet
 
 bassoons = tutti bassoon
 
-[flutes1, flutes2] = divide 2 flutes
+(flutes1, flutes2) = divide2 flutes
 
 altoFlutes = tutti altoFlute
 
-[oboes1, oboes2] = divide 2 oboes
+(oboes1, oboes2) = divide2 oboes
 
 corAnglaises = tutti corAnglais
 
-[clarinets1, clarinets2] = divide 2 clarinets
+(clarinets1, clarinets2) = divide2 clarinets
 
 ebClarinets = tutti ebClarinet
 
@@ -336,15 +335,15 @@ trumpets = tutti trumpet
 
 trombones = tutti trombone
 
-[trumpets1, trumpets2] = divide 2 trumpets
+(trumpets1, trumpets2) = divide2 trumpets
 
-[trombones1, trombones2] = divide 2 trombones
+(trombones1, trombones2) = divide2 trombones
 
 tubas = tutti tuba
 
 violins = tutti violin
 
-[violins1, violins2] = divide 2 violins
+(violins1, violins2) = divide2 violins
 
 violas = tutti viola
 
@@ -357,3 +356,8 @@ harp' = fromMidiProgram 46
 harp = tutti harp'
 
 stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
+
+divide2 x = case divide 2 x of
+  [a, b] -> (a, b)
+  _ -> error "Expected 2"
+
