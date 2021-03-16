@@ -547,7 +547,7 @@ From music21:
 - [ ] render e.g. snare drum parts correctly on single-line staff
 
 - Internal improvements:
-  - Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
+  - [X] Replace Control.Monad.Compose uses with (WriterT []) iso-deriving
 
 - [ ] Docs: User-Guide
   - Title/Attribution not shown in examples (because the example uses the inline LY template?)
