@@ -3,7 +3,6 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-matches
   -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
 
@@ -69,7 +68,7 @@ splitWhile p xs = case splitWhile' p xs of
   [] : xss -> xss
   xss -> xss
   where
-    splitWhile' p [] = [[]]
+    splitWhile' _ [] = [[]]
     splitWhile' p (x : xs) = case splitWhile' p xs of
       (xs : xss) -> if p x then [] : (x : xs) : xss else (x : xs) : xss
       [] -> error "splitWhile"
@@ -213,8 +212,8 @@ partial3 f = curry3 (fmap (view _3) . partial (uncurry3 f))
 -- > category: List
 -- > depends: base
 list :: r -> ([a] -> r) -> [a] -> r
-list z f [] = z
-list z f xs = f xs
+list z _ [] = z
+list _ f xs = f xs
 
 -- | Merge lists.
 -- > category: List
@@ -233,8 +232,8 @@ mergeBy f = mergeBy' $ (fmap . fmap) orderingToBool f
     orderingToBool GT = False
 
 mergeBy' :: (a -> a -> Bool) -> [a] -> [a] -> [a]
-mergeBy' pred xs [] = xs
-mergeBy' pred [] ys = ys
+mergeBy' _    xs [] = xs
+mergeBy' _    [] ys = ys
 mergeBy' pred (x : xs) (y : ys) =
   case pred x y of
     True -> x : mergeBy' pred xs (y : ys)
@@ -298,10 +297,10 @@ swap (x, y) = (y, x)
 -- > category: List
 -- > depends: base
 withNext :: [a] -> [(a, Maybe a)]
-withNext = fmap (\(p, c, n) -> (c, n)) . withPrevNext
+withNext = fmap (\(_, c, n) -> (c, n)) . withPrevNext
 
 withPrev :: [a] -> [(Maybe a, a)]
-withPrev = fmap (\(p, c, n) -> (p, c)) . withPrevNext
+withPrev = fmap (\(p, c, _) -> (p, c)) . withPrevNext
 
 -- withNext = go
 --     where
