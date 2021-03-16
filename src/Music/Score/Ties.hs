@@ -1,8 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-matches
-  -fno-warn-redundant-constraints #-}
+  #-}
 
 -- |
 -- Provides a representation for tied notes, and a class to split a single note
@@ -242,14 +240,14 @@ splitDurThen s t x = case splitDur s x of
 --
 -- > sum $ fmap duration $ fst $ splitDurFor maxDur xs == maxDur  iff  (not $ null $ snd $ splitDurFor maxDur xs)
 splitDurFor :: Tiable a => Duration -> [(Duration, a)] -> ([(Duration, a)], [(Duration, a)])
-splitDurFor remDur [] = ([], [])
+splitDurFor _      [] = ([], [])
 splitDurFor remDur (x : xs) = case splitDur remDur x of
   (x@(d, _), Nothing) ->
     if d < remDur
       then first (x :) $ splitDurFor (remDur - d) xs
       else-- d == remDur
         ([x], xs)
-  (x@(d, _), Just rest) -> ([x], rest : xs)
+  (x, Just rest) -> ([x], rest : xs)
 
 -- |
 -- Split a event if it is longer than the given duration. Returns the first part of the
