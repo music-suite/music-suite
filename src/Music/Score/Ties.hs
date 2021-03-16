@@ -1,6 +1,4 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC
-  #-}
 
 -- |
 -- Provides a representation for tied notes, and a class to split a single note
