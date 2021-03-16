@@ -78,7 +78,7 @@ import Music.Time.Event
 import Music.Time.Internal.Transform
 import Music.Time.Note
 import Music.Time.Score
-import Music.Time.Voice
+import Music.Time.Voice hiding (map, traverse)
 
 -- |
 -- Dynamics type.
@@ -411,7 +411,7 @@ cresc' ::
 cresc' a b = setLevelWithAlignment (\t -> alerp a b (realToFrac t))
 
 setLevelWithAlignment :: (Attenuable l d a) => (Duration -> GetDynamic a) -> Voice a -> Voice a
-setLevelWithAlignment f = mapWithOnsetRelative 0 (\t x -> level (f (t .-. 0)) x)
+setLevelWithAlignment f = Music.Time.Voice.mapWithOnset 0 (\t x -> level (f (t .-. 0)) x)
 
 dim ::
   (HasPhrases' s a, Attenuable v d a, Fractional (Scalar v)) =>

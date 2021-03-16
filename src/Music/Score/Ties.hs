@@ -37,7 +37,7 @@ import Music.Pitch.Literal
 import Music.Time.Behavior
 import Music.Time.Note (note)
 import Music.Time.Transform
-import Music.Time.Voice
+import Music.Time.Voice hiding (map, traverse)
 
 -- |
 -- Class of types that can be tied. Ties are added to a score by splitting a single note

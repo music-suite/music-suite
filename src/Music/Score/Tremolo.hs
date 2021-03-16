@@ -104,7 +104,7 @@ deriving instance Alterable a => Alterable (TremoloT a)
 
 deriving instance Augmentable a => Augmentable (TremoloT a)
 
-type instance Pitch (TremoloT a) = Pitch a
+type instance GetPitch (TremoloT a) = GetPitch a
 
 type instance SetPitch g (TremoloT a) = TremoloT (SetPitch g a)
 

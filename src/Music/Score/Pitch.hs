@@ -63,9 +63,9 @@ module Music.Score.Pitch
     enumDownChromaticFromTo,
 
     -- * Pitch type
-    Pitch,
+    GetPitch,
     SetPitch,
-    Interval,
+    GetInterval,
 
     -- * HasPitch classes
     HasPitch (..),
@@ -121,7 +121,7 @@ import Music.Time.Note
 import Music.Time.Placed
 import Music.Time.Score
 import Music.Time.Track
-import Music.Time.Voice
+import Music.Time.Voice hiding (map, traverse)
 
 -- | A type function that returns the pitch type associated with a given type.
 --
@@ -132,7 +132,7 @@ import Music.Time.Voice
 -- For containers this is a morhism
 --
 -- > GetPitch (Voice Pitch) = PitchOf Pitch = Pitch
-type family Pitch (s :: Type) :: Type
+type family GetPitch (s :: Type) :: Type
 
 -- |
 -- A type function to change the pitch type associate with a given type, where the first argument is the new pitch type,
@@ -150,15 +150,15 @@ type family SetPitch (b :: Type) (s :: Type) :: Type
 -- | Types which has a single pitch (i.e notes, events, the pitches themselves).
 class HasPitches s t => HasPitch s t where
   -- | Access the pitch.
-  pitch :: Lens s t (Pitch s) (Pitch t)
+  pitch :: Lens s t (GetPitch s) (GetPitch t)
 
 -- | Types which has multiple pitches (i.e. voices, scores).
 class
-  ( SetPitch (Pitch t) s ~ t
+  ( SetPitch (GetPitch t) s ~ t
   ) =>
   HasPitches s t where
   -- | Access all pitches.
-  pitches :: Traversal s t (Pitch s) (Pitch t)
+  pitches :: Traversal s t (GetPitch s) (GetPitch t)
 
 -- |  Same as 'HasPitch' but does not allow you to change the type.
 type HasPitch' a = HasPitch a a
@@ -167,70 +167,70 @@ type HasPitch' a = HasPitch a a
 type HasPitches' a = HasPitches a a
 
 -- |  Access the pitch. This is the same as 'pitch', but does not allow you to change the type.
-pitch' :: HasPitch' s => Lens' s (Pitch s)
+pitch' :: HasPitch' s => Lens' s (GetPitch s)
 pitch' = pitch
 
 -- | Access all pitches. Same as 'pitches', but does not allow you to change the type.
-pitches' :: HasPitches' s => Traversal' s (Pitch s)
+pitches' :: HasPitches' s => Traversal' s (GetPitch s)
 pitches' = pitches
 
-type instance Pitch () = ()
+type instance GetPitch () = ()
 
 type instance SetPitch a () = a
 
-instance (a ~ Pitch a) => HasPitch () a where pitch = ($)
+instance (a ~ GetPitch a) => HasPitch () a where pitch = ($)
 
-instance (a ~ Pitch a) => HasPitches () a where pitches = ($)
+instance (a ~ GetPitch a) => HasPitches () a where pitches = ($)
 
-type instance Pitch (c, a) = Pitch a
+type instance GetPitch (c, a) = GetPitch a
 
 type instance SetPitch b (c, a) = (c, SetPitch b a)
 
-type instance Pitch [a] = Pitch a
+type instance GetPitch [a] = GetPitch a
 
 type instance SetPitch b [a] = [SetPitch b a]
 
-type instance Pitch (Map k a) = Pitch a
+type instance GetPitch (Map k a) = GetPitch a
 
 type instance SetPitch b (Map k a) = Map k (SetPitch b a)
 
-type instance Pitch (Seq a) = Pitch a
+type instance GetPitch (Seq a) = GetPitch a
 
 type instance SetPitch b (Seq a) = Seq (SetPitch b a)
 
-type instance Pitch (Maybe a) = Pitch a
+type instance GetPitch (Maybe a) = GetPitch a
 
 type instance SetPitch b (Maybe a) = Maybe (SetPitch b a)
 
-type instance Pitch (Either c a) = Pitch a
+type instance GetPitch (Either c a) = GetPitch a
 
 type instance SetPitch b (Either c a) = Either c (SetPitch b a)
 
-type instance Pitch (Event a) = Pitch a
+type instance GetPitch (Event a) = GetPitch a
 
 type instance SetPitch b (Event a) = Event (SetPitch b a)
 
-type instance Pitch (Placed a) = Pitch a
+type instance GetPitch (Placed a) = GetPitch a
 
 type instance SetPitch b (Placed a) = Placed (SetPitch b a)
 
-type instance Pitch (Note a) = Pitch a
+type instance GetPitch (Note a) = GetPitch a
 
 type instance SetPitch b (Note a) = Note (SetPitch b a)
 
-type instance Pitch (Voice a) = Pitch a
+type instance GetPitch (Voice a) = GetPitch a
 
 type instance SetPitch b (Voice a) = Voice (SetPitch b a)
 
-type instance Pitch (Track a) = Pitch a
+type instance GetPitch (Track a) = GetPitch a
 
 type instance SetPitch b (Track a) = Track (SetPitch b a)
 
-type instance Pitch (Score a) = Pitch a
+type instance GetPitch (Score a) = GetPitch a
 
 type instance SetPitch b (Score a) = Score (SetPitch b a)
 
-type instance Pitch (Aligned a) = Pitch a
+type instance GetPitch (Aligned a) = GetPitch a
 
 type instance SetPitch b (Aligned a) = Aligned (SetPitch b a)
 
@@ -282,7 +282,7 @@ instance HasPitches a b => HasPitches (Voice a) (Voice b) where
 instance HasPitches a b => HasPitches (Track a) (Track b) where
   pitches = traverse . pitches
 
-type instance Pitch (NonEmpty a) = Pitch a
+type instance GetPitch (NonEmpty a) = GetPitch a
 
 type instance SetPitch b (NonEmpty a) = NonEmpty (SetPitch b a)
 
@@ -299,44 +299,44 @@ instance HasPitches a b => HasPitches (Chord a) (Chord b) where
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
   pitches = traverse . pitches
 
-type instance Pitch (Sum a) = Pitch a
+type instance GetPitch (Sum a) = GetPitch a
 
 type instance SetPitch b (Sum a) = Sum (SetPitch b a)
 
 instance HasPitches a b => HasPitches (Sum a) (Sum b) where
   pitches = traverse . pitches
 
-type instance Pitch (Behavior a) = Behavior a
+type instance GetPitch (Behavior a) = Behavior a
 
 type instance SetPitch b (Behavior a) = b
 
-instance (b ~ Pitch b) => HasPitches (Behavior a) b where
+instance (b ~ GetPitch b) => HasPitches (Behavior a) b where
   pitches = ($)
 
-instance (b ~ Pitch b) => HasPitch (Behavior a) b where
+instance (b ~ GetPitch b) => HasPitch (Behavior a) b where
   pitch = ($)
 
-type instance Pitch (Couple c a) = Pitch a
+type instance GetPitch (Couple c a) = GetPitch a
 
 type instance SetPitch g (Couple c a) = Couple c (SetPitch g a)
 
-type instance Pitch (TextT a) = Pitch a
+type instance GetPitch (TextT a) = GetPitch a
 
 type instance SetPitch g (TextT a) = TextT (SetPitch g a)
 
-type instance Pitch (HarmonicT a) = Pitch a
+type instance GetPitch (HarmonicT a) = GetPitch a
 
 type instance SetPitch g (HarmonicT a) = HarmonicT (SetPitch g a)
 
-type instance Pitch (TieT a) = Pitch a
+type instance GetPitch (TieT a) = GetPitch a
 
 type instance SetPitch g (TieT a) = TieT (SetPitch g a)
 
-type instance Pitch (SlideT a) = Pitch a
+type instance GetPitch (SlideT a) = GetPitch a
 
 type instance SetPitch g (SlideT a) = SlideT (SetPitch g a)
 
-type instance Pitch (Ambitus v a) = Pitch a
+type instance GetPitch (Ambitus v a) = GetPitch a
 
 type instance SetPitch g (Ambitus v a) = Ambitus v (SetPitch g a)
 
@@ -375,7 +375,7 @@ instance (HasPitches a b) => HasPitches (Ambitus v a) (Ambitus v b) where
 
 -- |
 -- Associated interval type.
-type Interval a = Diff (Pitch a)
+type GetInterval a = Diff (GetPitch a)
 
 type PitchPair v w = (Num (Scalar v), IsInterval v, IsPitch w)
 
@@ -383,8 +383,8 @@ type PitchPair v w = (Num (Scalar v), IsInterval v, IsPitch w)
 -- Class of types that can be transposed, inverted and so on.
 type Transposable a =
   ( HasPitches' a,
-    AffinePair (Interval a) (Pitch a),
-    PitchPair (Interval a) (Pitch a)
+    AffinePair (GetInterval a) (GetPitch a),
+    PitchPair (GetInterval a) (GetPitch a)
   )
 
 -- |
@@ -395,7 +395,7 @@ type Transposable a =
 --
 -- >>> up _P5 [c,d,e :: Pitch]
 -- [g,a,b]
-up :: Transposable a => Interval a -> a -> a
+up :: Transposable a => GetInterval a -> a -> a
 up v = pitches %~ (.+^ v)
 
 -- |
@@ -406,7 +406,7 @@ up v = pitches %~ (.+^ v)
 --
 -- >>> down _P5 [c,d,e]
 -- [f_,g_,a_]
-down :: Transposable a => Interval a -> a -> a
+down :: Transposable a => GetInterval a -> a -> a
 down v = pitches %~ (.-^ v)
 
 -- |
@@ -417,7 +417,7 @@ down v = pitches %~ (.-^ v)
 --
 -- >>> above _P5 (c :: Score Pitch)
 -- [c,g]^.score
-above :: (Semigroup a, Transposable a) => Interval a -> a -> a
+above :: (Semigroup a, Transposable a) => GetInterval a -> a -> a
 above v x = x <> up v x
 
 -- |
@@ -425,12 +425,12 @@ above v x = x <> up v x
 --
 -- >>> below _P8 [c :: Pitch]
 -- [c,c_]
-below :: (Semigroup a, Transposable a) => Interval a -> a -> a
+below :: (Semigroup a, Transposable a) => GetInterval a -> a -> a
 below v x = x <> down v x
 
 -- |
 -- Invert pitches.
-invertPitches :: Transposable a => Pitch a -> a -> a
+invertPitches :: Transposable a => GetPitch a -> a -> a
 invertPitches p = pitches %~ reflectThrough p
 
 -- |
@@ -441,7 +441,7 @@ invertPitches p = pitches %~ reflectThrough p
 --
 -- >>> octavesUp (-1) [c,d,e]
 -- [c_,d_,e_]
-octavesUp :: Transposable a => Scalar (Interval a) -> a -> a
+octavesUp :: Transposable a => Scalar (GetInterval a) -> a -> a
 octavesUp n = up (_P8 ^* n)
 
 -- |
@@ -452,7 +452,7 @@ octavesUp n = up (_P8 ^* n)
 --
 -- >>> octavesDown (-1) [c,d,e]
 -- [c',d',e']
-octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
+octavesDown :: Transposable a => Scalar (GetInterval a) -> a -> a
 octavesDown n = down (_P8 ^* n)
 
 -- | Same as @'octavesUp' 2@.
@@ -478,7 +478,7 @@ _15vb = octavesDown 2
 --
 -- >>> highestPitch (Data.Map.fromList [("do",c),("re",d)] :: Data.Map.Map String Pitch)
 -- Just d
-highestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
+highestPitch :: (HasPitches' a, Ord (GetPitch a)) => a -> Maybe (GetPitch a)
 highestPitch = maximumOf pitches'
 
 -- | Extract the lowest pitch. Returns @Nothing@ if there are none.
@@ -488,10 +488,10 @@ highestPitch = maximumOf pitches'
 --
 -- >>> highestPitch (Data.Map.fromList [("do",c),("re",d)] :: Data.Map.Map String Pitch)
 -- Just c
-lowestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
+lowestPitch :: (HasPitches' a, Ord (GetPitch a)) => a -> Maybe (GetPitch a)
 lowestPitch = minimumOf pitches'
 
-pitchRange :: (HasPitches' a, Ord p, p ~ Pitch a) => a -> Maybe (Ambitus v p)
+pitchRange :: (HasPitches' a, Ord p, p ~ GetPitch a) => a -> Maybe (Ambitus v p)
 pitchRange x = do
   lo <- lowestPitch x
   hi <- highestPitch x
@@ -501,7 +501,7 @@ pitchRange x = do
 --
 -- >>> averagePitch (Data.Map.fromList [(True,440::Hertz),(False,445)])
 -- Just 442.5 Hz
-averagePitch :: (HasPitches' a, Fractional (Pitch a)) => a -> Maybe (Pitch a)
+averagePitch :: (HasPitches' a, Fractional (GetPitch a)) => a -> Maybe (GetPitch a)
 averagePitch = maybeAverage . Average . toListOf pitches'
 
 -- | The number of whole octaves in an ambitus.
@@ -570,7 +570,7 @@ enumDownChromaticFromTo x y = takeWhile (>= y) $ fmap (\n -> downChromatic x n x
 -- >>> upDiatonic f 2 [e,f,g :: Pitch]
 -- [g,a,bb]
 upDiatonic ::
-  (HasPitches' a, Pitch a ~ Common.Pitch) =>
+  (HasPitches' a, GetPitch a ~ Common.Pitch) =>
   -- | Tonic
   Common.Pitch ->
   -- | Number of steps to transpose
@@ -591,7 +591,7 @@ upDiatonic o n = over pitches' (upDiatonicP o n)
 -- >>> upDiatonic f 2 [e,f,g :: Pitch]
 -- [g,a,bb]
 downDiatonic ::
-  (HasPitches' a, Pitch a ~ Common.Pitch) =>
+  (HasPitches' a, GetPitch a ~ Common.Pitch) =>
   -- | Tonic
   Common.Pitch ->
   -- | Number of steps to transpose
@@ -612,7 +612,7 @@ downDiatonic o n = over pitches' (downDiatonicP o n)
 -- >>> upDiatonic f 2 [e,f,g :: Pitch]
 -- [g,a,bb]
 upChromatic ::
-  (HasPitches' a, Pitch a ~ Common.Pitch) =>
+  (HasPitches' a, GetPitch a ~ Common.Pitch) =>
   -- | Tonic
   Common.Pitch ->
   -- | Number of steps to transpose
@@ -633,7 +633,7 @@ upChromatic o n = over pitches' (upChromaticP' o n)
 -- >>> upDiatonic f 2 [e,f,g :: Pitch]
 -- [g,a,bb]
 downChromatic ::
-  (HasPitches' a, Pitch a ~ Common.Pitch) =>
+  (HasPitches' a, GetPitch a ~ Common.Pitch) =>
   -- | Tonic
   Common.Pitch ->
   -- | Number of steps to transpose
@@ -647,7 +647,7 @@ downChromatic o n = over pitches' (downChromaticP' o n)
 -- >>> invertDiatonic c ([e,gs]^.score :: Score Pitch)
 -- [(0 <-> 1,a_)^.event,(0 <-> 1,fs_)^.event]^.score
 invertDiatonic ::
-  (HasPitches' a, Pitch a ~ Common.Pitch) =>
+  (HasPitches' a, GetPitch a ~ Common.Pitch) =>
   -- | Tonic
   Common.Pitch ->
   -- | Original music
@@ -659,7 +659,7 @@ invertDiatonic o = over pitches' (invertDiatonicallyP o)
 -- >>> invertChromatic c ([e,gs]^.score :: Score Pitch)
 -- [(0 <-> 1,e)^.event,(0 <-> 1,gb)^.event]^.score
 invertChromatic ::
-  (HasPitches' a, Pitch a ~ Common.Pitch) =>
+  (HasPitches' a, GetPitch a ~ Common.Pitch) =>
   -- | Tonic
   Common.Pitch ->
   -- | Original music
@@ -677,7 +677,7 @@ upChromaticP' _ n p
   | otherwise = error "Impossible"
 
 -- | Simpify the spelling of each pitch.
-simplifyPitches :: (HasPitches' a, Pitch a ~ Common.Pitch) => a -> a
+simplifyPitches :: (HasPitches' a, GetPitch a ~ Common.Pitch) => a -> a
 simplifyPitches = over pitches' simplifyPitch
   where
     simplifyPitch p
@@ -689,10 +689,10 @@ simplifyPitches = over pitches' simplifyPitch
 -- Join two voices together so that one note overlaps. The second voice is
 -- transposed to achieve this.
 --
--- At the join point the note from the first voice is used. If @a ~ Pitch@,
+-- At the join point the note from the first voice is used. If @a ~ GetPitch@,
 -- then 'stitch' and 'stitchLast' are equivalent.
 --
--- >>> stitch ([c :: Note Pitch,d,e]^.voice) ([c,g]^.voice)
+-- >>> stitch ([c :: Note GetPitch,d,e]^.voice) ([c,g]^.voice)
 -- [(1,c)^.note,(1,d)^.note,(1,e)^.note,(1,b)^.note]^.voice
 stitch :: (Transposable a) => Voice a -> Voice a -> Voice a
 stitch = stitchWith (\a b -> [a] ^. voice)
@@ -700,7 +700,7 @@ stitch = stitchWith (\a b -> [a] ^. voice)
 -- Join two voices together so that one note overlaps. The second voice is
 -- transposed to achieve this.
 --
--- At the join point the note from the first voice is used. If @a ~ Pitch@,
+-- At the join point the note from the first voice is used. If @a ~ GetPitch@,
 -- then 'stitch' and 'stitchLast' are equivalent.
 --
 -- At the join point the note from the second voice is used.
@@ -727,22 +727,22 @@ stitchWith f a b
     headPitch b = headV b ^?! pitches
     diff = lastPitch a .-. headPitch b
 
-type instance Pitch Common.Pitch = Common.Pitch
+type instance GetPitch Common.Pitch = Common.Pitch
 
 type instance SetPitch a Common.Pitch = a
 
-instance (a ~ Pitch a) => HasPitch Common.Pitch a where
+instance (a ~ GetPitch a) => HasPitch Common.Pitch a where
   pitch = ($)
 
-instance (a ~ Pitch a) => HasPitches Common.Pitch a where
+instance (a ~ GetPitch a) => HasPitches Common.Pitch a where
   pitches = ($)
 
-type instance Pitch Hertz = Hertz
+type instance GetPitch Hertz = Hertz
 
 type instance SetPitch a Hertz = a
 
-instance (a ~ Pitch a) => HasPitch Hertz a where
+instance (a ~ GetPitch a) => HasPitch Hertz a where
   pitch = ($)
 
-instance (a ~ Pitch a) => HasPitches Hertz a where
+instance (a ~ GetPitch a) => HasPitches Hertz a where
   pitches = ($)

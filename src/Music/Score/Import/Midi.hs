@@ -70,7 +70,7 @@ type IsMidi a =
     Ord (GetPart a),
     Enum (GetPart a),
     -- HasPitch a,
-    Num (Pitch a),
+    Num (GetPitch a),
     HasTremolo a,
     HasArticulation a a,
     Tiable a

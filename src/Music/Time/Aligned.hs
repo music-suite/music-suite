@@ -40,7 +40,7 @@ import Music.Time.Internal.Preliminaries
 import Music.Time.Juxtapose
 import Music.Time.Note
 import Music.Time.Score
-import Music.Time.Voice
+import Music.Time.Voice hiding (map, traverse)
 
 -- | Update the local origin of a value, but not its attachment point.
 --

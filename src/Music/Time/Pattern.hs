@@ -33,7 +33,7 @@ import Music.Time.Aligned
 import Music.Time.Juxtapose
 import Music.Time.Note
 import Music.Time.Score
-import Music.Time.Voice
+import Music.Time.Voice hiding (map, traverse)
 import Control.Monad.State.Strict
 
 
@@ -167,7 +167,7 @@ type instance SetArticulation b (Pattern a) = Pattern (SetArticulation b a)
 instance HasArticulations a b => HasArticulations (Pattern a) (Pattern b) where
   articulations = traverse . articulations
 
-type instance Pitch (Pattern a) = Pitch a
+type instance GetPitch (Pattern a) = GetPitch a
 
 type instance SetPitch b (Pattern a) = Pattern (SetPitch b a)
 
@@ -220,6 +220,6 @@ renderPatternsRel = join . fmap (flip renderPattern zeroV)
 -- This means that notes of different onset and duration may trigger a different number of cycles (frequency), with
 -- different starting point in the pattern (phase).
 renderPatternsAbs :: Score (Pattern a) -> Score a
-renderPatternsAbs = join . mapWithSpan (\s -> transform (negateV s) . flip renderPattern s)
+renderPatternsAbs = join . Music.Time.Score.mapWithSpan (\s -> transform (negateV s) . flip renderPattern s)
 -- Note: We can not change the span of a note using mapWithSpan, so we transform the result to position (0<->1)
 -- and trust join to put it back in the same position it was rendered.

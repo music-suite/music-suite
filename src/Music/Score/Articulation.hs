@@ -68,7 +68,7 @@ import Music.Score.Phrases
 import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
-import Music.Time.Voice
+import Music.Time.Voice hiding (map, traverse)
 import Music.Time.Score
 import Music.Time.Track
 import Music.Time.Note

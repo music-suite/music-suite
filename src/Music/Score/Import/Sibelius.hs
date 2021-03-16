@@ -32,7 +32,7 @@ import Music.Pitch.Literal (IsPitch)
 import qualified Music.Pitch.Literal as Pitch
 import qualified Music.Prelude
 import qualified Music.Score as S
-import Music.Score hiding (Interval, GetPart, Pitch)
+import Music.Score
 
 -- |
 -- Read a Sibelius score from a file. Fails if the file could not be read or if a parsing

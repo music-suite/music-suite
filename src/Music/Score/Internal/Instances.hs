@@ -89,7 +89,7 @@ instance Semigroup a => Semigroup (PartT n a) where
 -- Aspect instaces (Pitch, Dynamics and Articulation) for PartT needs to go here,
 -- as the other aspects depends on partwise traversals etc
 --
-type instance Pitch (TechniqueT p a) = Pitch a
+type instance GetPitch (TechniqueT p a) = GetPitch a
 
 type instance SetPitch b (TechniqueT p a) = TechniqueT p (SetPitch b a)
 
@@ -119,7 +119,7 @@ instance HasArticulation a b => HasArticulation (TechniqueT p a) (TechniqueT p b
 instance HasArticulations a b => HasArticulations (TechniqueT p a) (TechniqueT p b) where
   articulations = _Wrapped . articulations
 
-type instance Pitch (PartT p a) = Pitch a
+type instance GetPitch (PartT p a) = GetPitch a
 
 type instance SetPitch b (PartT p a) = PartT p (SetPitch b a)
 
@@ -129,7 +129,7 @@ instance HasPitch a b => HasPitch (PartT p a) (PartT p b) where
 instance HasPitches a b => HasPitches (PartT p a) (PartT p b) where
   pitches = _Wrapped . _2 . pitches
 
-type instance Pitch (DynamicT p a) = Pitch a
+type instance GetPitch (DynamicT p a) = GetPitch a
 
 type instance SetPitch b (DynamicT p a) = DynamicT p (SetPitch b a)
 
@@ -139,7 +139,7 @@ instance HasPitch a b => HasPitch (DynamicT p a) (DynamicT p b) where
 instance HasPitches a b => HasPitches (DynamicT p a) (DynamicT p b) where
   pitches = _Wrapped . _2 . pitches
 
-type instance Pitch (ArticulationT p a) = Pitch a
+type instance GetPitch (ArticulationT p a) = GetPitch a
 
 type instance SetPitch b (ArticulationT p a) = ArticulationT p (SetPitch b a)
 
@@ -180,7 +180,7 @@ instance HasArticulations a b => HasArticulations (PartT p a) (PartT p b) where
   articulations = _Wrapped . _2 . articulations
 
 -- TODO move up?
-type instance Pitch (ColorT a) = Pitch a
+type instance GetPitch (ColorT a) = GetPitch a
 
 type instance SetPitch g (ColorT a) = ColorT (SetPitch g a)
 
