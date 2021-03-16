@@ -1,7 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports
   -fno-warn-unused-matches
   -fno-warn-redundant-constraints #-}
 
@@ -25,13 +24,9 @@ where
 import BasePrelude hiding ((<>), Dynamic, first, second)
 import Control.Comonad
 import Control.Lens hiding ((&), transform)
-import Data.AffineSpace
 import Data.Bifunctor
 import Data.Functor.Couple
-import qualified Data.List as List
 import Data.Monoid.Average
-import Data.Semigroup
-import Data.VectorSpace hiding (Sum, getSum)
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
 import Music.Time.Behavior
