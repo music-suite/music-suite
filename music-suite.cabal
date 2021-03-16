@@ -74,7 +74,6 @@ library
 
     exposed-modules:
                         Control.Monad.Abort
-                        Control.Monad.Compose
                         Control.Monad.Log
                         Data.AffineSpace.Point
                         Data.AffineSpace.Point.Offsets
