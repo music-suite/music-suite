@@ -3,7 +3,6 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
-  -fno-warn-unused-imports
   -fno-warn-unused-matches
   -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
@@ -41,8 +40,7 @@ where
 
 import Control.Applicative
 import Control.Lens
-import qualified Data.Char
-import Data.Functor.Contravariant (Equivalence (..), contramap)
+import Data.Functor.Contravariant (Equivalence (..))
 import qualified Data.List
 import qualified Data.Monoid
 import qualified Data.Ratio
