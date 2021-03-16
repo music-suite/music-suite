@@ -4,7 +4,6 @@
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-unused-top-binds
   -fno-warn-unused-matches
   -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
