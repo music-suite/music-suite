@@ -25,8 +25,7 @@
 --
 -- Provides miscellaneous conversions.
 module Music.Time.Internal.Convert
-  ( -- scoreToVoice,
-    reactiveToVoice',
+  ( reactiveToVoice',
   )
 where
 
