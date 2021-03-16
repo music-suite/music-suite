@@ -1,8 +1,5 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 -- | Provides a representation of harmonics.
 module Music.Score.Harmonics
