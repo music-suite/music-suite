@@ -40,21 +40,6 @@ module Music.Time.Internal.Util
   )
 where
 
-{-
-    Rules:
-
-        * Functions may depend on any module in the lastest Haskell Platform release
-        * All functions but those in Prelude must be referred to with their full,
-          qualified names (i.e. Data.List.unfoldr).
-        * Each function must have a unique name (so the whole file is a loadable module).
-        * Each function should have a synopisis, like:
-
-            -- | Ordinary Haddock commentary ...
-            -- > category: Categories (please use the common Hackage names)
-            -- > depends : base (all packages in HP that the function depends on)
-
--}
-
 import Control.Applicative
 import Control.Lens
 import qualified Data.Char
