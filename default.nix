@@ -58,10 +58,15 @@ pkgs.stdenv.mkDerivation {
    ];
   shellHook = ''
     function doctests {
-        cabal exec doctester --package music-suite -- src/Music/Parts && \
-        cabal exec doctester --package music-suite -- src/Music/Dynamics && \
+        cabal exec doctester --package music-suite -- src/Control && \
+        cabal exec doctester --package music-suite -- src/Data && \
         cabal exec doctester --package music-suite -- src/Music/Articulation && \
+        cabal exec doctester --package music-suite -- src/Music/Dynamics && \
+        cabal exec doctester --package music-suite -- src/Music/Parts && \
         cabal exec doctester --package music-suite -- src/Music/Pitch && \
+        # cabal exec doctester --package music-suite -- src/Music/Prelude && \
+        # cabal exec doctester --package music-suite -- src/Music/Score && \
+        cabal exec doctester --package music-suite -- src/Music/Time && \
         true;
     }
     function tests {
