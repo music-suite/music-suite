@@ -340,7 +340,7 @@ durationsAsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. duration
 map :: (a -> b) -> Voice a -> Voice b
 map = fmap
 
--- Transform this voice by mapping each element to an action, evaluating these actions from left to right, and collecting the results.
+-- | Transform this voice by mapping each element to an action, evaluating these actions from left to right, and collecting the results.
 traverse :: Applicative f => (a -> f b) -> Voice a -> f (Voice b)
 traverse = Data.Traversable.traverse
 
