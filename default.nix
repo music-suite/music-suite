@@ -57,8 +57,21 @@ pkgs.stdenv.mkDerivation {
     )
    ];
   shellHook = ''
+    function doctests {
+        cabal exec doctester --package music-suite -- src/Music/Parts && \
+        cabal exec doctester --package music-suite -- src/Music/Dynamics && \
+        cabal exec doctester --package music-suite -- src/Music/Articulation && \
+        cabal exec doctester --package music-suite -- src/Music/Pitch && \
+        true;
+    }
+    function tests {
+        cabal test --test-show-details=streaming --test-options=--color=always && \
+            cabal build && \
+            doctests && \
+            true;
+    }
     export LOCALE_ARCHIVE="${pkgs.glibcLocales}/lib/locale/locale-archive"
     export LANG=en_US.UTF-8
-    export PS1="m> "
+    export PS1="# "
   '';
 }
