@@ -10,6 +10,12 @@ Consider switching to a decentralized issue tracker such as:
 - https://github.com/dspinellis/git-issue
 - https://github.com/MichaelMure/git-bug
 
+
+- [ ] Get rid of remaining orphans
+
+- [ ] Data.Monoid.Average should use (Sum `Product` Count), not a list.
+  Could have massive performance impact, given that this is used for dynamics/articulation.
+
 ---
 
 - [ ] Use dynamics map

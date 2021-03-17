@@ -442,8 +442,6 @@ instance IsPitch a => IsPitch (Average a) where
 instance IsInterval a => IsInterval (Average a) where
   fromInterval = pure . fromInterval
 
-instance IsDynamics a => IsDynamics (Average a) where
-  fromDynamics = pure . fromDynamics
 
 deriving instance Typeable Music.Parts.Part
 

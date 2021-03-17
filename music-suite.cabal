@@ -60,6 +60,7 @@ library
                         random,
                         random-shuffle,
                         roman-numerals,
+                        scientific,
                         semigroups,
                         split,
                         streams,
