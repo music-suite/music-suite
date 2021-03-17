@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 -- |  Provides functions for manipulating dynamics.

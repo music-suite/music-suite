@@ -66,6 +66,7 @@ pkgs.stdenv.mkDerivation {
         cabal exec doctester --package music-suite -- src/Music/Pitch && \
         # cabal exec doctester --package music-suite -- src/Music/Prelude && \
         # cabal exec doctester --package music-suite -- src/Music/Score && \
+        cabal exec doctester --package music-suite -- src/Music/Score/Dynamics && \
         # cabal exec doctester --package music-suite -- src/Music/Time && \
         true;
     }
