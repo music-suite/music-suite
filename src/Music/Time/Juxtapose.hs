@@ -1,9 +1,9 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# OPTIONS_GHC
-  -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+  -fno-warn-redundant-constraints
+  #-}
 
 module Music.Time.Juxtapose
   ( module Music.Time.Split,

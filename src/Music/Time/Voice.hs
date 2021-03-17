@@ -2,7 +2,6 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 module Music.Time.Voice
   ( -- * Voice type
