@@ -2,7 +2,6 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# OPTIONS_GHC
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
   #-}
 
 module Music.Time.Juxtapose
