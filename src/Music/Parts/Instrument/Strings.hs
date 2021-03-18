@@ -6,6 +6,7 @@
 module Music.Parts.Instrument.Strings
   ( StringInstrument,
     stringInstrument,
+    isStringInstrument,
   )
 where
 

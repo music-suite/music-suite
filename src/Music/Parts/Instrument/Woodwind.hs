@@ -6,6 +6,7 @@
 module Music.Parts.Instrument.Woodwind
   ( WoodwindInstrument,
     woodwindInstrument,
+    isWoodwindInstrument,
   )
 where
 

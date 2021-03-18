@@ -7,7 +7,8 @@
 -- Of course voices are not instruments, but for the sake of consistency.
 module Music.Parts.Instrument.Vocal
   ( Vocalist,
-    vocalInstrument,
+    vocalist,
+    isVocalist,
   )
 where
 
@@ -24,8 +25,8 @@ newtype Vocalist = Vocalist {getVocalist :: Instrument}
 partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
 
-vocalInstrument :: Prism' Instrument Vocalist
-vocalInstrument = prism' getVocalist (fmap Vocalist . partial isVocalist)
+vocalist :: Prism' Instrument Vocalist
+vocalist = prism' getVocalist (fmap Vocalist . partial isVocalist)
 
 isVocalist :: Instrument -> Bool
 isVocalist x = case toMusicXmlSoundId x of

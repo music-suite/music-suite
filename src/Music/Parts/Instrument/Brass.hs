@@ -6,6 +6,7 @@
 module Music.Parts.Instrument.Brass
   ( BrassInstrument,
     brassInstrument,
+    isBrassInstrument,
   )
 where
 
