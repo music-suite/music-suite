@@ -1148,7 +1148,7 @@ From music21:
       trigger a preview (visual/audial) in an editor window, as if the expression had been applied to
       defaultMain (see above).
 
-- [ ] Deprecate Track/Placed?
+- [X] Deprecate Track/Placed?
   - It's rarely useful to just 'delay'
   - Score/Event/Aligned/Pattern usually more compelling
   - Placed is currently used in the definition of Pattern, but that could be changed to Aligned (which is a
