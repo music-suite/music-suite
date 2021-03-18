@@ -1,8 +1,9 @@
+{-# OPTIONS_HADDOCK hide #-}
 {-# OPTIONS_GHC
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
-module Music.Time.Placed
+module Music.Time.Internal.Placed
   ( -- * Placed type
     Placed,
 

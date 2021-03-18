@@ -23,6 +23,7 @@ import Data.Monoid.Average
 import Data.Ord (comparing)
 import Music.Prelude hiding (defaultMain, elements)
 import Music.Pitch.Common.Internal (Interval(..), ChromaticSteps(..), DiatonicSteps(..))
+import Music.Time.Internal.Placed (Placed, placed)
 import Music.Time.Internal.Track (Track, track)
 
 import Test.Tasty

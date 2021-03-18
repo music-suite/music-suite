@@ -192,12 +192,12 @@ library
                         Music.Time.Meta
                         Music.Time.Note
                         Music.Time.Pattern
-                        Music.Time.Placed
                         Music.Time.Position
                         Music.Time.Reactive
                         Music.Time.Rest
                         Music.Time.Score
                         Music.Time.Split
+                        Music.Time.Internal.Placed
                         Music.Time.Internal.Track
                         Music.Time.Transform
                         Music.Time.Types

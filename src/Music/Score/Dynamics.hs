@@ -68,7 +68,7 @@ import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
 import Music.Time.Internal.Track
-import Music.Time.Placed
+import Music.Time.Internal.Placed
 import Music.Time.Position
 import Music.Time.Behavior
 import Music.Time.Aligned

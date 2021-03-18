@@ -45,9 +45,9 @@ import Data.String
 import Data.Traversable
 import Data.VectorSpace
 import Music.Time.Note
-import Music.Time.Placed
 import Music.Time.Reactive
 import Music.Time.Internal.Track
+import Music.Time.Internal.Placed
 import Music.Time.Types
 import Music.Time.Voice
 

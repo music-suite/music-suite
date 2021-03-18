@@ -69,7 +69,7 @@ import Music.Time.Voice hiding (map, traverse)
 import Music.Time.Score
 import Music.Time.Internal.Track
 import Music.Time.Note
-import Music.Time.Placed
+import Music.Time.Internal.Placed
 import Music.Time.Event
 import Music.Time.Internal.Transform
 

@@ -78,6 +78,7 @@ import Music.Score.Ties (Tiable (..), TieT)
 import Music.Score.Tremolo (TremoloT, mapTremoloT)
 import Music.Time
 import Music.Time.Internal.Track
+import Music.Time.Internal.Placed
 import Music.Time.Internal.Transform
 
 -- |
