@@ -6,7 +6,6 @@
 module Music.Parts.Instrument.Brass
   ( BrassInstrument,
     brassInstrument,
-    isBrassInstrument,
   )
 where
 
@@ -25,8 +24,3 @@ brassInstrument = prism' getBrassInstrument (fmap BrassInstrument . partial isBr
 -- TODO move/consolidate
 partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
-
-isBrassInstrument :: Instrument -> Bool
-isBrassInstrument x = case toMusicXmlSoundId x of
-  Nothing -> False
-  Just i -> Data.List.isPrefixOf "brass" i

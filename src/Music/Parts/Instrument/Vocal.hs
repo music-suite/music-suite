@@ -8,7 +8,6 @@
 module Music.Parts.Instrument.Vocal
   ( Vocalist,
     vocalInstrument,
-    isVocalist,
   )
 where
 

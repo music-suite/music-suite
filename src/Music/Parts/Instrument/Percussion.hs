@@ -6,7 +6,6 @@
 module Music.Parts.Instrument.Percussion
   ( PercussionInstrument,
     percussionInstrument,
-    isPercussionInstrument,
   )
 where
 

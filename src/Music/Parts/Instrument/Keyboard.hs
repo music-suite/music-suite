@@ -6,7 +6,6 @@
 module Music.Parts.Instrument.Keyboard
   ( KeyboardInstrument,
     keyboardInstrument,
-    isKeyboardInstrument,
   )
 where
 
