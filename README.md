@@ -1,8 +1,13 @@
 [![CircleCI](https://circleci.com/gh/music-suite/music-suite.svg?style=svg)](https://circleci.com/gh/music-suite/music-suite)
 
+
+
 # Music Suite
 
 Music Suite is a language for describing music, based on Haskell.
+
+![image](https://user-images.githubusercontent.com/321331/111701233-6c33ab80-8832-11eb-9d26-7d0369b22a43.png)
+
 
 <!-- See <http://music-suite.github.io>. -->
 
