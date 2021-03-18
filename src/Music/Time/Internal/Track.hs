@@ -1,10 +1,11 @@
+{-# OPTIONS_HADDOCK hide #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-top-binds
   -fno-warn-redundant-constraints
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
-module Music.Time.Track
+module Music.Time.Internal.Track
   ( -- * Track type
     Track,
 
