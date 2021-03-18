@@ -98,7 +98,6 @@ library
                         Music.Articulation
                         Music.Dynamics
                         Music.Dynamics.Absolute
-                        Music.Dynamics.Balance
                         Music.Dynamics.Common
                         Music.Dynamics.Literal
                         Music.Parts
