@@ -35,18 +35,20 @@ import qualified Music.Time
 import qualified System.Info
 import qualified System.Process
 
+-- |
+-- 'Inspectable' types can be converted to 'Music' in some fashion. Typically
+-- this is used to provide a visual or audible preview of the term.
+--
+-- This is a lawless typeclass, similar to 'Show'. It is is useful for
+-- debugging and testing, but should be avoided for anything else.
 class Inspectable a where
   inspectableToMusic :: a -> Music
 
+-- | 'InspectableNote' is similar to 'Inspectable' but is optimized for rendering
+-- a single note or event. It is used by many 'Inspectable' instances.
 class InspectableNote a where
-  -- inspectableToNote :: a -> StandardNote
-
   inspectableToMusicNote :: a -> Music
 
--- instance Inspectable (Score StandardNote) where
---   inspectableToMusic = id
-
--- TODO not just Pitch
 instance InspectableNote a => Inspectable (Pattern a) where
   inspectableToMusic = inspectableToMusic . flip renderPattern (0 <-> 1)
 
@@ -80,21 +82,14 @@ instance InspectableNote a => Inspectable (Aligned (Voice a)) where
 instance InspectableNote a => Inspectable [Aligned (Voice a)] where
   inspectableToMusic = rcat . fmap (join . fmap inspectableToMusicNote . renderAlignedVoice)
 
--- inspectableToMusic . rcat . fmap (preserveMeta $ asScore . fmap fromPitch . mcatMaybes . renderAlignedVoice)
-
 instance InspectableNote a => Inspectable (Note a) where
   inspectableToMusic x = inspectableToMusic $ [x] ^. voice
 
 instance InspectableNote a => Inspectable (Event a) where
   inspectableToMusic x = inspectableToMusic $ [x] ^. score
 
--- instance Inspectable (Voice ()) where
--- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
 instance Inspectable (Ambitus Interval Pitch) where
   inspectableToMusic x = stretch 0.5 $ let Ambitus m n = x in glissando $ fromPitch m |> fromPitch n
-
--- instance Inspectable (Mode Interval Pitch) where
---  inspectableToMusic = inspectableToMusic . scale c
 
 instance Inspectable (ChordType Interval Pitch) where
   inspectableToMusic = inspectableToMusic . chord c
@@ -108,11 +103,9 @@ instance Inspectable (Chord Interval Pitch) where
 instance Inspectable (Voiced Chord Interval Pitch) where
   inspectableToMusic = fmap fromPitch . ppar . map (\x -> pure x :: Score Pitch) . toList . getVoiced
 
--- TODO should be on separate staves, but without left binding (implying simultanuety)
 instance Inspectable [Mode Interval Pitch] where
    inspectableToMusic = inspectableToMusic . fmap (scale c)
 
--- TODO should be on separate staves, but without left binding (implying simultanuety)
 instance Inspectable [Scale Interval Pitch] where
   inspectableToMusic = rcat . fmap inspectableToMusic
 
@@ -131,15 +124,9 @@ instance Inspectable [Interval] where
 instance Inspectable [Ambitus Interval Pitch] where
   inspectableToMusic = rcat . fmap inspectableToMusic
 
--- instance Inspectable [Hertz] where
---   inspectableToMusic xs = ppar $ map fromPitch $ map (^.from pitchHertz) xs
--- instance Inspectable [[Hertz]] where
---   inspectableToMusic = pseq . fmap inspectableToMusic
 instance Inspectable [Pitch] where
   inspectableToMusic = compress 8 . pseq . fmap fromPitch
 
--- instance Inspectable Hertz where
--- inspectableToMusic = inspectableToMusic . (:[])
 instance Inspectable Pitch where
   inspectableToMusic = inspectableToMusic . (: [])
 
@@ -152,7 +139,6 @@ instance Inspectable Span where
 instance Inspectable Time where
   inspectableToMusic t = inspectableToMusic (t >-> (1 / 4))
 
--- TODO use power of 2 related to time...
 instance Inspectable Duration where
   inspectableToMusic d = inspectableToMusic (0 >-> d)
 
