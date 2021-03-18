@@ -4,9 +4,9 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# OPTIONS_GHC
-  -fno-warn-name-shadowing
   -fno-warn-redundant-constraints
-  -fno-warn-unused-imports #-}
+  -fno-warn-name-shadowing
+  #-}
 
 module Music.Time.Score
   ( -- * Score type
@@ -66,23 +66,13 @@ import Control.Monad.Writer
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson as JSON
 import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Foldable (Foldable)
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
-import Data.Map (Map)
-import qualified Data.Map as Map
 import qualified Data.Ord as Ord
-import Data.Ratio
 import Data.Semigroup
-import Data.Set (Set)
-import qualified Data.Set as Set
 import Data.String
-import Data.Traversable (Traversable)
-import qualified Data.Traversable as T
 import Data.Typeable
-import Data.VectorSpace hiding (Sum (..))
 import Iso.Deriving hiding (Iso, Iso')
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
@@ -90,8 +80,6 @@ import Music.Time.Event
 import Music.Time.Internal.Util
 import Music.Time.Juxtapose
 import Music.Time.Meta
-import Music.Time.Note
-import Music.Time.Voice hiding (map, traverse, mapWithSpan)
 
 -- $traversals
 -- @

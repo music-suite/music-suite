@@ -1,6 +1,3 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-matches #-}
 module Music.Time.Pattern
   ( Pattern,
     newPattern,

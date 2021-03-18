@@ -27,7 +27,7 @@ nix-shell --pure
 You should see this prompt:
 
 ```
-m>
+#
 ```
 
 Inside the build shell, the following commands can be used:
@@ -35,22 +35,22 @@ Inside the build shell, the following commands can be used:
 ### Build the library and examples
 
 ```
-m> cabal update
-m> cabal build
+# cabal update
+# cabal build
 ```
 
 ### Build and run the tests
 
-#### Property tests
+#### Standard test suite
 
 ```
-m> cabal test --test-show-details=streaming --test-options=--color=always
+# cabal test --test-show-details=streaming --test-options=--color=always
 ```
 
 To run individual tests:
 
 ```
-m> cabal run TEST_NAME -- TEST_ARGS...
+# cabal run TEST_NAME -- TEST_ARGS...
 ```
 
 e.g.
@@ -61,18 +61,28 @@ cabal run music-suite-test-xml-parser
 
 #### Doctests
 
-cabal build && cabal exec doctester --package music-suite -- src/Music/Pitch
+```
+# cabal build && doctests
+```
+
+To run doctests for individual files/directories:
+
+```
+# cabal build && cabal exec doctester --package music-suite -- src/Music/Pitch
+```
+
+
 
 ### Development shell
 
 ```
-m> cabal build music-suite && cabal exec --package music-suite ghci
+# cabal build music-suite && cabal exec --package music-suite ghci
 ```
 
 or
 
 ```
-m> cabal repl
+# cabal repl
 ```
 
 ### Build the documentation

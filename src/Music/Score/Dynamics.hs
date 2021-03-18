@@ -59,6 +59,7 @@ import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
+import Music.Dynamics.Common (Dynamics)
 import Music.Score.Harmonics
 import Music.Score.Internal.Util (through)
 import Music.Score.Part
@@ -66,8 +67,8 @@ import Music.Score.Phrases
 import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
-import Music.Time.Track
-import Music.Time.Placed
+import Music.Time.Internal.Track
+import Music.Time.Internal.Placed
 import Music.Time.Position
 import Music.Time.Behavior
 import Music.Time.Aligned
@@ -279,6 +280,17 @@ instance (HasDynamics a b) => HasDynamics (SlideT a) (SlideT b) where
 instance (HasDynamic a b) => HasDynamic (SlideT a) (SlideT b) where
   dynamic = _Wrapped . dynamic
 
+type instance GetDynamic Dynamics = Dynamics
+
+type instance SetDynamic a Dynamics = a
+
+instance (a ~ GetDynamic a, SetDynamic Dynamics a ~ Dynamics) => HasDynamic Dynamics a where
+  dynamic = ($)
+
+instance (a ~ GetDynamic a, SetDynamic Dynamics a ~ Dynamics) => HasDynamics Dynamics a where
+  dynamics = ($)
+
+
 -- |
 -- The 'GetLevel' type represents difference in dynamics.
 type GetLevel a = Diff (GetDynamic a)
@@ -302,13 +314,13 @@ type Attenuable level dyn a =
 -- For standard notation, switches dynamic marks the given number of step upwards.
 --
 -- >>> louder 1 (mp :: Dynamics)
--- _p
+-- mf
 --
 -- >>> louder 1 (ff :: Dynamics)
 -- fff
 --
 -- >>> louder 5 [ppp,mf :: Dynamics]
--- [_f, fffff]
+-- [_f,fffff]
 louder :: Attenuable level dyn a => level -> a -> a
 louder a = dynamics %~ (.+^ a)
 
@@ -334,11 +346,9 @@ volume a = dynamics *~ a
 
 -- | Compress dynamics upwards.
 --
--- >>> compressUp mp 2 [ppp,pp,_p,mp,mf,_f,ff,fff::Dynamics]
--- [ppp,pp,_p,mp,mp,fff,fffff,fffffff]
+-- >>> compressUp mp 2 [ppp,pp,_p,mp,mf,_f,ff::Dynamics]
+-- [ppp,pp,_p,mp,_f,fff,fffff]
 --
--- >>> compressUp 0 (1/2) (0.2 :: Amplitude)
--- Amplitude {getAmplitude = 0.1}
 compressUp ::
   (Attenuable v d a, Ord v, Num v) =>
   -- | Threshold
@@ -352,11 +362,9 @@ compressUp th r = over dynamics (relative th $ \x -> if x < 0 then x else x ^* r
 
 -- | Compress dynamics downwards.
 --
--- >>> compressUp mp 2 [ppp,pp,_p,mp,mf,_f,ff,fff::Dynamics]
--- [ppp,pp,_p,mp,mp,fff,fffff,fffffff]
+-- >>> compressDown mp 2 [ppp,pp,_p,mp,mf,_f,ff,fff::Dynamics]
+-- [pppppp,pppp,pp,mp,mf,_f,ff,fff]
 --
--- >>> compressDown 0 1.5 (-0.2 :: Amplitude)
--- Amplitude {getAmplitude = -0.30000000000000004}
 compressDown ::
   (Attenuable l d a, Ord l, Num l) =>
   -- | Threshold

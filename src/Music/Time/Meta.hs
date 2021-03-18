@@ -2,9 +2,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC
-  -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+  -fno-warn-redundant-constraints
+  #-}
 
 -- |
 -- Provides a way to annotate data-types with 'Transformable' meta-data.

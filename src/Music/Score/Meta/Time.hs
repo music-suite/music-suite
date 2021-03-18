@@ -161,9 +161,16 @@ timeSignatureDuring s c = addMetaNote $ view event (s, optionLast c)
 
 -- | Time signature typically used for the given duration.
 --
--- Returns Nothing if the denominator of the canonical form of given duration is not a power of two.
+-- >>> standardTimeSignature 1
+-- Just 4/4
 --
--- TODO partial
+-- >>> standardTimeSignature 0.5
+-- Just 2/4
+--
+-- Just standardTimeSignature 0.625
+-- Just 5/8
+--
+-- Returns Nothing if the denominator of the canonical form of given duration is not a power of two.
 standardTimeSignature :: Duration -> Maybe TimeSignature
 standardTimeSignature x = case unRatio (toRational x) of
   -- (1,2) -> time 1 2

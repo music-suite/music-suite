@@ -60,6 +60,7 @@ library
                         random,
                         random-shuffle,
                         roman-numerals,
+                        scientific,
                         semigroups,
                         split,
                         streams,
@@ -97,7 +98,6 @@ library
                         Music.Articulation
                         Music.Dynamics
                         Music.Dynamics.Absolute
-                        Music.Dynamics.Balance
                         Music.Dynamics.Common
                         Music.Dynamics.Literal
                         Music.Parts
@@ -192,13 +192,13 @@ library
                         Music.Time.Meta
                         Music.Time.Note
                         Music.Time.Pattern
-                        Music.Time.Placed
                         Music.Time.Position
                         Music.Time.Reactive
                         Music.Time.Rest
                         Music.Time.Score
                         Music.Time.Split
-                        Music.Time.Track
+                        Music.Time.Internal.Placed
+                        Music.Time.Internal.Track
                         Music.Time.Transform
                         Music.Time.Types
                         Music.Time.Voice

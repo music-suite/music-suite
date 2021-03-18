@@ -7,11 +7,6 @@ module Music.Parts.Instrument.Strings
   ( StringInstrument,
     stringInstrument,
     isStringInstrument,
-    StringTuning,
-    standardTuning,
-    allowedTunings,
-    HarmonicPosition,
-    naturalHarmonicPositions,
   )
 where
 
@@ -36,15 +31,3 @@ isStringInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
   Just i -> Data.List.isPrefixOf "strings" i
 
-type StringTuning = [Pitch]
-
-standardTuning :: StringInstrument -> StringTuning
-standardTuning = error "No standardTuning"
-
-allowedTunings :: StringInstrument -> Set StringTuning
-allowedTunings = error "No allowedTunings"
-
-type HarmonicPosition = Integer
-
-naturalHarmonicPositions :: StringInstrument -> Set HarmonicPosition
-naturalHarmonicPositions = error "No naturalHarmonicPositions"

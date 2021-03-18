@@ -7,10 +7,6 @@ module Music.Parts.Instrument.Woodwind
   ( WoodwindInstrument,
     woodwindInstrument,
     isWoodwindInstrument,
-    GlissandoRange,
-    Glissando,
-    allowedGlissandi,
-    effectiveGlissandi,
   )
 where
 
@@ -35,13 +31,3 @@ isWoodwindInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
   Just i -> Data.List.isPrefixOf "wind" i
 
-type GlissandoRange = Ambitus Interval Pitch
-
-type Glissando = Ambitus Interval Pitch
-
-allowedGlissandi :: Set GlissandoRange
-allowedGlissandi = error "No allowedGlissandi"
-
-effectiveGlissandi :: Set GlissandoRange
-effectiveGlissandi = error "No effectiveGlissandi"
--- TODO correspondance of range/sound/dynamic

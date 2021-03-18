@@ -57,8 +57,34 @@ pkgs.stdenv.mkDerivation {
     )
    ];
   shellHook = ''
+    function doctests {
+        cabal exec doctester --package music-suite -- src/Control && \
+        cabal exec doctester --package music-suite -- src/Data && \
+        cabal exec doctester --package music-suite -- src/Music/Articulation && \
+        cabal exec doctester --package music-suite -- src/Music/Dynamics && \
+        cabal exec doctester --package music-suite -- src/Music/Parts && \
+        cabal exec doctester --package music-suite -- src/Music/Pitch && \
+        # cabal exec doctester --package music-suite -- src/Music/Prelude && \
+        # cabal exec doctester --package music-suite -- src/Music/Score && \
+        cabal exec doctester --package music-suite -- src/Music/Score/Dynamics && \
+        cabal exec doctester --package music-suite -- src/Music/Score/Part && \
+        cabal exec doctester --package music-suite -- src/Music/Score/Export && \
+        cabal exec doctester --package music-suite -- src/Music/Score/Import && \
+        cabal exec doctester --package music-suite -- src/Music/Score/Meta && \
+        # cabal exec doctester --package music-suite -- src/Music/Time && \
+        true;
+    }
+    function tests {
+        cabal test --test-show-details=streaming --test-options=--color=always && \
+            cabal build && \
+            doctests && \
+            true;
+    }
+    function ci {
+            tests && cabal build && cabal haddock
+    }
     export LOCALE_ARCHIVE="${pkgs.glibcLocales}/lib/locale/locale-archive"
     export LANG=en_US.UTF-8
-    export PS1="m> "
+    export PS1="# "
   '';
 }

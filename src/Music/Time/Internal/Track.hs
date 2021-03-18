@@ -1,10 +1,11 @@
+{-# OPTIONS_HADDOCK hide #-}
 {-# OPTIONS_GHC
   -fno-warn-name-shadowing
   -fno-warn-unused-top-binds
   -fno-warn-redundant-constraints
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
-module Music.Time.Track
+module Music.Time.Internal.Track
   ( -- * Track type
     Track,
 
@@ -46,36 +47,15 @@ import Data.Typeable
 import Data.VectorSpace
 import Music.Time.Internal.Util
 import Music.Time.Juxtapose
-import Music.Time.Placed
+import Music.Time.Internal.Placed
 
 -- |
 -- A 'Track' is a parallel composition of values.
 newtype Track a = Track {getTrack :: TrackList (TrackEv a)}
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
--- {-# DEPRECATED Track "Use 'Chord'" #-}
-
---
--- @
--- type Track a = [Placed a]
--- @
---
-
--- A track is a list of events with explicit onset.
---
--- Track is a 'Monoid' under parallel composition. 'mempty' is the empty track
--- and 'mappend' interleaves values.
---
--- Track is a 'Monad'. 'return' creates a track containing a single value at time
--- zero, and '>>=' transforms the values of a track, allowing the addition and
--- removal of values relative to the time of the value. Perhaps more intuitively,
--- 'join' delays each inner track to start at the offset of an outer track, then
--- removes the intermediate structure.
-
--- Can use [] or Seq here
 type TrackList = []
 
--- Can use any type as long as trackEv provides an Iso
 type TrackEv a = Placed a
 
 trackEv :: Iso (Placed a) (Placed b) (TrackEv a) (TrackEv b)

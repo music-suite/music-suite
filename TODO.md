@@ -10,6 +10,12 @@ Consider switching to a decentralized issue tracker such as:
 - https://github.com/dspinellis/git-issue
 - https://github.com/MichaelMure/git-bug
 
+
+- [ ] Get rid of remaining orphans
+
+- [ ] Data.Monoid.Average should use (Sum `Product` Count), not a list.
+  Could have massive performance impact, given that this is used for dynamics/articulation.
+
 ---
 
 - [ ] Use dynamics map
@@ -409,6 +415,11 @@ From music21:
 
 -}
 
+- [ ] Expose Common.Part internals
+  - As a record
+  - Remove HasSubpart and expose standard lens
+
+- [ ] Remove empty methods in Parts.Instrument
 
 - [X] MusicXML Parser
   - [X] Make all tests pass (music-suite-test-xml-parser)
@@ -1137,7 +1148,7 @@ From music21:
       trigger a preview (visual/audial) in an editor window, as if the expression had been applied to
       defaultMain (see above).
 
-- [ ] Deprecate Track/Placed?
+- [X] Deprecate Track/Placed?
   - It's rarely useful to just 'delay'
   - Score/Event/Aligned/Pattern usually more compelling
   - Placed is currently used in the definition of Pattern, but that could be changed to Aligned (which is a

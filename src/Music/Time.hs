@@ -12,8 +12,6 @@ module Music.Time
     module Music.Time.Event,
     module Music.Time.Score,
     module Music.Time.Pattern,
-    module Music.Time.Placed,
-    module Music.Time.Track,
     module Music.Time.Reactive,
     module Music.Time.Behavior,
     module Data.AffineSpace.Point.Offsets,
@@ -28,13 +26,11 @@ import Music.Time.Event
 import Music.Time.Juxtapose
 import Music.Time.Note
 import Music.Time.Pattern
-import Music.Time.Placed
 import Music.Time.Position
 import Music.Time.Reactive
 import Music.Time.Rest
 import Music.Time.Score
 import Music.Time.Split
-import Music.Time.Track
 import Music.Time.Transform
 import Music.Time.Types
 import Music.Time.Voice hiding (map, traverse, mapWithSpan)

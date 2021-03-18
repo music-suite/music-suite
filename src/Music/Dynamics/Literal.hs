@@ -47,6 +47,7 @@ import Data.Fixed
 import Data.Functor.Couple
 import Data.Ratio
 import Data.Semigroup
+import Data.Monoid.Average
 
 -- |
 -- Dynamics literal.
@@ -91,6 +92,9 @@ instance Integral a => IsDynamics (Ratio a) where
 
 instance IsDynamics Double where
   fromDynamics (DynamicsL (x, _)) = x
+
+instance IsDynamics a => IsDynamics (Average a) where
+  fromDynamics = pure . fromDynamics
 
 pppppp, ppppp, pppp, ppp, pp, _p, mp, mf, _f, ff, fff, ffff, fffff, ffffff :: IsDynamics a => a
 

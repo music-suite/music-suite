@@ -20,6 +20,7 @@ import Music.Time.Internal.Util (rotate)
 import Data.Tree(Tree)
 import qualified Data.Tree
 import qualified Data.List
+import Music.Time.Internal.Placed -- TODO do not used Placed
 import Control.Lens (Iso, Lens', lens, element, iso, _1, _2, preview, each, _head, _last, nullOf)
 
 
