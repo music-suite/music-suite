@@ -415,6 +415,11 @@ From music21:
 
 -}
 
+- [ ] Expose Common.Part internals
+  - As a record
+  - Remove HasSubpart and expose standard lens
+
+- [ ] Remove empty methods in Parts.Instrument
 
 - [X] MusicXML Parser
   - [X] Make all tests pass (music-suite-test-xml-parser)
