@@ -81,6 +81,7 @@ library
                         Data.FiniteSeq
                         Data.Functor.Context
                         Data.Functor.Couple
+                        Data.LabelTree
                         Data.Music.Lilypond
                         Data.Music.Lilypond.Dynamics
                         Data.Music.Lilypond.Pitch
