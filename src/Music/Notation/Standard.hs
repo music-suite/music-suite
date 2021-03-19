@@ -3,9 +3,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC
-  -fno-warn-name-shadowing
   -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+  #-}
 
 -- |
 -- This module defines a monomorphic representation of Western music notation.
@@ -126,41 +125,6 @@ module Music.Notation.Standard
     movements,
 
     barLayersHaveEqualDuration,
-
-    -- -- * MonadLog
-    -- MonadLog (..),
-
-    -- -- * Pure export monad
-    -- PureExportM,
-    -- runPureExportM,
-    -- runPureExportMNoLog,
-
-    -- -- * IO export monad
-    -- IOExportM,
-    -- runIOExportM,
-
-    -- -- * Standard notation
-    -- Asp1,
-    -- Asp1a,
-    -- Asp,
-    -- StandardNotationExportM,
-    -- toStandardNotation,
-
-    -- -- * Lilypond backend
-    -- LilypondLayout (..),
-    -- LilypondOptions (..),
-    -- defaultLilypondLayout,
-    -- defaultLilypondOptions,
-    -- LilypondExportM,
-    -- toLy,
-
-    -- -- * MusicXML backend
-    -- MusicXmlExportM,
-    -- toXml,
-
-    -- -- * MIDI backend
-    -- MidiExportM,
-    -- toMidi,
   )
 where
 
