@@ -186,14 +186,13 @@ note :: Iso (Duration, a) (Duration, b) (Note a) (Note b)
 note = _Unwrapped
 
 -- | Access the note value.
+--
 -- Taking a value out carries out the stretch (using the 'Transformable' instance),
 -- while putting a value in carries out the reverse transformation.
 --
 -- >>> view notee $ (2,3::Duration)^.note
 -- 6
 --
--- >>> set notee 6 $ (2,1::Duration)^.note
--- (2,3)^.note
 notee :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
 notee = _Wrapped `dependingOn` (transformed . stretching)
 

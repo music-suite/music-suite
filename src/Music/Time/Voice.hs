@@ -353,7 +353,7 @@ mapWithOnset t f = mapWithSpan t (\s x -> f (s ^. onset) x)
 
 -- | Transform this voice by applying a function to every value.
 --
--- >>> mapWithSpan 0 (\s x -> s) $ asVoice $ mconcat [c,d^*2,e]
+-- >>> mapWithSpan @Music.Pitch.Common.Pitch 0 (\s x -> s) $ mconcat [c,d |* 2,e]
 -- [(1,0 <-> 1)^.note,(2,1 <-> 3)^.note,(1,3 <-> 4)^.note]^.voice
 mapWithSpan :: Time -> (Span -> a -> b) -> Voice a -> Voice b
 mapWithSpan t f v = set valuesV newValues v
@@ -820,8 +820,8 @@ erasRelative o v = zipWith (<->) (onsetsRelative o v) (offsetsRelative o v)
 
 -- | Rotate the durations of a voice.
 --
--- >>> rotateDurations 1 (fromList [(1,'c'), (2, 'd'), (1, 'e')] :: Voice Char)
--- [(2,'c'), (1, 'd'), (1, 'e')]
+-- >>> rotateDurations @Char 1 (fromNotes $ fmap (view note) [(1,'c'), (2, 'd'), (1, 'e')])
+-- [(1,'c')^.note,(1,'d')^.note,(2,'e')^.note]^.voice
 rotateDurations :: Int -> Voice a -> Voice a
 rotateDurations n x = view voice $ view note <$> zip (rotate n ds) vs
   where
@@ -829,8 +829,8 @@ rotateDurations n x = view voice $ view note <$> zip (rotate n ds) vs
 
 -- | Rotate the values of a voice.
 --
--- >>> rotateValues 1 [(1,'c'), (2, 'd'), (1, 'e')]
--- [(1,'d'), (2, 'e'), (1, 'c')]
+-- >>> rotateValues 1 (fromNotes $ fmap (view note)  [(1,'c'), (2, 'd'), (1, 'e')])
+-- [(1,'e')^.note,(2,'c')^.note,(1,'d')^.note]^.voice
 rotateValues :: Int -> Voice a -> Voice a
 rotateValues n x = view voice $ fmap (view note) $ zip ds (rotate n vs)
   where

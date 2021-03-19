@@ -203,8 +203,8 @@ rhythmPattern a = newPattern $ fmap (const c) $ a ^. durationsAsVoice
 
 -- | Render a pattern in the given 'Span'.
 --
--- >>> renderPattern (rhythmPattern [1,2,1] (0 <-> 8))
---
+-- >>> renderPattern (rhythmPattern [1,2,1]) (0 <-> 4)
+-- [(0 <-> 1,())^.event,(1 <-> 3,())^.event,(3 <-> 4,())^.event]^.score
 renderPattern :: Pattern a -> Span -> Score a
 renderPattern (Pattern xs) s = mconcat $ fmap (renderLunga s) xs
 
