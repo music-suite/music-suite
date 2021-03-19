@@ -193,9 +193,11 @@ instance HasDynamics a b => HasDynamics (Pattern a) (Pattern b) where
 pureP :: a -> Pattern a
 pureP = newPattern . pure
 
+-- | Create a pattern repeating the given voice.
 newPattern :: Voice a -> Pattern a
 newPattern v = Pattern [aligned 0 0 v]
 
+-- | Create a pattern repeating the given rhythm.
 rhythmPattern :: IsPitch a => [Duration] -> Pattern a
 rhythmPattern a = newPattern $ fmap (const c) $ a ^. durationsAsVoice
 
