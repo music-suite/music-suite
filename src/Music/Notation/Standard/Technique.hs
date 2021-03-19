@@ -15,7 +15,7 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
-module Music.Score.Export.TechniqueNotation
+module Music.Notation.Standard.Technique
   ( TechniqueNotation (..),
     textualNotations,
     notateTechnique,

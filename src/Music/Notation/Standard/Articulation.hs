@@ -11,7 +11,7 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
-module Music.Score.Export.ArticulationNotation
+module Music.Notation.Standard.Articulation
   ( Slur (..),
     Mark (..),
     ArticulationNotation (..),

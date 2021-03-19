@@ -11,7 +11,7 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
-module Music.Score.Export.DynamicNotation
+module Music.Notation.Standard.Dynamic
   ( CrescDim (..),
     DynamicNotation (..),
     crescDim,
