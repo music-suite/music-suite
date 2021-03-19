@@ -282,43 +282,27 @@ tempoDuring s c = addMetaNote $ view event (s, c)
 
 -}
 
-presto :: Tempo
-
-allegro :: Tempo
-
-allegretto :: Tempo
-
-moderato :: Tempo
-
-andante :: Tempo
-
-adagio :: Tempo
-
-largo :: Tempo
-
-lento :: Tempo
-
--- presto     = metronome (1/4) 125
--- allegro    = metronome (1/4) 115
--- allegretto = metronome (1/4) 105
--- moderato   = metronome (1/4) 95
--- andante    = metronome (1/4) 85
--- adagio     = metronome (1/4) 65
--- largo      = metronome (1/4) 55
--- lento      = metronome (1/4) 45
-
-presto = metronome (1 / 4) 140
-
-allegro = metronome (1 / 4) 128
-
-allegretto = metronome (1 / 4) 118
-
-moderato = metronome (1 / 4) 98
-
-andante = metronome (1 / 4) 84
 
 adagio = metronome (1 / 4) 64
+adagio :: Tempo
+
+allegretto = metronome (1 / 4) 118
+allegretto :: Tempo
+
+allegro = metronome (1 / 4) 128
+allegro :: Tempo
+
+andante = metronome (1 / 4) 84
+andante :: Tempo
 
 largo = metronome (1 / 4) 48
+largo :: Tempo
 
 lento = metronome (1 / 4) 42
+lento :: Tempo
+
+moderato = metronome (1 / 4) 98
+moderato :: Tempo
+
+presto = metronome (1 / 4) 140
+presto :: Tempo
