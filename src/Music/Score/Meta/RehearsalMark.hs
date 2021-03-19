@@ -66,10 +66,12 @@ instance Monoid RehearsalMark where
 
   mappend = (<>)
 
+-- | Place a rehearsal mark at the onset.
 rehearsalMark :: (HasMeta a, HasPosition a, Transformable a) => a -> a
 rehearsalMark x = case _era x of
   Nothing -> x
   Just e -> rehearsalMarkAt (view onset e) x
 
+-- | Place a rehearsal mark at the given time.
 rehearsalMarkAt :: HasMeta a => Time -> a -> a
 rehearsalMarkAt t = addMetaNote $ view event (t <-> t, RehearsalMark)
