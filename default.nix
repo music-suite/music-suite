@@ -46,11 +46,9 @@ pkgs.stdenv.mkDerivation {
     pkgs.timidity
     pkgs.cabal-install
     pkgs.haskell.packages.ghc883.ormolu
-    # pkgs.haskell.packages.ghc865.cabal-install
     (
     pkgs.haskellPackages.ghcWithPackages (pkgs:
         [
-          # pkgs.cabal-install
           pkgs.pandoc
           pkgs.ormolu
         ])
