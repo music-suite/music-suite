@@ -201,7 +201,10 @@ newPattern v = Pattern [aligned 0 0 v]
 rhythmPattern :: IsPitch a => [Duration] -> Pattern a
 rhythmPattern a = newPattern $ fmap (const c) $ a ^. durationsAsVoice
 
--- TODO variant that returns [Aligned (Voice a)]
+-- | Render a pattern in the given 'Span'.
+--
+-- >>> renderPattern (rhythmPattern [1,2,1] (0 <-> 8))
+--
 renderPattern :: Pattern a -> Span -> Score a
 renderPattern (Pattern xs) s = mconcat $ fmap (renderLunga s) xs
 
