@@ -78,8 +78,6 @@ module Music.Notation.Standard
     ArpeggioNotation (..),
     TremoloNotation (..),
     BreathNotation (..),
-    ArticulationNotation,
-    DynamicNotation,
     HarmonicNotation,
     SlideNotation,
     beginGliss,
@@ -93,7 +91,6 @@ module Music.Notation.Standard
     arpeggioNotation,
     tremoloNotation,
     breathNotation,
-    articulationNotation,
     dynamicNotation,
     fermata,
     chordColor,
@@ -128,6 +125,7 @@ module Music.Notation.Standard
     attribution,
     Work (..),
     workInfo,
+    articulationNotation,
     movements,
 
     barLayersHaveEqualDuration,
@@ -436,10 +434,6 @@ data TremoloNotation
 data BreathNotation = NoBreath | Comma | Caesura | CaesuraWithFermata
   deriving (Eq, Ord, Show)
 
-type ArticulationNotation = Music.Score.Export.ArticulationNotation.ArticulationNotation
-
-type DynamicNotation = Music.Score.Export.DynamicNotation.DynamicNotation
-
 type HarmonicNotation = (Any, Sum Int)
 
 -- (artificial?, partial number)
@@ -523,9 +517,9 @@ data Chord
         _arpeggioNotation :: ArpeggioNotation,
         _tremoloNotation :: TremoloNotation,
         _breathNotation :: BreathNotation,
-        _articulationNotation :: ArticulationNotation,
+        _articulationNotation :: AN.ArticulationNotation,
         -- I'd like to put dynamics in a separate layer, but neither Lily nor MusicXML thinks this way
-        _dynamicNotation :: DynamicNotation,
+        _dynamicNotation :: DN.DynamicNotation,
         _fermata :: Fermata,
         _chordColor :: Maybe (First (Colour Double)),
         _chordText :: [String],

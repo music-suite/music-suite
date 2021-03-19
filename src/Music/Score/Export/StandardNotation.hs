@@ -78,8 +78,6 @@ module Music.Score.Export.StandardNotation
     ArpeggioNotation (..),
     TremoloNotation (..),
     BreathNotation (..),
-    ArticulationNotation,
-    DynamicNotation,
     HarmonicNotation,
     SlideNotation,
     beginGliss,
@@ -243,10 +241,10 @@ import qualified Music.Score.Internal.Util
 import Music.Score.Internal.Util (unRatio)
 import qualified Music.Score.Meta
 import qualified Music.Score.Meta.Attribution
-import Music.Notation.Standard
 import qualified Music.Score.Meta.Key
 import qualified Music.Score.Meta.RehearsalMark
 import qualified Music.Score.Meta.Tempo
+import Music.Notation.Standard
 import Music.Score.Meta.Tempo (Tempo)
 import qualified Music.Score.Meta.Time
 import qualified Music.Score.Meta.Title
@@ -532,7 +530,7 @@ toLyNote p =
             (p .-. Music.Score.Pitch.octavesDown (4 + 1) Music.Pitch.Literal.c)
       )
 
-notateDynamicLy :: DynamicNotation -> Lilypond.Music -> Lilypond.Music
+notateDynamicLy :: DN.DynamicNotation -> Lilypond.Music -> Lilypond.Music
 notateDynamicLy (DN.DynamicNotation (crescDims, level)) =
   rcomposed (fmap notateCrescDim crescDims)
     . notateLevel level
@@ -560,7 +558,7 @@ fixLevel :: Double -> Double
 fixLevel x = fromInteger (round (x - 0.5)) + 0.5
 
 notateArticulationLy ::
-  ArticulationNotation ->
+  AN.ArticulationNotation ->
   Lilypond.Music ->
   Lilypond.Music
 notateArticulationLy (AN.ArticulationNotation (slurs, marks)) =
