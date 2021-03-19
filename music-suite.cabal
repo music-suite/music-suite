@@ -101,6 +101,7 @@ library
                         Music.Dynamics.Absolute
                         Music.Dynamics.Common
                         Music.Dynamics.Literal
+                        Music.Notation.Standard
                         Music.Parts
                         Music.Parts.Division
                         Music.Parts.Group
