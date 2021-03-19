@@ -131,7 +131,7 @@ cabal exec runhaskell -- examples/chopin.hs -f ly -o t.ly
   - `Music.Dynamics`: high-level DSL for dynamics
   - `Music.Articulation`: high-level DSL for musical articulation
   - `Music.Part`: high-level DSL for instruments and parts
-  - `Music.Prelude.Standard`: prelude/standard library for the Music Suite DSL
+  - `Music.Prelude`: prelude/standard library for the Music Suite DSL
 
 - The notation DSL:
   - `Music.Notation.Standard`: DSL for representing Common/Western music notation
