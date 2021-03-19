@@ -39,10 +39,7 @@
 --   staff\" that contains information pertaining to all parts, such as key and
 --   time signatures.
 module Music.Notation.Standard
-  ( LabelTree (..),
-    foldLabelTree,
-    fromListLT,
-
+  (
     -- * Common music notation
     BarNumber,
     TimeSignature,
