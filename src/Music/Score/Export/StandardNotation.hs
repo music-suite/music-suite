@@ -50,7 +50,6 @@ module Music.Score.Export.StandardNotation
     RehearsalMark,
     TempoMark,
     BracketType (..),
-    SpecialBarline,
     SystemBar,
     barNumbers,
     timeSignature,

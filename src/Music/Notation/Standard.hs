@@ -46,7 +46,6 @@ module Music.Notation.Standard
     RehearsalMark,
     TempoMark,
     BracketType (..),
-    SpecialBarline,
     SystemBar,
     barNumbers,
     timeSignature,
@@ -215,15 +214,6 @@ import Music.Score.Part (PartT (..))
 import qualified Music.Score.Phrases
 import Music.Score.Phrases (MVoice)
 import qualified Music.Score.Pitch
--- import Music.Score.Pitch ()
--- import Music.Score.Slide (SlideT, runSlideT)
--- import Music.Score.StaffNumber (StaffNumberT, runStaffNumberT)
--- import Music.Score.Technique (HasTechniques (techniques), Technique, TechniqueT (..))
--- import qualified Music.Score.Technique
--- import Music.Score.Text (TextT, runTextT)
--- import qualified Music.Score.Ties
--- import Music.Score.Ties (Tiable (..), TieT (..))
--- import Music.Score.Tremolo (TremoloT, runTremoloT)
 import Music.Time
 import Data.LabelTree (LabelTree(Branch, Leaf), fromListLT, foldLabelTree)
 
@@ -237,8 +227,6 @@ Remember:
 
 -}
 
--- TODO w/wo connecting barlines
--- TODO parg group names (i.e. "archi", "horns", "chorus", "fl (I && II)")
 data BracketType = NoBracket | Bracket | Brace | Subbracket
   deriving (Eq, Ord, Show)
 
@@ -252,11 +240,6 @@ type RehearsalMark = Music.Score.Meta.RehearsalMark.RehearsalMark
 
 type TempoMark = Music.Score.Meta.Tempo.Tempo
 
-type SpecialBarline = () -- TODO Dashed | Double | Final
-  -- type BarLines               = (Maybe SpecialBarline, Maybe SpecialBarline)
-  -- (prev,next) biased to next
-
--- TODO lyrics
 
 data SystemBar
   = SystemBar
