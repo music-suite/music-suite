@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-unused-imports
+{-# OPTIONS_GHC -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
 module Music.Time.Aligned

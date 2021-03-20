@@ -42,7 +42,6 @@ instance IsString Value where
   fromString = toValue
 
 instance Num Value where
-
   (+) = noOverloading "(+)"
 
   (*) = noOverloading "(*)"
@@ -58,7 +57,6 @@ instance Num Value where
   fromInteger = toValue
 
 instance Fractional Value where
-
   (/) = noOverloading "(/)"
 
   recip = noOverloading "recip"

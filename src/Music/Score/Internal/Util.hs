@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
 {-# OPTIONS_HADDOCK hide #-}
@@ -111,9 +110,7 @@ unf :: (a -> Maybe a) -> a -> [a]
 unf f = Data.List.unfoldr (fmap dup . f)
 
 mapF :: forall b. (b -> b) -> [b] -> [b]
-
 mapT :: forall b. (b -> b) -> [b] -> [b]
-
 mapL :: forall b. (b -> b) -> [b] -> [b]
 
 -- |
@@ -214,9 +211,7 @@ partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
 
 partial2 :: (a -> b -> Bool) -> a -> b -> Maybe b
-
 partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
-
 partial2 f = curry (fmap snd . partial (uncurry f))
 
 partial3 f = curry3 (fmap (view _3) . partial (uncurry3 f))

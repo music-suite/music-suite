@@ -1,8 +1,7 @@
-{-# OPTIONS_HADDOCK hide #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-redundant-constraints
   -fno-warn-unused-imports #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------
 
@@ -40,7 +39,7 @@ module Music.Score.Internal.Quantize
 where
 
 import Control.Applicative
-import Control.Lens ((^.), _Left, over)
+import Control.Lens (over, (^.), _Left)
 import Control.Monad (MonadPlus (..), ap, join)
 import Data.Either
 import Data.Foldable
@@ -73,13 +72,13 @@ data Rhythm a
   = Beat Duration a -- d is divisible by 2
   | Group [Rhythm a] --
   | Dotted Int (Rhythm a) -- n > 0.
-        -- Can be thought of as a special case of tuplet, where
-        --  Dotted n x = Tuplet (dotMod n) x
+  -- Can be thought of as a special case of tuplet, where
+  --  Dotted n x = Tuplet (dotMod n) x
   | Tuplet Duration (Rhythm a) -- d is an emelent of 'konstTuplets'.
-        -- d = (sounding dur/notated dur)
-        --   Of course this implies (notated * d = sounding)
-        --   This is the reciprocal of the ratio usually written in a score
-        -- I.e. for standard triplet, sounding/notated = (1/3)/(1/2) = 2/3
+  -- d = (sounding dur/notated dur)
+  --   Of course this implies (notated * d = sounding)
+  --   This is the reciprocal of the ratio usually written in a score
+  -- I.e. for standard triplet, sounding/notated = (1/3)/(1/2) = 2/3
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
 -- RInvTuplet  Duration (Rhythm a)
@@ -146,11 +145,12 @@ instance Monoid (Rhythm a) where
   mempty = Group []
 
 appendRhythm :: Rhythm a -> Rhythm a -> Rhythm a
-appendRhythm = mappend where
-  Group as `mappend` Group bs = Group (as <> bs)
-  r `mappend` Group bs = Group ([r] <> bs)
-  Group as `mappend` r = Group (as <> [r])
-  a `mappend` b = Group [a, b]
+appendRhythm = mappend
+  where
+    Group as `mappend` Group bs = Group (as <> bs)
+    r `mappend` Group bs = Group ([r] <> bs)
+    Group as `mappend` r = Group (as <> [r])
+    a `mappend` b = Group [a, b]
 
 instance HasDuration (Rhythm a) where
   _duration (Beat d _) = d
@@ -159,7 +159,6 @@ instance HasDuration (Rhythm a) where
   _duration (Group as) = sum (fmap (^. duration) as)
 
 instance AdditiveGroup (Rhythm a) where
-
   zeroV = error "No zeroV for (Rhythm a)"
 
   (^+^) = error "No ^+^ for (Rhythm a)"
@@ -167,7 +166,6 @@ instance AdditiveGroup (Rhythm a) where
   negateV = error "No negateV for (Rhythm a)"
 
 instance VectorSpace (Rhythm a) where
-
   type Scalar (Rhythm a) = Duration
 
   a *^ Beat d x = Beat (a * d) x
@@ -182,7 +180,6 @@ instance VectorSpace (Rhythm a) where
     Rhythm rewrite laws (all up to realization equality)
 
     Note: Just sketching, needs more formal treatment.
-
 
     Group [Group xs ...] = Group [xs ...]
         [JoinGroup]
@@ -295,21 +292,19 @@ konstTuplets = [2 / 3, 4 / 5, 4 / 7, 8 / 9, 8 / 11, 8 / 13, 8 / 15, 16 / 17, 16 
 konstMaxTupletNest :: Int
 konstMaxTupletNest = 1
 
-data RhythmContext
-  = RhythmContext
-      { -- | Time scaling of the current note (from dots and tuplets).
-        timeMod :: Duration,
-        -- | Time subtracted from the current rhythm (from ties).
-        timeSub :: Duration,
-        -- | Number of tuplets above the current note (default 0).
-        tupleDepth :: Int
-      }
+data RhythmContext = RhythmContext
+  { -- | Time scaling of the current note (from dots and tuplets).
+    timeMod :: Duration,
+    -- | Time subtracted from the current rhythm (from ties).
+    timeSub :: Duration,
+    -- | Number of tuplets above the current note (default 0).
+    tupleDepth :: Int
+  }
 
 instance Semigroup RhythmContext where
   a <> _ = a
 
 instance Monoid RhythmContext where
-
   mappend = (<>)
 
   mempty = RhythmContext {timeMod = 1, timeSub = 0, tupleDepth = 0}
@@ -361,7 +356,6 @@ TODO this should be abolished!
 What this should really do is to split the rhythm into two rhythms where the first have the bound duration...
 -}
 bound = msum $ fmap bound' $ konstBounds
-
 
 -- | Look for a common tuplet.
 --
@@ -473,15 +467,15 @@ logBaseR k n | isInfinite (fromRational n :: a) = logBaseR k (n / k) + 1
 logBaseR k n | isDenormalized (fromRational n :: a) = logBaseR k (n * k) - 1
 logBaseR k n | otherwise = logBase (fromRational k) (fromRational n)
 
-
 -- As it sounds, do NOT use infix
 -- Only works for simple n such as 2 or 3, TODO determine
 -- isPowerOf :: Duration -> Duration -> Bool
 isPowerOf :: forall a a1. (Real a, Real a1) => a -> a1 -> Bool
-isPowerOf n = (== (0.0 :: Double)) . snd
-  . properFraction @Double @Integer
-  . logBaseR (toRational n)
-  . toRational
+isPowerOf n =
+  (== (0.0 :: Double)) . snd
+    . properFraction @Double @Integer
+    . logBaseR (toRational n)
+    . toRational
 
 isPowerOf2 :: forall a. Real a => a -> Bool
 isPowerOf2 = isPowerOf @Integer 2
@@ -515,6 +509,3 @@ quSimp = Right . qu1 1
 -- (1/n) = (p/n)(1/p)
 -- (1/n) = (p/np)
 -- (1/n) = (1/n)
-
-
-

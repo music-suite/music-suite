@@ -1,7 +1,6 @@
-{-# OPTIONS_HADDOCK hide #-}
-{-# OPTIONS_GHC
-  -fno-warn-unused-imports
+{-# OPTIONS_GHC -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
+{-# OPTIONS_HADDOCK hide #-}
 
 module Music.Time.Internal.Placed
   ( -- * Placed type
@@ -16,8 +15,7 @@ where
 import Control.Applicative
 import Control.Comonad
 import Control.Lens hiding
-  ( (<|),
-    Indexable,
+  ( Indexable,
     Level,
     below,
     index,
@@ -25,6 +23,7 @@ import Control.Lens hiding
     parts,
     reversed,
     transform,
+    (<|),
     (|>),
   )
 import Data.AffineSpace
@@ -60,7 +59,6 @@ instance (Show a, Transformable a) => Show (Placed a) where
   show x = show (x ^. from placed) ++ "^.placed"
 
 instance Wrapped (Placed a) where
-
   type Unwrapped (Placed a) = (Time, a)
 
   _Wrapped' = iso (getCouple . getPlaced) (Placed . Couple)

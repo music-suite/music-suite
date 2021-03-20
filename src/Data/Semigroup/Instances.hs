@@ -24,13 +24,11 @@ deriving instance Fractional a => Fractional (Sum a)
 deriving instance AdditiveGroup a => AdditiveGroup (Sum a)
 
 instance VectorSpace a => VectorSpace (Sum a) where
-
   type Scalar (Sum a) = Scalar a
 
   s *^ Sum v = Sum (s *^ v)
 
 instance AffineSpace a => AffineSpace (Sum a) where
-
   type Diff (Sum a) = Sum (Diff a)
 
   Sum p .-. Sum q = Sum (p .-. q)
@@ -44,13 +42,11 @@ deriving instance Fractional a => Fractional (Product a)
 deriving instance AdditiveGroup a => AdditiveGroup (Product a)
 
 instance VectorSpace a => VectorSpace (Product a) where
-
   type Scalar (Product a) = Scalar a
 
   x *^ Product y = Product (x *^ y)
 
 instance AffineSpace a => AffineSpace (Product a) where
-
   type Diff (Product a) = Product (Diff a)
 
   Product p .-. Product q = Product (p .-. q)
@@ -60,6 +56,7 @@ instance AffineSpace a => AffineSpace (Product a) where
 deriving instance IsDynamics a => IsDynamics (Sum a)
 
 deriving instance IsDynamics a => IsDynamics (Product a)
+
 {-
 deriving instance Floating a => Floating (Product a)
 instance Num a => Num (Product a) where

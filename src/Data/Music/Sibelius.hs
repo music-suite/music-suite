@@ -40,17 +40,15 @@ import Control.Monad.Plus
 import Data.Aeson
 import qualified Data.HashMap.Strict as HashMap
 
-
-data SibeliusScore
-  = SibeliusScore
-      { scoreTitle :: String,
-        scoreComposer :: String,
-        scoreInformation :: String,
-        scoreStaffHeight :: Double,
-        scoreTransposing :: Bool,
-        scoreStaves :: [SibeliusStaff],
-        scoreSystemStaff :: SibeliusSystemStaff
-      }
+data SibeliusScore = SibeliusScore
+  { scoreTitle :: String,
+    scoreComposer :: String,
+    scoreInformation :: String,
+    scoreStaffHeight :: Double,
+    scoreTransposing :: Bool,
+    scoreStaves :: [SibeliusStaff],
+    scoreSystemStaff :: SibeliusSystemStaff
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusScore where
@@ -65,10 +63,9 @@ instance FromJSON SibeliusScore where
       <*> v .: "systemStaff"
   parseJSON _ = fail "expected object"
 
-data SibeliusSystemStaff
-  = SibeliusSystemStaff
-      { systemStaffBars :: [SibeliusBar]
-      }
+data SibeliusSystemStaff = SibeliusSystemStaff
+  { systemStaffBars :: [SibeliusBar]
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusSystemStaff where
@@ -77,12 +74,11 @@ instance FromJSON SibeliusSystemStaff where
       <$> v .: "bars"
   parseJSON _ = fail "expected object"
 
-data SibeliusStaff
-  = SibeliusStaff
-      { staffBars :: [SibeliusBar],
-        staffName :: String,
-        staffShortName :: String
-      }
+data SibeliusStaff = SibeliusStaff
+  { staffBars :: [SibeliusBar],
+    staffName :: String,
+    staffShortName :: String
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusStaff where
@@ -91,12 +87,11 @@ instance FromJSON SibeliusStaff where
       <$> v .: "bars"
       <*> v .: "name"
       <*> v .: "shortName"
-
   parseJSON _ = fail "expected object"
-data SibeliusBar
-  = SibeliusBar
-      { barElements :: [SibeliusBarObject]
-      }
+
+data SibeliusBar = SibeliusBar
+  { barElements :: [SibeliusBarObject]
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusBar where
@@ -140,13 +135,12 @@ instance FromJSON SibeliusBarObject where
     _ -> mempty -- failure: no type field
   parseJSON _ = fail "expected object"
 
-data SibeliusText
-  = SibeliusText
-      { textVoice :: Int,
-        textPosition :: Int,
-        textText :: String,
-        textStyle :: Maybe String
-      }
+data SibeliusText = SibeliusText
+  { textVoice :: Int,
+    textPosition :: Int,
+    textText :: String,
+    textStyle :: Maybe String
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusText where
@@ -158,12 +152,11 @@ instance FromJSON SibeliusText where
       <*> v .:? "style"
   parseJSON _ = fail "expected object"
 
-data SibeliusClef
-  = SibeliusClef
-      { clefVoice :: Int,
-        clefPosition :: Int,
-        clefStyle :: Maybe String
-      }
+data SibeliusClef = SibeliusClef
+  { clefVoice :: Int,
+    clefPosition :: Int,
+    clefStyle :: Maybe String
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusClef where
@@ -174,13 +167,12 @@ instance FromJSON SibeliusClef where
       <*> v .: "style"
   parseJSON _ = fail "expected object"
 
-data SibeliusSlur
-  = SibeliusSlur
-      { slurVoice :: Int,
-        slurPosition :: Int,
-        slurDuration :: Int,
-        slurStyle :: Maybe String
-      }
+data SibeliusSlur = SibeliusSlur
+  { slurVoice :: Int,
+    slurPosition :: Int,
+    slurDuration :: Int,
+    slurStyle :: Maybe String
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusSlur where
@@ -192,13 +184,12 @@ instance FromJSON SibeliusSlur where
       <*> v .: "style"
   parseJSON _ = fail "expected object"
 
-data SibeliusCrescendoLine
-  = SibeliusCrescendoLine
-      { crescVoice :: Int,
-        crescPosition :: Int,
-        crescDuration :: Int,
-        crescStyle :: Maybe String
-      }
+data SibeliusCrescendoLine = SibeliusCrescendoLine
+  { crescVoice :: Int,
+    crescPosition :: Int,
+    crescDuration :: Int,
+    crescStyle :: Maybe String
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusCrescendoLine where
@@ -210,13 +201,12 @@ instance FromJSON SibeliusCrescendoLine where
       <*> v .: "style"
   parseJSON _ = fail "expected object"
 
-data SibeliusDiminuendoLine
-  = SibeliusDiminuendoLine
-      { dimVoice :: Int,
-        dimPosition :: Int,
-        dimDuration :: Int,
-        dimStyle :: Maybe String
-      }
+data SibeliusDiminuendoLine = SibeliusDiminuendoLine
+  { dimVoice :: Int,
+    dimPosition :: Int,
+    dimDuration :: Int,
+    dimStyle :: Maybe String
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusDiminuendoLine where
@@ -228,14 +218,13 @@ instance FromJSON SibeliusDiminuendoLine where
       <*> v .: "style"
   parseJSON _ = fail "expected object"
 
-data SibeliusTimeSignature
-  = SibeliusTimeSignature
-      { timeVoice :: Int,
-        timePosition :: Int,
-        timeValue :: [Int],
-        timeIsCommon :: Bool,
-        timeIsAllaBreve :: Bool
-      }
+data SibeliusTimeSignature = SibeliusTimeSignature
+  { timeVoice :: Int,
+    timePosition :: Int,
+    timeValue :: [Int],
+    timeIsCommon :: Bool,
+    timeIsAllaBreve :: Bool
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusTimeSignature where
@@ -248,14 +237,13 @@ instance FromJSON SibeliusTimeSignature where
       <*> v .: "allaBreve"
   parseJSON _ = fail "expected object"
 
-data SibeliusKeySignature
-  = SibeliusKeySignature
-      { keyVoice :: Int,
-        keyPosition :: Int,
-        keyMajor :: Bool,
-        keySharps :: Int,
-        keyIsOpen :: Bool
-      }
+data SibeliusKeySignature = SibeliusKeySignature
+  { keyVoice :: Int,
+    keyPosition :: Int,
+    keyMajor :: Bool,
+    keySharps :: Int,
+    keyIsOpen :: Bool
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusKeySignature where
@@ -268,14 +256,13 @@ instance FromJSON SibeliusKeySignature where
       <*> v .: "isOpen"
   parseJSON _ = fail "expected object"
 
-data SibeliusTuplet
-  = SibeliusTuplet
-      { tupletVoice :: Int,
-        tupletPosition :: Int,
-        tupletDuration :: Int,
-        tupletPlayedDuration :: Int,
-        tupletValue :: [Int]
-      }
+data SibeliusTuplet = SibeliusTuplet
+  { tupletVoice :: Int,
+    tupletPosition :: Int,
+    tupletDuration :: Int,
+    tupletPlayedDuration :: Int,
+    tupletValue :: [Int]
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusTuplet where
@@ -316,18 +303,17 @@ readSibeliusArticulation = go
     go "staccato" = Just Staccato
     go _ = Nothing
 
-data SibeliusChord
-  = SibeliusChord
-      { chordPosition :: Int,
-        chordDuration :: Int,
-        chordVoice :: Int,
-        chordArticulations :: [SibeliusArticulation], -- TODO
-        chordSingleTremolos :: Int,
-        chordDoubleTremolos :: Int,
-        chordAcciaccatura :: Bool,
-        chordAppoggiatura :: Bool,
-        chordNotes :: [SibeliusNote]
-      }
+data SibeliusChord = SibeliusChord
+  { chordPosition :: Int,
+    chordDuration :: Int,
+    chordVoice :: Int,
+    chordArticulations :: [SibeliusArticulation], -- TODO
+    chordSingleTremolos :: Int,
+    chordDoubleTremolos :: Int,
+    chordAcciaccatura :: Bool,
+    chordAppoggiatura :: Bool,
+    chordNotes :: [SibeliusNote]
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusChord where
@@ -344,14 +330,13 @@ instance FromJSON SibeliusChord where
       <*> v .: "notes"
   parseJSON _ = fail "expected object"
 
-data SibeliusNote
-  = SibeliusNote
-      { notePitch :: Int,
-        noteDiatonicPitch :: Int,
-        noteAccidental :: Int,
-        noteTied :: Bool,
-        noteStyle :: Maybe Int -- not String?
-      }
+data SibeliusNote = SibeliusNote
+  { notePitch :: Int,
+    noteDiatonicPitch :: Int,
+    noteAccidental :: Int,
+    noteTied :: Bool,
+    noteStyle :: Maybe Int -- not String?
+  }
   deriving (Eq, Ord, Show)
 
 instance FromJSON SibeliusNote where

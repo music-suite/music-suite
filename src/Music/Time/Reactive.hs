@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-unused-imports
+{-# OPTIONS_GHC -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
 module Music.Time.Reactive
@@ -34,8 +33,7 @@ where
 
 import Control.Applicative
 import Control.Lens hiding
-  ( (<|),
-    Indexable,
+  ( Indexable,
     Level,
     below,
     index,
@@ -43,6 +41,7 @@ import Control.Lens hiding
     parts,
     reversed,
     transform,
+    (<|),
     (|>),
   )
 import Control.Monad
@@ -76,7 +75,6 @@ instance Transformable (Reactive a) where
   transform s (Reactive (t, r)) = Reactive (transform s t, transform s r)
 
 instance Wrapped (Reactive a) where
-
   type Unwrapped (Reactive a) = ([Time], Behavior a)
 
   _Wrapped' = iso getReactive Reactive
@@ -84,7 +82,6 @@ instance Wrapped (Reactive a) where
 instance Rewrapped (Reactive a) (Reactive b)
 
 instance Applicative Reactive where
-
   pure = pureDefault
     where
       pureDefault = view _Unwrapped . pure . pure
@@ -103,13 +100,11 @@ instance IsDynamics a => IsDynamics (Reactive a) where
   fromDynamics = pure . fromDynamics
 
 instance Alterable a => Alterable (Reactive a) where
-
   sharpen = fmap sharpen
 
   flatten = fmap flatten
 
 instance Augmentable a => Augmentable (Reactive a) where
-
   augment = fmap augment
 
   diminish = fmap diminish

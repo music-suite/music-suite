@@ -32,7 +32,6 @@ import Music.Time.Score
 import Numeric.Natural
 
 class HasHarmonic a where
-
   setNatural :: Bool -> a -> a
 
   -- 0 for none, positive for natural, negative for artificial
@@ -80,7 +79,6 @@ instance HasHarmonic a => HasHarmonic [a]
 instance HasHarmonic a => HasHarmonic (Score a)
 
 instance HasHarmonic (HarmonicT a) where
-
   setNatural b = over (iso getHarmonicT HarmonicT . _Wrapped') $ \((_, n), x) -> ((Any b, n), x)
 
   setHarmonic n = over (iso getHarmonicT HarmonicT . _Wrapped') $ \((nat, _), x) -> ((nat, Sum n), x)

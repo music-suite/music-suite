@@ -1,4 +1,3 @@
-
 -- |
 -- Many time structures such as 'Score' allows for rests between notes. Generally rests
 -- are simply treated as blank space, and thus have no duration. Sometimes it is useful

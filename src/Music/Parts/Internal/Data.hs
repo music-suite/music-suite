@@ -1,16 +1,15 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-orphans
-  -fno-warn-redundant-constraints #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing
+  -fno-warn-unused-imports
+  -fno-warn-orphans
+  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
 
 module Music.Parts.Internal.Data
   ( SoundId,
-    InstrumentTopCategory(..),
+    InstrumentTopCategory (..),
     InstrumentDef (..),
     getInstrumentData,
     getInstrumentDefById,
@@ -20,22 +19,22 @@ module Music.Parts.Internal.Data
 where
 
 import Control.Applicative
-import Control.Lens ((^.), toListOf)
+import Control.Lens (toListOf, (^.))
 import Control.Monad.Plus
-import qualified Data.Text
 import Data.AffineSpace
 import qualified Data.ByteString.Lazy
 import qualified Data.ByteString.Lazy.Char8
 import Data.Csv
-  ( (.!),
-    FromField (..),
+  ( FromField (..),
     FromRecord (..),
+    (.!),
   )
 import qualified Data.Csv
 import Data.FileEmbed
 import qualified Data.List
 import Data.Map (Map)
 import qualified Data.Maybe
+import qualified Data.Text
 import Data.Traversable (traverse)
 import Data.VectorSpace
 import Music.Pitch
@@ -55,22 +54,21 @@ data InstrumentTopCategory
   | Other
   deriving (Show)
 
-data InstrumentDef
-  = InstrumentDef
-      { _soundId :: SoundId, -- ID
-        _generalMidiProgram :: [Int], -- GM Program
-        _generalMidiPercussionNote :: [Int], -- GM Percussion Note
-        _defaultMidiChannel :: Maybe Int, -- Default MIDI Channel
-        _scoreOrder :: Double, -- Score Order
-        _allowedClefs :: [Clef], -- Allowed Clefs
-        _standardClef :: [Clef], -- Standard Clef (1 elem for single staff, more otherwise, never empty)
-        _transposition :: Interval, -- Transposition
-        _playableRange :: Maybe (Ambitus Interval Pitch), -- Playable Range
-        _comfortableRange :: Maybe (Ambitus Interval Pitch), -- Comfortable Range
-        _longName :: Maybe String,
-        _shortName :: Maybe String,
-        _sibeliusName :: Maybe String
-      }
+data InstrumentDef = InstrumentDef
+  { _soundId :: SoundId, -- ID
+    _generalMidiProgram :: [Int], -- GM Program
+    _generalMidiPercussionNote :: [Int], -- GM Percussion Note
+    _defaultMidiChannel :: Maybe Int, -- Default MIDI Channel
+    _scoreOrder :: Double, -- Score Order
+    _allowedClefs :: [Clef], -- Allowed Clefs
+    _standardClef :: [Clef], -- Standard Clef (1 elem for single staff, more otherwise, never empty)
+    _transposition :: Interval, -- Transposition
+    _playableRange :: Maybe (Ambitus Interval Pitch), -- Playable Range
+    _comfortableRange :: Maybe (Ambitus Interval Pitch), -- Comfortable Range
+    _longName :: Maybe String,
+    _shortName :: Maybe String,
+    _sibeliusName :: Maybe String
+  }
   deriving (Show)
 
 getInstrumentDefById :: String -> Maybe InstrumentDef
@@ -186,4 +184,3 @@ getInstrumentData =
 
 splitBy :: Char -> String -> [String]
 splitBy sep = fmap Data.Text.unpack . Data.Text.split (== sep) . Data.Text.pack
-

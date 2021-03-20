@@ -51,9 +51,7 @@ import Music.Time.Internal.Transform
 --
 --    @'setColor' n ('setColor' n x) = 'setColor' n x@
 class HasColor a where
-
   setColor :: Colour Double -> a -> a
-
   default setColor :: forall f b. (a ~ f b, Functor f, HasColor b) => Colour Double -> a -> a
   setColor s = fmap (setColor s)
 
@@ -92,7 +90,6 @@ deriving instance Enum a => Enum (ColorT a)
 deriving instance Bounded a => Bounded (ColorT a)
 
 instance Wrapped (ColorT a) where
-
   type Unwrapped (ColorT a) = Couple (Maybe (Last (Colour Double))) a
 
   _Wrapped' = iso getColorT ColorT

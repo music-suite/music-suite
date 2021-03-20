@@ -17,9 +17,9 @@ module Music.Score.Ties
   )
 where
 
-import BasePrelude hiding ((<>), Dynamic, first, second)
+import BasePrelude hiding (Dynamic, first, second, (<>))
 import Control.Comonad
-import Control.Lens hiding ((&), transform)
+import Control.Lens hiding (transform, (&))
 import Data.Bifunctor
 import Data.Functor.Couple
 import Data.Monoid.Average
@@ -37,7 +37,6 @@ import Music.Time.Voice hiding (map, traverse)
 --
 -- Minimal definition: 'toTied', or both 'beginTie' and 'endTie'.
 class Tiable a where
-
   -- |
   -- Modify a note to be the first note in a tied note pair.
   beginTie :: a -> a
@@ -112,7 +111,6 @@ instance Transformable a => Transformable (TieT a) where
   transform s = fmap (transform s)
 
 instance Num a => Num (TieT a) where
-
   (+) = liftA2 (+)
 
   (*) = liftA2 (*)
@@ -126,13 +124,11 @@ instance Num a => Num (TieT a) where
   fromInteger = pure . fromInteger
 
 instance Fractional a => Fractional (TieT a) where
-
   recip = fmap recip
 
   fromRational = pure . fromRational
 
 instance Floating a => Floating (TieT a) where
-
   pi = pure pi
 
   sqrt = fmap sqrt
@@ -162,13 +158,11 @@ instance Floating a => Floating (TieT a) where
   acosh = fmap acos
 
 instance Enum a => Enum (TieT a) where
-
   toEnum = pure . toEnum
 
   fromEnum = fromEnum . extract
 
 instance Bounded a => Bounded (TieT a) where
-
   minBound = pure minBound
 
   maxBound = pure maxBound
@@ -177,7 +171,6 @@ instance (Num a, Ord a, Real a) => Real (TieT a) where
   toRational = toRational . extract
 
 instance (Real a, Enum a, Integral a) => Integral (TieT a) where
-
   quot = liftA2 quot
 
   quotRem = fmap (fmap unzipR) (liftA2 quotRem)
@@ -190,7 +183,6 @@ newtype TieT a = TieT {getTieT :: ((Any, Any), a)}
   deriving (Eq, Ord, Show, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad)
 
 instance Wrapped (TieT a) where
-
   type Unwrapped (TieT a) = ((Any, Any), a)
 
   _Wrapped' = iso getTieT TieT
@@ -238,12 +230,12 @@ splitDurThen s t x = case splitDur s x of
 --
 -- > sum $ fmap duration $ fst $ splitDurFor maxDur xs == maxDur  iff  (not $ null $ snd $ splitDurFor maxDur xs)
 splitDurFor :: Tiable a => Duration -> [(Duration, a)] -> ([(Duration, a)], [(Duration, a)])
-splitDurFor _      [] = ([], [])
+splitDurFor _ [] = ([], [])
 splitDurFor remDur (x : xs) = case splitDur remDur x of
   (x@(d, _), Nothing) ->
     if d < remDur
       then first (x :) $ splitDurFor (remDur - d) xs
-      else-- d == remDur
+      else -- d == remDur
         ([x], xs)
   (x, Just rest) -> ([x], rest : xs)
 

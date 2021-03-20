@@ -1,5 +1,5 @@
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 -------------------------------------------------------------------------------------
 
@@ -17,6 +17,7 @@ module Data.Music.MusicXml.Score
   ( -----------------------------------------------------------------------------
 
     -- * Score
+
     -----------------------------------------------------------------------------
     Score (..),
     ScoreHeader (..),
@@ -35,6 +36,7 @@ module Data.Music.MusicXml.Score
     -----------------------------------------------------------------------------
 
     -- * Music
+
     -----------------------------------------------------------------------------
     Music (..),
     MusicElem (..),
@@ -83,6 +85,7 @@ module Data.Music.MusicXml.Score
     -----------------------------------------------------------------------------
 
     -- * Basic types
+
     -----------------------------------------------------------------------------
 
     -----------------------------------------------------------------------------
@@ -160,26 +163,25 @@ data Score
           [(PartAttrs, Music)]
         )
       ]
-  deriving Show
+  deriving (Show)
 
 -- |
 -- Encodes the <https://github.com/w3c/musicxml/blob/v3.1/schema/musicxml.xsd#L5991 score header> type.
 --
 -- We currently don't support the @defaults@ and @credits@ fields.
-data ScoreHeader
-  = ScoreHeader
-      { scoreTitle :: Maybe String,
-        mvmNumber :: Maybe Int,
-        mvmTitle :: Maybe String,
-        scoreIdentification :: Maybe Identification,
-        scorePartList :: PartList
-      }
-  deriving Show
+data ScoreHeader = ScoreHeader
+  { scoreTitle :: Maybe String,
+    mvmNumber :: Maybe Int,
+    mvmTitle :: Maybe String,
+    scoreIdentification :: Maybe Identification,
+    scorePartList :: PartList
+  }
+  deriving (Show)
 
 data Identification
   = Identification
       [Creator] --  ^ creator
-  deriving Show
+  deriving (Show)
 
 -- | MusicXML supports arbitrary types of creators. Standard values
 -- for @creatorType@ are @composer@, @lyricist@, and @arranger@.
@@ -188,9 +190,11 @@ data Creator
   | Lyricist String
   | Arranger String
   | OtherCreator
-    String -- ^ type
-    String -- ^ name
-  deriving Show
+      String
+      -- ^ type
+      String
+      -- ^ name
+  deriving (Show)
 
 data Defaults
   = Defaults
@@ -204,27 +208,29 @@ data Defaults
 data ScoreAttrs
   = ScoreAttrs
       [Int] --  ^ score version
-  deriving Show
+  deriving (Show)
 
 data PartAttrs
   = PartAttrs
       String --  ^ part id
-  deriving Show
+  deriving (Show)
 
 -- | Measure numbers are usually integral, but can technically be any type xs:token
 -- http://usermanuals.musicxml.com/MusicXML/MusicXML.htm#EL-MusicXML-measure.htm
 data MeasureAttrs
   = MeasureAttrs
-      Bool -- ^ implicit
-      String -- ^ number
-  deriving Show
+      Bool
+      -- ^ implicit
+      String
+      -- ^ number
+  deriving (Show)
 
 -- ----------------------------------------------------------------------------------
 -- Part list
 -- ----------------------------------------------------------------------------------
 
 newtype PartList = PartList {getPartList :: [PartListElem]}
-  deriving Show
+  deriving (Show)
 
 instance Default PartList where
   def = PartList []
@@ -238,7 +244,6 @@ instance Semigroup PartList where
       partIds = ["P" ++ show @Int n | n <- [1 ..]]
 
 instance Monoid PartList where
-
   mempty = def
 
   mappend = (<>)
@@ -251,10 +256,11 @@ data PartListElem
       (Maybe String)
       (Maybe String)
       (Maybe String)
-      -- score-instrument?
-      -- midi-device?
-      -- midi-instrument?
-  | -- | number start/stop name? abbrev? symbol barline style
+  | -- score-instrument?
+    -- midi-device?
+    -- midi-instrument?
+
+    -- | number start/stop name? abbrev? symbol barline style
     Group
       Level
       StartStop
@@ -263,13 +269,13 @@ data PartListElem
       (Maybe GroupSymbol)
       (Maybe GroupBarlines)
       Bool
-  deriving Show
+  deriving (Show)
 
 data GroupSymbol = GroupBrace | GroupLine | GroupBracket | GroupSquare | NoGroupSymbol
-  deriving Show
+  deriving (Show)
 
 data GroupBarlines = GroupBarLines | GroupNoBarLines | GroupMensurstrich
-  deriving Show
+  deriving (Show)
 
 -- ----------------------------------------------------------------------------------
 -- Music
@@ -298,7 +304,7 @@ data MusicElem
   | MusicGrouping -- TODO
   | MusicLink -- TODO
   | MusicBookmark -- TODO
-  deriving Show
+  deriving (Show)
 
 -- ----------------------------------------------------------------------------------
 -- Attributes
@@ -328,7 +334,7 @@ data Attributes
       (Maybe OctaveChange)
   | Directive -- TODO
   | MeasureStyle -- TODO
-  deriving Show
+  deriving (Show)
 
 data TimeSignature
   = CommonTime
@@ -336,7 +342,7 @@ data TimeSignature
   | DivTime
       Beat
       BeatType
-  deriving Show
+  deriving (Show)
 
 data ClefSign
   = GClef
@@ -347,7 +353,7 @@ data ClefSign
   deriving (Eq, Ord, Enum, Bounded, Show)
 
 newtype OctaveChange = OctaveChange {getOctaveChage :: Int}
-  deriving Show
+  deriving (Show)
 
 -- ----------------------------------------------------------------------------------
 -- Notes
@@ -367,7 +373,7 @@ data Note
       FullNote
       [Tie]
       NoteProps
-  deriving Show
+  deriving (Show)
 
 data FullNote
   = Pitched
@@ -379,42 +385,41 @@ data FullNote
   | Rest
       IsChord
       (Maybe DisplayPitch)
-  deriving Show
+  deriving (Show)
 
 type IsChord = Bool
 
 type Tie = StartStop
 
-data NoteProps
-  = NoteProps
-      { -- | instrument
-        noteInstrument :: Maybe String,
-        -- | voice
-        noteVoice :: Maybe Natural,
-        -- | type
-        noteType :: Maybe NoteType,
-        -- | dots
-        noteDots :: Natural,
-        -- | accidental, cautionary, editorial
-        noteAccidental :: Maybe (Accidental, Bool, Bool),
-        -- | actual, normal
-        noteTimeMod :: Maybe (Natural, Natural),
-        -- | stem
-        noteStem :: Maybe StemDirection,
-        -- | notehead, filled, parentheses
-        noteNoteHead :: Maybe (NoteHead, Bool, Bool),
-        -- | display-text, accidental-text
-        noteNoteHeadText :: Maybe (String, Accidental),
-        -- | staff
-        noteStaff :: Maybe Natural,
-        -- | beam-level, beam-type
-        noteBeam :: Maybe (Level, BeamType),
-        -- | notation
-        noteNotations :: [Notation],
-        -- | lyric
-        noteLyrics :: [Lyric]
-      }
-  deriving Show
+data NoteProps = NoteProps
+  { -- | instrument
+    noteInstrument :: Maybe String,
+    -- | voice
+    noteVoice :: Maybe Natural,
+    -- | type
+    noteType :: Maybe NoteType,
+    -- | dots
+    noteDots :: Natural,
+    -- | accidental, cautionary, editorial
+    noteAccidental :: Maybe (Accidental, Bool, Bool),
+    -- | actual, normal
+    noteTimeMod :: Maybe (Natural, Natural),
+    -- | stem
+    noteStem :: Maybe StemDirection,
+    -- | notehead, filled, parentheses
+    noteNoteHead :: Maybe (NoteHead, Bool, Bool),
+    -- | display-text, accidental-text
+    noteNoteHeadText :: Maybe (String, Accidental),
+    -- | staff
+    noteStaff :: Maybe Natural,
+    -- | beam-level, beam-type
+    noteBeam :: Maybe (Level, BeamType),
+    -- | notation
+    noteNotations :: [Notation],
+    -- | lyric
+    noteLyrics :: [Lyric]
+  }
+  deriving (Show)
 
 noChord :: IsChord
 noChord = False
@@ -477,10 +482,10 @@ data Notation
       Accidental
   | OtherNotation
       String
-  deriving Show
+  deriving (Show)
 
 data FermataSign = NormalFermata | AngledFermata | SquaredFermata
-  deriving Show
+  deriving (Show)
 
 data Articulation
   = Accent
@@ -536,7 +541,7 @@ data Ornament
       Natural -- TODO restrict to (1..8) range
   | OtherOrnament
       String
-  deriving Show
+  deriving (Show)
 
 data Technical
   = UpBow
@@ -567,7 +572,7 @@ data Technical
   | Handbell
   | OtherTechnical
       String
-  deriving Show
+  deriving (Show)
 
 -- ----------------------------------------------------------------------------------
 -- Directions
@@ -613,7 +618,7 @@ data Direction
   | Percussion -- TODO
   | OtherDirection
       String
-  deriving Show
+  deriving (Show)
 
 -- ----------------------------------------------------------------------------------
 -- Barlines/Repeats
@@ -676,19 +681,22 @@ instance Show BarlineLocation where
 -- ----------------------------------------------------------------------------------
 
 data Lyric = Lyric -- TODO
-  deriving Show
+  deriving (Show)
 
 -- ----------------------------------------------------------------------------------
 -- Basic types
 -- ----------------------------------------------------------------------------------
 
 newtype Level = Level Max8
+
 -- MusicXml constrains level to be in range [1..8] but
 -- this type admits numbers in range [0..7]. See
 -- http://usermanuals.musicxml.com/MusicXML/MusicXML.htm#ST-MusicXML-beam-level.htm
 mkLevel :: Natural -> Level
-mkLevel n | n < 8 && n > 0 = Level (coerceToIndex (n - 1))
-          | otherwise = def
+mkLevel n
+  | n < 8 && n > 0 = Level (coerceToIndex (n - 1))
+  | otherwise = def
+
 getLevel :: Level -> Max8
 getLevel (Level n) = n + 1
 
@@ -701,7 +709,7 @@ data BeamType
   | EndBeam
   | ForwardHook
   | BackwardHook
-  deriving Show
+  deriving (Show)
 
 type StartStop = StartStopContinueChange
 
@@ -714,21 +722,21 @@ data StartStopContinueChange
   | Stop
   | Continue
   | Change
-  deriving Show
+  deriving (Show)
 
 data StemDirection
   = StemDown
   | StemUp
   | StemNone
   | StemDouble
-  deriving Show
+  deriving (Show)
 
 data LineType
   = Solid
   | Dashed
   | Dotted
   | Wavy
-  deriving Show
+  deriving (Show)
 
 data NoteHead
   = SlashNoteHead
@@ -750,7 +758,7 @@ data NoteHead
   | RectangleNoteHead
   | -- | @"none"@
     NoNoteHead
-  deriving Show
+  deriving (Show)
 
 deriving instance Eq Level
 
@@ -762,7 +770,6 @@ deriving instance Num Level
 
 -- Bounded ints
 type Max8 = Index N8
-
 
 -- ----------------------------------------------------------------------------------
 -- Default instances

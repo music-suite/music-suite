@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -80,7 +79,6 @@ instance Monoid Fifths where mempty = 0
 instance Monoid Cents where mempty = 0
 
 instance AffineSpace Hertz where
-
   type Diff Hertz = Double
 
   (.-.) f1 f2 = getHertz f1 / getHertz f2

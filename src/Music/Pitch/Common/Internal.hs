@@ -4,8 +4,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
@@ -32,13 +31,13 @@ import Data.Ratio
 import Data.Semigroup
 import Data.Typeable
 import Data.VectorSpace
+import GHC.Generics (Generic)
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 import Music.Time.Transform (Transformable (..))
 import Numeric.Positive
-import Test.QuickCheck (Arbitrary(..), CoArbitrary)
+import Test.QuickCheck (Arbitrary (..), CoArbitrary)
 import Test.QuickCheck.Gen (oneof)
-import GHC.Generics (Generic)
 
 -- |
 -- Number of chromatic steps.
@@ -83,7 +82,6 @@ instance Arbitrary Number where
   arbitrary = (Number . \x -> if x < 1 then x - 1 else x) <$> arbitrary
 
 instance Num Number where
-
   Number a + Number b = Number (a + b)
 
   Number a * Number b = Number (a * b)
@@ -148,7 +146,6 @@ instance Monoid Interval where
   mempty = _P1
 
 instance VectorSpace Interval where
-
   type Scalar Interval = Integer
 
   (*^) = stackInterval
@@ -159,7 +156,6 @@ instance VectorSpace Interval where
         | otherwise = negateV $ stackInterval (negate n) a
 
 instance AdditiveGroup Interval where
-
   zeroV = _P1
 
   (Interval (a1, d1)) ^+^ (Interval (a2, d2)) = Interval (a1 ^+^ a2, d1 ^+^ d2)
@@ -167,7 +163,6 @@ instance AdditiveGroup Interval where
   negateV (Interval (a, d)) = Interval (- a, - d)
 
 instance AffineSpace Pitch where
-
   type Diff Pitch = Interval
 
   Pitch a .-. Pitch b = a ^-^ b
@@ -192,7 +187,6 @@ instance Show Accidental where
     | otherwise = error "Impossible"
 
 instance Alterable Accidental where
-
   sharpen = succ
 
   flatten = pred
@@ -205,7 +199,6 @@ instance Ord Interval where
       swap (x, y) = (y, x)
 
 instance AdditiveGroup ChromaticSteps where
-
   zeroV = 0
 
   (^+^) = (+)
@@ -213,7 +206,6 @@ instance AdditiveGroup ChromaticSteps where
   negateV = negate
 
 instance AdditiveGroup DiatonicSteps where
-
   zeroV = 0
 
   (^+^) = (+)
@@ -376,7 +368,6 @@ instance Show Interval where
       showQuality (Diminished n) = replicate (fromIntegral n) 'd'
 
 instance HasBasis Interval where
-
   type Basis Interval = IntervalBasis
 
   basisValue Chromatic = _A1
@@ -436,7 +427,6 @@ instance HasNumber Interval where
     | otherwise = fromIntegral (d - 1)
 
 instance Augmentable Interval where
-
   augment i = i ^+^ _A1
 
   diminish i = i ^-^ _A1
@@ -538,7 +528,6 @@ separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ _P8))
 -- > (perfect octave)^*x + y = z  iff  y = simple z
 simple :: Interval -> Interval
 simple = snd . separate
-
 
 -- |
 -- Returns whether the given interval is simple.
@@ -997,7 +986,6 @@ instance HasQuality Quality where
 -- diminished/augmented intervals turning into major/minor/perfect
 -- intervals.
 instance Augmentable Quality where
-
   augment Major = Augmented 1
   augment Minor = Major
   augment Perfect = Augmented 1
@@ -1283,8 +1271,8 @@ getSpelling x = case x of
   UsingSharps -> usingSharpsImpl
   UsingFlats -> usingFlatsImpl
   Modally -> modallyImpl
--- TODO Spelling is semantically a function ([0..11] -> [0..6])
 
+-- TODO Spelling is semantically a function ([0..11] -> [0..6])
 
 -- |
 -- Spell an interval using the given 'Spelling'.
@@ -1317,7 +1305,6 @@ spell spelling x =
 --
 -- >>> spellPitchRelative c modally ab
 -- gs
---
 spellPitchRelative :: Pitch -> Spelling -> Pitch -> Pitch
 spellPitchRelative tonic s p = tonic .+^ spell s (p .-. tonic)
 
@@ -1504,13 +1491,11 @@ isStandardAccidental a = abs a < 2
 -- >>> [c..g] :: [Pitch]
 -- [c,d,e,f,g]
 instance Enum Pitch where
-
   toEnum = Pitch . view intervalAlterationSteps . (0,) . fromIntegral
 
   fromEnum = fromIntegral . snd . view (from intervalAlterationSteps) . getPitch
 
 instance Alterable Pitch where
-
   sharpen (Pitch a) = Pitch (augment a)
 
   flatten (Pitch a) = Pitch (diminish a)
@@ -1533,7 +1518,6 @@ instance Show Pitch where
 -- Avoid using 'abs', '(*)', 'signum' or `fromInteger` on intervals.
 -- For multiplication, see the `VectorSpace` instance.
 instance Num Interval where
-
   -- Point-wise implementation for the group methods.
   negate = negateV
 

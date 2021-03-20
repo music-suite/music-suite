@@ -1,6 +1,5 @@
 {-# LANGUAGE PackageImports #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-matches
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
@@ -33,7 +32,6 @@ import "random-shuffle" System.Random.Shuffle (shuffleM)
     The number of partitions to consider grows quickly, so we really need a heuristic method
       https://en.wikipedia.org/wiki/Bell_number
     Type (Score a -> [NooverlapScore a]) or (Score a -> [Voice (Maybe a)])
-
 
 -}
 
@@ -75,7 +73,6 @@ Prelude Math.Combinat.Partitions.Set> countSetPartitionsWithKParts 1 (16)
 
 Possibly good strategy
   If k and m are small, use setPartitionsWithKParts/partitionWeighted.
-
 
 -}
 
@@ -131,6 +128,7 @@ partitionSimplistic p = recur []
             (chooseSuchThat (\picked -> p (picked : alreadyPicked)) $ aShuffle toConsider)
             (\(picked, notPicked) -> recur (picked : alreadyPicked) notPicked)
             (return (alreadyPicked, toConsider))
+
 {-
 -- For testing
 

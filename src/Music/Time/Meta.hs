@@ -1,10 +1,8 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints
-  #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 -- |
 -- Provides a way to annotate data-types with 'Transformable' meta-data.
@@ -117,7 +115,6 @@ instance Semigroup Meta where
 --   same type they are combined according to their semigroup
 --   structure.
 instance Monoid Meta where
-
   mempty = Meta Map.empty
 
   mappend = (<>)
@@ -242,7 +239,6 @@ newtype AddMeta a = AddMeta {getAddMeta :: Meta `Twain` a}
     )
 
 instance Wrapped (AddMeta a) where
-
   type Unwrapped (AddMeta a) = Twain Meta a
 
   _Wrapped' = iso getAddMeta AddMeta

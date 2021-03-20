@@ -19,11 +19,11 @@ import Music.Time.Meta
 
 attributionAt :: HasMeta a => Time -> String -> a -> Maybe String
 attributionAt t n x =
-  join
-    $ fmap (`getAttribution` n)
-    $ fmap (`atTime` t)
-    $ unwrapMeta
-    $ x ^. meta
+  join $
+    fmap (`getAttribution` n) $
+      fmap (`atTime` t) $
+        unwrapMeta $
+          x ^. meta
 
 attributionsAt :: HasMeta a => Time -> a -> [(String, Maybe String)]
 attributionsAt t x =
@@ -33,4 +33,3 @@ attributionsAt t x =
 
 partNames :: (HasParts' a, Show (GetPart a)) => a -> [String]
 partNames = fmap show . toListOf parts'
-

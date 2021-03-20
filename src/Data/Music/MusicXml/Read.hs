@@ -19,7 +19,7 @@ import Control.Category ((>>>))
 import Control.Monad
 import Data.Char (toUpper)
 import Data.Default
-import Data.List.Split (wordsBy, chop)
+import Data.List.Split (chop, wordsBy)
 import Data.Maybe
 import Data.Music.MusicXml.Score
 import Text.Read
@@ -53,11 +53,12 @@ parseHeader top =
     identification = do
       clist <- child "identification" top
       Identification <$> traverse parseCreator (children "creator" clist)
-    parseCreator c = attr "type" c >>= \case
-      "composer" -> Composer <$> getText c
-      "lyricist" -> Lyricist <$> getText c
-      "arranger" -> Arranger <$> getText c
-      other -> OtherCreator other <$> getText c
+    parseCreator c =
+      attr "type" c >>= \case
+        "composer" -> Composer <$> getText c
+        "lyricist" -> Lyricist <$> getText c
+        "arranger" -> Arranger <$> getText c
+        other -> OtherCreator other <$> getText c
     partList = do
       plist <- child "part-list" top
       PartList
@@ -78,18 +79,20 @@ parsePartGroup partGroup = do
   startStop <- parseStartStop partGroup
   let name = child "group-name" partGroup >>= getText
       abbrev = child "group-abbreviation" partGroup >>= getText
-      symbol = child "group-symbol" partGroup >>= getText >>= \case
-        "brace" -> pure GroupBrace
-        "line" -> pure GroupLine
-        "bracket" -> pure GroupBracket
-        "square" -> pure GroupSquare
-        "none" -> pure NoGroupSymbol
-        _ -> empty
-      barline = child "group-barline" partGroup >>= getText >>= \case
-        "yes" -> pure GroupBarLines
-        "no" -> pure GroupNoBarLines
-        "Mensurstrich" -> pure GroupMensurstrich
-        _ -> empty
+      symbol =
+        child "group-symbol" partGroup >>= getText >>= \case
+          "brace" -> pure GroupBrace
+          "line" -> pure GroupLine
+          "bracket" -> pure GroupBracket
+          "square" -> pure GroupSquare
+          "none" -> pure NoGroupSymbol
+          _ -> empty
+      barline =
+        child "group-barline" partGroup >>= getText >>= \case
+          "yes" -> pure GroupBarLines
+          "no" -> pure GroupNoBarLines
+          "Mensurstrich" -> pure GroupMensurstrich
+          _ -> empty
   pure $ Group level startStop name abbrev symbol barline True
 
 parsePart :: Element -> Maybe (PartAttrs, [(MeasureAttrs, Music)])
@@ -134,10 +137,11 @@ parseKey key =
   let fifths = child "fifths" key >>= readText
       mode = case child "mode" key of
         Nothing -> Just NoMode
-        Just m -> getText m >>= \case
-          "nomode" -> Just NoMode
-          (c : cs) -> readMaybe (toUpper c : cs)
-          _ -> Nothing
+        Just m ->
+          getText m >>= \case
+            "nomode" -> Just NoMode
+            (c : cs) -> readMaybe (toUpper c : cs)
+            _ -> Nothing
    in Key <$> (Fifths <$> fifths) <*> mode
 
 parseTime :: Element -> Maybe Attributes
@@ -152,13 +156,14 @@ parseTime time = do
 
 parseClef :: Element -> Maybe Attributes
 parseClef clef = do
-  sign <- child "sign" clef >>= getText >>= \case
-    "G" -> pure GClef
-    "C" -> pure CClef
-    "F" -> pure FClef
-    "percussion" -> pure PercClef
-    "TAB" -> pure TabClef
-    _ -> empty
+  sign <-
+    child "sign" clef >>= getText >>= \case
+      "G" -> pure GClef
+      "C" -> pure CClef
+      "F" -> pure FClef
+      "percussion" -> pure PercClef
+      "TAB" -> pure TabClef
+      _ -> empty
   line <- case child "line" clef of
     -- Percussion clefs can have no line element in which case they appear
     -- in the middle of the staff
@@ -224,15 +229,17 @@ parseNoteProps note = do
         let cautionary = attr "cautionary" accidentalElem == Just "yes"
             editorial = attr "editorial" accidentalElem == Just "yes"
         pure (a, cautionary, editorial)
-      noteTimeMod = child "time-modification" note >>= \t ->
-        (,) <$> (child "actual-notes" t >>= readText)
-          <*> (child "normal-notes" note >>= readText)
-      noteStem = child "stem" note >>= getText >>= \case
-        "up" -> pure StemUp
-        "down" -> pure StemDown
-        "none" -> pure StemNone
-        "double" -> pure StemDouble
-        _ -> empty
+      noteTimeMod =
+        child "time-modification" note >>= \t ->
+          (,) <$> (child "actual-notes" t >>= readText)
+            <*> (child "normal-notes" note >>= readText)
+      noteStem =
+        child "stem" note >>= getText >>= \case
+          "up" -> pure StemUp
+          "down" -> pure StemDown
+          "none" -> pure StemNone
+          "double" -> pure StemDouble
+          _ -> empty
       noteNoteHead = do
         noteheadElem <- child "notehead" note
         n <- case getText noteheadElem of
@@ -313,12 +320,13 @@ supportedNotations =
         <$> parseStartStopContinue slideType
         <*> parseLineType slideType
         <*> pure (getText slideType)
-    parseLineType = child "line-type" >=> getText >=> \case
-      "solid" -> pure Solid
-      "dashed" -> pure Dashed
-      "dotted" -> pure Dotted
-      "wavy" -> pure Wavy
-      _ -> empty
+    parseLineType =
+      child "line-type" >=> getText >=> \case
+        "solid" -> pure Solid
+        "dashed" -> pure Dashed
+        "dotted" -> pure Dotted
+        "wavy" -> pure Wavy
+        _ -> empty
 
 parseDynamics :: Element -> Maybe Dynamics
 parseDynamics = elChildren >>> headMay >=> getName >>> map toUpper >>> readMaybe
@@ -415,14 +423,15 @@ parseNoteType typ = do
   pure (noteval, notesize)
 
 parseAccidental :: Element -> Maybe Accidental
-parseAccidental = getText >=> \case
-  "flat-flat" -> pure DoubleFlat
-  "flat" -> pure Flat
-  "natural" -> pure Natural
-  "sharp" -> pure Sharp
-  "double-sharp" -> pure Sharp
-  -- TODO quarter tone accidentals
-  _ -> empty
+parseAccidental =
+  getText >=> \case
+    "flat-flat" -> pure DoubleFlat
+    "flat" -> pure Flat
+    "natural" -> pure Natural
+    "sharp" -> pure Sharp
+    "double-sharp" -> pure Sharp
+    -- TODO quarter tone accidentals
+    _ -> empty
 
 parseLevel :: Element -> Level
 parseLevel e = maybe def mkLevel $ attr "number" e >>= readMaybe
@@ -475,24 +484,27 @@ parseBarline barline = do
       Just "short" -> pure BSShort
       Just "none" -> pure BSNone
       _ -> empty
-  let barRepeat = child "repeat" barline >>= attr "direction" >>= \case
-        "backward" -> pure (Repeat RepeatBackward)
-        "forward" -> pure (Repeat RepeatForward)
-        _ -> empty
+  let barRepeat =
+        child "repeat" barline >>= attr "direction" >>= \case
+          "backward" -> pure (Repeat RepeatBackward)
+          "forward" -> pure (Repeat RepeatForward)
+          _ -> empty
   pure $ Barline loc style barRepeat
 
 parseStartStop :: Element -> Maybe StartStop
-parseStartStop = attr "type" >=> \case
-  "start" -> pure Start
-  "stop" -> pure Stop
-  _ -> empty
+parseStartStop =
+  attr "type" >=> \case
+    "start" -> pure Start
+    "stop" -> pure Stop
+    _ -> empty
 
 parseStartStopContinue :: Element -> Maybe StartStopContinue
-parseStartStopContinue = attr "type" >=> \case
-  "start" -> pure Start
-  "stop" -> pure Stop
-  "continue" -> pure Continue
-  _ -> empty
+parseStartStopContinue =
+  attr "type" >=> \case
+    "start" -> pure Start
+    "stop" -> pure Stop
+    "continue" -> pure Continue
+    _ -> empty
 
 -- For elements with many children corresponding to a sum type. This parser
 -- is much more permissive than the other parsers in that it will simply

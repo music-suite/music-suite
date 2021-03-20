@@ -43,8 +43,8 @@ import qualified Data.Map as Map
 import qualified Data.Maybe
 import Data.Monoid
 import Music.Dynamics.Literal
-import Music.Pitch.Literal (IsPitch)
 import Music.Pitch.Literal
+import Music.Pitch.Literal (IsPitch)
 import qualified Music.Pitch.Literal as Pitch
 import Music.Score.Articulation
 import Music.Score.Dynamics
@@ -101,13 +101,13 @@ fromMidi = noConstraintWarning . error "TODO" . getMidi
 
 getMidi :: Midi.Midi -> [[Event (Midi.Channel, Midi.Key, Midi.Velocity)]]
 getMidi (Midi.Midi fileType timeDiv tracks) =
-  id
-    $ compress (ticksp timeDiv)
-    $ fmap mcatMaybes
-    $ fmap snd
-    $ fmap (List.mapAccumL g mempty)
-    $ fmap mcatMaybes
-    $ over (mapped . mapped) getMsg tracks
+  id $
+    compress (ticksp timeDiv) $
+      fmap mcatMaybes $
+        fmap snd $
+          fmap (List.mapAccumL g mempty) $
+            fmap mcatMaybes $
+              over (mapped . mapped) getMsg tracks
   where
     g keyStatus (t, onOff, c, p, v) =
       ( updateKeys onOff p (fromIntegral t) keyStatus,

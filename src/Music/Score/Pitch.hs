@@ -2,8 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC
-  -fno-warn-missing-local-signatures
+{-# OPTIONS_GHC -fno-warn-missing-local-signatures
   -fno-warn-unsafe
   -fno-warn-unused-type-patterns
   -fno-warn-identities
@@ -116,11 +115,11 @@ import Music.Score.Ties
 import Music.Time.Aligned
 import Music.Time.Behavior
 import Music.Time.Event
+import Music.Time.Internal.Placed
+import Music.Time.Internal.Track
 import Music.Time.Internal.Transform
 import Music.Time.Note
 import Music.Time.Score
-import Music.Time.Internal.Placed
-import Music.Time.Internal.Track
 import Music.Time.Voice hiding (map, traverse)
 
 -- | A type function that returns the pitch type associated with a given type.
@@ -156,7 +155,8 @@ class HasPitches s t => HasPitch s t where
 class
   ( SetPitch (GetPitch t) s ~ t
   ) =>
-  HasPitches s t where
+  HasPitches s t
+  where
   -- | Access all pitches.
   pitches :: Traversal s t (GetPitch s) (GetPitch t)
 

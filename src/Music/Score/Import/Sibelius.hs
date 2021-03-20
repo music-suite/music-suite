@@ -31,8 +31,8 @@ import Music.Pitch
 import Music.Pitch.Literal (IsPitch)
 import qualified Music.Pitch.Literal as Pitch
 import qualified Music.Prelude
-import qualified Music.Score as S
 import Music.Score
+import qualified Music.Score as S
 
 -- |
 -- Read a Sibelius score from a file. Fails if the file could not be read or if a parsing
@@ -349,9 +349,10 @@ fromSibeliusBar d (SibeliusBar elems) =
   fmap Just (ppar $ fmap fromSibeliusChordElem chords) <> stretch d rest
   where
     chords = filter isChord elems
-    -- TODO use these
-    -- tuplets = filter isTuplet elems
-    -- floating = filter isFloating elems
+
+-- TODO use these
+-- tuplets = filter isTuplet elems
+-- floating = filter isFloating elems
 
 fromSibeliusChordElem :: IsSibelius a => SibeliusBarObject -> Score a
 fromSibeliusChordElem = go

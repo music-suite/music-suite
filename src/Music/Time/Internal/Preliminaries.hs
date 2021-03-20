@@ -21,9 +21,7 @@ where
 import Control.Applicative
 import Control.Comonad
 import Control.Lens hiding
-  ( (<.>),
-    (<|),
-    Indexable,
+  ( Indexable,
     Level,
     below,
     index,
@@ -31,6 +29,8 @@ import Control.Lens hiding
     parts,
     reversed,
     transform,
+    (<.>),
+    (<|),
     (|>),
   )
 import Data.Aeson (ToJSON (..))

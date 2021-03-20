@@ -1,4 +1,3 @@
-
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -11,7 +10,7 @@ module Data.Music.Lilypond.Pitch
   ( Pitch (..),
     PitchName (..),
     Accidental,
-    Octaves ,
+    Octaves,
     Mode (..),
     OctaveCheck (..),
   )

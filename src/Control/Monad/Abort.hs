@@ -1,15 +1,16 @@
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE FlexibleInstances #-}
 
-{-# LANGUAGE DerivingVia, FlexibleInstances #-}
+module Control.Monad.Abort
+  ( Abort (..),
+    abort,
+  )
+where
 
-module Control.Monad.Abort (
-  Abort(..),
-  abort
-) where
-
-import Iso.Deriving
-import Control.Monad.State
 import Control.Monad.Except
+import Control.Monad.State
 import Data.Bifunctor
+import Iso.Deriving
 
 -- |
 -- Abort is like 'State' but allow short-circuiting the computation.
@@ -22,11 +23,11 @@ import Data.Bifunctor
 --   put $ x + 1
 --   t
 -- @
---
-data Abort s a = Abort { runAbort :: s -> (Maybe a, s) }
+data Abort s a = Abort {runAbort :: s -> (Maybe a, s)}
   deriving (Functor)
-  deriving (Applicative, Monad, MonadState s) via
-    (ExceptT () (State s) `As1` Abort s)
+  deriving
+    (Applicative, Monad, MonadState s)
+    via (ExceptT () (State s) `As1` Abort s)
 
 -- | Abort the computation. The current state will be retained, but no
 -- result will be returned.
@@ -48,4 +49,3 @@ eitherToMaybe (Right x) = Just x
 maybeToEither :: Maybe a -> Either () a
 maybeToEither Nothing = Left ()
 maybeToEither (Just x) = Right x
-

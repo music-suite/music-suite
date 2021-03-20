@@ -33,4 +33,4 @@ import Music.Time.Score
 import Music.Time.Split
 import Music.Time.Transform
 import Music.Time.Types
-import Music.Time.Voice hiding (map, traverse, mapWithSpan)
+import Music.Time.Voice hiding (map, mapWithSpan, traverse)

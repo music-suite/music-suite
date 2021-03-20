@@ -1,8 +1,7 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------
 
@@ -58,7 +57,7 @@ import Music.Score.Pitch
 import Music.Time
 import Music.Time.Reactive
 
-newtype Fifths = Fifths { getFifths :: Integer }
+newtype Fifths = Fifths {getFifths :: Integer}
   deriving (Eq, Ord, Num, Enum, Integral, Real)
 
 instance Show Fifths where

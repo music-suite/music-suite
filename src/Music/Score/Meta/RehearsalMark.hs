@@ -1,8 +1,7 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------
 
@@ -61,7 +60,6 @@ instance Semigroup RehearsalMark where
   RehearsalMark <> RehearsalMark = RehearsalMark
 
 instance Monoid RehearsalMark where
-
   mempty = RehearsalMark
 
   mappend = (<>)

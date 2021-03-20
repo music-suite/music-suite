@@ -1,10 +1,10 @@
-{-# OPTIONS_HADDOCK hide #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-top-binds
   -fno-warn-redundant-constraints
   -fno-warn-unused-matches
   -fno-warn-unused-imports #-}
+{-# OPTIONS_HADDOCK hide #-}
+
 module Music.Time.Internal.Track
   ( -- * Track type
     Track,
@@ -17,8 +17,7 @@ where
 
 import Control.Applicative
 import Control.Lens hiding
-  ( (<|),
-    Indexable,
+  ( Indexable,
     Level,
     below,
     index,
@@ -26,6 +25,7 @@ import Control.Lens hiding
     parts,
     reversed,
     transform,
+    (<|),
     (|>),
   )
 import Control.Monad
@@ -34,7 +34,6 @@ import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.Foldable (Foldable)
 import qualified Data.Foldable as Foldable
-import qualified Data.Traversable
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Ratio
@@ -42,12 +41,13 @@ import Data.Semigroup
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Traversable (Traversable)
+import qualified Data.Traversable
 import qualified Data.Traversable as T
 import Data.Typeable
 import Data.VectorSpace
+import Music.Time.Internal.Placed
 import Music.Time.Internal.Util
 import Music.Time.Juxtapose
-import Music.Time.Internal.Placed
 
 -- |
 -- A 'Track' is a parallel composition of values.
@@ -62,19 +62,16 @@ trackEv :: Iso (Placed a) (Placed b) (TrackEv a) (TrackEv b)
 trackEv = id
 
 instance Applicative Track where
-
   pure = return
 
   (<*>) = ap
 
 instance Alternative Track where
-
   (<|>) = (<>)
 
   empty = mempty
 
 instance Monad Track where
-
   return = view _Unwrapped . return . return
 
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
@@ -82,7 +79,6 @@ instance Monad Track where
       mbind = (concat .) . fmap . (fmap join .) . Data.Traversable.traverse
 
 instance Wrapped (Track a) where
-
   type Unwrapped (Track a) = (TrackList (TrackEv a))
 
   _Wrapped' = iso getTrack Track

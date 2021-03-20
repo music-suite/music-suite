@@ -1,9 +1,8 @@
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -164,27 +163,27 @@ module Music.Score.Export.StandardNotation
   )
 where
 
-import BasePrelude hiding ((<>), First (..), first, second)
+import BasePrelude hiding (First (..), first, second, (<>))
 import qualified Codec.Midi as Midi
 import Control.Lens
   ( Lens',
-    _1,
-    _2,
-    _head,
     at,
     from,
     over,
     preview,
     to,
     view,
+    _1,
+    _2,
+    _head,
   )
 import Control.Lens.Operators hiding ((|>))
 import Control.Lens.TH (makeLenses)
 import Control.Monad.Except
+import Control.Monad.Log
 import Control.Monad.Plus
 import Control.Monad.State
-import Control.Monad.Log
-import Control.Monad.Writer hiding ((<>), First (..))
+import Control.Monad.Writer hiding (First (..), (<>))
 import Data.AffineSpace
 import Data.Bifunctor (first)
 import qualified Data.ByteString.Char8
@@ -194,6 +193,7 @@ import Data.FileEmbed
 import Data.FiniteSeq (FiniteSeq)
 import qualified Data.FiniteSeq
 import Data.Functor.Couple
+import Data.LabelTree (LabelTree (Branch, Leaf), concatLT, foldLabelTree, fromListLT)
 import qualified Data.List
 import qualified Data.List.NonEmpty
 import qualified Data.List.Split
@@ -201,8 +201,8 @@ import Data.Map (Map)
 import qualified Data.Map
 import qualified Data.Maybe
 import qualified Data.Monoid
-import qualified Data.Music.Lilypond as Lilypond
 import qualified Data.Music.Lilypond as L
+import qualified Data.Music.Lilypond as Lilypond
 import qualified Data.Music.MusicXml.Simple as MusicXml
 import qualified Data.Music.MusicXml.Simple as X
 import Data.Semigroup
@@ -211,22 +211,23 @@ import Data.VectorSpace hiding (Sum)
 import Music.Articulation (Articulation)
 import Music.Dynamics (Dynamics)
 import Music.Dynamics.Literal (DynamicsL (..), fromDynamics)
-import Music.Parts (Instrument, Part, ScoreLayout (..))
-import qualified Music.Parts
-import qualified Music.Pitch
-import Music.Pitch (IsPitch (..), Pitch, fromPitch)
-import qualified Music.Pitch.Literal
-import qualified Music.Pitch.Literal as P
-import qualified Music.Score.Articulation
-import Music.Score.Articulation (ArticulationT (..))
-import Music.Score.Color (ColorT, runColorT)
-import qualified Music.Score.Dynamics
-import Music.Score.Dynamics (DynamicT (..))
+import Music.Notation.Standard
 import qualified Music.Notation.Standard.Articulation
 import qualified Music.Notation.Standard.Articulation as AN
 import qualified Music.Notation.Standard.Dynamic
 import qualified Music.Notation.Standard.Dynamic as DN
 import qualified Music.Notation.Standard.Technique as TN
+import Music.Parts (Instrument, Part, ScoreLayout (..))
+import qualified Music.Parts
+import Music.Pitch (IsPitch (..), Pitch, fromPitch)
+import qualified Music.Pitch
+import qualified Music.Pitch.Literal
+import qualified Music.Pitch.Literal as P
+import Music.Score.Articulation (ArticulationT (..))
+import qualified Music.Score.Articulation
+import Music.Score.Color (ColorT, runColorT)
+import Music.Score.Dynamics (DynamicT (..))
+import qualified Music.Score.Dynamics
 import Music.Score.Harmonics (HarmonicT, runHarmonicT)
 import qualified Music.Score.Internal.Export
 import Music.Score.Internal.Instances ()
@@ -236,37 +237,34 @@ import Music.Score.Internal.Quantize
     quantize,
     rewrite,
   )
-import qualified Music.Score.Internal.Util
 import Music.Score.Internal.Util (unRatio)
+import qualified Music.Score.Internal.Util
 import qualified Music.Score.Meta
 import qualified Music.Score.Meta.Attribution
 import qualified Music.Score.Meta.Key
 import qualified Music.Score.Meta.RehearsalMark
-import qualified Music.Score.Meta.Tempo
-import Music.Notation.Standard
 import Music.Score.Meta.Tempo (Tempo)
+import qualified Music.Score.Meta.Tempo
 import qualified Music.Score.Meta.Time
 import qualified Music.Score.Meta.Title
-import qualified Music.Score.Part
 import Music.Score.Part (PartT (..))
-import qualified Music.Score.Phrases
+import qualified Music.Score.Part
 import Music.Score.Phrases (MVoice)
-import qualified Music.Score.Pitch
+import qualified Music.Score.Phrases
 import Music.Score.Pitch ()
+import qualified Music.Score.Pitch
 import Music.Score.Slide (SlideT, runSlideT)
 import Music.Score.StaffNumber (StaffNumberT, runStaffNumberT)
 import Music.Score.Technique (HasTechniques (techniques), Technique, TechniqueT (..))
 import qualified Music.Score.Technique
 import Music.Score.Text (TextT, runTextT)
-import qualified Music.Score.Ties
 import Music.Score.Ties (Tiable (..), TieT (..))
+import qualified Music.Score.Ties
 import Music.Score.Tremolo (TremoloT, runTremoloT)
 import Music.Time
-import Data.LabelTree (LabelTree(Branch, Leaf), concatLT, fromListLT, foldLabelTree)
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
-
 
 -- |
 -- Basic monad for exporting music.
@@ -310,7 +308,6 @@ newtype IOExportM a = IOExportM {runIOExportM_ :: IO a}
 -- TODO add reader for indentation level etc
 
 instance MonadError String IOExportM where
-
   throwError e = fail e
 
   -- TODO
@@ -359,16 +356,16 @@ data LilypondLayout
 defaultLilypondLayout :: LilypondLayout
 defaultLilypondLayout = LilypondBigScore
 
-data LilypondOptions
-  = LilypondOptions
-      { layout :: LilypondLayout
-      }
+data LilypondOptions = LilypondOptions
+  { layout :: LilypondLayout
+  }
   deriving (Eq, Show)
 
 defaultLilypondOptions :: LilypondOptions
-defaultLilypondOptions = LilypondOptions
-  { layout = defaultLilypondLayout
-  }
+defaultLilypondOptions =
+  LilypondOptions
+    { layout = defaultLilypondLayout
+    }
 
 toLy :: (LilypondExportM m) => LilypondOptions -> Work -> m (String, Lilypond.Music)
 toLy opts work = do
@@ -450,12 +447,12 @@ toLyBar sysBar bar = do
     -- actually a problem? Is the empty case correct?
     sysStuff [] = []
     sysStuff (x : xs) =
-      ( ( lySeq
-            $ addTimeSignature (sysBar ^. timeSignature)
-            $ addKeySignature (sysBar ^. keySignature)
-            $ pure x
-        )
-          : xs
+      ( ( lySeq $
+            addTimeSignature (sysBar ^. timeSignature) $
+              addKeySignature (sysBar ^. keySignature) $
+                pure x
+        ) :
+        xs
       )
     sim [x] = x
     sim xs = Lilypond.Simultaneous False xs
@@ -767,22 +764,23 @@ movementToPartwiseXml movement = music
         divisions_ = MusicXml.defaultDivisions : repeat mempty
 
         keySignatures_ :: [MusicXml.Music]
-        keySignatures_ = fmap (expKS . view keySignature) $
+        keySignatures_ =
+          fmap (expKS . view keySignature) $
             (movement ^. systemStaff)
           where
             expKS (Music.Score.Meta.Key.KeySignature (Data.Monoid.First Nothing)) =
               mempty
             expKS (Music.Score.Meta.Key.KeySignature (Data.Monoid.First (Just ks))) =
-              let
-                (fifths, mode) = ks
+              let (fifths, mode) = ks
 
-                fifths' = MusicXml.Fifths $ fromInteger $
-                  Music.Score.Meta.Key.getFifths $ fromPitch fifths
+                  fifths' =
+                    MusicXml.Fifths $
+                      fromInteger $
+                        Music.Score.Meta.Key.getFifths $ fromPitch fifths
 
-                mode' = case mode of
-                  Music.Pitch.MajorMode -> MusicXml.Major
-                  Music.Pitch.MinorMode -> MusicXml.Minor
-
+                  mode' = case mode of
+                    Music.Pitch.MajorMode -> MusicXml.Major
+                    Music.Pitch.MinorMode -> MusicXml.Minor
                in MusicXml.key fifths' mode'
 
         timeSignatures_ :: [MusicXml.Music]
@@ -810,9 +808,11 @@ movementToPartwiseXml movement = music
         renderClef :: Music.Pitch.Clef -> MusicXml.Music
         renderClef (Music.Pitch.Clef clef) = case clef of
           (clefSymbol, _octCh, line) ->
-            X.Music $ pure $ X.MusicAttributes [
-              X.Clef (exportSymbol clefSymbol) (fromIntegral line + 3) Nothing
-            ]
+            X.Music $
+              pure $
+                X.MusicAttributes
+                  [ X.Clef (exportSymbol clefSymbol) (fromIntegral line + 3) Nothing
+                  ]
           where
             -- TODO add octave-adjust to musicxml2
             exportSymbol x = case x of
@@ -1059,16 +1059,17 @@ toMidi = fmap (finalizeExport . fmap exportNote) . exportScore . mcatMaybes
 exportScore :: MidiExportM m => Score Asp1a -> m (MidiScore Asp1a)
 exportScore xs = do
   pa :: PartAllocation <- allocateParts $ Data.Set.fromList $ fmap (view Music.Parts.instrument . fst) ys
-  pure $ MidiScore $
-    map
-      (\(p, sc) -> ((getMidiChannel pa p, getMidiProgram pa p), sc))
-      ys
+  pure $
+    MidiScore $
+      map
+        (\(p, sc) -> ((getMidiChannel pa p, getMidiProgram pa p), sc))
+        ys
   where
     ys :: [(Part, Score Asp1a)]
     ys =
-      Music.Score.Part.extractPartsWithInfo
-        $ fixTempo
-        $ normalizeScore xs
+      Music.Score.Part.extractPartsWithInfo $
+        fixTempo $
+          normalizeScore xs
     -- TODO We actually want to extract *all* tempo changes and transform the score appropriately
     -- For the time being, we assume the whole score has the same tempo
     fixTempo :: Score Asp1a -> Score Asp1a
@@ -1215,16 +1216,20 @@ setChannel c = go
 type Asp1 = Maybe Asp1a
 
 type Asp1a =
-  ( PartT Part
+  ( PartT
+      Part
       ( StaffNumberT
           ( TremoloT
               ( ColorT
                   ( TextT
                       ( HarmonicT
                           ( SlideT
-                              ( TechniqueT Technique
-                                  ( ArticulationT Articulation
-                                      ( DynamicT Dynamics
+                              ( TechniqueT
+                                  Technique
+                                  ( ArticulationT
+                                      Articulation
+                                      ( DynamicT
+                                          Dynamics
                                           Pitch
                                       )
                                   )
@@ -1240,16 +1245,20 @@ type Asp1a =
 -- We require all notes in a chords to have the same kind of ties
 type Asp2 =
   TieT
-    ( PartT Part
+    ( PartT
+        Part
         ( StaffNumberT
             ( TremoloT
                 ( ColorT
                     ( TextT
                         ( HarmonicT
                             ( SlideT
-                                ( TechniqueT Technique
-                                    ( ArticulationT Articulation
-                                        ( DynamicT Dynamics
+                                ( TechniqueT
+                                    Technique
+                                    ( ArticulationT
+                                        Articulation
+                                        ( DynamicT
+                                            Dynamics
                                             [Pitch]
                                         )
                                     )
@@ -1264,16 +1273,20 @@ type Asp2 =
 
 type Asp3 =
   TieT
-    ( PartT Part
+    ( PartT
+        Part
         ( StaffNumberT
             ( TremoloT
                 ( ColorT
                     ( TextT
                         ( HarmonicT
                             ( SlideT
-                                ( TechniqueT TN.TechniqueNotation
-                                    ( ArticulationT AN.ArticulationNotation
-                                        ( DynamicT DN.DynamicNotation
+                                ( TechniqueT
+                                    TN.TechniqueNotation
+                                    ( ArticulationT
+                                        AN.ArticulationNotation
+                                        ( DynamicT
+                                            DN.DynamicNotation
                                             [Pitch]
                                         )
                                     )
@@ -1290,8 +1303,6 @@ type Asp = Score Asp1
 
 type StandardNotationExportM m = (MonadLog String m, MonadError String m)
 
-
-
 -- |
 -- Partition intervals into non-overlapping subsets.
 --
@@ -1302,19 +1313,22 @@ type StandardNotationExportM m = (MonadLog String m, MonadError String m)
 -- TODO track the fact that the returned maps are all non-overlapping
 -- in the type system?
 partitionIntervals :: forall a b. Ord a => Map (a, a) b -> [Map (a, a) b]
-partitionIntervals xs = fmap (Data.Map.fromList . toList) $ snd $ (`runState` []) $ for sorted $ \ev@((start, _stop), _val) -> do
-  -- Out list of state is the voices/resources
-  -- Inner non-empty list is the spans in chronological order
-  currentResources :: [NonEmpty ((a, a), b)] <- get
-  let currentEndTimes :: [a] = fmap (snd . fst . Data.List.NonEmpty.head) currentResources
-  let nextVoice :: Maybe Int = findIndex (<= start) currentEndTimes
-  case nextVoice of
-    -- A new voice is needed
-    Nothing ->
-      modify (++ [pure ev])
-    -- This fits in current voice n (0-index)
-    Just n ->
-      modify (update n $ Data.List.NonEmpty.cons ev)
+partitionIntervals xs = fmap (Data.Map.fromList . toList) $
+  snd $
+    (`runState` []) $
+      for sorted $ \ev@((start, _stop), _val) -> do
+        -- Out list of state is the voices/resources
+        -- Inner non-empty list is the spans in chronological order
+        currentResources :: [NonEmpty ((a, a), b)] <- get
+        let currentEndTimes :: [a] = fmap (snd . fst . Data.List.NonEmpty.head) currentResources
+        let nextVoice :: Maybe Int = findIndex (<= start) currentEndTimes
+        case nextVoice of
+          -- A new voice is needed
+          Nothing ->
+            modify (++ [pure ev])
+          -- This fits in current voice n (0-index)
+          Just n ->
+            modify (update n $ Data.List.NonEmpty.cons ev)
   where
     sorted :: [((a, a), b)]
     sorted = Data.Map.toAscList xs
@@ -1398,8 +1412,6 @@ toStandardNotation sc' = do
       - Bar splitting (adding ties)
       - Quantization
 
-
-
     TODO layer sepration (which, again, does not actually happen in current code)
     should happen after bars have been split.
 
@@ -1452,24 +1464,25 @@ toStandardNotation sc' = do
   return $ Work mempty [Movement info systemStaff staves]
   where
     info =
-      id
-        $ movementTitle
-          .~ ( Data.Maybe.fromMaybe "" $ flip Music.Score.Meta.Title.getTitleAt 0 $
-                 Music.Score.Meta.metaAtStart sc
+      id $
+        movementTitle
+          .~ ( Data.Maybe.fromMaybe "" $
+                 flip Music.Score.Meta.Title.getTitleAt 0 $
+                   Music.Score.Meta.metaAtStart sc
              )
-        $ (movementAttribution . at "composer")
-          .~ ( flip Music.Score.Meta.Attribution.getAttribution "composer" $ Music.Score.Meta.metaAtStart sc
-             )
-        $ mempty
+          $ (movementAttribution . at "composer")
+            .~ ( flip Music.Score.Meta.Attribution.getAttribution "composer" $ Music.Score.Meta.metaAtStart sc
+               )
+            $ mempty
     -- TODO also extract Barline, Key, RehearsalMark, Tempo here
     -- (all of these should force a new bar)
     systemStaff :: SystemStaff
     systemStaff =
       fmap
         ( \(_dur, ts, ks) ->
-            timeSignature .~ fmap First ts
-              $ keySignature .~ maybe mempty id ks
-              $ mempty
+            timeSignature .~ fmap First ts $
+              keySignature .~ maybe mempty id ks $
+                mempty
         )
         barMeta
     (barDurations, _timeSignatureMarks, _keySignatureMarks) = unzip3 barMeta
@@ -1477,7 +1490,7 @@ toStandardNotation sc' = do
     -- Make this more prominent!
     -- This is being used for the actual score!
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
-        --
+    --
     sc :: Score Asp1a
     sc = mcatMaybes sc'
 
@@ -1524,18 +1537,18 @@ singleStaff :: Part -> [Rhythm (Maybe Asp3)] -> Staff
 singleStaff part bars = Staff info (fmap aspectsToBar bars)
   where
     info =
-      id
-        $ transposition
+      id $
+        transposition
           .~ (part ^. Music.Parts.instrument . to Music.Parts.transposition)
-        $ instrumentDefaultClef
-          .~ Data.Maybe.fromMaybe
-            Music.Pitch.trebleClef
-            (part ^. Music.Parts.instrument . to Music.Parts.standardClef)
-        $ instrumentShortName
-          .~ Data.Maybe.fromMaybe "" (part ^. Music.Parts.instrument . to Music.Parts.shortName)
-        $ instrumentFullName
-          .~ (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr])
-        $ mempty
+          $ instrumentDefaultClef
+            .~ Data.Maybe.fromMaybe
+              Music.Pitch.trebleClef
+              (part ^. Music.Parts.instrument . to Music.Parts.standardClef)
+            $ instrumentShortName
+              .~ Data.Maybe.fromMaybe "" (part ^. Music.Parts.instrument . to Music.Parts.shortName)
+              $ instrumentFullName
+                .~ (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr])
+                $ mempty
       where
         soloStr = if (part ^. Music.Parts._solo) == Music.Parts.Solo then Just "Solo" else Nothing
         nameStr = part ^. Music.Parts.instrument . to Music.Parts.fullName
@@ -1561,14 +1574,15 @@ scoreLayoutToLabelTree (Many gt _ xs) = Branch (k gt) (fmap scoreLayoutToLabelTr
 aspectsToChord :: Maybe Asp3 -> Chord
 aspectsToChord Nothing = mempty
 aspectsToChord (Just asp) =
-  id
-    $ ties .~ (Any endTie, Any beginTie)
-    $ dynamicNotation .~ (asp ^. Music.Score.Dynamics.dynamic)
-    $ articulationNotation .~ (asp ^. Music.Score.Articulation.articulation)
-    $ pitches .~ (asp ^.. Music.Score.Pitch.pitches)
-    $ chordText .~ TN.textualNotations (asp ^. Music.Score.Technique.technique)
-    -- TODO: $ harmonicNotation .~ _ asp
-    $ mempty
+  id $
+    ties .~ (Any endTie, Any beginTie) $
+      dynamicNotation .~ (asp ^. Music.Score.Dynamics.dynamic) $
+        articulationNotation .~ (asp ^. Music.Score.Articulation.articulation) $
+          pitches .~ (asp ^.. Music.Score.Pitch.pitches) $
+            chordText .~ TN.textualNotations (asp ^. Music.Score.Technique.technique)
+            -- TODO: $ harmonicNotation .~ _ asp
+            $
+              mempty
   where
     (endTie, beginTie) = Music.Score.Ties.isTieEndBeginning asp
 

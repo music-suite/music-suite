@@ -1,8 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE LambdaCase #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -58,9 +57,9 @@ import Music.Pitch
 import Music.Score hiding (Clef (..), Fifths, view)
 import Music.Score.Export.StandardNotation (Asp1, Asp1a, LilypondLayout (..), LilypondOptions (..), defaultLilypondOptions, runIOExportM, toLy, toMidi, toStandardNotation, toXml)
 import qualified Music.Score.Part
+import qualified Options.Applicative as O
 import qualified System.Environment
 import qualified Text.Pretty
-import qualified Options.Applicative as O
 
 type StandardNote = Asp1
 
@@ -69,15 +68,15 @@ type Music = Score StandardNote
 -- TODO set logging level
 -- TODO more options?
 data ExportBackend = ToXml | ToLy | ToMidi | ToLyAndMidi
-data CommandLineOptions
-  = CommandLineOptions
-      { -- | Backend to use.
-        backend :: ExportBackend,
-        -- | Lilypond options, ignored when `backend` is not `ToLy`.
-        lilypondOptions :: LilypondOptions,
-        -- | Path to generated file.
-        output :: FilePath
-      }
+
+data CommandLineOptions = CommandLineOptions
+  { -- | Backend to use.
+    backend :: ExportBackend,
+    -- | Lilypond options, ignored when `backend` is not `ToLy`.
+    lilypondOptions :: LilypondOptions,
+    -- | Path to generated file.
+    output :: FilePath
+  }
 
 parseOpts :: O.Parser CommandLineOptions
 parseOpts =
@@ -109,8 +108,6 @@ parseLyOpts =
       "score" -> Right LilypondScore
       "big-score" -> Right LilypondBigScore
       _ -> Left "Lilypond layout must be one of [inline|score|big-score]"
-
-
 
 defaultMain :: Music -> IO ()
 defaultMain music = do

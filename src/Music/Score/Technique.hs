@@ -55,7 +55,7 @@ where
 
 import BasePrelude
 import Control.Comonad
-import Control.Lens hiding ((&), Level, transform)
+import Control.Lens hiding (Level, transform, (&))
 import Control.Lens.TH (makeLenses)
 import Data.AffineSpace
 import Data.AffineSpace.Point (relative)
@@ -67,7 +67,7 @@ import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Music.Pitch.Literal
 import Music.Score.Color (ColorT)
-import Music.Score.Harmonics (HarmonicT(..))
+import Music.Score.Harmonics (HarmonicT (..))
 import Music.Score.Internal.Util (through)
 import Music.Score.Part
 import Music.Score.Phrases
@@ -77,8 +77,8 @@ import Music.Score.Text (TextT)
 import Music.Score.Ties (Tiable (..), TieT)
 import Music.Score.Tremolo (TremoloT, mapTremoloT)
 import Music.Time
-import Music.Time.Internal.Track
 import Music.Time.Internal.Placed
+import Music.Time.Internal.Track
 import Music.Time.Internal.Transform
 
 -- |
@@ -108,7 +108,8 @@ type TechniqueLensLaws s t = TechniqueLensLaws' s t (GetTechnique s) (GetTechniq
 class
   ( TechniqueLensLaws s t
   ) =>
-  HasTechniques s t where
+  HasTechniques s t
+  where
   -- | Access all techniques.
   techniques :: Traversal s t (GetTechnique s) (GetTechnique t)
 
@@ -359,7 +360,6 @@ newtype TechniqueT n a = TechniqueT {getTechniqueT :: Couple n a}
     )
 
 instance (Monoid n, Num a) => Num (TechniqueT n a) where
-
   (+) = liftA2 (+)
 
   (*) = liftA2 (*)
@@ -373,13 +373,11 @@ instance (Monoid n, Num a) => Num (TechniqueT n a) where
   fromInteger = pure . fromInteger
 
 instance (Monoid n, Fractional a) => Fractional (TechniqueT n a) where
-
   recip = fmap recip
 
   fromRational = pure . fromRational
 
 instance (Monoid n, Floating a) => Floating (TechniqueT n a) where
-
   pi = pure pi
 
   sqrt = fmap sqrt
@@ -409,19 +407,16 @@ instance (Monoid n, Floating a) => Floating (TechniqueT n a) where
   acosh = fmap acos
 
 instance (Monoid n, Enum a) => Enum (TechniqueT n a) where
-
   toEnum = pure . toEnum
 
   fromEnum = fromEnum . extract
 
 instance (Monoid n, Bounded a) => Bounded (TechniqueT n a) where
-
   minBound = pure minBound
 
   maxBound = pure maxBound
 
 instance Wrapped (TechniqueT p a) where
-
   type Unwrapped (TechniqueT p a) = Couple p a
 
   _Wrapped' = iso getTechniqueT TechniqueT
@@ -486,25 +481,25 @@ instance Semigroup StringMute where
 
 -- |
 -- Represents playing techniques.
-data Technique
-  = Technique
-      { _pizzicato :: PizzArco,
-        _legno :: Legno,
-        _stringPos :: StringPos,
-        _stringMute :: StringMute
-        -- TODO etc
-      }
+data Technique = Technique
+  { _pizzicato :: PizzArco,
+    _legno :: Legno,
+    _stringPos :: StringPos,
+    _stringMute :: StringMute
+    -- TODO etc
+  }
   deriving (Show, Eq)
 
 makeLenses ''Technique
 
 instance Monoid Technique where
-  mempty = Technique
-    { _pizzicato = mempty,
-      _legno = mempty,
-      _stringPos = mempty,
-      _stringMute = mempty
-    }
+  mempty =
+    Technique
+      { _pizzicato = mempty,
+        _legno = mempty,
+        _stringPos = mempty,
+        _stringMute = mempty
+      }
 
 instance Semigroup Technique where
   Technique p1 l1 o1 m1
@@ -545,7 +540,6 @@ vtechnique ::
   (HasTechnique a a, HasTechnique a b) =>
   Lens (Voice a) (Voice b) (Voice (GetTechnique a)) (Voice (GetTechnique b))
 vtechnique = lens (fmap $ view technique) (flip $ zipVoiceWithNoScale (set technique))
-
 
 addTechniqueCon ::
   ( HasPhrases s t a b,

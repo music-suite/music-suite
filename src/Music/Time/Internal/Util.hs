@@ -1,8 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-redundant-constraints #-}
 {-# OPTIONS_HADDOCK hide #-}
 
@@ -201,9 +200,7 @@ partial :: (a -> Bool) -> a -> Maybe a
 partial p x = if p x then Just x else Nothing
 
 partial2 :: (a -> b -> Bool) -> a -> b -> Maybe b
-
 partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
-
 partial2 f = curry (fmap snd . partial (uncurry f))
 
 partial3 f = curry3 (fmap (view _3) . partial (uncurry3 f))
@@ -232,8 +229,8 @@ mergeBy f = mergeBy' $ (fmap . fmap) orderingToBool f
     orderingToBool GT = False
 
 mergeBy' :: (a -> a -> Bool) -> [a] -> [a] -> [a]
-mergeBy' _    xs [] = xs
-mergeBy' _    [] ys = ys
+mergeBy' _ xs [] = xs
+mergeBy' _ [] ys = ys
 mergeBy' pred (x : xs) (y : ys) =
   case pred x y of
     True -> x : mergeBy' pred xs (y : ys)
@@ -380,7 +377,5 @@ dependingOn :: Lens s t (x, a) (x, b) -> (x -> Lens a b c d) -> Lens s t c d
 dependingOn l depending f = l (\(x, a) -> (x,) <$> depending x f a)
 
 mapF :: forall b. (b -> b) -> [b] -> [b]
-
 mapT :: forall b. (b -> b) -> [b] -> [b]
-
 mapL :: forall b. (b -> b) -> [b] -> [b]

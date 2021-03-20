@@ -63,14 +63,14 @@ where
 
 import Control.Applicative
 import Control.Lens hiding
-  ( (<|),
-    Level,
+  ( Level,
     below,
     index,
     inside,
     parts,
     reversed,
     transform,
+    (<|),
     (|>),
   )
 import Control.Monad.State.Lazy
@@ -137,7 +137,6 @@ instance Monoid Duration where
   mempty = 1
 
 instance AdditiveGroup Duration where
-
   zeroV = 0
 
   (^+^) = (+)
@@ -145,7 +144,6 @@ instance AdditiveGroup Duration where
   negateV = negate
 
 instance VectorSpace Duration where
-
   type Scalar Duration = Duration
 
   (*^) = (*)
@@ -188,7 +186,6 @@ instance Monoid Time where
   mempty = 0
 
 instance AdditiveGroup Time where
-
   zeroV = 0
 
   (^+^) = (+)
@@ -196,13 +193,11 @@ instance AdditiveGroup Time where
   negateV = negate
 
 instance VectorSpace Time where
-
   type Scalar Time = Duration
 
   Duration x *^ Time y = Time (x * y)
 
 instance AffineSpace Time where
-
   type Diff Time = Duration
 
   Time x .-. Time y = Duration (x - y)
@@ -272,7 +267,6 @@ newtype Span = Span {getSpan :: (Time, Duration)}
 -- - To convert a span to a pair, use @s^.'range'@.
 --
 -- - To construct a span from a pair, use @(t, u)^.'from' 'range'@.
---
 
 --
 
@@ -310,7 +304,6 @@ instance Monoid Span where
   mempty = zeroV
 
 instance AdditiveGroup Span where
-
   zeroV = 0 <-> 1
 
   Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1 * d2)
@@ -318,7 +311,6 @@ instance AdditiveGroup Span where
   negateV (Span (t, d)) = Span (- t ^/ d, recip d)
 
 instance VectorSpace Span where
-
   type Scalar Span = Duration
 
   x *^ Span (t, d) = Span (x *^ t, x *^ d)
@@ -573,8 +565,3 @@ _midpointS s = _onsetS s .+^ _durationS s / 2
 
 _durationS :: Span -> Duration
 _durationS s = _offsetS s .-. _onsetS s
-
-
-
-
-

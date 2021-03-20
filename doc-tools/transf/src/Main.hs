@@ -42,12 +42,13 @@ firstJust :: [Maybe a] -> Maybe a
 firstJust = listToMaybe . catMaybes
 
 getMusicOpts :: [Opt] -> MusicOpts
-getMusicOpts xs = MusicOpts
-  { format = fromMaybe (format def) $ firstJust $ fmap getFormat xs,
-    resolution = fromMaybe (resolution def) $ firstJust $ fmap getResolution xs,
-    resize = fromMaybe (resize def) $ firstJust $ fmap getResize xs,
-    prelude = fromMaybe (prelude def) $ firstJust $ fmap getPrelude xs
-  }
+getMusicOpts xs =
+  MusicOpts
+    { format = fromMaybe (format def) $ firstJust $ fmap getFormat xs,
+      resolution = fromMaybe (resolution def) $ firstJust $ fmap getResolution xs,
+      resize = fromMaybe (resize def) $ firstJust $ fmap getResize xs,
+      prelude = fromMaybe (prelude def) $ firstJust $ fmap getPrelude xs
+    }
 
 optDesc :: [OptDescr Opt]
 optDesc =

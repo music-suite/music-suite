@@ -1,6 +1,5 @@
 {-# LANGUAGE DerivingStrategies #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -25,35 +24,35 @@ where
 
 import Control.Applicative
 import Control.Monad
+import Data.AffineSpace
 import Data.Either
 import Data.Maybe
 import Data.Monoid.Average
+import Data.Scientific (Scientific)
 import Data.Semigroup
 import Data.VectorSpace
-import Data.AffineSpace
 import Music.Dynamics.Literal
-import Data.Scientific (Scientific)
 
-newtype Dynamics = Dynamics { getDynamics :: Average Rational }
+newtype Dynamics = Dynamics {getDynamics :: Average Rational}
   deriving newtype (Semigroup, Eq, Ord, Num, Real, Monoid, IsDynamics, Fractional)
 
 instance Show Dynamics where
   -- TODO showsPrec
   show x
     | x == pppppp = "pppppp"
-    | x == ppppp  = "ppppp"
-    | x == pppp   = "pppp"
-    | x == ppp    = "ppp"
-    | x == pp     = "pp"
-    | x == _p     = "_p"
-    | x == mp     = "mp"
+    | x == ppppp = "ppppp"
+    | x == pppp = "pppp"
+    | x == ppp = "ppp"
+    | x == pp = "pp"
+    | x == _p = "_p"
+    | x == mp = "mp"
     | x == ffffff = "ffffff"
-    | x == fffff  = "fffff"
-    | x == ffff   = "ffff"
-    | x == fff    = "fff"
-    | x == ff     = "ff"
-    | x == _f     = "_f"
-    | x == mf     = "mf"
+    | x == fffff = "fffff"
+    | x == ffff = "ffff"
+    | x == fff = "fff"
+    | x == ff = "ff"
+    | x == _f = "_f"
+    | x == mf = "mf"
     | otherwise = show $ realToFrac @_ @Scientific $ average $ getDynamics x
 
 deriving newtype instance AdditiveGroup Dynamics

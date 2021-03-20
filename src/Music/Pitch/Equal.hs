@@ -1,6 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -63,7 +62,6 @@ instance Show (Equal a) where
 --   where app_prec = 10
 
 instance IsNat a => Num (Equal a) where
-
   Equal a + Equal b = Equal (a + b)
 
   Equal a * Equal b = Equal (a * b)
@@ -83,7 +81,6 @@ instance IsNat a => Monoid (Equal a) where
   mempty = 0
 
 instance IsNat a => AdditiveGroup (Equal a) where
-
   zeroV = 0
 
   (^+^) = (+)
@@ -91,7 +88,6 @@ instance IsNat a => AdditiveGroup (Equal a) where
   negateV = negate
 
 instance IsNat a => VectorSpace (Equal a) where
-
   type Scalar (Equal a) = Equal a
 
   (*^) = (*)

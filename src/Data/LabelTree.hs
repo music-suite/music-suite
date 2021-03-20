@@ -1,6 +1,5 @@
-
 module Data.LabelTree
-  ( LabelTree(..),
+  ( LabelTree (..),
     concatLT,
     fromListLT,
     foldLabelTree,
@@ -24,4 +23,3 @@ fromListLT = Branch mempty . fmap Leaf
 foldLabelTree :: (a -> c) -> (b -> [c] -> c) -> LabelTree b a -> c
 foldLabelTree f _ (Leaf x) = f x
 foldLabelTree f g (Branch b xs) = g b (fmap (foldLabelTree f g) xs)
-

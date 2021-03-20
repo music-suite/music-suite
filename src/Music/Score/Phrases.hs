@@ -4,10 +4,9 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports
+  -fno-warn-redundant-constraints #-}
 
 -- | Provides phrase-wise traversal.
 module Music.Score.Phrases
@@ -29,8 +28,8 @@ module Music.Score.Phrases
   )
 where
 
-import BasePrelude hiding ((<>), Dynamic, first, second)
-import Control.Lens hiding ((&), rewrite)
+import BasePrelude hiding (Dynamic, first, second, (<>))
+import Control.Lens hiding (rewrite, (&))
 import Control.Monad.Plus
 import Data.AffineSpace
 import Data.AffineSpace.Point.Offsets (offsetPoints)
@@ -46,11 +45,11 @@ import Music.Time.Aligned
 import Music.Time.Duration
 import Music.Time.Event
 import Music.Time.Internal.Convert ()
+import Music.Time.Internal.Placed
+import Music.Time.Internal.Track
 import Music.Time.Internal.Util
 import Music.Time.Note
 import Music.Time.Score
-import Music.Time.Internal.Placed
-import Music.Time.Internal.Track
 import Music.Time.Voice hiding (map, traverse)
 
 -- |
@@ -203,8 +202,15 @@ mapPhrasesWithPrevAndCurrentOnset :: HasPhrases s t a b => (Maybe (Time, Phrase 
 mapPhrasesWithPrevAndCurrentOnset f = over (mvoices . mVoiceTVoice) (withPrevAndCurrentOnset f)
 
 withPrevAndCurrentOnset :: (Maybe (Time, a) -> Time -> a -> b) -> Track a -> Track b
-withPrevAndCurrentOnset f = over placeds (fmap (\(x, y, _)
-  -> fmap (f (fmap placedOnset x) (fst $ placedOnset y)) y) . withPrevNext)
+withPrevAndCurrentOnset f =
+  over
+    placeds
+    ( fmap
+        ( \(x, y, _) ->
+            fmap (f (fmap placedOnset x) (fst $ placedOnset y)) y
+        )
+        . withPrevNext
+    )
   where
     placedOnset :: Placed a -> (Time, a)
     placedOnset = view (from placed)

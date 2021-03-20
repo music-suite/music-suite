@@ -64,6 +64,7 @@ module Music.Time.Voice
     homoToPolyphonic,
 
     -- * Context
+
     -- TODO clean
     withContext,
 
@@ -74,8 +75,7 @@ where
 
 import Control.Applicative
 import Control.Lens hiding
-  ( (<|),
-    Indexable,
+  ( Indexable,
     Level,
     below,
     index,
@@ -84,20 +84,19 @@ import Control.Lens hiding
     reversed,
     transform,
     traverse,
+    (<|),
     (|>),
   )
-
-import Prelude hiding (map, traverse)
 import Control.Monad
 import Control.Monad.Zip
 import Data.AffineSpace
 import qualified Data.Either
-import qualified Data.Traversable
 import qualified Data.Foldable
 import Data.Functor.Context
 import qualified Data.List
 import Data.Maybe
 import Data.String
+import qualified Data.Traversable
 import Data.Typeable (Typeable)
 import GHC.Exts (IsList (..))
 import Music.Dynamics.Literal
@@ -105,6 +104,7 @@ import Music.Pitch.Literal
 import Music.Time.Internal.Util
 import Music.Time.Juxtapose
 import Music.Time.Note
+import Prelude hiding (map, traverse)
 
 -- Both 'Voice' and 'Note' have duration but no position. The difference
 -- is that 'Note' sustains a single value throughout its duration, while
@@ -135,13 +135,11 @@ instance Show a => Show (Voice a) where
 -- intermediate structure.
 
 instance Applicative Voice where
-
   pure = return
 
   (<*>) = ap
 
 instance Alternative Voice where
-
   (<|>) = (<>)
 
   empty = mempty
@@ -149,7 +147,6 @@ instance Alternative Voice where
 -- Note: We could also iso-derive this via (WriterT Duration [])
 -- as in Music.Time.Score
 instance Monad Voice where
-
   return = Voice . return . return
 
   (>>=) :: forall a b. Voice a -> (a -> Voice b) -> Voice b
@@ -158,13 +155,11 @@ instance Monad Voice where
       mbind = (concat .) . fmap . (fmap join .) . Data.Traversable.traverse
 
 instance MonadPlus Voice where
-
   mzero = mempty
 
   mplus = mappend
 
 instance IsList (Voice a) where
-
   -- NOTE "ignoring meta" is a misnomer, see TODO.md
   type Item (Voice a) = Note a
 
@@ -241,13 +236,11 @@ instance IsDynamics a => IsDynamics (Voice a) where
 
 -- Bogus instance, so we can use [c..g] expressions
 instance Enum a => Enum (Voice a) where
-
   toEnum = return . toEnum
 
   fromEnum = list 0 (fromEnum . head) . Data.Foldable.toList
 
 instance Num a => Num (Voice a) where
-
   fromInteger = return . fromInteger
 
   abs = fmap abs
@@ -344,7 +337,7 @@ traverse :: Applicative f => (a -> f b) -> Voice a -> f (Voice b)
 traverse = Data.Traversable.traverse
 
 -- | Transform this voice by applying a function to every value.
-mapWithOffset:: Time -> (Time -> a -> b) -> Voice a -> Voice b
+mapWithOffset :: Time -> (Time -> a -> b) -> Voice a -> Voice b
 mapWithOffset t f = mapWithSpan t (\s x -> f (s ^. offset) x)
 
 -- | Transform this voice by applying a function to every value.
@@ -494,7 +487,6 @@ Naturality law:
       cd = zipWith (const) ad bd
       cs = zipWith (,) as bs
    in zip cd cs
-
 
   ∀ f g ma mb.
   let
@@ -784,7 +776,6 @@ mergeIfSameDurationWith :: (a -> b -> c) -> Voice a -> Voice b -> Maybe (Voice c
 mergeIfSameDurationWith f a b
   | sameDurations a b = Just $ zipVoiceWithNoScale f a b
   | otherwise = Nothing
-
 
 -- | Split a homophonic texture into a polyphonic one. The returned voice list will
 -- have as many elements as the chord with the fewest number of notes.

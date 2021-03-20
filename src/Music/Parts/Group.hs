@@ -1,12 +1,11 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
 module Music.Parts.Group where
 
 import Control.Applicative
-import Control.Lens (Lens, Lens', (^.), toListOf)
+import Control.Lens (Lens, Lens', toListOf, (^.))
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson
 import Data.Default
