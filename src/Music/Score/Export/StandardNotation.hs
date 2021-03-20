@@ -1514,6 +1514,12 @@ asp2ToAsp3 =
       )
 
 -- TODO optionally log quantization
+
+-- | Quantize a single bar.
+--
+-- >>> runPureExportMNoLog $ quantizeBar (mempty :: Voice (Maybe ()))
+-- Right (Group [])
+--
 quantizeBar ::
   (StandardNotationExportM m, Tiable a) =>
   Voice (Maybe a) ->
