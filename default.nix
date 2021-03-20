@@ -84,6 +84,9 @@ pkgs.stdenv.mkDerivation {
     function ci {
             tests && cabal build && cabal haddock
     }
+    function build-docs {
+            pandoc --to=rst docs/src/User-Guide.md >docs-sphinx/docs/source/index.rst
+    }
     export LOCALE_ARCHIVE="${pkgs.glibcLocales}/lib/locale/locale-archive"
     export LANG=en_US.UTF-8
     export PS1="# "
