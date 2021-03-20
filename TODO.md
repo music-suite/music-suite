@@ -437,16 +437,8 @@ From music21:
   - [X] Run locally (README)
     - [X] Tool works
     - [ ] Fix hack for default-extensions (see Doctester.hs)
-    - [ ] Make this work for all modules
-      - Done:
-        - src/Control
-        - src/Data
-        - src/Music/Pitch
-        - src/Music/Part
-        - src/Music/Dynamics
-        - src/Music/Articulation
-        - src/Music/Score/Export
-    - [ ] Try property-based testing (see doctest/README)
+    - [ ] Make this work for all modules. See what modules are not run in the CI for an up-to-date reference.
+    - [X] Try property-based testing (see doctest/README)
   - [X] Run in CI
 
 - [ ] Assure a script to run *all* builds, tests and doc gens *from scratch*
