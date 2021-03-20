@@ -18,6 +18,21 @@ Consider switching to a decentralized issue tracker such as:
 
 ---
 
+- We'll refer to as examples `union` test/music (extracted from docs) as Examples
+
+- All Examples must be expressions compatible with `defaultMain`
+
+- Check all Examples generate something with all backends (or randomize)
+
+- For each backend B in testbackends
+  - Render a set of `Music` expressions using some backend B
+  - Check if output is identical to the "committed" version
+    - If the source has changed, allow user to "commit" without preview
+    - Otherwise, make the user check preview and commit if they are unchanged
+
+- Generate nice docs + Example gallery + "Wall of Shame"
+
+
 - [ ] Use dynamics map
     {-
         ppp -42    -36
