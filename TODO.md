@@ -11,6 +11,9 @@ Consider switching to a decentralized issue tracker such as:
 - https://github.com/MichaelMure/git-bug
 
 
+- [ ] Make defaultMain expose a type-safe CLI (e.g. for integration into build/test/gen
+  pipelines).
+
 - [ ] Remove Makefiles (none of them run in CI, mostly dead code)
 
 - [ ] Get rid of remaining orphans
