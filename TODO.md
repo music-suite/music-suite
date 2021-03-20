@@ -11,6 +11,8 @@ Consider switching to a decentralized issue tracker such as:
 - https://github.com/MichaelMure/git-bug
 
 
+- [ ] Remove Makefiles (none of them run in CI, mostly dead code)
+
 - [ ] Get rid of remaining orphans
 
 - [ ] Data.Monoid.Average should use (Sum `Product` Count), not a list.
