@@ -1,14 +1,13 @@
 # Format /src with Ormulo <https://github.com/tweag/ormolu>
-#
-# To use this, clone Ormulo 0.0.2.0 from source and build as per its README
-#
-# Replace the /nix/store/... path below with the build output, if necessary
 
 set -e
 
 export LANG="C.UTF-8"
 
-OR=/nix/store/2598zamzhprq07xvxr8lj6020kms7scm-ormolu-0.0.2.0
+# Ormolu enables most extensions by default, but some have to be passed
+# explicitly. If this list becomes long, think of a better way
+# of coordinating extensions between Cabal, doctester and Ormulo.
+OR=ormolu\ --ghc-opt=-XTypeApplications
 
-$OR/bin/ormolu --mode inplace  $(find src -type f -name "*.hs" -exec grep -H -c 'CPP' {} \; | grep 0$ | cut -d':' -f1)
-$OR/bin/ormolu --mode inplace  $(find doc-tools -type f -name "*.hs" -exec grep -H -c 'CPP' {} \; | grep 0$ | cut -d':' -f1)
+$OR --mode inplace  $(find src -type f -name "*.hs" -exec grep -H -c 'CPP' {} \; | grep 0$ | cut -d':' -f1)
+$OR --mode inplace  $(find doc-tools -type f -name "*.hs" -exec grep -H -c 'CPP' {} \; | grep 0$ | cut -d':' -f1)
