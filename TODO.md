@@ -1078,7 +1078,7 @@ From music21:
       - No monad instance
   - Idea 4: Disallow empty scores
 
-
+- [ ] partitionSimplistic is dead code, use or remove
 
 - [X] Proper scale/chord type supporting all common use-cases
   - [X] Represent functions/modes and chords/scales
