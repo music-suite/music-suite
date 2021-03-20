@@ -447,7 +447,7 @@ From music21:
         - src/Music/Articulation
         - src/Music/Score/Export
     - [ ] Try property-based testing (see doctest/README)
-  - [ ] Run in CI
+  - [X] Run in CI
 
 - [ ] Assure a script to run *all* builds, tests and doc gens *from scratch*
   - Should ideally be invoked in CI
