@@ -102,6 +102,9 @@ library
                         Music.Dynamics.Common
                         Music.Dynamics.Literal
                         Music.Notation.Standard
+                        Music.Notation.Standard.Articulation
+                        Music.Notation.Standard.Dynamic
+                        Music.Notation.Standard.Technique
                         Music.Parts
                         Music.Parts.Division
                         Music.Parts.Group
@@ -146,11 +149,8 @@ library
                         Music.Score.Articulation
                         Music.Score.Color
                         Music.Score.Dynamics
-                        Music.Score.Export.ArticulationNotation
-                        Music.Score.Export.DynamicNotation
                         Music.Score.Export.Meta
                         Music.Score.Export.StandardNotation
-                        Music.Score.Export.TechniqueNotation
                         Music.Score.Harmonics
                         Music.Score.Import.Abc
                         Music.Score.Import.Lilypond
@@ -187,7 +187,9 @@ library
                         Music.Time.Duration
                         Music.Time.Event
                         Music.Time.Internal.Convert
+                        Music.Time.Internal.Placed
                         Music.Time.Internal.Preliminaries
+                        Music.Time.Internal.Track
                         Music.Time.Internal.Transform
                         Music.Time.Internal.Util
                         Music.Time.Juxtapose
@@ -199,8 +201,6 @@ library
                         Music.Time.Rest
                         Music.Time.Score
                         Music.Time.Split
-                        Music.Time.Internal.Placed
-                        Music.Time.Internal.Track
                         Music.Time.Transform
                         Music.Time.Types
                         Music.Time.Voice

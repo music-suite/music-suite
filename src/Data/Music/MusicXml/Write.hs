@@ -18,7 +18,6 @@ module Data.Music.MusicXml.Write
   )
 where
 
-import Text.XML.Light hiding (Line)
 import qualified Data.Char as Char
 import qualified Data.List as List
 import Data.Maybe (maybeToList)
@@ -26,8 +25,9 @@ import Data.Music.MusicXml.Pitch
 import Data.Music.MusicXml.Score
 import Data.Music.MusicXml.Time
 import Data.Semigroup
-import Prelude hiding (getLine)
 import GHC.Stack (HasCallStack)
+import Text.XML.Light hiding (Line)
+import Prelude hiding (getLine)
 
 class WriteMusicXml a where
   write :: a -> [Element]
@@ -40,23 +40,21 @@ instance WriteMusicXml Score where
         header
         parts
       ) =
-      single
-        $ unode "score-partwise"
-        $ write header <> writePartwise parts
+      single $
+        unode "score-partwise" $
+          write header <> writePartwise parts
   write
     ( Timewise
         attr
         header
         measures
       ) =
-      single
-        $ unode "timewise-score"
-        $ write header <> writeTimewise measures
+      single $
+        unode "timewise-score" $
+          write header <> writeTimewise measures
 
 writePartwise :: [(PartAttrs, [(MeasureAttrs, Music)])] -> [Element]
-
 writeTimewise :: [(MeasureAttrs, [(PartAttrs, Music)])] -> [Element]
-
 writePartwise =
   fmap
     ( \(attrs, measures) ->
@@ -88,11 +86,8 @@ writeMeasureElem attrs = addMeasureAttrs attrs . unode "measure"
 writeMusic = concatMap write . getMusic
 
 addScoreAttrs :: ScoreAttrs -> Element -> Element
-
 addPartAttrs :: PartAttrs -> Element -> Element
-
 addMeasureAttrs :: MeasureAttrs -> Element -> Element
-
 addScoreAttrs (ScoreAttrs []) = id
 addScoreAttrs (ScoreAttrs xs) = addAttr (uattr "version" $ concatSep "." $ map show xs)
 
@@ -100,7 +95,7 @@ addPartAttrs (PartAttrs x) = addAttr (uattr "id" x)
 
 addMeasureAttrs (MeasureAttrs implicit number) =
   let yesNo = if implicit then "yes" else "no"
-  in addAttr (uattr "number" number) . addAttr (uattr "implicit" yesNo)
+   in addAttr (uattr "number" number) . addAttr (uattr "implicit" yesNo)
 
 instance WriteMusicXml ScoreHeader where
   write
@@ -147,15 +142,15 @@ instance WriteMusicXml PartListElem where
         nameDisplay
         abbrevDisplay
       ) =
-      single
-        $ addAttr (uattr "id" id)
-        $ unode "score-part"
-        $ mconcat
-          [ writeName name,
-            writeAbbrev abbrev,
-            writeNameDisplay nameDisplay,
-            writeAbbrevDisplay abbrevDisplay
-          ]
+      single $
+        addAttr (uattr "id" id) $
+          unode "score-part" $
+            mconcat
+              [ writeName name,
+                writeAbbrev abbrev,
+                writeNameDisplay nameDisplay,
+                writeAbbrevDisplay abbrevDisplay
+              ]
       where
         writeName = single . unode "part-name"
         writeAbbrev = maybeToList . fmap (unode "part-abbreviation")
@@ -171,15 +166,15 @@ instance WriteMusicXml PartListElem where
         barlines
         time
       ) =
-      single
-        $ addAttr (uattr "number" $ show $ getLevel level)
-        $ addAttr (uattr "type" $ writeStartStop startStop)
-        $ unode "part-group"
-        $ mempty
-          <> writeName name
-          <> writeAbbrev abbrev
-          <> writeSymbol symbol
-          <> writeBarlines barlines
+      single $
+        addAttr (uattr "number" $ show $ getLevel level) $
+          addAttr (uattr "type" $ writeStartStop startStop) $
+            unode "part-group" $
+              mempty
+                <> writeName name
+                <> writeAbbrev abbrev
+                <> writeSymbol symbol
+                <> writeBarlines barlines
       where
         writeName = maybeToList . fmap (unode "group-name")
         writeAbbrev = maybeToList . fmap (unode "group-abbreviation")
@@ -187,7 +182,6 @@ instance WriteMusicXml PartListElem where
         writeBarlines = maybeToList . fmap (unode "group-barline" . writeGroupBarlines)
 
 writeGroupSymbol :: GroupSymbol -> String
-
 writeGroupBarlines :: GroupBarlines -> String
 
 -- ----------------------------------------------------------------------------------
@@ -209,19 +203,20 @@ instance WriteMusicXml MusicElem where
 
 instance WriteMusicXml Attributes where
   write (Divisions divs) =
-    single $ unode "divisions"
-      $ show
-      $ getDivs divs
+    single $
+      unode "divisions" $
+        show $
+          getDivs divs
   write (Clef sign line octaveChange) =
-    single
-      $ unode
+    single $
+      unode
         "clef"
-      $ [ unode "sign" (writeClef sign),
-          unode "line" (show $ getLine line)
-        ]
-        ++ case octaveChange of
-          Nothing -> []
-          Just (OctaveChange n) -> [unode "clef-octave-change" (show n)]
+        $ [ unode "sign" (writeClef sign),
+            unode "line" (show $ getLine line)
+          ]
+          ++ case octaveChange of
+            Nothing -> []
+            Just (OctaveChange n) -> [unode "clef-octave-change" (show n)]
   write (Key fifths mode) =
     single $
       unode
@@ -230,19 +225,21 @@ instance WriteMusicXml Attributes where
           unode "mode" (writeMode mode)
         ]
   write (Time CommonTime) =
-    single $ addAttr (uattr "symbol" "common") $
-      unode
-        "time"
-        [ unode "beats" (show @Integer 4),
-          unode "beat-type" (show @Integer 4)
-        ]
+    single $
+      addAttr (uattr "symbol" "common") $
+        unode
+          "time"
+          [ unode "beats" (show @Integer 4),
+            unode "beat-type" (show @Integer 4)
+          ]
   write (Time CutTime) =
-    single $ addAttr (uattr "symbol" "cut") $
-      unode
-        "time"
-        [ unode "beats" (show @Integer 2),
-          unode "beat-type" (show @Integer 2)
-        ]
+    single $
+      addAttr (uattr "symbol" "cut") $
+        unode
+          "time"
+          [ unode "beats" (show @Integer 2),
+            unode "beat-type" (show @Integer 2)
+          ]
   write (Time (DivTime beats beatType)) =
     single $
       unode
@@ -252,16 +249,15 @@ instance WriteMusicXml Attributes where
         ]
   write (Staves n) = single $ unode "staves" $ show n
   write (Transpose d c octaveChange) =
-    single
-      $ unode
+    single $
+      unode
         "transpose"
-      $ [ unode "diatonic" (show d),
-          unode "chromatic" (show c)
-        ]
-        ++ case octaveChange of
-          Nothing -> []
-          Just (OctaveChange n) -> [unode "octave-change" (show n)]
-
+        $ [ unode "diatonic" (show d),
+            unode "chromatic" (show c)
+          ]
+          ++ case octaveChange of
+            Nothing -> []
+            Just (OctaveChange n) -> [unode "octave-change" (show n)]
   write xs = error $ "Unsupported Attributes: " ++ show xs
 
 -- ----------------------------------------------------------------------------------
@@ -306,9 +302,9 @@ instance WriteMusicXml NoteProps where
         -- TODO staff
         <> maybeOne
           ( \(n, typ) ->
-              addAttr (uattr "number" $ show $ getLevel n)
-                $ unode "beam"
-                $ writeBeamType typ
+              addAttr (uattr "number" $ show $ getLevel n) $
+                unode "beam" $
+                  writeBeamType typ
           )
           beam
         <> case notations of
@@ -421,33 +417,33 @@ writeTie typ = single $ addAttr (uattr "type" $ writeStartStopContinue typ) $ un
 
 instance WriteMusicXml Notation where
   write (Tied typ) =
-    single
-      $ addAttr (uattr "type" $ writeStartStopContinue typ)
-      $ unode "tied" ()
+    single $
+      addAttr (uattr "type" $ writeStartStopContinue typ) $
+        unode "tied" ()
   write (Slur level typ) =
-    single
-      $ addAttr (uattr "number" $ show $ getLevel level)
-      $ addAttr (uattr "type" $ writeStartStopContinue typ)
-      $ unode "slur" ()
+    single $
+      addAttr (uattr "number" $ show $ getLevel level) $
+        addAttr (uattr "type" $ writeStartStopContinue typ) $
+          unode "slur" ()
   write (Tuplet level typ) =
-    single
-      $ addAttr (uattr "number" $ show $ getLevel level)
-      $ addAttr (uattr "type" $ writeStartStopContinue typ)
-      $ unode "tuplet" ()
-  write (Glissando level typ lineTyp text) = single
-    $ addAttr (uattr "number" $ show $ getLevel level)
-    $ addAttr (uattr "type" $ writeStartStopContinue typ)
-    $ addAttr (uattr "line-type" $ writeLineType lineTyp)
-    $ case text of
-      Nothing -> unode "glissando" ()
-      Just text -> unode "glissando" text
-  write (Slide level typ lineTyp text) = single
-    $ addAttr (uattr "number" $ show $ getLevel level)
-    $ addAttr (uattr "type" $ writeStartStopContinue typ)
-    $ addAttr (uattr "line-type" $ writeLineType lineTyp)
-    $ case text of
-      Nothing -> unode "slide" ()
-      Just text -> unode "slide" text
+    single $
+      addAttr (uattr "number" $ show $ getLevel level) $
+        addAttr (uattr "type" $ writeStartStopContinue typ) $
+          unode "tuplet" ()
+  write (Glissando level typ lineTyp text) = single $
+    addAttr (uattr "number" $ show $ getLevel level) $
+      addAttr (uattr "type" $ writeStartStopContinue typ) $
+        addAttr (uattr "line-type" $ writeLineType lineTyp) $
+          case text of
+            Nothing -> unode "glissando" ()
+            Just text -> unode "glissando" text
+  write (Slide level typ lineTyp text) = single $
+    addAttr (uattr "number" $ show $ getLevel level) $
+      addAttr (uattr "type" $ writeStartStopContinue typ) $
+        addAttr (uattr "line-type" $ writeLineType lineTyp) $
+          case text of
+            Nothing -> unode "slide" ()
+            Just text -> unode "slide" text
   write (Ornaments xs) = single $ unode "ornaments" (concatMap writeOrnamentWithAcc xs)
     where
       writeOrnamentWithAcc (o, as) =
@@ -536,10 +532,11 @@ instance WriteMusicXml Direction where
   write (Diminuendo Stop) = single $ addAttr (uattr "type" "stop") $ unode "wedge" ()
   write (Dynamics dyn) = single $ unode "dynamics" (writeDynamics dyn)
   write (Metronome noteVal dotted tempo) =
-    single $ unode "metronome" $
-      [unode "beat-unit" (writeNoteVal noteVal)]
-        <> singleIf dotted (unode "beat-unit-dot" ())
-        <> [unode "per-minute" (show $ round @Double @Integer $ getTempo tempo)]
+    single $
+      unode "metronome" $
+        [unode "beat-unit" (writeNoteVal noteVal)]
+          <> singleIf dotted (unode "beat-unit-dot" ())
+          <> [unode "per-minute" (show $ round @Double @Integer $ getTempo tempo)]
   write Bracket = notImplemented "Unsupported directions"
   write (OtherDirection dir) = notImplemented ("OtherDirection " <> dir)
   write xs = error $ "Unsupported Direction: " ++ show xs
@@ -550,11 +547,11 @@ instance WriteMusicXml Direction where
 
 instance WriteMusicXml Barline where
   write (Barline location style repeat) =
-    single
-      $ addAttr (uattr "location" (show location))
-      $ unode "barline"
-      $ [unode "bar-style" (show style)]
-        <> maybe [] write repeat
+    single $
+      addAttr (uattr "location" (show location)) $
+        unode "barline" $
+          [unode "bar-style" (show style)]
+            <> maybe [] write repeat
 
 instance WriteMusicXml Repeat where
   write (Repeat dir) = single $ addAttr (uattr "direction" (show dir)) $ unode "repeat" ()
@@ -672,9 +669,7 @@ writeDynamics x = unode (toLowerString $ show x) ()
 -- XML aliases
 
 addAttr :: Attr -> Element -> Element
-
 addAttrs :: [Attr] -> Element -> Element
-
 addAttr = add_attr
 
 addAttrs = add_attrs

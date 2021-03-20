@@ -1,6 +1,5 @@
 {-# LANGUAGE StandaloneDeriving #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -35,7 +34,6 @@ import Data.Ratio
 --
 --    @augment . diminish = id = diminish . augment@
 class Augmentable a where
-
   -- |
   -- Increase the size of this interval by one.
   augment :: a -> a
@@ -45,31 +43,26 @@ class Augmentable a where
   diminish :: a -> a
 
 instance Augmentable Double where
-
   augment = (+ 1)
 
   diminish = subtract 1
 
 instance Augmentable Integer where
-
   augment = (+ 1)
 
   diminish = subtract 1
 
 instance Integral a => Augmentable (Ratio a) where
-
   augment = (+ 1)
 
   diminish = subtract 1
 
 instance Augmentable a => Augmentable [a] where
-
   augment = fmap augment
 
   diminish = fmap diminish
 
 instance Augmentable a => Augmentable (b, a) where
-
   augment = fmap augment
 
   diminish = fmap diminish

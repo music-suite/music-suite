@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -43,7 +42,6 @@ import Text.Numeral.Roman (toRoman)
 -- TODO laws
 -- TODO rename? (SubpartOf -> Subpart, Subpart -> DivisionList/Voice)
 class BoundIncr (SubpartOf a) => HasSubpart a where
-
   type SubpartOf a
 
   subpart :: Lens' a (SubpartOf a)
@@ -51,19 +49,16 @@ class BoundIncr (SubpartOf a) => HasSubpart a where
 -- TODO name
 -- TODO laws?
 class BoundIncr a where
-
   maximum' :: NonEmpty a -> a
 
   increment' :: a -> a
 
 instance BoundIncr Integer where
-
   maximum' = maximum
 
   increment' = succ
 
 instance BoundIncr Subpart where
-
   maximum' = maximum . fmap firstComp
 
   increment' (Subpart xs) = Subpart (fmap succ xs)
@@ -96,7 +91,6 @@ instance Rewrapped Subpart Subpart
 -}
 
 instance Num Subpart where
-
   fromInteger n = Subpart (pure $ fromInteger n)
 
   (+) = error "Num Subpart: Not implemented"

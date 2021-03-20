@@ -1,6 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-unused-imports
-  #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 module Music.Time.Note
   ( -- * Note type
@@ -16,8 +14,7 @@ where
 import Control.Applicative
 import Control.Comonad
 import Control.Lens hiding
-  ( (<|),
-    Indexable,
+  ( Indexable,
     Level,
     below,
     index,
@@ -25,6 +22,7 @@ import Control.Lens hiding
     parts,
     reversed,
     transform,
+    (<|),
     (|>),
   )
 import Data.Aeson (FromJSON (..), ToJSON (..))
@@ -65,7 +63,6 @@ instance (Show a) => Show (Note a) where
   show x = show (x ^. from note) ++ "^.note"
 
 instance Wrapped (Note a) where
-
   type Unwrapped (Note a) = (Duration, a)
 
   _Wrapped' = iso (getCouple . getNote) (Note . Couple)
@@ -186,14 +183,12 @@ note :: Iso (Duration, a) (Duration, b) (Note a) (Note b)
 note = _Unwrapped
 
 -- | Access the note value.
+--
 -- Taking a value out carries out the stretch (using the 'Transformable' instance),
 -- while putting a value in carries out the reverse transformation.
 --
 -- >>> view notee $ (2,3::Duration)^.note
 -- 6
---
--- >>> set notee 6 $ (2,1::Duration)^.note
--- (2,3)^.note
 notee :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
 notee = _Wrapped `dependingOn` (transformed . stretching)
 
@@ -204,6 +199,7 @@ notee = _Wrapped `dependingOn` (transformed . stretching)
 -- (2,())^.note
 durationNote :: Iso' Duration (Note ())
 durationNote = iso (\d -> (d, ()) ^. note) (^. duration)
+
 -- >>> (pure ())^.from durationNote
 -- 1
 -- >>> (pure () :: Note ())^.duration

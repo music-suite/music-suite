@@ -10,8 +10,8 @@ import Data.List
     sortBy,
   )
 import Data.Maybe
-import qualified Data.MemoTrie as MT
 import Data.MemoTrie
+import qualified Data.MemoTrie as MT
 import Data.Ord (comparing)
 import Data.Traversable (traverse)
 -- import qualified Distribution.ModuleName as M

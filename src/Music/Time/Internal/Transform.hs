@@ -58,8 +58,7 @@ module Music.Time.Internal.Transform
 where
 
 import Control.Lens hiding
-  ( (<|),
-    Indexable,
+  ( Indexable,
     Level,
     below,
     index,
@@ -67,6 +66,7 @@ import Control.Lens hiding
     parts,
     reversed,
     transform,
+    (<|),
     (|>),
   )
 import Data.AffineSpace
@@ -266,13 +266,11 @@ s `flip whilstM` f = fmap (transform (negateV t)) . f . transform t
 
 -- is this the same as transformed?
 
-
 From lens:
   iso sa bt = dimap sa (fmap bt)
 From profunctor:
   dimap ab cd bc = cd . bc . ab
   dimap ab cd    = \f -> cd . f . ab
-
 
 flip whilstM = transformed
 flip whilstM = \s -> iso (transform s) (itransform s)
@@ -287,9 +285,6 @@ flip (\f t -> fmap (transform (negateV t)) . f . transform t) = \s f -> (fmap $ 
 \t f -> fmap (itransform t) . f . transform t
 =
 \t f -> fmap (itransform t) . f . transform t
-
-
-
 
 Something similar to whilstL* is being used in Note/Delayed/Stretched
 Are they the same?
@@ -364,6 +359,7 @@ onSpan ::
   Span ->
   LensLike f s t a b
 f `onSpan` s = transformed (negateV s) . f
+
 -- TODO name
 
 -- deriving instance Functor Sum

@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-unused-imports
+{-# OPTIONS_GHC -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
 module Music.Time.Duration
@@ -14,9 +13,9 @@ module Music.Time.Duration
   )
 where
 
+import Control.Lens (Getter)
 import Control.Lens hiding
-  ( (<|),
-    Indexable,
+  ( Indexable,
     Level,
     below,
     index,
@@ -24,9 +23,9 @@ import Control.Lens hiding
     parts,
     reversed,
     transform,
+    (<|),
     (|>),
   )
-import Control.Lens (Getter)
 import Data.Functor.Contravariant (Op (..))
 import Data.NumInstances ()
 import Data.Semigroup hiding ()
@@ -44,7 +43,6 @@ import Music.Time.Transform
 --
 --    @'_duration' ('transform' s x) = 'transform' s ('_duration' x)@
 class HasDuration a where
-
   -- | Return the duration of a value.
   _duration :: a -> Duration
 

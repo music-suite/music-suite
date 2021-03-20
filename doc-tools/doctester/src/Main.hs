@@ -31,4 +31,5 @@ main = do
         ]
   -- doctestWithOptions
   args <- getArgs
+  putStrLn $ "Running doctests: " ++ show args
   doctest (args ++ fmap ("-X" ++) defaultExtensions)

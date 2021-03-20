@@ -46,9 +46,7 @@ import Numeric.Natural
 --
 --    @'setStaffNumber' n ('setStaffNumber' n x) = 'setStaffNumber' n x@
 class HasStaffNumber a where
-
   setStaffNumber :: Natural -> a -> a
-
   default setStaffNumber :: forall f b. (a ~ f b, Functor f, HasStaffNumber b) => Natural -> a -> a
   setStaffNumber s = fmap (setStaffNumber s)
 
@@ -67,7 +65,6 @@ newtype StaffNumberT a = StaffNumberT {getStaffNumberT :: Couple (First Natural)
   deriving (Eq, Show, Ord, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad)
 
 instance Wrapped (StaffNumberT a) where
-
   type Unwrapped (StaffNumberT a) = Couple (First Natural) a
 
   _Wrapped' = iso getStaffNumberT StaffNumberT

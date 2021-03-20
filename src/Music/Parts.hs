@@ -1,10 +1,9 @@
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 -- | Representation of musical instruments, parts and playing techniques.
 module Music.Parts
-  (
-    -- * Subparts
+  ( -- * Subparts
     module Music.Parts.Division,
     module Music.Parts.Subpart,
 
@@ -207,7 +206,7 @@ altoTrombone = fromMusicXmlSoundId "brass.trombone.alto"
 trombone :: Instrument
 trombone = tenorTrombone
 
-tenorTrombone  :: Instrument
+tenorTrombone :: Instrument
 tenorTrombone = fromMidiProgram 57
 
 bassTrombone :: Instrument
@@ -360,4 +359,3 @@ stringOrchestra = divide 2 violins ++ [violas, cellos] -- TODO define somewhere
 divide2 x = case divide 2 x of
   [a, b] -> (a, b)
   _ -> error "Expected 2"
-

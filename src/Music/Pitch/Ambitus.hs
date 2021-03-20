@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -43,6 +42,7 @@ ambitusInterval (Ambitus x y) = x .-. y
 inAmbitus :: (AffinePair v p, HasSemitones v) => Ambitus v p -> p -> Bool
 inAmbitus (Ambitus a c) b =
   semitones (c .-. b) >= 0 && semitones (b .-. a) >= 0
+
 {-
 Misc stuff from data-interval and friends. What is relevant?
 

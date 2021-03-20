@@ -1,11 +1,8 @@
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 -- |
 -- This module defines a monomorphic representation of Western music notation.
@@ -39,18 +36,13 @@
 --   staff\" that contains information pertaining to all parts, such as key and
 --   time signatures.
 module Music.Notation.Standard
-  ( LabelTree (..),
-    foldLabelTree,
-    fromListLT,
-
-    -- * Common music notation
+  ( -- * Common music notation
     BarNumber,
     TimeSignature,
     KeySignature,
     RehearsalMark,
     TempoMark,
     BracketType (..),
-    SpecialBarline,
     SystemBar,
     barNumbers,
     timeSignature,
@@ -127,67 +119,31 @@ module Music.Notation.Standard
     workInfo,
     articulationNotation,
     movements,
-
     barLayersHaveEqualDuration,
-
-    -- -- * MonadLog
-    -- MonadLog (..),
-
-    -- -- * Pure export monad
-    -- PureExportM,
-    -- runPureExportM,
-    -- runPureExportMNoLog,
-
-    -- -- * IO export monad
-    -- IOExportM,
-    -- runIOExportM,
-
-    -- -- * Standard notation
-    -- Asp1,
-    -- Asp1a,
-    -- Asp,
-    -- StandardNotationExportM,
-    -- toStandardNotation,
-
-    -- -- * Lilypond backend
-    -- LilypondLayout (..),
-    -- LilypondOptions (..),
-    -- defaultLilypondLayout,
-    -- defaultLilypondOptions,
-    -- LilypondExportM,
-    -- toLy,
-
-    -- -- * MusicXML backend
-    -- MusicXmlExportM,
-    -- toXml,
-
-    -- -- * MIDI backend
-    -- MidiExportM,
-    -- toMidi,
   )
 where
 
-import BasePrelude hiding ((<>), First (..), first, second)
+import BasePrelude hiding (First (..), first, second, (<>))
 import qualified Codec.Midi as Midi
 import Control.Lens
   ( Lens',
-    _1,
-    _2,
-    _head,
     at,
     from,
     over,
     preview,
     to,
     view,
+    _1,
+    _2,
+    _head,
   )
 import Control.Lens.Operators hiding ((|>))
 import Control.Lens.TH (makeLenses)
 import Control.Monad.Except
+import Control.Monad.Log
 import Control.Monad.Plus
 import Control.Monad.State
-import Control.Monad.Log
-import Control.Monad.Writer hiding ((<>), First (..))
+import Control.Monad.Writer hiding (First (..), (<>))
 import Data.AffineSpace
 import Data.Bifunctor (first)
 import qualified Data.ByteString.Char8
@@ -197,6 +153,7 @@ import Data.FileEmbed
 import Data.FiniteSeq (FiniteSeq)
 import qualified Data.FiniteSeq
 import Data.Functor.Couple
+import Data.LabelTree (LabelTree (Branch, Leaf), foldLabelTree, fromListLT)
 import qualified Data.List
 import qualified Data.List.NonEmpty
 import qualified Data.List.Split
@@ -204,8 +161,8 @@ import Data.Map (Map)
 import qualified Data.Map
 import qualified Data.Maybe
 import qualified Data.Monoid
-import qualified Data.Music.Lilypond as Lilypond
 import qualified Data.Music.Lilypond as L
+import qualified Data.Music.Lilypond as Lilypond
 import qualified Data.Music.MusicXml.Simple as MusicXml
 import qualified Data.Music.MusicXml.Simple as X
 import Data.Semigroup
@@ -214,22 +171,22 @@ import Data.VectorSpace hiding (Sum)
 import Music.Articulation (Articulation)
 import Music.Dynamics (Dynamics)
 import Music.Dynamics.Literal (DynamicsL (..), fromDynamics)
+import qualified Music.Notation.Standard.Articulation
+import qualified Music.Notation.Standard.Articulation as AN
+import qualified Music.Notation.Standard.Dynamic
+import qualified Music.Notation.Standard.Dynamic as DN
+import qualified Music.Notation.Standard.Technique as TN
 import Music.Parts (Instrument, Part, ScoreLayout (..))
 import qualified Music.Parts
-import qualified Music.Pitch
 import Music.Pitch (IsPitch (..), Pitch, fromPitch)
+import qualified Music.Pitch
 import qualified Music.Pitch.Literal
 import qualified Music.Pitch.Literal as P
-import qualified Music.Score.Articulation
 import Music.Score.Articulation (ArticulationT (..))
+import qualified Music.Score.Articulation
 import Music.Score.Color (ColorT, runColorT)
-import qualified Music.Score.Dynamics
 import Music.Score.Dynamics (DynamicT (..))
-import qualified Music.Score.Export.ArticulationNotation
-import qualified Music.Score.Export.ArticulationNotation as AN
-import qualified Music.Score.Export.DynamicNotation
-import qualified Music.Score.Export.DynamicNotation as DN
-import qualified Music.Score.Export.TechniqueNotation as TN
+import qualified Music.Score.Dynamics
 import Music.Score.Harmonics (HarmonicT, runHarmonicT)
 import qualified Music.Score.Internal.Export
 import Music.Score.Internal.Instances ()
@@ -239,32 +196,22 @@ import Music.Score.Internal.Quantize
     quantize,
     rewrite,
   )
-import qualified Music.Score.Internal.Util
 import Music.Score.Internal.Util (unRatio)
+import qualified Music.Score.Internal.Util
 import qualified Music.Score.Meta
 import qualified Music.Score.Meta.Attribution
 import qualified Music.Score.Meta.Key
 import qualified Music.Score.Meta.RehearsalMark
-import qualified Music.Score.Meta.Tempo
 import Music.Score.Meta.Tempo (Tempo)
+import qualified Music.Score.Meta.Tempo
 import qualified Music.Score.Meta.Time
 import qualified Music.Score.Meta.Title
-import qualified Music.Score.Part
 import Music.Score.Part (PartT (..))
-import qualified Music.Score.Phrases
+import qualified Music.Score.Part
 import Music.Score.Phrases (MVoice)
+import qualified Music.Score.Phrases
 import qualified Music.Score.Pitch
--- import Music.Score.Pitch ()
--- import Music.Score.Slide (SlideT, runSlideT)
--- import Music.Score.StaffNumber (StaffNumberT, runStaffNumberT)
--- import Music.Score.Technique (HasTechniques (techniques), Technique, TechniqueT (..))
--- import qualified Music.Score.Technique
--- import Music.Score.Text (TextT, runTextT)
--- import qualified Music.Score.Ties
--- import Music.Score.Ties (Tiable (..), TieT (..))
--- import Music.Score.Tremolo (TremoloT, runTremoloT)
 import Music.Time
-import Data.LabelTree (LabelTree(Branch, Leaf), fromListLT, foldLabelTree)
 
 {-
 Remember:
@@ -276,8 +223,6 @@ Remember:
 
 -}
 
--- TODO w/wo connecting barlines
--- TODO parg group names (i.e. "archi", "horns", "chorus", "fl (I && II)")
 data BracketType = NoBracket | Bracket | Brace | Subbracket
   deriving (Eq, Ord, Show)
 
@@ -291,40 +236,33 @@ type RehearsalMark = Music.Score.Meta.RehearsalMark.RehearsalMark
 
 type TempoMark = Music.Score.Meta.Tempo.Tempo
 
-type SpecialBarline = () -- TODO Dashed | Double | Final
-  -- type BarLines               = (Maybe SpecialBarline, Maybe SpecialBarline)
-  -- (prev,next) biased to next
+data SystemBar = SystemBar
+  {-
+  We treat all the following information as global.
 
--- TODO lyrics
+  This is more restrictive than most classical notations, but greatly
+  simplifies representation. In this view, a score is a matrix of bars
+  (each belonging to a single staff). Each bar must have a single
+  time sig/key sig/rehearsal mark/tempo mark.
 
-data SystemBar
-  = SystemBar
-      {-
-      We treat all the following information as global.
+  ----
+  Note: Option First ~ Maybe
 
-      This is more restrictive than most classical notations, but greatly
-      simplifies representation. In this view, a score is a matrix of bars
-      (each belonging to a single staff). Each bar must have a single
-      time sig/key sig/rehearsal mark/tempo mark.
+  Alternatively we could just make these things into Monoids such that
+  mempty means "no notation at this point", and remove the "Option First"
+  part here.
 
-      ----
-      Note: Option First ~ Maybe
-
-      Alternatively we could just make these things into Monoids such that
-      mempty means "no notation at this point", and remove the "Option First"
-      part here.
-
-      Actually I'm pretty sure this is the right approach. See also #242
-      -}
-      { _barNumbers :: Maybe (First BarNumber),
-        _timeSignature :: Maybe (First TimeSignature),
-        _keySignature :: KeySignature,
-        _rehearsalMark :: Maybe (First RehearsalMark),
-        _tempoMark :: Maybe (First TempoMark)
-        -- ,_barLines :: BarLines
-        -- Tricky because of ambiguity. Use balanced pair
-        -- or an alt-list in SystemStaff.
-      }
+  Actually I'm pretty sure this is the right approach. See also #242
+  -}
+  { _barNumbers :: Maybe (First BarNumber),
+    _timeSignature :: Maybe (First TimeSignature),
+    _keySignature :: KeySignature,
+    _rehearsalMark :: Maybe (First RehearsalMark),
+    _tempoMark :: Maybe (First TempoMark)
+    -- ,_barLines :: BarLines
+    -- Tricky because of ambiguity. Use balanced pair
+    -- or an alt-list in SystemStaff.
+  }
   deriving (Eq, Ord, Show)
 
 type SystemStaff = [SystemBar]
@@ -349,34 +287,33 @@ information goes here as well.
 
 TODO add instrument part no. (I, II.1 etc)
 -}
-data StaffInfo
-  = StaffInfo
-      { _instrumentShortName :: InstrumentShortName,
-        _instrumentFullName :: InstrumentFullName,
-        _sibeliusFriendlyName :: SibeliusFriendlyName,
-        {-
-        See also clefChanges
+data StaffInfo = StaffInfo
+  { _instrumentShortName :: InstrumentShortName,
+    _instrumentFullName :: InstrumentFullName,
+    _sibeliusFriendlyName :: SibeliusFriendlyName,
+    {-
+    See also clefChanges
 
-        TODO change name of _instrumentDefaultClef
-        More accurately, it represents the first clef to be used on the staff
-        (and the only one if there are no changes.)
+    TODO change name of _instrumentDefaultClef
+    More accurately, it represents the first clef to be used on the staff
+    (and the only one if there are no changes.)
 
-        OTOH having clef in the staff at all is redundant, specifying clef
-        is optional (along with everything else) in this representation anyway.
-        This is arguably wrong, as stanard notation generally requires a clef.
-        -}
-        _instrumentDefaultClef :: Music.Pitch.Clef,
-        {-
-        I.e. -P5 for horn
+    OTOH having clef in the staff at all is redundant, specifying clef
+    is optional (along with everything else) in this representation anyway.
+    This is arguably wrong, as stanard notation generally requires a clef.
+    -}
+    _instrumentDefaultClef :: Music.Pitch.Clef,
+    {-
+    I.e. -P5 for horn
 
-        Note that this representation indicates *written pitch*, not sounding (as does MusicXML),
-        so this value is redundant when rendering a graphical score. OTOH if this representation
-        is used to render *sound*, pitches need to be transposed acconrdingly.
-        -}
-        _transposition :: Transposition,
-        _smallOrLarge :: SmallOrLarge,
-        _scoreOrder :: ScoreOrder
-      }
+    Note that this representation indicates *written pitch*, not sounding (as does MusicXML),
+    so this value is redundant when rendering a graphical score. OTOH if this representation
+    is used to render *sound*, pitches need to be transposed acconrdingly.
+    -}
+    _transposition :: Transposition,
+    _smallOrLarge :: SmallOrLarge,
+    _scoreOrder :: ScoreOrder
+  }
   deriving (Eq, Ord, Show)
 
 type Title = String
@@ -385,20 +322,18 @@ type Annotations = [(Span, String)]
 
 type Attribution = Map String String -- composer, lyricist etc
 
-data MovementInfo
-  = MovementInfo
-      { _movementTitle :: Title,
-        _movementAnnotations :: Annotations,
-        _movementAttribution :: Attribution
-      }
+data MovementInfo = MovementInfo
+  { _movementTitle :: Title,
+    _movementAnnotations :: Annotations,
+    _movementAttribution :: Attribution
+  }
   deriving (Eq, Show)
 
-data WorkInfo
-  = WorkInfo
-      { _title :: Title,
-        _annotations :: Annotations,
-        _attribution :: Attribution
-      }
+data WorkInfo = WorkInfo
+  { _title :: Title,
+    _annotations :: Annotations,
+    _attribution :: Attribution
+  }
   deriving (Eq, Show)
 
 data ArpeggioNotation
@@ -511,22 +446,21 @@ data Fermata = NoFermata | Fermata | ShortFermata | LongFermata
 -- TODO trills
 -- TODO brackets/dashed lines?
 
-data Chord
-  = Chord
-      { _pitches :: [Pitch],
-        _arpeggioNotation :: ArpeggioNotation,
-        _tremoloNotation :: TremoloNotation,
-        _breathNotation :: BreathNotation,
-        _articulationNotation :: AN.ArticulationNotation,
-        -- I'd like to put dynamics in a separate layer, but neither Lily nor MusicXML thinks this way
-        _dynamicNotation :: DN.DynamicNotation,
-        _fermata :: Fermata,
-        _chordColor :: Maybe (First (Colour Double)),
-        _chordText :: [String],
-        _harmonicNotation :: HarmonicNotation,
-        _slideNotation :: SlideNotation,
-        _ties :: Ties
-      }
+data Chord = Chord
+  { _pitches :: [Pitch],
+    _arpeggioNotation :: ArpeggioNotation,
+    _tremoloNotation :: TremoloNotation,
+    _breathNotation :: BreathNotation,
+    _articulationNotation :: AN.ArticulationNotation,
+    -- I'd like to put dynamics in a separate layer, but neither Lily nor MusicXML thinks this way
+    _dynamicNotation :: DN.DynamicNotation,
+    _fermata :: Fermata,
+    _chordColor :: Maybe (First (Colour Double)),
+    _chordText :: [String],
+    _harmonicNotation :: HarmonicNotation,
+    _slideNotation :: SlideNotation,
+    _ties :: Ties
+  }
   deriving (Eq, Show)
 
 -- |
@@ -565,12 +499,11 @@ newtype PitchLayer = PitchLayer {getPitchLayer :: Rhythm Chord}
 --     ...
 --
 -- TODO free floating text/symbols?
-data Bar
-  = Bar
-      { _clefChanges :: Map Duration Music.Pitch.Clef,
-        _pitchLayers :: [PitchLayer]
-        {-, _dynamicLayer :: DynamicLayer-}
-      }
+data Bar = Bar
+  { _clefChanges :: Map Duration Music.Pitch.Clef,
+    _pitchLayers :: [PitchLayer]
+    {-, _dynamicLayer :: DynamicLayer-}
+  }
   deriving (Eq, Show)
 
 -- |
@@ -609,11 +542,10 @@ data Bar
 -- and then assign individual notes (and which other objects?) to this.
 --
 -- [1]: http://www.musicxml.com/tutorial/notation-basics/multi-part-music-2/)
-data Staff
-  = Staff
-      { _staffInfo :: StaffInfo,
-        _bars :: [Bar]
-      }
+data Staff = Staff
+  { _staffInfo :: StaffInfo,
+    _bars :: [Bar]
+  }
   deriving (Eq, Show)
 
 -- |
@@ -626,24 +558,22 @@ data Staff
 -- The /system staff/ contains information that pertains to all simultaneous bars,
 -- such as key and time signature changes (implying that this model does not allow
 -- different time- or key singatures in different staves).
-data Movement
-  = Movement
-      { _movementInfo :: MovementInfo,
-        _systemStaff :: SystemStaff,
-        -- Don't allow names for staff groups, only staves
-        _staves :: LabelTree BracketType Staff
-      }
+data Movement = Movement
+  { _movementInfo :: MovementInfo,
+    _systemStaff :: SystemStaff,
+    -- Don't allow names for staff groups, only staves
+    _staves :: LabelTree BracketType Staff
+  }
   deriving (Eq, Show)
 
 -- |
 -- A musical work. A sequential composition of /movements/ with meta-information.
 --
 -- Called work to avoid confusion with 'Score'.
-data Work
-  = Work
-      { _workInfo :: WorkInfo,
-        _movements :: [Movement]
-      }
+data Work = Work
+  { _workInfo :: WorkInfo,
+    _movements :: [Movement]
+  }
   deriving (Show)
 
 makeLenses ''SystemBar
@@ -821,5 +751,3 @@ movementAssureSameNumberOfBars (Movement i ss st) =
     n = maximum $ 0 : numBars
     -- numSystemBars :: Int = length ss
     numBars :: [Int] = length . _bars <$> toList st
-
-

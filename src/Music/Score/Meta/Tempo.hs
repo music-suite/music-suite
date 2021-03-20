@@ -1,8 +1,7 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -------------------------------------------------------------------------------------
 
@@ -88,7 +87,6 @@ data Tempo = Tempo (Maybe String) (Maybe Duration) Duration
   deriving (Eq, Ord, Typeable)
 
 instance Num Tempo where
-
   (+) = error "Num Tempo: No implementation"
 
   (-) = error "Num Tempo: No implementation"
@@ -189,7 +187,6 @@ tempoDuring s c = addMetaNote $ view event (s, c)
             $ tempoRegions0 (_era sc)
             $ getTempoChanges defTempo sc
 
-
         -- | Standard tempo
         --
         -- > tempoToDuration defTempo == 1
@@ -198,7 +195,6 @@ tempoDuring s c = addMetaNote $ view event (s, c)
 
         getTempoChanges :: Tempo -> Score a -> Reactive Tempo
         getTempoChanges def = fmap (fromMaybe def . unOptionFirst) . fromMetaReactive (Nothing::Maybe Int) . (view meta)
-
 
         -- | Get all tempo regions for the given span.
         tempoRegions0 :: Span -> Reactive Tempo -> [TempoRegion0]
@@ -212,10 +208,6 @@ tempoDuring s c = addMetaNote $ view event (s, c)
                 f (nt,st) (TempoRegion0 _ d x) = ((nt .+^ d, st .+^ (d*x)),
                     TempoRegion nt (nt .+^ d) st x
                     )
-
-
-
-
 
         -- | Return the sounding position of the given notated position, given its tempo region.
         --   Does nothing if the given point is outside the given region.
@@ -235,7 +227,6 @@ tempoDuring s c = addMetaNote $ view event (s, c)
         -- TODO use lens
         renderTempoScore :: TempoRegion -> Score a -> Score a
         renderTempoScore tr = over notes $ fmap $ over (from note . _1) $ renderTempoSpan tr
-
 
         data TempoRegion0 =
             TempoRegion0 {
@@ -277,32 +268,36 @@ tempoDuring s c = addMetaNote $ view event (s, c)
         - Its onset and offset are rendered separately
         - Its duration is (offset - onset) as per the duration law
 
-
-
-
 -}
 
-
 adagio = metronome (1 / 4) 64
+
 adagio :: Tempo
 
 allegretto = metronome (1 / 4) 118
+
 allegretto :: Tempo
 
 allegro = metronome (1 / 4) 128
+
 allegro :: Tempo
 
 andante = metronome (1 / 4) 84
+
 andante :: Tempo
 
 largo = metronome (1 / 4) 48
+
 largo :: Tempo
 
 lento = metronome (1 / 4) 42
+
 lento :: Tempo
 
 moderato = metronome (1 / 4) 98
+
 moderato :: Tempo
 
 presto = metronome (1 / 4) 140
+
 presto :: Tempo

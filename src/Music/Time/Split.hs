@@ -1,4 +1,3 @@
-
 module Music.Time.Split
   ( module Music.Time.Position,
 
@@ -11,8 +10,7 @@ module Music.Time.Split
 where
 
 import Control.Lens hiding
-  ( (<|),
-    Indexable,
+  ( Indexable,
     Level,
     below,
     index,
@@ -20,9 +18,9 @@ import Control.Lens hiding
     parts,
     reversed,
     transform,
+    (<|),
     (|>),
   )
-
 import Data.VectorSpace hiding (Sum (..))
 import Music.Time.Position
 
@@ -40,7 +38,6 @@ import Music.Time.Position
 -- (Note that any of these three laws can be derived from the other two, so it is
 -- sufficient to prove two!).
 class Splittable a where
-
   -- |  Split a value at the given duration and return both parts.
   split :: Duration -> a -> (a, a)
   split d x = (beginning d x, ending d x)

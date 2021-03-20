@@ -1,4 +1,3 @@
-
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --

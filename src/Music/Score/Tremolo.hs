@@ -38,9 +38,7 @@ import Music.Time
 --
 --    @'setTrem' n ('setTrem' m x) = 'setTrem' n x@
 class HasTremolo a where
-
   setTrem :: Int -> a -> a
-
   default setTrem :: forall f b. (a ~ f b, Functor f, HasTremolo b) => Int -> a -> a
   setTrem s = fmap (setTrem s)
 

@@ -22,4 +22,3 @@ where
 import Music.Dynamics.Absolute
 import Music.Dynamics.Common
 import Music.Dynamics.Literal
-

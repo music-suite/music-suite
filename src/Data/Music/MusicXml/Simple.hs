@@ -1,6 +1,6 @@
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 -------------------------------------------------------------------------------------
 
@@ -21,6 +21,7 @@ module Data.Music.MusicXml.Simple
     -----------------------------------------------------------------------------
 
     -- * Score and parts
+
     -----------------------------------------------------------------------------
 
     -- ** Basic constructors
@@ -47,6 +48,7 @@ module Data.Music.MusicXml.Simple
     -----------------------------------------------------------------------------
 
     -- * Top-level attributes
+
     -----------------------------------------------------------------------------
 
     -- ** Pitch
@@ -68,18 +70,21 @@ module Data.Music.MusicXml.Simple
     staves,
 
     -- ** Tempo
+
     -- TODO #15 tempo
     metronome,
     metronome',
     -----------------------------------------------------------------------------
 
     -- * Backup and forward
+
     -----------------------------------------------------------------------------
     backup,
     forward,
     -----------------------------------------------------------------------------
 
     -- * Notes
+
     -----------------------------------------------------------------------------
 
     -- ** Basic constructors
@@ -117,6 +122,7 @@ module Data.Music.MusicXml.Simple
     -----------------------------------------------------------------------------
 
     -- * Pitch transformations
+
     -----------------------------------------------------------------------------
 
     -- ** Glissando
@@ -129,9 +135,11 @@ module Data.Music.MusicXml.Simple
     -----------------------------------------------------------------------------
 
     -- * Time transformations
+
     -----------------------------------------------------------------------------
 
     -- ** Accelerando and ritardando
+
     -- TODO #16 accelerando,
     -- TODO #16 ritardando,
 
@@ -142,6 +150,7 @@ module Data.Music.MusicXml.Simple
     -----------------------------------------------------------------------------
 
     -- * Articulation
+
     -----------------------------------------------------------------------------
     addTechnical,
     addArticulation,
@@ -184,6 +193,7 @@ module Data.Music.MusicXml.Simple
     -----------------------------------------------------------------------------
 
     -- * Dynamics
+
     -----------------------------------------------------------------------------
 
     -- ** Crescendo and diminuendo
@@ -207,6 +217,7 @@ module Data.Music.MusicXml.Simple
     -----------------------------------------------------------------------------
 
     -- * Text
+
     -----------------------------------------------------------------------------
     text,
     rehearsal,
@@ -215,6 +226,7 @@ module Data.Music.MusicXml.Simple
     -----------------------------------------------------------------------------
 
     -- * Barlines/Repeats
+
     -----------------------------------------------------------------------------
     barline,
     doubleBarline,
@@ -223,6 +235,7 @@ module Data.Music.MusicXml.Simple
     -----------------------------------------------------------------------------
 
     -- * Folds and maps
+
     -----------------------------------------------------------------------------
 
     -- mapNote,
@@ -338,13 +351,13 @@ setHeader header (Partwise attrs _ music) = Partwise attrs header music
 setHeader header (Timewise attrs _ music) = Timewise attrs header music
 
 setTitle :: String -> ScoreHeader -> ScoreHeader
-setTitle title sh = sh { scoreTitle = Just title }
+setTitle title sh = sh {scoreTitle = Just title}
 
 setMovementNumber :: Int -> ScoreHeader -> ScoreHeader
-setMovementNumber n sh = sh { mvmNumber = Just n }
+setMovementNumber n sh = sh {mvmNumber = Just n}
 
 setMovementTitle :: String -> ScoreHeader -> ScoreHeader
-setMovementTitle t sh = sh { mvmTitle = Just t }
+setMovementTitle t sh = sh {mvmTitle = Just t}
 
 -- | The values P1, P2... which are conventionally used to identify parts in MusicXML.
 standardPartAttributes :: [String]
@@ -510,12 +523,13 @@ chord (p : ps) d = note p d <> Music (concatMap (\p -> getMusic $ chordNote p d)
 
 note' :: Bool -> Pitch -> NoteVal -> Int -> Music
 note' isChord pitch dur dots =
-  Music . single $ MusicNote $
-    Note
-      (Pitched isChord pitch)
-      (defaultDivisionsVal `div` denom)
-      noTies
-      (setNoteValP val $ addDots def)
+  Music . single $
+    MusicNote $
+      Note
+        (Pitched isChord pitch)
+        (defaultDivisionsVal `div` denom)
+        noTies
+        (setNoteValP val $ addDots def)
   where
     addDots = foldl (.) id (replicate dots dotP)
     -- I.e. given a 1/4 note
@@ -543,11 +557,8 @@ setVoice :: Int -> Music -> Music
 setVoice n = Music . fmap (modifyNoteProps (setVoiceP n)) . getMusic
 
 dot :: Music -> Music
-
 setNoteVal :: NoteVal -> Music -> Music
-
 setTimeMod :: Int -> Int -> Music -> Music
-
 dot = Music . fmap (modifyNoteProps dotP) . getMusic
 
 setNoteVal x = Music . fmap (modifyNoteProps (setNoteValP x)) . getMusic
@@ -587,19 +598,14 @@ mergeNotations notations =
     _ `mergeN` _ = error "mergeNotations: mergeN: Unexpected"
 
 beginTuplet :: Music -> Music
-
 endTuplet :: Music -> Music
-
 beginTuplet = addNotation (Tuplet 1 Start)
 
 endTuplet = addNotation (Tuplet 1 Stop)
 
 beginBeam :: Music -> Music
-
 continueBeam :: Music -> Music
-
 endBeam :: Music -> Music
-
 beginBeam = Music . fmap (modifyNoteProps (beginBeamP 1)) . getMusic
 
 continueBeam = Music . fmap (modifyNoteProps (continueBeamP 1)) . getMusic
@@ -607,9 +613,7 @@ continueBeam = Music . fmap (modifyNoteProps (continueBeamP 1)) . getMusic
 endBeam = Music . fmap (modifyNoteProps (endBeamP 1)) . getMusic
 
 beginTie :: Music -> Music
-
 endTie :: Music -> Music
-
 beginTie = beginTie' . addNotation (Tied Start)
 
 endTie = endTie' . addNotation (Tied Stop)
@@ -649,13 +653,9 @@ mapNoteHeadP f x@NoteProps {noteNoteHead = a@_} = x {noteNoteHead = f a}
 -- ----------------------------------------------------------------------------------
 
 beginGliss :: Music -> Music
-
 endGliss :: Music -> Music
-
 beginSlide :: Music -> Music
-
 endSlide :: Music -> Music
-
 beginGliss = addNotation (Glissando 1 Start Solid Nothing)
 
 endGliss = addNotation (Glissando 1 Stop Solid Nothing)
@@ -665,9 +665,7 @@ beginSlide = addNotation (Slide 1 Start Solid Nothing)
 endSlide = addNotation (Slide 1 Stop Solid Nothing)
 
 arpeggiate :: Music -> Music
-
 nonArpeggiate :: Music -> Music
-
 arpeggiate = addNotation Arpeggiate
 
 nonArpeggiate = addNotation NonArpeggiate
@@ -675,11 +673,8 @@ nonArpeggiate = addNotation NonArpeggiate
 -- ----------------------------------------------------------------------------------
 
 fermata :: FermataSign -> Music -> Music
-
 breathMark :: Music -> Music
-
 caesura :: Music -> Music
-
 fermata = addNotation . Fermata
 
 breathMark = addNotation (Articulations [BreathMark])
@@ -703,39 +698,24 @@ harmonic = addTechnical Harmonic
 openString = addTechnical OpenString
 
 beginSlur :: Music -> Music
-
 endSlur :: Music -> Music
-
 beginSlur = addNotation (Slur 1 Start)
 
 endSlur = addNotation (Slur 1 Stop)
 
 accent :: Music -> Music
-
 strongAccent :: Music -> Music
-
 staccato :: Music -> Music
-
 tenuto :: Music -> Music
-
 detachedLegato :: Music -> Music
-
 staccatissimo :: Music -> Music
-
 spiccato :: Music -> Music
-
 scoop :: Music -> Music
-
 plop :: Music -> Music
-
 doit :: Music -> Music
-
 falloff :: Music -> Music
-
 stress :: Music -> Music
-
 unstress :: Music -> Music
-
 accent = addNotation (Articulations [Accent])
 
 strongAccent = addNotation (Articulations [StrongAccent])
@@ -765,13 +745,9 @@ unstress = addNotation (Articulations [Unstress])
 -- ----------------------------------------------------------------------------------
 
 cresc, dim :: Music -> Music
-
 crescFrom, crescTo, dimFrom, dimTo :: Dynamics -> Music -> Music
-
 crescFromTo, dimFromTo :: Dynamics -> Dynamics -> Music -> Music
-
 cresc = \m -> beginCresc <> m <> endCresc
-
 dim = \m -> beginDim <> m <> endDim
 
 crescFrom x = \m -> dynamic x <> cresc m
@@ -837,19 +813,16 @@ slur (Music xs) = as <> bs <> cs
 -----------------------------------------------------------------------------
 
 -- * Ornaments
+
 -----------------------------------------------------------------------------
 
 tremolo :: Int -> Music -> Music
 tremolo n = addNotation (Ornaments [(Tremolo $ fromIntegral n, [])])
 
 trill :: Music -> Music
-
 turn :: Bool -> Bool -> Music -> Music
-
 shake :: Music -> Music
-
 mordent :: Bool -> Music -> Music
-
 trill = addOrnament TrillMark
 
 turn delay invert = case (delay, invert) of
@@ -871,9 +844,7 @@ addOrnament a = addNotation (Ornaments [(a, [])])
 -- ----------------------------------------------------------------------------------
 
 text :: String -> Music
-
 rehearsal :: String -> Music
-
 text = Music . single . MusicDirection . Words
 
 rehearsal = Music . single . MusicDirection . Rehearsal

@@ -41,9 +41,9 @@ module Music.Score.Part
   )
 where
 
-import BasePrelude hiding ((<>), Dynamic, first, second)
+import BasePrelude hiding (Dynamic, first, second, (<>))
 import Control.Comonad
-import Control.Lens hiding ((&), parts, transform)
+import Control.Lens hiding (parts, transform, (&))
 import Data.Functor.Couple
 import Data.Kind
 import qualified Data.List as List
@@ -280,7 +280,6 @@ newtype PartT n a = PartT {getPartT :: (n, a)}
     )
 
 instance Wrapped (PartT p a) where
-
   type Unwrapped (PartT p a) = (p, a)
 
   _Wrapped' = iso getPartT PartT

@@ -1,4 +1,3 @@
-
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -39,7 +38,8 @@ addCtxt :: [a] -> [Ctxt a]
 addCtxt = fmap Ctxt . withPrevNext
   where
     withPrevNext :: [a] -> [(Maybe a, a, Maybe a)]
-    withPrevNext xs = zip3
+    withPrevNext xs =
+      zip3
         (pure Nothing ++ fmap Just xs)
         xs
         (fmap Just (tail xs) ++ repeat Nothing)

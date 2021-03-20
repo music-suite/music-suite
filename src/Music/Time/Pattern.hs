@@ -5,34 +5,32 @@ module Music.Time.Pattern
     renderPattern,
     renderPatternsRel,
     renderPatternsAbs,
-
-  -- TODO hide?
+    -- TODO hide?
     renderLunga,
     getCycles,
     splitAt,
   )
 where
 
-import Prelude hiding (splitAt)
-import Control.Lens ((^.), from, view)
+import Control.Lens (from, view, (^.))
 import Control.Monad.Abort
+import Control.Monad.State.Strict
 import Data.AffineSpace
-import Data.VectorSpace
-import Data.Traversable (for)
 import qualified Data.List
+import Data.Traversable (for)
+import Data.VectorSpace
 import Music.Pitch (IsPitch (..))
 import Music.Pitch.Literal (c)
+import Music.Score.Articulation
+import Music.Score.Dynamics
 import Music.Score.Part
 import Music.Score.Pitch
-import Music.Score.Dynamics
-import Music.Score.Articulation
 import Music.Time.Aligned
 import Music.Time.Juxtapose
 import Music.Time.Note
 import Music.Time.Score
 import Music.Time.Voice hiding (map, traverse)
-import Control.Monad.State.Strict
-
+import Prelude hiding (splitAt)
 
 -- TODO move divModDur
 -- TODO generalize to any vector
@@ -45,14 +43,11 @@ divModDur x v = (n, r)
     r = x ^-^ (v *^ fromIntegral n)
 {-# INLINE divModDur #-}
 
-
-
-
 takeM, dropM :: Duration -> Voice a -> Voice a
 takeM d = fst . splitAt d
 dropM d = snd . splitAt d
 
-data SplitAtState = SplitAtState { remainingDur :: Duration, notesEaten :: Integer }
+data SplitAtState = SplitAtState {remainingDur :: Duration, notesEaten :: Integer}
   deriving (Show)
 
 fromVoice :: Voice a -> [Note a]
@@ -65,9 +60,10 @@ toNote :: (Duration, a) -> Note a
 
 -- | Duration must be >0
 splitNote :: Duration -> Note a -> (Note a, Maybe (Note a))
-splitNote d' (fromNote -> (d, x)) = if d' < d
-  then (toNote (d', x), Just $ toNote (d - d', x))
-  else (toNote (d, x), Nothing)
+splitNote d' (fromNote -> (d, x)) =
+  if d' < d
+    then (toNote (d', x), Just $ toNote (d - d', x))
+    else (toNote (d, x), Nothing)
 
 -- |
 -- Take the given number of notes and up to d of the next note.
@@ -75,29 +71,31 @@ splitNotesAt :: Integer -> Duration -> Voice a -> (Voice a, Voice a)
 splitNotesAt n d xs
   | d <= 0 =
     case Data.List.splitAt (fromIntegral n) (fromVoice xs) of
-      (ys,zs) ->
+      (ys, zs) ->
         (toVoice ys, toVoice zs)
   | otherwise =
     case fmap Data.List.uncons $ Data.List.splitAt (fromIntegral n) (fromVoice xs) of
       (ys, Nothing) -> (toVoice ys, mempty)
       (ys, Just (z, zs)) -> case splitNote d z of
-        (m, Nothing) -> (toVoice (ys++[m]), toVoice zs)
-        (m, Just o)  -> (toVoice (ys++[m]), toVoice (o : zs))
+        (m, Nothing) -> (toVoice (ys ++ [m]), toVoice zs)
+        (m, Just o) -> (toVoice (ys ++ [m]), toVoice (o : zs))
 
 -- TODO move splitAt to Time.Voice
 
 getSplitPoint :: Duration -> Voice a -> SplitAtState
 getSplitPoint d xs =
-  snd $ flip runAbort (SplitAtState { remainingDur = d, notesEaten = 0 }) $
-    for (view notes xs) $ \note -> do
-      SplitAtState { remainingDur, notesEaten } <- get
-      if _duration note > remainingDur
-        then
-          abort
-        else
-          put $ SplitAtState
-            { remainingDur = remainingDur - _duration note,
-            notesEaten = notesEaten + 1 }
+  snd $
+    flip runAbort (SplitAtState {remainingDur = d, notesEaten = 0}) $
+      for (view notes xs) $ \note -> do
+        SplitAtState {remainingDur, notesEaten} <- get
+        if _duration note > remainingDur
+          then abort
+          else
+            put $
+              SplitAtState
+                { remainingDur = remainingDur - _duration note,
+                  notesEaten = notesEaten + 1
+                }
 
 -- TODO property tests:
 --
@@ -107,7 +105,7 @@ getSplitPoint d xs =
 splitAt :: Duration -> Voice a -> (Voice a, Voice a)
 splitAt d xs = split $ getSplitPoint d xs
   where
-    split SplitAtState{remainingDur, notesEaten} = splitNotesAt notesEaten remainingDur xs
+    split SplitAtState {remainingDur, notesEaten} = splitNotesAt notesEaten remainingDur xs
 
 --
 modDur :: Duration -> Duration -> Duration
@@ -117,15 +115,15 @@ getCycles :: Span -> Span -> Either Duration (Duration, Integer, Duration)
 getCycles ts s
   | _duration ts <= 0 = error "getCycles: Duration of repeated span must be >0"
   --  | _duration s < _duration ts = (0, 0, _duration s)
-  | otherwise = if cycles >= 0
+  | otherwise =
+    if cycles >= 0
       then Right (rem, cycles, phase)
       else Left (_duration ts - rem)
   where
     phase = (view offset s .-. view offset ts) `modDur` _duration ts
     (cycles, rem) = (_duration s - phase) `divModDur` _duration ts
 
-
-newtype Lunga a = Lunga { getLunga :: [Aligned a] }
+newtype Lunga a = Lunga {getLunga :: [Aligned a]}
   deriving (Functor, Foldable, Traversable, Transformable, Semigroup, Monoid)
 
 instance (HasDuration a, Transformable a) => HasPosition (Lunga a) where
@@ -136,22 +134,25 @@ instance (HasDuration a, Transformable a) => HasPosition (Lunga a) where
 renderLunga :: Span -> Aligned (Voice a) -> Score a
 renderLunga s l = case getCycles (_era1 l) s of
   Left phase ->
-    renderAlignedVoice $ alignOnsetTo (view onset s)
-      (takeM (_duration s) $ dropM phase $ unAlign l)
-  Right (introDur, numCycles, outroDur) -> let
-      intro  = alignOnsetTo (view onset s) (dropM (_duration l - introDur) $ unAlign l)
-      outro  = alignOffsetTo (view offset s) (takeM outroDur $ unAlign l)
-      cycles = getLunga $ times (fromIntegral numCycles) $
+    renderAlignedVoice $
+      alignOnsetTo
+        (view onset s)
+        (takeM (_duration s) $ dropM phase $ unAlign l)
+  Right (introDur, numCycles, outroDur) ->
+    let intro = alignOnsetTo (view onset s) (dropM (_duration l - introDur) $ unAlign l)
+        outro = alignOffsetTo (view offset s) (takeM outroDur $ unAlign l)
+        cycles =
+          getLunga $
+            times (fromIntegral numCycles) $
               Lunga $ pure $ alignOnsetTo (view onset s .+^ introDur) (unAlign l)
-    in mconcat $ fmap renderAlignedVoice $ [intro] ++ cycles ++ [outro]
+     in mconcat $ fmap renderAlignedVoice $ [intro] ++ cycles ++ [outro]
   where
     alignOnsetTo t = aligned t 0
     alignOffsetTo t = aligned t 1
 
 -- List of repeated voices
 -- TODO is this isomorphic to Tidal's pattern (i.e. Span -> Score a)
-newtype Pattern a
-  = Pattern {_getPattern :: [Aligned (Voice a)]}
+newtype Pattern a = Pattern {_getPattern :: [Aligned (Voice a)]}
   deriving (Semigroup, Monoid, Transformable, Functor, Foldable, Traversable)
 
 instance (IsPitch a) => IsPitch (Pattern a) where
@@ -193,16 +194,20 @@ instance HasDynamics a b => HasDynamics (Pattern a) (Pattern b) where
 pureP :: a -> Pattern a
 pureP = newPattern . pure
 
+-- | Create a pattern repeating the given voice.
 newPattern :: Voice a -> Pattern a
 newPattern v = Pattern [aligned 0 0 v]
 
+-- | Create a pattern repeating the given rhythm.
 rhythmPattern :: IsPitch a => [Duration] -> Pattern a
 rhythmPattern a = newPattern $ fmap (const c) $ a ^. durationsAsVoice
 
--- TODO variant that returns [Aligned (Voice a)]
+-- | Render a pattern in the given 'Span'.
+--
+-- >>> renderPattern (rhythmPattern [1,2,1]) (0 <-> 4)
+-- [(0 <-> 1,())^.event,(1 <-> 3,())^.event,(3 <-> 4,())^.event]^.score
 renderPattern :: Pattern a -> Span -> Score a
 renderPattern (Pattern xs) s = mconcat $ fmap (renderLunga s) xs
-
 
 -- |
 -- Renders each pattern over one cycle (0<->1) and stretches to the duration of the surrounding note.
@@ -218,5 +223,6 @@ renderPatternsRel = join . fmap (flip renderPattern zeroV)
 -- different starting point in the pattern (phase).
 renderPatternsAbs :: Score (Pattern a) -> Score a
 renderPatternsAbs = join . Music.Time.Score.mapWithSpan (\s -> transform (negateV s) . flip renderPattern s)
+
 -- Note: We can not change the span of a note using mapWithSpan, so we transform the result to position (0<->1)
 -- and trust join to put it back in the same position it was rendered.

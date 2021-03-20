@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-unused-imports
+{-# OPTIONS_GHC -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
 module Music.Time.Behavior
@@ -140,13 +139,11 @@ instance IsDynamics a => IsDynamics (Behavior a) where
   fromDynamics = pure . fromDynamics
 
 instance Alterable a => Alterable (Behavior a) where
-
   sharpen = fmap sharpen
 
   flatten = fmap flatten
 
 instance Augmentable a => Augmentable (Behavior a) where
-
   augment = fmap augment
 
   diminish = fmap diminish
@@ -155,7 +152,6 @@ instance Eq a => Eq (Behavior a) where
   (==) = error "No overloading for behavior: (<=)"
 
 instance Ord a => Ord (Behavior a) where
-
   (<=) = error "No overloading for behavior: (<=)"
 
   (>=) = error "No overloading for behavior: (<=)"
@@ -169,19 +165,16 @@ instance Ord a => Ord (Behavior a) where
   min = liftA2 min
 
 instance Enum a => Enum (Behavior a) where
-
   toEnum = pure . toEnum
 
   fromEnum = fromEnum . (! 0)
 
 instance VectorSpace a => VectorSpace (Behavior a) where
-
   type Scalar (Behavior a) = Behavior (Scalar a)
 
   (*^) = liftA2 (*^)
 
 instance AffineSpace a => AffineSpace (Behavior a) where
-
   type Diff (Behavior a) = Behavior (Diff a)
 
   (.-.) = liftA2 (.-.)
@@ -330,4 +323,3 @@ tau = 2 * pi
 -- TODO use Internal.Util version
 floor' :: RealFrac a => a -> a
 floor' = fromInteger . floor
-

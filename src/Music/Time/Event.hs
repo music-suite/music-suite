@@ -1,4 +1,3 @@
-
 module Music.Time.Event
   ( -- * Event type
     Event,
@@ -13,14 +12,14 @@ where
 import Control.Applicative
 import Control.Comonad
 import Control.Lens hiding
-  ( (<|),
-    Indexable,
+  ( Indexable,
     Level,
     index,
     inside,
     parts,
     reversed,
     transform,
+    (<|),
     (|>),
   )
 import Data.Aeson (FromJSON (..), ToJSON (..))

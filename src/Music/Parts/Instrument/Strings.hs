@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -30,4 +29,3 @@ isStringInstrument :: Instrument -> Bool
 isStringInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
   Just i -> Data.List.isPrefixOf "strings" i
-

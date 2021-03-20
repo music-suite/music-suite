@@ -48,9 +48,9 @@ module Music.Score.Articulation
   )
 where
 
-import BasePrelude hiding ((<>), Dynamic, first, second)
+import BasePrelude hiding (Dynamic, first, second, (<>))
 import Control.Comonad
-import Control.Lens hiding ((&), below, transform)
+import Control.Lens hiding (below, transform, (&))
 import Data.AffineSpace
 import Data.Functor.Context
 import Data.Functor.Couple
@@ -65,13 +65,13 @@ import Music.Score.Phrases
 import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
-import Music.Time.Voice hiding (map, traverse)
-import Music.Time.Score
-import Music.Time.Internal.Track
-import Music.Time.Note
-import Music.Time.Internal.Placed
 import Music.Time.Event
+import Music.Time.Internal.Placed
+import Music.Time.Internal.Track
 import Music.Time.Internal.Transform
+import Music.Time.Note
+import Music.Time.Score
+import Music.Time.Voice hiding (map, traverse)
 
 -- |
 -- Articulations type.
@@ -100,7 +100,8 @@ class (HasArticulations s t) => HasArticulation s t where
 class
   ( ArticulationLensLaws s t
   ) =>
-  HasArticulations s t where
+  HasArticulations s t
+  where
   -- | Articulation type.
   articulations :: Traversal s t (GetArticulation s) (GetArticulation t)
 
@@ -270,14 +271,13 @@ class
     AffineSpace (Accentuation a),
     AffineSpace (Separation a)
   ) =>
-  Articulated a where
-
+  Articulated a
+  where
   accentuation :: Lens' a (Accentuation a)
 
   separation :: Lens' a (Separation a)
 
 instance (AffineSpace a, AffineSpace b, Fractional a, Fractional b) => Articulated (a, b) where
-
   accentuation = _1
 
   separation = _2
@@ -334,7 +334,6 @@ newtype ArticulationT n a = ArticulationT {getArticulationT :: (n, a)}
     )
 
 instance (Monoid n, Num a) => Num (ArticulationT n a) where
-
   (+) = liftA2 (+)
 
   (*) = liftA2 (*)
@@ -348,13 +347,11 @@ instance (Monoid n, Num a) => Num (ArticulationT n a) where
   fromInteger = pure . fromInteger
 
 instance (Monoid n, Fractional a) => Fractional (ArticulationT n a) where
-
   recip = fmap recip
 
   fromRational = pure . fromRational
 
 instance (Monoid n, Floating a) => Floating (ArticulationT n a) where
-
   pi = pure pi
 
   sqrt = fmap sqrt
@@ -384,19 +381,16 @@ instance (Monoid n, Floating a) => Floating (ArticulationT n a) where
   acosh = fmap acos
 
 instance (Monoid n, Enum a) => Enum (ArticulationT n a) where
-
   toEnum = pure . toEnum
 
   fromEnum = fromEnum . extract
 
 instance (Monoid n, Bounded a) => Bounded (ArticulationT n a) where
-
   minBound = pure minBound
 
   maxBound = pure maxBound
 
 instance Wrapped (ArticulationT p a) where
-
   type Unwrapped (ArticulationT p a) = (p, a)
 
   _Wrapped' = iso getArticulationT ArticulationT

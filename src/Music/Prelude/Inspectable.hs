@@ -3,8 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -104,7 +103,7 @@ instance Inspectable (Voiced Chord Interval Pitch) where
   inspectableToMusic = fmap fromPitch . ppar . map (\x -> pure x :: Score Pitch) . toList . getVoiced
 
 instance Inspectable [Mode Interval Pitch] where
-   inspectableToMusic = inspectableToMusic . fmap (scale c)
+  inspectableToMusic = inspectableToMusic . fmap (scale c)
 
 instance Inspectable [Scale Interval Pitch] where
   inspectableToMusic = rcat . fmap inspectableToMusic

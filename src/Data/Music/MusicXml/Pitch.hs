@@ -14,8 +14,8 @@
 -- Stability   : experimental
 -- Portability : portable
 module Data.Music.MusicXml.Pitch
-  ( Pitch ,
-    DisplayPitch ,
+  ( Pitch,
+    DisplayPitch,
     PitchClass (..),
     Semitones (..),
     noSemitones,
@@ -49,30 +49,26 @@ data Mode
   deriving (Read)
 
 data Accidental = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
-  deriving Show
+  deriving (Show)
 
 data PitchClass = C | D | E | F | G | A | B
   deriving (Read)
 
-newtype Semitones
-  = -- | Semitones, i.e 100 cent
-    Semitones {getSemitones :: Double}
-  deriving Show
+newtype Semitones = -- | Semitones, i.e 100 cent
+  Semitones {getSemitones :: Double}
+  deriving (Show)
 
-newtype Octaves
-  = -- | Octaves, i.e. 1200 cent
-    Octaves {getOctaves :: Int}
-  deriving Show
+newtype Octaves = -- | Octaves, i.e. 1200 cent
+  Octaves {getOctaves :: Int}
+  deriving (Show)
 
-newtype Fifths
-  = -- | Number of fifths upwards relative to C (i.e. F is -1, G is 1)
-    Fifths {getFifths :: Int}
-  deriving Show
+newtype Fifths = -- | Number of fifths upwards relative to C (i.e. F is -1, G is 1)
+  Fifths {getFifths :: Int}
+  deriving (Show)
 
-newtype Line
-  = -- | Line number, from bottom (i.e. 1-5)
-    Line {getLine :: Int}
-  deriving Show
+newtype Line = -- | Line number, from bottom (i.e. 1-5)
+  Line {getLine :: Int}
+  deriving (Show)
 
 noSemitones :: Maybe Semitones
 noSemitones = Nothing

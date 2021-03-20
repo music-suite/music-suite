@@ -1,4 +1,3 @@
-
 -------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
@@ -11,7 +10,7 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
-module Music.Score.Export.DynamicNotation
+module Music.Notation.Standard.Dynamic
   ( CrescDim (..),
     DynamicNotation (..),
     crescDim,
@@ -41,12 +40,10 @@ instance Semigroup CrescDim where
   NoCrescDim <> a = a
   a <> _ = a
 
-newtype DynamicNotation
-  = DynamicNotation {getDynamicNotation :: ([CrescDim], Maybe Double)}
+newtype DynamicNotation = DynamicNotation {getDynamicNotation :: ([CrescDim], Maybe Double)}
   deriving (Eq, Ord, Show)
 
 instance Wrapped DynamicNotation where
-
   type Unwrapped DynamicNotation = ([CrescDim], Maybe Double)
 
   _Wrapped' = iso getDynamicNotation DynamicNotation
@@ -65,7 +62,6 @@ instance Tiable DynamicNotation where
     )
 
 instance Monoid DynamicNotation where
-
   mempty = DynamicNotation ([], Nothing)
 
   mappend = (<>)
@@ -86,26 +82,27 @@ dynamicLevel = _Wrapped' . _2
 --   2) Whether we should display the current dynamic value
 --
 notateDynamic :: Real a => Ctxt a -> DynamicNotation
-notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case getCtxt x of
-  (Nothing, _, Nothing) -> ([], True)
-  (Nothing, y, Just z) -> case y `compare` z of
-    LT -> ([BeginCresc], True)
-    EQ -> ([], True)
-    GT -> ([BeginDim], True)
-  (Just x, y, Just z) -> case (x `compare` y, y `compare` z) of
-    (LT, LT) -> ([NoCrescDim], False)
-    (LT, EQ) -> ([EndCresc], True)
-    (EQ, LT) -> ([BeginCresc], False {-True-})
-    (GT, GT) -> ([NoCrescDim], False)
-    (GT, EQ) -> ([EndDim], True)
-    (EQ, GT) -> ([BeginDim], False {-True-})
-    (EQ, EQ) -> ([], False)
-    (LT, GT) -> ([EndCresc, BeginDim], True)
-    (GT, LT) -> ([EndDim, BeginCresc], True)
-  (Just x, y, Nothing) -> case x `compare` y of
-    LT -> ([EndCresc], True)
-    EQ -> ([], False)
-    GT -> ([EndDim], True)
+notateDynamic x = DynamicNotation $
+  over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case getCtxt x of
+    (Nothing, _, Nothing) -> ([], True)
+    (Nothing, y, Just z) -> case y `compare` z of
+      LT -> ([BeginCresc], True)
+      EQ -> ([], True)
+      GT -> ([BeginDim], True)
+    (Just x, y, Just z) -> case (x `compare` y, y `compare` z) of
+      (LT, LT) -> ([NoCrescDim], False)
+      (LT, EQ) -> ([EndCresc], True)
+      (EQ, LT) -> ([BeginCresc], False {-True-})
+      (GT, GT) -> ([NoCrescDim], False)
+      (GT, EQ) -> ([EndDim], True)
+      (EQ, GT) -> ([BeginDim], False {-True-})
+      (EQ, EQ) -> ([], False)
+      (LT, GT) -> ([EndCresc, BeginDim], True)
+      (GT, LT) -> ([EndDim, BeginCresc], True)
+    (Just x, y, Nothing) -> case x `compare` y of
+      LT -> ([EndCresc], True)
+      EQ -> ([], False)
+      GT -> ([EndDim], True)
 
 removeCloseDynMarks :: forall s a. (HasPhrases' s a, HasDynamics' a, GetDynamic a ~ DynamicNotation) => s -> s
 removeCloseDynMarks = mapPhrasesWithPrevAndCurrentOnset f

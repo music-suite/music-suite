@@ -60,13 +60,13 @@ import Music.Score.Articulation (ArticulationT (..))
 import Music.Score.Color (ColorT, runColorT)
 import qualified Music.Score.Dynamics
 import Music.Score.Dynamics (DynamicT (..))
-import qualified Music.Score.Export.ArticulationNotation
-import Music.Score.Export.ArticulationNotation (marks, slurs)
-import qualified Music.Score.Export.ArticulationNotation as AN
-import Music.Score.Export.DynamicNotation (crescDim, dynamicLevel)
-import qualified Music.Score.Export.DynamicNotation
-import qualified Music.Score.Export.DynamicNotation as DN
-import qualified Music.Score.Export.TechniqueNotation as TN
+import qualified Music.Notation.Standard.Articulation
+import qualified Music.Notation.Standard.Articulation as AN
+import qualified Music.Notation.Standard.Dynamic
+import qualified Music.Notation.Standard.Dynamic as DN
+import qualified Music.Notation.Standard.Technique as TN
+import Music.Notation.Standard.Articulation (marks, slurs)
+import Music.Notation.Standard.Dynamic (crescDim, dynamicLevel)
 import Music.Score.Harmonics (HarmonicT, runHarmonicT)
 import Data.Semigroup
 import qualified Music.Score.Internal.Export

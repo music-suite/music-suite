@@ -46,9 +46,9 @@ module Music.Score.Dynamics
   )
 where
 
-import BasePrelude hiding ((<>), Dynamic, first, second)
+import BasePrelude hiding (Dynamic, first, second, (<>))
 import Control.Comonad
-import Control.Lens hiding ((&), Level, transform)
+import Control.Lens hiding (Level, transform, (&))
 import Data.AffineSpace
 import Data.AffineSpace.Point (relative)
 import Data.Functor.Context
@@ -57,9 +57,9 @@ import Data.Kind
 import qualified Data.List as List
 import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
+import Music.Dynamics.Common (Dynamics)
 import Music.Dynamics.Literal
 import Music.Pitch.Literal
-import Music.Dynamics.Common (Dynamics)
 import Music.Score.Harmonics
 import Music.Score.Internal.Util (through)
 import Music.Score.Part
@@ -67,14 +67,14 @@ import Music.Score.Phrases
 import Music.Score.Slide
 import Music.Score.Text
 import Music.Score.Ties
-import Music.Time.Internal.Track
-import Music.Time.Internal.Placed
-import Music.Time.Position
-import Music.Time.Behavior
 import Music.Time.Aligned
+import Music.Time.Behavior
 import Music.Time.Event
+import Music.Time.Internal.Placed
+import Music.Time.Internal.Track
 import Music.Time.Internal.Transform
 import Music.Time.Note
+import Music.Time.Position
 import Music.Time.Score
 import Music.Time.Voice hiding (map, traverse)
 
@@ -105,7 +105,8 @@ type DynamicLensLaws s t = DynamicLensLaws' s t (GetDynamic s) (GetDynamic t)
 class
   ( DynamicLensLaws s t
   ) =>
-  HasDynamics s t where
+  HasDynamics s t
+  where
   -- | Access all dynamics.
   dynamics :: Traversal s t (GetDynamic s) (GetDynamic t)
 
@@ -290,7 +291,6 @@ instance (a ~ GetDynamic a, SetDynamic Dynamics a ~ Dynamics) => HasDynamic Dyna
 instance (a ~ GetDynamic a, SetDynamic Dynamics a ~ Dynamics) => HasDynamics Dynamics a where
   dynamics = ($)
 
-
 -- |
 -- The 'GetLevel' type represents difference in dynamics.
 type GetLevel a = Diff (GetDynamic a)
@@ -348,7 +348,6 @@ volume a = dynamics *~ a
 --
 -- >>> compressUp mp 2 [ppp,pp,_p,mp,mf,_f,ff::Dynamics]
 -- [ppp,pp,_p,mp,_f,fff,fffff]
---
 compressUp ::
   (Attenuable v d a, Ord v, Num v) =>
   -- | Threshold
@@ -364,7 +363,6 @@ compressUp th r = over dynamics (relative th $ \x -> if x < 0 then x else x ^* r
 --
 -- >>> compressDown mp 2 [ppp,pp,_p,mp,mf,_f,ff,fff::Dynamics]
 -- [pppppp,pppp,pp,mp,mf,_f,ff,fff]
---
 compressDown ::
   (Attenuable l d a, Ord l, Num l) =>
   -- | Threshold
@@ -470,7 +468,6 @@ newtype DynamicT n a = DynamicT {getDynamicT :: (n, a)}
     )
 
 instance (Monoid n, Num a) => Num (DynamicT n a) where
-
   (+) = liftA2 (+)
 
   (*) = liftA2 (*)
@@ -484,13 +481,11 @@ instance (Monoid n, Num a) => Num (DynamicT n a) where
   fromInteger = pure . fromInteger
 
 instance (Monoid n, Fractional a) => Fractional (DynamicT n a) where
-
   recip = fmap recip
 
   fromRational = pure . fromRational
 
 instance (Monoid n, Floating a) => Floating (DynamicT n a) where
-
   pi = pure pi
 
   sqrt = fmap sqrt
@@ -520,19 +515,16 @@ instance (Monoid n, Floating a) => Floating (DynamicT n a) where
   acosh = fmap acos
 
 instance (Monoid n, Enum a) => Enum (DynamicT n a) where
-
   toEnum = pure . toEnum
 
   fromEnum = fromEnum . extract
 
 instance (Monoid n, Bounded a) => Bounded (DynamicT n a) where
-
   minBound = pure minBound
 
   maxBound = pure maxBound
 
 instance Wrapped (DynamicT p a) where
-
   type Unwrapped (DynamicT p a) = (p, a)
 
   _Wrapped' = iso getDynamicT DynamicT
@@ -561,7 +553,6 @@ instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
     where
       (a1, a2) = toTied a
       (d1, d2) = toTied d
-
 
 -- |
 -- View just the dynamices in a voice.

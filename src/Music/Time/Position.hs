@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-unused-imports
+{-# OPTIONS_GHC -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
 -- |
@@ -46,8 +45,7 @@ module Music.Time.Position
 where
 
 import Control.Lens hiding
-  ( (<|),
-    Indexable,
+  ( Indexable,
     Level,
     below,
     index,
@@ -55,6 +53,7 @@ import Control.Lens hiding
     parts,
     reversed,
     transform,
+    (<|),
     (|>),
   )
 import Data.AffineSpace

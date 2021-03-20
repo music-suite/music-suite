@@ -33,7 +33,6 @@ newtype Twain b a = Twain {getTwain :: (b, a)}
   deriving (Show, Functor, Traversable, Foldable, Typeable, Applicative, Monad, Comonad, Semigroup, Monoid)
 
 instance Wrapped (Twain b a) where
-
   type Unwrapped (Twain b a) = (b, a)
 
   _Wrapped' = iso getTwain Twain
@@ -41,7 +40,6 @@ instance Wrapped (Twain b a) where
 instance Rewrapped (Twain c a) (Twain c b)
 
 instance (Monoid b, Num a) => Num (Twain b a) where
-
   (+) = liftA2 (+)
 
   (*) = liftA2 (*)
@@ -55,13 +53,11 @@ instance (Monoid b, Num a) => Num (Twain b a) where
   fromInteger = pure . fromInteger
 
 instance (Monoid b, Fractional a) => Fractional (Twain b a) where
-
   recip = fmap recip
 
   fromRational = pure . fromRational
 
 instance (Monoid b, Floating a) => Floating (Twain b a) where
-
   pi = pure pi
 
   sqrt = fmap sqrt
@@ -91,13 +87,11 @@ instance (Monoid b, Floating a) => Floating (Twain b a) where
   acosh = fmap acos
 
 instance (Monoid b, Enum a) => Enum (Twain b a) where
-
   toEnum = pure . toEnum
 
   fromEnum = fromEnum . extract
 
 instance (Monoid b, Bounded a) => Bounded (Twain b a) where
-
   minBound = pure minBound
 
   maxBound = pure maxBound
@@ -117,7 +111,6 @@ instance Ord a => Ord (Twain b a) where
   Twain (_b, a) <= Twain (_b', a') = a < a'
 
 instance (Monoid b, Real a, Enum a, Integral a) => Integral (Twain b a) where
-
   quot = liftA2 quot
 
   rem = liftA2 rem
@@ -138,7 +131,6 @@ newtype Couple b a = Couple {getCouple :: (b, a)}
   deriving (Show, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad, Semigroup, Monoid)
 
 instance Wrapped (Couple b a) where
-
   type Unwrapped (Couple b a) = (b, a)
 
   _Wrapped' = iso getCouple Couple
@@ -146,7 +138,6 @@ instance Wrapped (Couple b a) where
 instance Rewrapped (Couple c a) (Couple c b)
 
 instance (Monoid b, Num a) => Num (Couple b a) where
-
   (+) = liftA2 (+)
 
   (*) = liftA2 (*)
@@ -160,13 +151,11 @@ instance (Monoid b, Num a) => Num (Couple b a) where
   fromInteger = pure . fromInteger
 
 instance (Monoid b, Fractional a) => Fractional (Couple b a) where
-
   recip = fmap recip
 
   fromRational = pure . fromRational
 
 instance (Monoid b, Floating a) => Floating (Couple b a) where
-
   pi = pure pi
 
   sqrt = fmap sqrt
@@ -196,13 +185,11 @@ instance (Monoid b, Floating a) => Floating (Couple b a) where
   acosh = fmap acos
 
 instance (Monoid b, Enum a) => Enum (Couple b a) where
-
   toEnum = pure . toEnum
 
   fromEnum = fromEnum . extract
 
 instance (Monoid b, Bounded a) => Bounded (Couple b a) where
-
   minBound = pure minBound
 
   maxBound = pure maxBound
@@ -214,7 +201,6 @@ instance (Ord b, Ord a) => Ord (Couple b a) where
   Couple (b, a) <= Couple (b', a') = (b, a) < (b', a')
 
 instance (Monoid b, Ord b, Real a, Enum a, Integral a) => Integral (Couple b a) where
-
   quot = liftA2 quot
 
   rem = liftA2 rem

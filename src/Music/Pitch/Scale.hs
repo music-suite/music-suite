@@ -4,10 +4,8 @@
 {-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 
 -- | Scales and chords.
---
 module Music.Pitch.Scale
-  (
-    -- * Basic types
+  ( -- * Basic types
     Orientation (..),
     Rooting (..),
     ScaleChord (..),
@@ -23,8 +21,10 @@ module Music.Pitch.Scale
     repeatingInterval,
 
     -- * Scales and chords as sets
+
     -- ** Generator
     generator,
+
     -- ** Indexing
     root,
     index,
@@ -35,12 +35,15 @@ module Music.Pitch.Scale
     Mode,
     leadingInterval,
     invertMode,
+
     -- ** Common
+
     -- *** Major-Minor/Common practice
     majorScale,
     pureMinorScale,
     harmonicMinorScale,
     melodicMinorScaleUp,
+
     -- *** Church modes
     aeolian,
     locrian,
@@ -49,6 +52,7 @@ module Music.Pitch.Scale
     phrygian,
     lydian,
     mixolydian,
+
     -- *** Other modes
     majorPentaTonic,
     minorPentaTonic,
@@ -61,7 +65,9 @@ module Music.Pitch.Scale
     -- * Chord types
     ChordType,
     complementInterval,
+
     -- ** Common
+
     -- *** Major-Minor/Common practice
     majorTriad,
     minorTriad,
@@ -75,12 +81,14 @@ module Music.Pitch.Scale
     minorMajorSeventhChord,
     frenchSixthChord,
     germanSixthChord,
+
     -- *** Clusters
     repeating,
     chromaticCluster,
     wholeToneCluster,
     quartal,
     quintal,
+
     -- *** Limited transposition
     firstMode,
     secondMode,
@@ -90,7 +98,6 @@ module Music.Pitch.Scale
     sixthMode,
     seventhMode,
 
-
     -- * Conversions
     chordToScale,
     scaleToChord,
@@ -99,9 +106,6 @@ module Music.Pitch.Scale
     reorient,
     chordToList,
     scaleToList,
-
-
-
 
     -- * Voicing
     Voiced (..),
@@ -147,7 +151,6 @@ data Rooting = NoRoot | Root
 -- * Interval type (usually 'Interval')
 --
 -- You may want work with a more specific type such as 'Scale' or 'Chord'.
---
 data ScaleChord :: Orientation -> Rooting -> Type -> Type -> Type where
   Mode :: NonEmpty v -> ScaleChord a 'NoRoot v p
   ScaleChord ::
@@ -240,7 +243,6 @@ scaleMode f (ScaleChord t xs) = fmap (\xs -> ScaleChord t xs) $ f xs
 -- _P8
 repeatingInterval :: AffinePair v p => Mode v p -> v
 repeatingInterval (Mode xs) = sumV xs
-
 
 -- |
 --
@@ -428,7 +430,6 @@ invertChord n (Mode xs) = Mode (rotate n xs)
 -- TODO semantically suspect!
 chordToList :: AffinePair v p => Chord v p -> [p]
 chordToList (ScaleChord tonic (Mode leaps)) = init $ offsetPoints tonic $ toList leaps
-
 
 majorScale :: Mode Interval Pitch
 majorScale = Mode [_M2, _M2, m2, _M2, _M2, _M2, m2]

@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints
   -fno-warn-orphans #-}
@@ -328,7 +327,6 @@ deriving instance Augmentable a => Augmentable (TextT a)
 -------------------------------------------------------------------------------------
 
 instance Alterable a => Alterable (Score a) where
-
   sharpen = fmap sharpen
 
   flatten = fmap flatten
@@ -344,7 +342,6 @@ deriving instance Alterable a => Alterable (DynamicT n a)
 deriving instance Alterable a => Alterable (ArticulationT n a)
 
 instance Augmentable a => Augmentable (Score a) where
-
   augment = fmap augment
 
   diminish = fmap diminish
@@ -366,7 +363,6 @@ deriving instance Augmentable a => Augmentable (ArticulationT n a)
 -- PartT
 
 instance (Enum v, Eq v, Num a) => Num (PartT v a) where
-
   PartT (v, a) + PartT (_, b) = PartT (v, a + b)
 
   PartT (v, a) * PartT (_, b) = PartT (v, a * b)
@@ -380,13 +376,11 @@ instance (Enum v, Eq v, Num a) => Num (PartT v a) where
   fromInteger a = PartT (toEnum 0, fromInteger a)
 
 instance (Monoid v, Enum a) => Enum (PartT v a) where
-
   toEnum a = PartT (mempty, toEnum a)
 
   fromEnum (PartT (_v, a)) = fromEnum a
 
 instance (Monoid v, Bounded a) => Bounded (PartT v a) where
-
   minBound = PartT (mempty, minBound)
 
   maxBound = PartT (mempty, maxBound)
@@ -425,7 +419,6 @@ type instance SetDynamic g (a, b, c) = g
 -- TODO place for this?
 -- For use with single-note scores etc
 instance Tiable a => Tiable (Score a) where
-
   beginTie = fmap beginTie
 
   endTie = fmap endTie
@@ -442,11 +435,9 @@ instance IsPitch a => IsPitch (Average a) where
 instance IsInterval a => IsInterval (Average a) where
   fromInterval = pure . fromInterval
 
-
 deriving instance Typeable Music.Parts.Part
 
 instance Tiable Music.Pitch.Pitch where
-
   beginTie = id
 
   endTie = id

@@ -1,4 +1,3 @@
-
 module Data.AffineSpace.Point.Offsets
   ( offsetPoints,
     offsetPointsS,
@@ -20,7 +19,6 @@ import Data.VectorSpace
 --
 -- Vectors represent distances between points, for example the
 -- distance between @(0,0)@ and @(0,1)@ is @1@.
---
 type AffinePair v p = (VectorSpace v, AffineSpace p, Diff p ~ v)
 
 -- | Lay out a series of vectors from a given point. Return all intermediate points.

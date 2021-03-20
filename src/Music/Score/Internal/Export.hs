@@ -1,8 +1,7 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -Wwarn #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
-{-# OPTIONS_GHC -Wwarn #-}
 {-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------
@@ -18,8 +17,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 module Music.Score.Internal.Export
-  (
-    extractBars,
+  ( extractBars,
   )
 where
 
@@ -95,9 +93,11 @@ extractBars x = case _era x of
   Nothing -> []
   Just e -> extractBarsInEra e x
 
-extractBarsInEra :: HasMeta a
-                 => Span -> a
-                 -> [(Duration, Maybe TimeSignature, Maybe KeySignature)]
+extractBarsInEra ::
+  HasMeta a =>
+  Span ->
+  a ->
+  [(Duration, Maybe TimeSignature, Maybe KeySignature)]
 extractBarsInEra era x = zip3 dss tss kss
   where
     dss :: [Duration]
@@ -108,10 +108,10 @@ extractBarsInEra era x = zip3 dss tss kss
     -- The time and key signature of each bar
     foo2 :: [(TimeSignature, KeySignature)]
     foo2 =
-      prolongLastBarIfDifferent
-        $ tsPerBar
-        $ fmap (view $ from note)
-        $ view notes foo1
+      prolongLastBarIfDifferent $
+        tsPerBar $
+          fmap (view $ from note) $
+            view notes foo1
     -- Each /combination/ of time signature from 0 througout the duration
     -- of the score
     foo1 :: Voice (TimeSignature, KeySignature)
@@ -121,7 +121,6 @@ extractBarsInEra era x = zip3 dss tss kss
     foo =
       (,) <$> getTimeSignatures defaultTimeSignature x
         <*> getKeySignatures x
-
 
 -- | Extract the time signature meta-track, using the given default.
 getTimeSignatures :: HasMeta a => TimeSignature -> a -> Reactive TimeSignature

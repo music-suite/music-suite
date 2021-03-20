@@ -1,10 +1,10 @@
-{-# OPTIONS_GHC -fno-warn-unused-matches #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -fno-warn-unused-matches #-}
 
 -------------------------------------------------------------------------------------
 
@@ -52,8 +52,8 @@ module Data.Music.Lilypond
     -- ** Pitch
     Pitch (..),
     PitchName (..),
-    Accidental ,
-    Octaves ,
+    Accidental,
+    Octaves,
 
     -- * Constructing Lilypond expresions
 
@@ -265,7 +265,6 @@ foldMusic' f g h = go
     go (Context s v m) = Context s v (h m)
 
 instance Pretty Music where
-
   pretty (Rest d p) = "r" <> pretty d <> prettyList p
   pretty (Note n d p) = pretty n <> pretty d <> prettyList p
   pretty (Chord ns d p) =
@@ -322,7 +321,6 @@ instance IsPitch Music where
   fromPitch = (\p -> Note p (Just (1 / 4)) []) . fromPitch
 
 instance AdditiveGroup Music where
-
   zeroV = Rest (Just $ 1 / 4) []
 
   a ^+^ b = Sequential [a, b]
@@ -330,7 +328,6 @@ instance AdditiveGroup Music where
   negateV = error "No Data.Music.Lilypond.Music.negateV"
 
 instance VectorSpace Music where
-
   type Scalar Music = Duration
 
   a *^ (Rest (Just d) p) = Rest (Just $ a * d) p
@@ -344,7 +341,6 @@ data Note
   deriving (Eq, Show)
 
 instance Pretty Note where
-
   pretty (NotePitch p Nothing) = pretty p
   pretty (NotePitch p _) = notImpl "Non-standard pitch"
   pretty (DrumNotePitch _) = notImpl "Non-standard pitch"
@@ -415,7 +411,6 @@ data PostEvent
   deriving (Eq, Show)
 
 instance Pretty PostEvent where
-
   pretty (Articulation d a) = pretty d <> pretty a
   pretty (Dynamics d a) = pretty d <> pretty a
   pretty Tie = "~"
@@ -539,7 +534,6 @@ data Articulation
   deriving (Eq, Show)
 
 instance Pretty Articulation where
-
   -- pretty Accent             = "\\accent"
   -- pretty Marcato            = "\\marcato"
   -- pretty Staccatissimo      = "\\staccatissimo"

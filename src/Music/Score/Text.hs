@@ -44,9 +44,7 @@ import Music.Time.Voice
 --
 --    @'addText' (m <> n) x = 'addText' m ('addText' n x)@
 class HasText a where
-
   addText :: [String] -> a -> a
-
   default addText :: forall f b. (a ~ f b, Functor f, HasText b) => [String] -> a -> a
   addText s = fmap (addText s)
 
@@ -82,7 +80,6 @@ instance HasText a => HasText (Voice a)
 instance HasText a => HasText (Score a)
 
 instance Wrapped (TextT a) where
-
   type Unwrapped (TextT a) = Couple [String] a
 
   _Wrapped' = iso getTextT TextT

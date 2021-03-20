@@ -33,7 +33,6 @@ import Music.Time.Score
 import Music.Time.Voice
 
 class HasSlide a where
-
   setBeginGliss :: Bool -> a -> a
 
   setBeginSlide :: Bool -> a -> a
@@ -77,7 +76,6 @@ runSlideT :: SlideT a -> ((), a)
 runSlideT (SlideT (Couple (_, x))) = ((), x)
 
 instance Wrapped (SlideT a) where
-
   type Unwrapped (SlideT a) = Couple ((Any, Any), (Any, Any)) a
 
   _Wrapped' = iso getSlideT SlideT
@@ -91,7 +89,6 @@ _eg = (_Wrapped' . _Wrapped') . _1 . _1 . _1
 _es = (_Wrapped' . _Wrapped') . _1 . _1 . _2
 
 instance HasSlide (SlideT a) where
-
   setBeginGliss x = _bg .~ Any x
 
   setBeginSlide x = _bs .~ Any x

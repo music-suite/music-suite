@@ -1,4 +1,3 @@
-
 -------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------
@@ -11,7 +10,7 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
-module Music.Score.Export.ArticulationNotation
+module Music.Notation.Standard.Articulation
   ( Slur (..),
     Mark (..),
     ArticulationNotation (..),
@@ -46,7 +45,6 @@ data Mark
   deriving (Eq, Ord, Show)
 
 instance Monoid Slur where
-
   mempty = NoSlur
 
   mappend = (<>)
@@ -56,7 +54,6 @@ instance Semigroup Slur where
   a <> _ = a
 
 instance Monoid Mark where
-
   mempty = NoMark
 
   mappend = (<>)
@@ -65,12 +62,10 @@ instance Semigroup Mark where
   NoMark <> a = a
   a <> _ = a
 
-newtype ArticulationNotation
-  = ArticulationNotation {getArticulationNotation :: ([Slur], [Mark])}
+newtype ArticulationNotation = ArticulationNotation {getArticulationNotation :: ([Slur], [Mark])}
   deriving (Eq, Ord, Show)
 
 instance Wrapped ArticulationNotation where
-
   type Unwrapped ArticulationNotation = ([Slur], [Mark])
 
   _Wrapped' = iso getArticulationNotation ArticulationNotation
@@ -109,7 +104,6 @@ instance Tiable ArticulationNotation where
       splitMark Circle = (Circle, mempty)
 
 instance Monoid ArticulationNotation where
-
   mempty = ArticulationNotation ([], [])
 
   mappend = (<>)
@@ -155,8 +149,8 @@ allMarks y =
     <> getSeparationMarks (realToFrac $ y ^. separation)
     <> getAccentMarks (realToFrac $ y ^. accentuation)
 
-notateArticulation
-  :: (Articulated a, Real (Separation a), Real (Accentuation a)) => Ctxt a -> ArticulationNotation
+notateArticulation ::
+  (Articulated a, Real (Separation a), Real (Accentuation a)) => Ctxt a -> ArticulationNotation
 notateArticulation (getCtxt -> x) = go x
   where
     go (Nothing, y, Nothing) = ArticulationNotation ([], allMarks y)

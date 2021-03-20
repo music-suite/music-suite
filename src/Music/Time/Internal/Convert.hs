@@ -4,10 +4,8 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
-  -fno-warn-unused-imports
-  #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing
+  -fno-warn-unused-imports #-}
 {-# OPTIONS_HADDOCK hide #-}
 
 -------------------------------------------------------------------------------------
@@ -44,10 +42,10 @@ import Data.Semigroup
 import Data.String
 import Data.Traversable
 import Data.VectorSpace
+import Music.Time.Internal.Placed
+import Music.Time.Internal.Track
 import Music.Time.Note
 import Music.Time.Reactive
-import Music.Time.Internal.Track
-import Music.Time.Internal.Placed
 import Music.Time.Types
 import Music.Time.Voice
 

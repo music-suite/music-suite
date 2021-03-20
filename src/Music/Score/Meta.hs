@@ -40,11 +40,11 @@ withMeta f x =
    in case splitReactive r of
         Left a -> f a x
         Right ((a, t), bs, (u, c)) ->
-          (meta .~) m
-            $ mapBefore t (f a)
-            $ (composed $ fmap (\(view (from event) -> (s, a)) -> mapDuring s $ f a) $ bs)
-            $ mapAfter u (f c)
-            $ x
+          (meta .~) m $
+            mapBefore t (f a) $
+              (composed $ fmap (\(view (from event) -> (s, a)) -> mapDuring s $ f a) $ bs) $
+                mapAfter u (f c) $
+                  x
 
 withTime :: Score a -> Score (Time, a)
 withTime = mapWithSpan (\s x -> (s ^. onset, x))

@@ -1,6 +1,5 @@
 {-# LANGUAGE StandaloneDeriving #-}
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -35,7 +34,6 @@ import Data.Ratio
 --
 --    @sharpen . flatten = id = flatten . sharpen@
 class Alterable a where
-
   -- |
   -- Increase the given pitch by one.
   sharpen :: a -> a
@@ -45,43 +43,36 @@ class Alterable a where
   flatten :: a -> a
 
 instance Alterable a => Alterable (b -> a) where
-
   sharpen = fmap sharpen
 
   flatten = fmap flatten
 
 instance Alterable a => Alterable (Maybe a) where
-
   sharpen = fmap sharpen
 
   flatten = fmap flatten
 
 instance Alterable Double where
-
   sharpen = (+ 1)
 
   flatten = subtract 1
 
 instance Alterable Integer where
-
   sharpen = (+ 1)
 
   flatten = subtract 1
 
 instance Integral a => Alterable (Ratio a) where
-
   sharpen = (+ 1)
 
   flatten = subtract 1
 
 instance Alterable a => Alterable [a] where
-
   sharpen = fmap sharpen
 
   flatten = fmap flatten
 
 instance Alterable a => Alterable (b, a) where
-
   sharpen = fmap sharpen
 
   flatten = fmap flatten

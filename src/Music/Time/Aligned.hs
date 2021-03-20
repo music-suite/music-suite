@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-unused-imports
+{-# OPTIONS_GHC -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
 module Music.Time.Aligned
@@ -151,10 +150,10 @@ renderAlignedDuration = renderAligned durationToSpanInEra
 -- >>> voiceAtDuration (stretch 2 c <> stretch 3 d) (-1)
 -- Nothing
 --
--- >>> voiceAtDuration (stretch 2 c <> stretch 3 d)) 0
+-- >>> voiceAtDuration @Music.Pitch.Common.Pitch (stretch 2 c <> stretch 3 d) 0
 -- Just c
 --
--- >>> voiceAtDuration (stretch 2 c <> stretch 3 d) 2
+-- >>> voiceAtDuration @Music.Pitch.Common.Pitch (stretch 2 c <> stretch 3 d) 2
 -- Just d
 --
 -- >>> voiceAtDuration (stretch 2 c <> stretch 3 d) 6

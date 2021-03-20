@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -45,9 +44,9 @@ where
 import Control.Applicative
 import Data.Fixed
 import Data.Functor.Couple
+import Data.Monoid.Average
 import Data.Ratio
 import Data.Semigroup
-import Data.Monoid.Average
 
 -- |
 -- Dynamics literal.
@@ -97,33 +96,17 @@ instance IsDynamics a => IsDynamics (Average a) where
   fromDynamics = pure . fromDynamics
 
 pppppp, ppppp, pppp, ppp, pp, _p, mp, mf, _f, ff, fff, ffff, fffff, ffffff :: IsDynamics a => a
-
-
 pppppp = fromDynamics $ DynamicsL (-6.5, Nothing)
-
 ppppp = fromDynamics $ DynamicsL (-5.5, Nothing)
-
 pppp = fromDynamics $ DynamicsL (-4.5, Nothing)
-
 ppp = fromDynamics $ DynamicsL (-3.5, Nothing)
-
 pp = fromDynamics $ DynamicsL (-2.5, Nothing)
-
 _p = fromDynamics $ DynamicsL (-1.5, Nothing)
-
 mp = fromDynamics $ DynamicsL (-0.5, Nothing)
-
 mf = fromDynamics $ DynamicsL (0.5, Nothing)
-
 _f = fromDynamics $ DynamicsL (1.5, Nothing)
-
 ff = fromDynamics $ DynamicsL (2.5, Nothing)
-
 fff = fromDynamics $ DynamicsL (3.5, Nothing)
-
 ffff = fromDynamics $ DynamicsL (4.5, Nothing)
-
 fffff = fromDynamics $ DynamicsL (5.5, Nothing)
-
 ffffff = fromDynamics $ DynamicsL (6.5, Nothing)
-

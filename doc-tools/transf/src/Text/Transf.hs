@@ -184,7 +184,6 @@ instance Semigroup Transform where
   a <> b = CompTrans [a, b]
 
 instance Monoid Transform where
-
   mempty = CompTrans []
 
   mappend = (<>)
@@ -290,10 +289,11 @@ eval = evalWith ["Prelude", "Music.Prelude.Basic"]
 --   Errors can be caught using 'catchError'.
 evalWith :: Typeable a => [String] -> String -> Context a
 evalWith imps str = do
-  res <- liftIO $ runInterpreter $ do
-    set [languageExtensions := [OverloadedStrings, NoMonomorphismRestriction]]
-    setImports imps
-    interpret str infer
+  res <- liftIO $
+    runInterpreter $ do
+      set [languageExtensions := [OverloadedStrings, NoMonomorphismRestriction]]
+      setImports imps
+      interpret str infer
   case res of
     Left e -> throwError $ "Could not evaluate: " ++ str ++ "\n" ++ showIE e
     Right a -> return a
@@ -344,21 +344,21 @@ evalT = transform "eval" $ \input -> do
   inform err
   return out
 
-data MusicOpts
-  = MusicOpts
-      { format :: String,
-        resolution :: Int,
-        resize :: Int,
-        prelude :: String
-      }
+data MusicOpts = MusicOpts
+  { format :: String,
+    resolution :: Int,
+    resize :: Int,
+    prelude :: String
+  }
 
 instance Default MusicOpts where
-  def = MusicOpts
-    { format = "png",
-      resolution = 200,
-      resize = 45,
-      prelude = "basic"
-    }
+  def =
+    MusicOpts
+      { format = "png",
+        resolution = 200,
+        resize = 45,
+        prelude = "basic"
+      }
 
 -- |
 -- This named transformation evaluates its input as a music expression.
@@ -435,7 +435,6 @@ musicT opts = transform "music" $ \input -> do
   return $ "![](" ++ name ++ ending ++ "." ++ format opts ++ ")"
 
 --  -resize 30%
-
 
 -- |
 -- This named transformation passes everything through and retains the source.

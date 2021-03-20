@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC
-  -fno-warn-name-shadowing
+{-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
   -fno-warn-redundant-constraints #-}
 
@@ -35,7 +34,7 @@ module Music.Score.Meta.Time
   )
 where
 
-import Control.Lens ((^.), view)
+import Control.Lens (view, (^.))
 import Control.Monad.Plus
 import Data.Bifunctor
 import Data.Bits ((.&.))
@@ -89,7 +88,6 @@ liftRational f = fromRational . f . toRational
 liftRational2 f x y = fromRational $ toRational x `f` toRational y
 
 instance Num TimeSignature where
-
   x + y
     | x `haveSameDenominator` y = concatFrac x y
     | otherwise = liftRational2 (+) x y
@@ -110,7 +108,6 @@ instance Num TimeSignature where
   fromInteger x = TimeSignature ([x], 1)
 
 instance Fractional TimeSignature where
-
   fromRational (unRatio -> (m, n)) = TimeSignature ([m], n)
 
   x / y
@@ -210,13 +207,8 @@ optionLast :: a -> Option (Last a)
 optionLast = Option . Just . Last
 
 mapNums :: ([Integer] -> [Integer]) -> TimeSignature -> TimeSignature
-
 mapDenom :: (Integer -> Integer) -> TimeSignature -> TimeSignature
-
 isSimple :: TimeSignature -> Bool
-
 getSimple :: TimeSignature -> Integer
-
 liftRational :: (Fractional c, Real a) => (Rational -> Rational) -> a -> c
-
 liftRational2 :: (Fractional a, Real a1, Real a2) => (Rational -> Rational -> Rational) -> a1 -> a2 -> a

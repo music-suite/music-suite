@@ -1,8 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
-{-# OPTIONS_GHC
-  -fno-warn-unused-imports
-  #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 module Music.Time.Juxtapose
   ( module Music.Time.Split,
@@ -130,7 +128,6 @@ times n = pseq . replicate n
 -- @
 group :: (Monoid a, Transformable a, HasPosition a) => Int -> a -> a
 group n x = times n x |/ fromIntegral n
-
 
 -- | Monoid under sequential composition.
 --

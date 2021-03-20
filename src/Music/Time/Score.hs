@@ -3,10 +3,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE QuantifiedConstraints #-}
-{-# OPTIONS_GHC
-  -fno-warn-redundant-constraints
-  -fno-warn-name-shadowing
-  #-}
+{-# OPTIONS_GHC -fno-warn-redundant-constraints
+  -fno-warn-name-shadowing #-}
 
 module Music.Time.Score
   ( -- * Score type
@@ -28,6 +26,7 @@ module Music.Time.Score
     mapFilterWithTime,
 
     -- * Simultaneous
+
     -- TODO check for overlapping values etc
     -- simult,
     hasOverlappingEvents,
@@ -49,8 +48,7 @@ where
 import Control.Applicative
 import Control.Comonad
 import Control.Lens hiding
-  ( (<|),
-    Indexable,
+  ( Indexable,
     Level,
     below,
     index,
@@ -58,6 +56,7 @@ import Control.Lens hiding
     parts,
     reversed,
     transform,
+    (<|),
     (|>),
   )
 import Control.Monad
@@ -122,7 +121,6 @@ newtype Score a = Score {getScore :: (Meta, Score' a)}
 
 -- | Up to meta-data.
 instance Applicative Score where
-
   pure = Score . pure . pure
 
   (<*>) = ap
@@ -132,14 +130,12 @@ instance Monad Score where
   Score (meta, xs) >>= f = Score (meta, xs >>= snd . getScore . f)
 
 instance Alternative Score where
-
   empty = mempty
 
   (<|>) = mappend
 
 -- | Up to meta-data.
 instance MonadPlus Score where
-
   mzero = mempty
 
   mplus = mappend
@@ -178,7 +174,6 @@ instance IsDynamics a => IsDynamics (Score a) where
   fromDynamics = pure . fromDynamics
 
 instance Num a => Num (Score a) where
-
   fromInteger = return . fromInteger
 
   abs = fmap abs
@@ -196,7 +191,6 @@ instance HasMeta (Score a) where
 
 -- | This instance exists only for the @enumFrom...@ methods.
 instance Enum a => Enum (Score a) where
-
   toEnum = return . toEnum
 
   fromEnum = list 0 (fromEnum . head) . Foldable.toList
@@ -232,13 +226,11 @@ swap :: (a, b) -> (b, a)
 swap (x, y) = (y, x)
 
 instance Alternative Score' where
-
   empty = mempty
 
   (<|>) = mappend
 
 instance MonadPlus Score' where
-
   mzero = mempty
 
   mplus = mappend
