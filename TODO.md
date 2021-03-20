@@ -38,7 +38,7 @@ Consider switching to a decentralized issue tracker such as:
         Nakamura (1987) The communication of dynamics between musicians and listeners through musical performance
     -}
 
-- [ ] Verify that harmonics can be played
+- [ ] Verify that harmonics can be played on the relevant instrument
 
 - [ ] Add snapTo
 
