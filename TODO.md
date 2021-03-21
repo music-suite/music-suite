@@ -10,6 +10,7 @@ Consider switching to a decentralized issue tracker such as:
 - https://github.com/dspinellis/git-issue
 - https://github.com/MichaelMure/git-bug
 
+- [ ] Single, append-only release note document
 
 - [ ] Make defaultMain expose a type-safe CLI (e.g. for integration into build/test/gen
   pipelines).
