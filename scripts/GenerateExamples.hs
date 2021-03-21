@@ -1,3 +1,23 @@
+{-# LANGUAGE OverloadedStrings #-}
+import Data.Text
+import Numeric.Natural
+import qualified Data.Map
+import Data.Map (Map)
+import qualified Data.Hashable
+import Data.Traversable (for)
+import System.Directory (doesFileExist)
+
+
+-- TODO use proper collission-resistant hashing function
+hashVal :: Val -> ValRef
+hashVal = Data.Text.pack . show . Data.Hashable.hash . show
+
+-- TODO use proper collission-resistant hashing function
+hashGraph :: Graph -> GraphRef
+hashGraph = Data.Text.pack . show . Data.Hashable.hash . show
+
+hashOp :: (Text, [ValRef]) -> GraphRef
+hashOp = Data.Text.pack . show . Data.Hashable.hash . show
 
 -- Runs creation for a set of examples. An example is either
 --
@@ -26,7 +46,7 @@
 
 -- In principle:
 --    Generate .ly files for all examples
---    Compare against stored expected results
+--    Compare against putd expected results
 --    If different, generate visual regression test
 --
 -- Issue: Running Lilypond for all these examples is slow. Solution:
@@ -39,58 +59,122 @@
 type GraphRef = Text -- sha256
 type ValRef = Text -- sha256a
 
-data Graph = Lit Text | Op Text [GraphRef]
-data Val = Nat Natural | Text Text -- TODO etc, JSON deduplicated using ValRef
+data Graph = Input Val | Op Text [GraphRef]
+  deriving (Read, Show)
+data Val = Nat Natural | Text Text | Record (Map Text ValRef)
+  deriving (Read, Show)
 
-type MonadX = Monad -- TODO determine primitive effects, some subset of the below:
+-- Laws:
+--    putVal, getVal returns same value
+--    putGraph, getGraph returns same value
+--    putEvalCache, getEvalCache: state laws, fail on conflicting write
+--    putResultCache, getResultCache: state law, fail on conflicting writes
+--    parallelFor: like standard Traversable laws. Do we need this for a parallel implementation?
+class Monad m => MonadBuild m where
+  putVal :: Val -> m ValRef
 
-getGraph :: MonadX m => GraphRef -> m Graph
-getGraph = undefined
+  getVal :: ValRef -> m Val
 
-getEvalCache :: MonadX m => GraphRef -> m (Maybe ValRef)
-getEvalCache = undefined
+  putGraph :: Graph -> m GraphRef
 
-storeEvalCache :: MonadX m => GraphRef -> Val -> m ()
-storeInEvalCache = undefined
+  getGraph :: GraphRef -> m Graph
 
-getResultCache :: MonadX m => (Text, [ValRef]) -> m (Maybe ValRef)
-getResultCache = undefined
+  getEvalCache :: GraphRef -> m (Maybe ValRef)
 
-storeResultCache :: MonadX m => (Text, [ValRef]) -> Val -> m ()
-storeInResultCache = undefined
+  putEvalCache :: GraphRef -> ValRef -> m ()
 
-parallelFor :: MonadX m => [a] -> (a -> m b) -> m [b]
-parallelFor = undefined
+  getResultCache :: (Text, [ValRef]) -> m (Maybe ValRef)
 
-withResultCache :: MonadX m => (Text, [ValRef]) -> m Val -> m Val
-withResultCache opValRefs k =
+  putResultCache :: (Text, [ValRef]) -> ValRef -> m ()
+
+  parallelFor :: [a] -> (a -> m b) -> m [b]
+
+
+prefix = ".graph/"
+storePrefix = prefix ++ "store/"
+evalCachePrefix = prefix ++ "eval/"
+resultCachePrefix = prefix ++ "results/"
+
+-- | For testing purposes only
+instance MonadBuild IO where
+  putVal v = do
+    let k = hashVal v
+    writeFile (storePrefix ++ Data.Text.unpack k) (show v)
+    pure k
+  getVal r =
+    read <$> readFile (storePrefix ++ Data.Text.unpack r)
+  putGraph v = do
+    let k = hashGraph v
+    writeFile (storePrefix ++ Data.Text.unpack k) (show v)
+    pure k
+  getGraph r =
+    read <$> readFile (storePrefix ++ Data.Text.unpack r)
+  putEvalCache k v = do
+    writeFile (storePrefix ++ Data.Text.unpack k) (show v)
+  getEvalCache r = do
+    let path = evalCachePrefix ++ Data.Text.unpack r
+    there <- doesFileExist path
+    if there then
+        Just . read <$> readFile path
+      else
+        pure Nothing
+  putResultCache k v = do
+    writeFile (storePrefix ++ Data.Text.unpack (hashOp k)) (show v)
+  getResultCache r = do
+    let path = resultCachePrefix ++ Data.Text.unpack (hashOp r)
+    there <- doesFileExist path
+    if there then
+        Just . read <$> readFile (resultCachePrefix ++ Data.Text.unpack (hashOp r))
+      else
+        pure Nothing
+  parallelFor = flip traverse -- TODO use parallel version?
+
+
+withResultCache :: MonadBuild m => (Text, [ValRef]) -> m ValRef -> m ValRef
+withResultCache opValRefs k = do
   res <- getResultCache opValRefs
   case res of
     Just x -> pure x
     Nothing -> do
       res <- k
-      storeInResultCache graphRef res
+      putResultCache opValRefs res
+      pure res
 
-withEvalCache :: MonadX m => GraphRef -> m Val -> m Val
+withEvalCache :: MonadBuild m => GraphRef -> m ValRef -> m ValRef
 withEvalCache graphRef k = do
   res <- getEvalCache graphRef
   case res of
     Just x -> pure x
     Nothing -> do
       res <- k
-      storeInEvalCache graphRef res
+      putEvalCache graphRef res
+      pure res
 
-eval :: MonadX m => GraphRef -> m Val
-eval graphRef = withEvalCache graphRef $ do
+eval :: MonadBuild m => (Text -> [ValRef] -> m ValRef) -> GraphRef -> m ValRef
+eval step graphRef = withEvalCache graphRef $ do
   graph <- getGraph graphRef
   case graph of
-    Literal n -> LitResult n
+    Input v -> putVal v
     Op opName inputGraphs -> do
       -- TODO limit parallelism, e.g. because operation requires
       -- some resource such as a CPU
-      inputValRefs <- parallelFor inputGraphs eval
-      withResultCache (opName, inputValRefs) $ do
-        error "TODO perform computation based on opName"
+      inputValRefs <- parallelFor inputGraphs (eval step)
+      withResultCache (opName, inputValRefs) $ step opName inputValRefs
+
+arith :: MonadBuild m => Text -> [ValRef] -> m ValRef
+arith "+" xs = do
+  ys <- for xs $ \x -> do
+    v <- getVal x
+    case v of
+      Nat x -> pure x
+      _ -> error "TODO handle non-nat"
+  putVal $ Nat $ sum ys
+
+test :: IO ()
+test = do
+  g <- putGraph $ Input $ Nat 23
+  print g
+  print =<< getVal =<< eval arith g
 
 -- TODO make use of the above for basic "cached testing" infra
 -- Add ops for
@@ -100,6 +184,6 @@ eval graphRef = withEvalCache graphRef $ do
 --      OK'd it.
 --    * Gallery - taking SVGs and producing HTML gallery
 -- External process invocation:
---    * COMPLETELY sandboxed, files are copied in/out of store as given
+--    * COMPLETELY sandboxed, files are copied in/out of put as given
 --    * CHECKS for any input that might matter but can't be sandboxed (e.g. version)
 
