@@ -12,7 +12,6 @@ import Data.Maybe
 import qualified Data.Monoid
 import Music.Prelude
 import qualified Music.Score.Pitch
-import qualified Music.Score.Pitch as S
 
 main = defaultMain $ inspectableToMusic music
 
@@ -31,7 +30,7 @@ not in some non-decaying instrument (e.g. not metal percussion) it might be usef
 durations explicitly.
 -}
 
-subj :: (HasPitches' a, IsPitch a, S.GetPitch a ~ Pitch) => Voice a
+subj :: (HasPitches' a, IsPitch a, GetPitch a ~ Pitch) => Voice a
 subj =
   compress 16
     $ mconcat $ take 6
@@ -43,7 +42,7 @@ subj =
 
 --  $ replicate 15 [c, g, g, b_, e, d]
 
-subj2 :: (HasPitches' a, IsPitch a, S.GetPitch a ~ Pitch) => Voice a
+subj2 :: (HasPitches' a, IsPitch a, GetPitch a ~ Pitch) => Voice a
 subj2 =
   compress 16
     $ mconcat $ take 6 -- (!! 3)

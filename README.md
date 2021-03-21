@@ -75,11 +75,13 @@ To run doctests for individual files/directories:
 
 ### Development shell
 
+Without preloading all modules (use the `:load` command to load modules instead).
+
 ```
 # cabal build music-suite && cabal exec --package music-suite ghci
 ```
 
-or
+Preloading all modules:
 
 ```
 # cabal repl
@@ -91,47 +93,47 @@ or
 
 TODO
 
-The output appears in `docs/build`. You can point a HTTP server to this directory.
+  The output appears in `docs/build`. You can point a HTTP server to this directory.
 
 #### API docs
 
-```
-m> cabal haddock
-```
+  ```
+  m> cabal haddock
+  ```
 
 
 ### Run example
 
-```
-cabal exec runhaskell -- examples/chopin.hs -f ly -o t.ly
-```
+  ```
+  cabal exec runhaskell -- examples/chopin.hs -f ly -o t.ly
+  ```
 
 
 
 ## How to upgrade the compiler/Nixpkgs
 
-- Update the commit/URL and hash in `default.nix`
-  - Use `$ nix-prefetch-url --unpack <url>` to obtain the hash (and verify)
-- Enter new Nix shell (may take a while)
-- Comment out `reject-unconstrained-dependencies` in Cabal config
-- Update `index-state` in Cabal config to a recent time
-- Run `cabal freeze`
-- Run `cabal test` to check that compiling/testing works (and fix errors)
-- Restore `reject-unconstrained-dependencies`
-- Commit changes to Nix and Cabal files
+  - Update the commit/URL and hash in `default.nix`
+    - Use `$ nix-prefetch-url --unpack <url>` to obtain the hash (and verify)
+  - Enter new Nix shell (may take a while)
+  - Comment out `reject-unconstrained-dependencies` in Cabal config
+  - Update `index-state` in Cabal config to a recent time
+  - Run `cabal freeze`
+  - Run `cabal test` to check that compiling/testing works (and fix errors)
+  - Restore `reject-unconstrained-dependencies`
+  - Commit changes to Nix and Cabal files
 
 
 # Developer notes
 
 ## Module hierarchy
 
-- The high-level DSL:
-  - `Music.Time`: high-level DSL for time and rhythm
-  - `Music.Pitch`: high-level DSL for pitch (common, scientific)
-  - `Music.Dynamics`: high-level DSL for dynamics
-  - `Music.Articulation`: high-level DSL for musical articulation
-  - `Music.Part`: high-level DSL for instruments and parts
-  - `Music.Prelude`: prelude/standard library for the Music Suite DSL
+  - The high-level DSL:
+    - `Music.Time`: high-level DSL for time and rhythm
+    - `Music.Pitch`: high-level DSL for pitch (common, scientific)
+    - `Music.Dynamics`: high-level DSL for dynamics
+    - `Music.Articulation`: high-level DSL for musical articulation
+    - `Music.Part`: high-level DSL for instruments and parts
+    - `Music.Prelude`: prelude/standard library for the Music Suite DSL
 
 - The notation DSL:
   - `Music.Notation.Standard`: DSL for representing Common/Western music notation

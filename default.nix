@@ -66,6 +66,7 @@ pkgs.stdenv.mkDerivation {
         # cabal exec doctester --package music-suite -- src/Music/Prelude && \
         # cabal exec doctester --package music-suite -- src/Music/Score && \
         cabal exec doctester --package music-suite -- src/Music/Score/Dynamics && \
+        cabal exec doctester --package music-suite -- src/Music/Score/Internal && \
         cabal exec doctester --package music-suite -- src/Music/Score/Part && \
         # TODO: strange import error:
         #  cabal exec doctester --package music-suite -- src/Music/Score/Export && \
@@ -82,6 +83,9 @@ pkgs.stdenv.mkDerivation {
     }
     function ci {
             tests && cabal build && cabal haddock
+    }
+    function build-docs {
+            pandoc --to=rst docs/src/User-Guide.md >docs-sphinx/docs/source/index.rst
     }
     export LOCALE_ARCHIVE="${pkgs.glibcLocales}/lib/locale/locale-archive"
     export LANG=en_US.UTF-8

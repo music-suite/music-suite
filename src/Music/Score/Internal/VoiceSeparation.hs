@@ -76,18 +76,20 @@ Possibly good strategy
 
 -}
 
-{-
-Partition a set such that each subset matches the predicate.
-
-Simplistic implementation:
-  - Pick elements from unchosen elements such that the predicate matches
-  - If we can not pick anymore elements, proceed to next subset
-
-Fast, but unweighted (in terms of voice sep: may generate strange partitions).
-Essentially:
-  Remove elements from a set S until it passes the predicate, this becomes a subset.
-  Repeat until no elements left.
--}
+-- |
+-- Partition a set such that each subset matches the predicate.
+--
+-- Simplistic implementation:
+--   - Pick elements from unchosen elements such that the predicate matches
+--   - If we can not pick anymore elements, proceed to next subset
+--
+-- Fast, but unweighted (in terms of voice sep: may generate strange partitions).
+-- Essentially:
+--
+--   * Remove elements from a set S until it passes the predicate, this becomes a subset.
+--
+--   * Repeat until no elements left.
+--
 partitionSimplistic :: ([a] -> Bool) -> [a] -> [[a]]
 partitionSimplistic p = recur []
   where

@@ -3985,7 +3985,7 @@ seq [seq [c,d,e,f,g] |* (4/5), c, d] |* (2/(3*4))
 -->
 
 
-# Wall of Shame
+# Visual issue tracker
 
 This is a list "bad rendering" examples. It's not really documentation so we should probably move it somewher else. For now they are listed here, as the documentation generator give us a reasonably good "visual issue tracker".
 
