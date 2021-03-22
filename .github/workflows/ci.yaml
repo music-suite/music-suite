@@ -9,7 +9,7 @@ on:
 
 jobs:
   music-suite-ci:
-    name: Music Suite CI checks
+    name: Build & Test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -17,4 +17,16 @@ jobs:
     - run: |
         nix-shell --pure --command "cabal update && ci"
         # nix-build ci.nix --no-out-link --argstr command "CMD"
+      shell: bash
+
+  music-suite-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v12
+    - run: |
+        nix-shell --pure --command "cabal update && build-docs"
+        cd docs-sphinx
+        nix-shell --pure --command "cd docs && make html"
       shell: bash

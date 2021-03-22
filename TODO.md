@@ -10,6 +10,12 @@ Consider switching to a decentralized issue tracker such as:
 - https://github.com/dspinellis/git-issue
 - https://github.com/MichaelMure/git-bug
 
+- [ ] Single, append-only release note document
+
+- [ ] Make defaultMain expose a type-safe CLI (e.g. for integration into build/test/gen
+  pipelines).
+
+- [ ] Remove Makefiles (none of them run in CI, mostly dead code)
 
 - [ ] Get rid of remaining orphans
 
@@ -17,6 +23,22 @@ Consider switching to a decentralized issue tracker such as:
   Could have massive performance impact, given that this is used for dynamics/articulation.
 
 ---
+
+- [ ] Visual regression tests. Design:
+    - We'll refer to as examples `union` test/music (extracted from docs) as Examples
+
+    - All Examples must be expressions compatible with `defaultMain`
+
+    - Check all Examples generate something with all backends (or randomize)
+
+    - For each backend B in testbackends
+      - Render a set of `Music` expressions using some backend B
+      - Check if output is identical to the "committed" version
+        - If the source has changed, allow user to "commit" without preview
+        - Otherwise, make the user check preview and commit if they are unchanged
+
+    - Generate nice docs + Example gallery + "Visual issue tracker"
+
 
 - [ ] Use dynamics map
     {-
@@ -38,7 +60,7 @@ Consider switching to a decentralized issue tracker such as:
         Nakamura (1987) The communication of dynamics between musicians and listeners through musical performance
     -}
 
-- [ ] Verify that harmonics can be played
+- [ ] Verify that harmonics can be played on the relevant instrument
 
 - [ ] Add snapTo
 
@@ -437,16 +459,8 @@ From music21:
   - [X] Run locally (README)
     - [X] Tool works
     - [ ] Fix hack for default-extensions (see Doctester.hs)
-    - [ ] Make this work for all modules
-      - Done:
-        - src/Control
-        - src/Data
-        - src/Music/Pitch
-        - src/Music/Part
-        - src/Music/Dynamics
-        - src/Music/Articulation
-        - src/Music/Score/Export
-    - [ ] Try property-based testing (see doctest/README)
+    - [ ] Make this work for all modules. See what modules are not run in the CI for an up-to-date reference.
+    - [X] Try property-based testing (see doctest/README)
   - [X] Run in CI
 
 - [ ] Assure a script to run *all* builds, tests and doc gens *from scratch*
@@ -1078,7 +1092,7 @@ From music21:
       - No monad instance
   - Idea 4: Disallow empty scores
 
-
+- [ ] partitionSimplistic is dead code, use or remove
 
 - [X] Proper scale/chord type supporting all common use-cases
   - [X] Represent functions/modes and chords/scales
@@ -1161,6 +1175,7 @@ From music21:
   - musescore.com
   - https://web.mit.edu/music21/doc/about/referenceCorpus.html
   - http://kern.ccarh.org/
+  - https://abcnotation.com/search
   - Nice viwer: https://verovio.humdrum.org/
 
 - [X] $reactiveSemantics
