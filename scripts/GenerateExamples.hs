@@ -174,8 +174,8 @@ arith "+" xs = do
       _ -> error "TODO handle non-nat"
   putVal $ Nat $ sum ys
 
-musicExamples :: (MonadBuild m, m ~ IO) -> Text -> [ValRef] -> m ValRef
-musicExamples op = case op of
+musicExamples :: (MonadBuild m, m ~ IO) => Text -> [ValRef] -> m ValRef
+musicExamples op xs = case op of
   "compile" -> undefined
 --    * `cabal exec` - creating LY file, taking and verifying music-suite version (plan.json+cabal sdist as per aboce), and taking source file example/Foo.hs
   "lilypond" -> undefined
