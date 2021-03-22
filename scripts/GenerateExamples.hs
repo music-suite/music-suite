@@ -174,6 +174,18 @@ arith "+" xs = do
       _ -> error "TODO handle non-nat"
   putVal $ Nat $ sum ys
 
+musicExamples :: (MonadBuild m, m ~ IO) -> Text -> [ValRef] -> m ValRef
+musicExamples op = case op of
+  "compile" -> undefined
+--    * `cabal exec` - creating LY file, taking and verifying music-suite version (plan.json+cabal sdist as per aboce), and taking source file example/Foo.hs
+  "lilypond" -> undefined
+--    * `lilypond` - taking .ly file, taking and verifying Ly source, producing SVG
+  "verified" -> undefined
+--    * Verify - taking source file example/Foo.hs and SVG, producing proof that user
+--      OK'd it.
+  "gallery" -> undefined
+--    * Gallery - taking SVGs and producing gallery (SVGs + HTML index)
+
 test :: IO ()
 test = do
   g1 <- putGraph $ Input $ Nat 1
@@ -185,11 +197,6 @@ test = do
 
 -- TODO make use of the above for basic "cached testing" infra
 -- Add ops for
---    * `cabal exec` - creating LY file, taking and verifying music-suite version (plan.json+cabal sdist as per aboce), and taking source file example/Foo.hs
---    * `lilypond` - taking .ly file, taking and verifying Ly source, producing SVG
---    * Verify - taking source file example/Foo.hs and SVG, producing proof that user
---      OK'd it.
---    * Gallery - taking SVGs and producing HTML gallery
 -- External process invocation:
 --    * COMPLETELY sandboxed, files are copied in/out of put as given
 --    * CHECKS for any input that might matter but can't be sandboxed (e.g. version)
