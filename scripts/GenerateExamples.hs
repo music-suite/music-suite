@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies #-}
 import Data.Text
 import Numeric.Natural
 import qualified Data.Map
@@ -110,7 +111,7 @@ instance MonadBuild IO where
   getGraph r =
     read <$> readFile (storePrefix ++ Data.Text.unpack r)
   putEvalCache k v = do
-    writeFile (storePrefix ++ Data.Text.unpack k) (show v)
+    writeFile (evalCachePrefix ++ Data.Text.unpack k) (show v)
   getEvalCache r = do
     let path = evalCachePrefix ++ Data.Text.unpack r
     there <- doesFileExist path
@@ -119,7 +120,7 @@ instance MonadBuild IO where
       else
         pure Nothing
   putResultCache k v = do
-    writeFile (storePrefix ++ Data.Text.unpack (hashOp k)) (show v)
+    writeFile (resultCachePrefix ++ Data.Text.unpack (hashOp k)) (show v)
   getResultCache r = do
     let path = resultCachePrefix ++ Data.Text.unpack (hashOp r)
     there <- doesFileExist path
@@ -129,7 +130,7 @@ instance MonadBuild IO where
         pure Nothing
   parallelFor = flip traverse -- TODO use parallel version?
 
-
+-- TODO show this is what gives "early cutoff"
 withResultCache :: MonadBuild m => (Text, [ValRef]) -> m ValRef -> m ValRef
 withResultCache opValRefs k = do
   res <- getResultCache opValRefs
@@ -140,6 +141,7 @@ withResultCache opValRefs k = do
       putResultCache opValRefs res
       pure res
 
+-- TODO show this is what gives "minimality"
 withEvalCache :: MonadBuild m => GraphRef -> m ValRef -> m ValRef
 withEvalCache graphRef k = do
   res <- getEvalCache graphRef
@@ -150,6 +152,7 @@ withEvalCache graphRef k = do
       putEvalCache graphRef res
       pure res
 
+-- TODO step function should *only* have access to getVal, ensure in types
 eval :: MonadBuild m => (Text -> [ValRef] -> m ValRef) -> GraphRef -> m ValRef
 eval step graphRef = withEvalCache graphRef $ do
   graph <- getGraph graphRef
@@ -161,8 +164,9 @@ eval step graphRef = withEvalCache graphRef $ do
       inputValRefs <- parallelFor inputGraphs (eval step)
       withResultCache (opName, inputValRefs) $ step opName inputValRefs
 
-arith :: MonadBuild m => Text -> [ValRef] -> m ValRef
+arith :: (MonadBuild m, m ~ IO) => Text -> [ValRef] -> m ValRef
 arith "+" xs = do
+  print ("+", xs)
   ys <- for xs $ \x -> do
     v <- getVal x
     case v of
@@ -172,7 +176,10 @@ arith "+" xs = do
 
 test :: IO ()
 test = do
-  g <- putGraph $ Input $ Nat 23
+  g1 <- putGraph $ Input $ Nat 1
+  g2 <- putGraph $ Input $ Nat 23
+  g3 <- putGraph $ Op "+" [g1, g2]
+  g  <- putGraph $ Op "+" [g3, g3]
   print g
   print =<< getVal =<< eval arith g
 
