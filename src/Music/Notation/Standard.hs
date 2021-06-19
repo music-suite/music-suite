@@ -154,6 +154,7 @@ import Data.FiniteSeq (FiniteSeq)
 import qualified Data.FiniteSeq
 import Data.Functor.Couple
 import Data.LabelTree (LabelTree (Branch, Leaf), foldLabelTree, fromListLT)
+import qualified Data.Foldable
 import qualified Data.List
 import qualified Data.List.NonEmpty
 import qualified Data.List.Split
@@ -750,4 +751,4 @@ movementAssureSameNumberOfBars (Movement i ss st) =
     addSystemBars n = take n . (++ repeat emptySystemBar)
     n = maximum $ 0 : numBars
     -- numSystemBars :: Int = length ss
-    numBars :: [Int] = length . _bars <$> toList st
+    numBars :: [Int] = length . _bars <$> Data.Foldable.toList st

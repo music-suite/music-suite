@@ -193,6 +193,7 @@ import Data.FileEmbed
 import Data.FiniteSeq (FiniteSeq)
 import qualified Data.FiniteSeq
 import Data.Functor.Couple
+import qualified Data.Foldable
 import Data.LabelTree (LabelTree (Branch, Leaf), concatLT, foldLabelTree, fromListLT)
 import qualified Data.List
 import qualified Data.List.NonEmpty
@@ -1460,7 +1461,7 @@ toStandardNotation sc' = do
         LabelTree BracketType Staff =
           concatLT Subbracket staffVoices
   say $ "System staff bars: " ++ show (length systemStaff)
-  say $ "Regular staff bars: " ++ show (fmap (length . _bars) . toList $ staves)
+  say $ "Regular staff bars: " ++ show (fmap (length . _bars) . Data.Foldable.toList $ staves)
   return $ Work mempty [Movement info systemStaff staves]
   where
     info =

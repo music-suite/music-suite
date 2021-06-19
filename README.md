@@ -108,17 +108,25 @@ cabal exec runhaskell -- examples/chopin.hs -f ly -o t.ly
 
 
 
-## How to upgrade the compiler/Nixpkgs
+## How to upgrade the compiler
+
+We use Nix to pin the version of GHC and Cabal freeze files to pin the
+version of all Haskell dependencies. This describes how to upgrade GHC.
+
+Because GHC pins a version of the Haskell base library, this generally
+also means upgrading your Cabal dependencies.
 
 - Update the commit/URL and hash in `default.nix`
   - Use `$ nix-prefetch-url --unpack <url>` to obtain the hash (and verify)
 - Enter new Nix shell (may take a while)
-- Comment out `reject-unconstrained-dependencies` in Cabal config
+- Comment out `reject-unconstrained-dependencies` in `cabal.project`
 - Update `index-state` in Cabal config to a recent time
+- Run `cabal update`
+- Run `rm cabal.project.freeze`
 - Run `cabal freeze`
 - Run `cabal test` to check that compiling/testing works (and fix errors)
 - Restore `reject-unconstrained-dependencies`
-- Commit changes to Nix and Cabal files
+- Commit your changes.
 
 
 # Developer notes

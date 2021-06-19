@@ -9,7 +9,7 @@ module Data.AffineSpace.Point.Offsets
 where
 
 import Data.AffineSpace
-import Data.List
+import qualified Data.List
 import Data.Stream.Infinite (Stream)
 import qualified Data.Stream.Infinite as Stream
 import Data.VectorSpace
@@ -41,7 +41,7 @@ offsetPointsS = Stream.scanl (.+^)
 -- >>> offsetPoints 0 [1,1,1] :: [Integer]
 -- [0,1,2,3]
 pointOffsets :: AffineSpace p => p -> [p] -> [Diff p]
-pointOffsets or = (zeroV :) . snd . mapAccumL g or
+pointOffsets or = (zeroV :) . snd . Data.List.mapAccumL g or
   where
     g prev p = (p, p .-. prev)
 
