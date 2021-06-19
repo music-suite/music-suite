@@ -139,7 +139,6 @@ import Data.Music.MusicXml.Pitch
 import Data.Music.MusicXml.Time
 import Data.Semigroup
 import Numeric.Natural
-import TypeUnary.Nat
 import Prelude hiding (getLine)
 
 -- ----------------------------------------------------------------------------------
@@ -687,17 +686,19 @@ data Lyric = Lyric -- TODO
 -- Basic types
 -- ----------------------------------------------------------------------------------
 
-newtype Level = Level Max8
+newtype Level = Level Natural
 
 -- MusicXml constrains level to be in range [1..8] but
 -- this type admits numbers in range [0..7]. See
 -- http://usermanuals.musicxml.com/MusicXML/MusicXML.htm#ST-MusicXML-beam-level.htm
+-- or
+-- https://w3c.github.io/musicxml/musicxml-reference/data-types/beam-level/
 mkLevel :: Natural -> Level
 mkLevel n
-  | n < 8 && n > 0 = Level (coerceToIndex (n - 1))
-  | otherwise = def
+  | n < 8 && n >= 0 = Level n
+  | otherwise = Level 0
 
-getLevel :: Level -> Max8
+getLevel :: Level -> Natural
 getLevel (Level n) = n + 1
 
 instance Default Level where
@@ -765,11 +766,6 @@ deriving instance Eq Level
 deriving instance Show Level
 
 deriving instance Num Level
-
--- ----------------------------------------------------------------------------------
-
--- Bounded ints
-type Max8 = Index N8
 
 -- ----------------------------------------------------------------------------------
 -- Default instances

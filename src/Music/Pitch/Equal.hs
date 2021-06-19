@@ -1,6 +1,10 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing
   -fno-warn-unused-imports
+  -fno-warn-unticked-promoted-constructors
   -fno-warn-redundant-constraints #-}
 
 -- | Generic equal temperament pitch.
@@ -34,6 +38,7 @@ module Music.Pitch.Equal
   )
 where
 
+import Data.Kind (Type)
 import Control.Applicative
 import Control.Monad
 import Data.AffineSpace
@@ -43,12 +48,63 @@ import Data.Proxy
 import Data.Semigroup
 import Data.VectorSpace
 import Music.Pitch.Absolute
-import TypeUnary.Nat
 
--- Based on Data.Fixed
+data Nat = Zero | Succ Nat
 
+type N1 = Succ Zero
+type N2 = Succ N1
+type N3 = Succ N2
+type N4 = Succ N3
+type N5 = Succ N4
+type N6 = Succ N5
+type N7 = Succ N6
+type N8 = Succ N7
+type N9 = Succ N8
+type N10 = Succ N9
+type N11 = Succ N10
+type N12 = Succ N11
+
+type Equal6 = Equal N6
+
+type Equal12 = Equal N12
+
+type Equal17 = Equal N17
+
+type Equal24 = Equal N24
+
+type Equal36 = Equal N36
+
+type (:+:) :: Nat -> Nat -> Nat
+type family a :+: b
+type instance Zero :+: b = b
+type instance Succ a :+: b = Succ (a :+: b)
+
+type (:*:) :: Nat -> Nat -> Nat
+type family a :*: b
+type instance Zero :*: b = Zero
+type instance Succ a :*: b = b :+: (a :*: b)
+
+type N20 = N10 :*: N2
+
+type N30 = N10 :*: N3
+
+type N17 = N10 :+: N7
+
+type N24 = N20 :+: N4
+
+type N36 = N30 :+: N6
+
+type Equal :: Nat -> Type
 newtype Equal a = Equal {getEqual :: Int}
-
+class IsNat a where
+  size :: proxy a -> Int
+instance IsNat Zero where
+  size _ = 0
+instance IsNat a => IsNat (Succ a) where
+  size p = size (pred p) + 1
+    where
+      pred :: p (Succ a) -> Proxy a
+      pred _ = Proxy
 deriving instance Eq (Equal a)
 
 deriving instance Ord (Equal a)
@@ -92,37 +148,11 @@ instance IsNat a => VectorSpace (Equal a) where
 
   (*^) = (*)
 
+{-
 getSize :: IsNat a => f a -> Nat a
 getSize _ = nat
 
--- | Size of this type (value not evaluated).
---
--- TODO>>> size (Proxy :: N2)
--- 2
---
--- TODO>>> size (Proxy :: N12)
--- 12
-size :: IsNat a => proxy a -> Int
-size = natToZ . getSize
-
--- TODO I got this part wrong
---
--- This type implements limited values (useful for interval *steps*)
--- An ET-interval is just an int, with a type-level size (divMod is "separate")
-
--- -- | Create an equal-temperament value.
--- toEqual :: IsNat a => Int -> Maybe (Equal a)
--- toEqual = checkSize . Equal
---
--- -- | Unsafely create an equal-temperament value.
--- unsafeToEqual :: IsNat a => Int -> Equal a
--- unsafeToEqual n = case toEqual n of
---   Nothing -> error $ "Bad equal: " ++ show n
---   Just x  -> x
---
--- checkSize :: IsNat a => Equal a -> Maybe (Equal a)
--- checkSize x = if 0 <= fromEqual x && fromEqual x < size x then Just x else Nothing
---
+-}
 
 -- |  Create an equal-temperament value.
 toEqual :: IsNat a => Int -> Equal a
@@ -158,22 +188,3 @@ cast = cast' Proxy
 cast' :: (IsNat a, IsNat b) => proxy b -> Equal a -> Equal b
 cast' p aDummy@(Equal a) = Equal $ (a * size p) `div` size aDummy
 
-type Equal6 = Equal N6
-
-type Equal12 = Equal N12
-
-type Equal17 = Equal N17
-
-type Equal24 = Equal N24
-
-type Equal36 = Equal N36
-
-type N20 = N10 :*: N2
-
-type N30 = N10 :*: N3
-
-type N17 = N10 :+: N7
-
-type N24 = N20 :+: N4
-
-type N36 = N30 :+: N6

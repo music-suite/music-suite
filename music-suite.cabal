@@ -24,7 +24,7 @@ source-repository head
 
 library
     build-depends:
-                        base >= 4.11,
+                        base,
                         aeson,
                         average,
                         base-orphans,
@@ -66,7 +66,7 @@ library
                         streams,
                         text,
                         transformers,
-                        type-unary,
+                        -- type-unary,
                         unordered-containers,
                         vector-space,
                         xml
@@ -295,7 +295,7 @@ test-suite "music-suite-test-umts"
                         tasty-quickcheck,
                         text,
                         transformers,
-                        type-unary,
+                        -- type-unary,
                         unordered-containers,
                         vector-space,
                         xml,

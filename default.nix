@@ -32,9 +32,9 @@ let
     });
 
   pkgs = import (builtins.fetchTarball {
-    url = https://github.com/nixos/nixpkgs/archive/8d05772134f17180fb2711d0660702dae2a67313.tar.gz;
+    url = https://github.com/nixos/nixpkgs/archive/bad3ccd099ebe9a8aa017bda8500ab02787d90aa.tar.gz;
     # Hash obtained using `nix-prefetch-url --unpack <url>`
-    sha256 = "0pnyg26c1yhnp3ymzglc71pd9j0567ymqy6il5ywc82bbm1zy25a";
+    sha256 = "07ik6rcfpcvj2zch3mzkxwxjs817iysbvsydkm85f14kn7gnyzp5";
   }) { config = opts; overlays = [ addOrmulo ]; };
 in
 
@@ -45,7 +45,8 @@ pkgs.stdenv.mkDerivation {
     pkgs.lilypond
     pkgs.timidity
     pkgs.cabal-install
-    pkgs.haskell.packages.ghc883.ormolu
+    pkgs.haskellPackages.hasktags
+    pkgs.haskell.packages.ghc884.ormolu
     (
     pkgs.haskellPackages.ghcWithPackages (pkgs:
         [
