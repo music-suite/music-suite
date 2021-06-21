@@ -119,6 +119,7 @@ also means upgrading your Cabal dependencies.
 - Update the commit/URL and hash in `default.nix`
   - Use `$ nix-prefetch-url --unpack <url>` to obtain the hash (and verify)
 - Enter new Nix shell (may take a while)
+- Update the `ghc-version` field in `cabal.project` to whatever is printed by `ghc --version`
 - Comment out `reject-unconstrained-dependencies` in `cabal.project`
 - Update `index-state` in Cabal config to a recent time
 - Run `cabal update`
