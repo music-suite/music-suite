@@ -22,7 +22,7 @@ additional programs manually.
 Befor you can build Music Suite you need to set up the build environment.
 The steps are outlined separately for Nix and Cabal.
 
-### Set up the build environment for Nix
+### Set up the Build Environment for Nix
 
 Install Nix (2.3.1 or later).
 
