@@ -18,7 +18,7 @@ If you use Nix then MusicSuite will have all the dependencies it needs
 installed for you. If you choose to use Cabal then you will need to install
 additional programs manually.
 
-## Set Up the Build Environment
+## Set up the Build Environment
 Befor you can build Music Suite you need to set up the build environment.
 The steps are outlined separately for Nix and Cabal.
 
