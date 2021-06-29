@@ -48,8 +48,8 @@ On Linux you should find these in your package manager if they're not
 already installed. On OSX you can either download these, or use Homebrew, or 
 MacPorts. You should be able to install these on Windows as well.
 
-For OSX and Linux users, install ghcup using [https://www.haskell.org/ghcup/](these
-instructions). If you're using Windows consult a guide on current bet
+For OSX and Linux users, install ghcup using [these
+instructions](https://www.haskell.org/ghcup). If you're using Windows consult a guide on current best
 practices for installing Haskell on Windows. Some of the instructions below
 may not work on Windows..
 
