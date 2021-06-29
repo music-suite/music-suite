@@ -38,7 +38,7 @@ You should see this prompt:
 #
 ```
 
-### Set up the build environment for Cabal
+### Set up the Build Environment for Cabal
 You will need to install the following:
 - [https://git-scm.com/](Git)
 - [http://lilypond.org/](Lilypond)
