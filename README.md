@@ -59,7 +59,7 @@ Install ghc 8.10.4:
 ghcup install 8.10.4
 ```
 
-Go to a directory where you want to use musicsuite and type the following
+Go to a directory where you want to use Music Suite and type the following
 commands:
 
 ```
