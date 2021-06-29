@@ -53,7 +53,7 @@ instructions](https://www.haskell.org/ghcup). If you're using Windows consult a 
 practices for installing Haskell on Windows. Some of the instructions below
 may not work on Windows..
 
-Install ghc 8.10.4:
+Install GHC 8.10.4:
 
 ```
 ghcup install 8.10.4
