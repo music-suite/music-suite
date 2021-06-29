@@ -12,7 +12,7 @@ Music Suite is a language for describing music, based on Haskell.
 <!-- See <http://music-suite.github.io>. -->
 
 
-## How to build MusicSuite
+## How to build Music Suite
 Music Suite can be built using in a Nix environment (Linux only) or with Cabal.
 If you use Nix then MusicSuite will have all the dependencies it needs
 installed for you. If you choose to use Cabal then you will need to install
