@@ -70,8 +70,8 @@ cd music-suite
 
 ## Build the library and examples
 
-The following instructions work both inside the NIX shell (if you're 
-using NIX), or inside the music-suite directory (if you're just using Cabal).
+The following instructions work both inside the Nix shell (if you're 
+using Nix), or inside the music-suite directory (if you're just using Cabal).
 
 ```
 # cabal update
