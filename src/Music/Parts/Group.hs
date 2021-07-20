@@ -55,7 +55,7 @@ groupDefault xs =
     [ Many Bracket ShowBarlines $ fmap Single ww,
       Many Bracket ShowBarlines $ fmap Single br,
       Many Bracket ShowBarlines $ fmap Single pc,
-      Many Invisible ShowBarlines $ fmap Single kb,
+      Many PianoStaff ShowBarlines $ fmap Single kb,
       Many Bracket HideBarlines $ fmap Single voc,
       Many Bracket ShowBarlines $ fmap Single str
     ]
