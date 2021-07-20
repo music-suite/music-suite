@@ -12,9 +12,18 @@ Music Suite is a language for describing music, based on Haskell.
 <!-- See <http://music-suite.github.io>. -->
 
 
-## How to build
+## How to build Music Suite
 
-### Set up the build environment
+Music Suite can be built in a Nix environment (Linux only), or with Cabal.
+If you use Nix then Music Suite will have all the dependencies it needs
+installed for you. If you choose to use Cabal then you will need to install
+additional programs manually.
+
+## Set up the Build Environment
+Befor you can build Music Suite you need to set up the build environment.
+The steps are outlined separately for Nix and Cabal.
+
+### Set up the Build Environment for Nix
 
 Install Nix (2.3.1 or later).
 
@@ -30,9 +39,40 @@ You should see this prompt:
 #
 ```
 
-Inside the build shell, the following commands can be used:
+### Set up the Build Environment for Cabal
+You will need to install the following:
+- [https://git-scm.com/](Git)
+- [http://lilypond.org/](Lilypond)
+- [http://timidity.sourceforge.net/](Timidity++)
 
-### Build the library and examples
+On Linux you should find these in your package manager if they're not
+already installed. On OSX you can either download these, or use Homebrew, or 
+MacPorts. You should be able to install these on Windows as well.
+
+For OSX and Linux users, install ghcup using [these
+instructions](https://www.haskell.org/ghcup). If you're using Windows consult a guide on current best
+practices for installing Haskell on Windows. Some of the instructions below
+may not work on Windows..
+
+Install GHC 8.10.4:
+
+```
+ghcup install 8.10.4
+```
+
+Go to a directory where you want to use Music Suite and type the following
+commands:
+
+```
+git clone https://github.com/music-suite/music-suite.git
+cd music-suite
+```
+
+
+## Build the library and examples
+
+The following instructions work both inside the Nix shell (if you're 
+using Nix), or inside the music-suite directory (if you're just using Cabal).
 
 ```
 # cabal update
