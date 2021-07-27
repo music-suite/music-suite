@@ -30,6 +30,9 @@ module Music.Prelude.Standard
     Asp1a,
     defaultMain,
 
+    -- * Data NonEmpty is needed for voicings 
+    NonEmpty(..),
+
     -- * Lens re-exports
     set,
     over,
@@ -60,6 +63,7 @@ import qualified Music.Score.Part
 import qualified Options.Applicative as O
 import qualified System.Environment
 import qualified Text.Pretty
+import Data.List.NonEmpty (NonEmpty(..))
 
 type StandardNote = Asp1
 
