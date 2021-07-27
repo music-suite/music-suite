@@ -9,7 +9,7 @@ index-state: 2021-06-14T23:59:24Z
 
 packages: ./music-suite.cabal
 
-with-ghc: 8.10.4
+with-compiler: ghc-8.10.4
 
 package music-suite
   optimization: False
