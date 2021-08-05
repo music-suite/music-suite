@@ -17,6 +17,7 @@ description:
 extra-source-files:     README.md,
                         examples/*.hs,
                         data/*.ly
+                        data/*.csv
 
 source-repository head
     type:             	git
