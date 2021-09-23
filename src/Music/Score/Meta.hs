@@ -5,7 +5,7 @@ module Music.Score.Meta
   ( module Music.Time.Meta,
 
     -- * Meta-events
-    addMetaNote,
+    addMetaEvent,
     fromMetaReactive,
     metaAtStart,
     withMeta,
@@ -19,8 +19,8 @@ import Music.Score.Internal.Util (composed)
 import Music.Time
 import Music.Time.Meta
 
-addMetaNote :: forall a b. (AttributeClass a, HasMeta b) => Event a -> b -> b
-addMetaNote x = applyMeta $ wrapTMeta $ noteToReactive x
+addMetaEvent :: forall a b. (AttributeClass a, HasMeta b) => Event a -> b -> b
+addMetaEvent x = applyMeta $ wrapTMeta $ noteToReactive x
 
 fromMetaReactive :: forall b. AttributeClass b => Meta -> Reactive b
 fromMetaReactive = fromMaybe mempty . unwrapMeta

@@ -58,7 +58,7 @@ annotate str x = case _era x of
 
 -- | Annotate a part of the score.
 annotateSpan :: Span -> String -> Score a -> Score a
-annotateSpan span str x = addMetaNote (transform span $ return $ Annotation [str]) x
+annotateSpan span str x = addMetaEvent (transform span $ return $ Annotation [str]) x
 
 -- | Show all annotations in the score.
 showAnnotations :: (HasParts' a, Ord (GetPart a), HasText a) => Score a -> Score a

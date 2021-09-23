@@ -106,7 +106,7 @@ attribute a x = case _era x of
 
 -- | Set the given attribution in the given part of a score.
 attributeDuring :: (HasMeta a) => Span -> Attribution -> a -> a
-attributeDuring s a = addMetaNote (view event (s, a))
+attributeDuring s a = addMetaEvent (view event (s, a))
 
 -- | Set composer of the given score.
 composer :: (HasMeta a, HasPosition a) => String -> a -> a
