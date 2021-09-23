@@ -74,11 +74,11 @@ import Music.Time.Reactive
 -- >
 -- > subtitle "Atto secundo"
 -- > ...
-newtype Title = Title (Int -> Option (Last String))
+newtype Title = Title (Int -> Maybe (Last String))
   deriving (Typeable, Monoid, Semigroup)
 
 instance IsString Title where
-  fromString x = Title $ \n -> if n == 0 then Option (Just (Last x)) else Option Nothing
+  fromString x = Title $ \n -> if n == 0 then Just (Last x) else Nothing
 
 instance Show Title where
   show = List.intercalate " " . getTitle
@@ -95,7 +95,7 @@ getTitle t = untilFail . fmap (getTitleAt t) $ [0 ..]
 
 -- | Extract the title of the given level. Semantic function.
 getTitleAt :: Title -> Int -> Maybe String
-getTitleAt (Title t) n = fmap getLast . getOption . t $ n
+getTitleAt (Title t) = fmap getLast . t 
 
 -- | Set title of the given score.
 title :: (HasMeta a, HasPosition a) => Title -> a -> a
@@ -105,7 +105,7 @@ title t x = case _era x of
 
 -- | Set title of the given part of a score.
 titleDuring :: HasMeta a => Span -> Title -> a -> a
-titleDuring s t = addMetaNote $ view event (s, t)
+titleDuring s t = addMetaEvent $ view event (s, t)
 
 -- | Set subtitle of the given score.
 subtitle :: (HasMeta a, HasPosition a) => Title -> a -> a
@@ -115,7 +115,7 @@ subtitle t x = case _era x of
 
 -- | Set subtitle of the given part of a score.
 subtitleDuring :: HasMeta a => Span -> Title -> a -> a
-subtitleDuring s t = addMetaNote $ view event (s, denoteTitle t)
+subtitleDuring s t = addMetaEvent $ view event (s, denoteTitle t)
 
 -- | Set subsubtitle of the given score.
 subsubtitle :: (HasMeta a, HasPosition a) => Title -> a -> a
@@ -125,4 +125,4 @@ subsubtitle t x = case _era x of
 
 -- | Set subsubtitle of the given part of a score.
 subsubtitleDuring :: HasMeta a => Span -> Title -> a -> a
-subsubtitleDuring s t = addMetaNote $ view event (s, denoteTitle (denoteTitle t))
+subsubtitleDuring s t = addMetaEvent $ view event (s, denoteTitle (denoteTitle t))

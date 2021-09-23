@@ -153,7 +153,7 @@ tempo c x = case _era x of
 
 -- | Set the tempo of the given part of a score.
 tempoDuring :: HasMeta a => Span -> Tempo -> a -> a
-tempoDuring s c = addMetaNote $ view event (s, c)
+tempoDuring s c = addMetaEvent $ view event (s, c)
 
 {-
         inSpan' (view onsetAndOffset -> (t,u)) x = t <= x && x < u

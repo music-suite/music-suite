@@ -72,4 +72,4 @@ rehearsalMark x = case _era x of
 
 -- | Place a rehearsal mark at the given time.
 rehearsalMarkAt :: HasMeta a => Time -> a -> a
-rehearsalMarkAt t = addMetaNote $ view event (t <-> t, RehearsalMark)
+rehearsalMarkAt t = addMetaEvent $ view event (t <-> t, RehearsalMark)

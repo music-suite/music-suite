@@ -35,7 +35,6 @@ import qualified Data.List as List
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
-import Data.Semigroup
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.String
@@ -49,6 +48,7 @@ import Music.Score.Part
 import Music.Score.Pitch
 import Music.Time
 import Music.Time.Reactive
+import Data.Monoid
 
 -- | Represents a fermata.
 data Fermata = StandardFermata | LongFermata | VeryLongFermata
@@ -62,4 +62,4 @@ fermata c x = case _era x of
 
 -- | Add a fermata to the given score.
 fermataAt :: HasMeta a => Time -> Fermata -> a -> a
-fermataAt s c = addMetaNote $ view event (s <-> s, Just $ Last c)
+fermataAt s c = addMetaEvent $ view event (s <-> s, Data.Monoid.Last $ Just c)

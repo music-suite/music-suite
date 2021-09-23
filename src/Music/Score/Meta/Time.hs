@@ -154,7 +154,7 @@ timeSignature c x = case _era x of
 
 -- | Set the time signature of the given part of a score.
 timeSignatureDuring :: HasMeta a => Span -> TimeSignature -> a -> a
-timeSignatureDuring s c = addMetaNote $ view event (s, optionLast c)
+timeSignatureDuring s c = addMetaEvent $ view event (s, Just $ Last c)
 
 -- | Time signature typically used for the given duration.
 --
@@ -201,10 +201,6 @@ isPowerOfTwo 0 = True
 isPowerOfTwo 1 = False
 isPowerOfTwo n = (n .&. (n -1)) == 0
 {-# INLINE isPowerOfTwo #-}
-
--- TODO consolidate
-optionLast :: a -> Maybe (Last a)
-optionLast = Just . Last
 
 mapNums :: ([Integer] -> [Integer]) -> TimeSignature -> TimeSignature
 mapDenom :: (Integer -> Integer) -> TimeSignature -> TimeSignature
