@@ -203,8 +203,8 @@ isPowerOfTwo n = (n .&. (n -1)) == 0
 {-# INLINE isPowerOfTwo #-}
 
 -- TODO consolidate
-optionLast :: a -> Option (Last a)
-optionLast = Option . Just . Last
+optionLast :: a -> Maybe (Last a)
+optionLast = Just . Last
 
 mapNums :: ([Integer] -> [Integer]) -> TimeSignature -> TimeSignature
 mapDenom :: (Integer -> Integer) -> TimeSignature -> TimeSignature
