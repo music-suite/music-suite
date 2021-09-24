@@ -41,9 +41,9 @@ You should see this prompt:
 
 ### Set up the Build Environment for Cabal
 You will need to install the following:
-- [https://git-scm.com/](Git)
-- [http://lilypond.org/](Lilypond)
-- [http://timidity.sourceforge.net/](Timidity++)
+- [Git](https://git-scm.com/)
+- [Lilypond](http://lilypond.org/)
+- [Timidity++](https://sourceforge.net/projects/timidity/)
 
 On Linux you should find these in your package manager if they're not
 already installed. On OSX you can either download these, or use Homebrew, or 
