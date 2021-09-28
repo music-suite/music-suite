@@ -4,6 +4,7 @@
 *.hi
 *.json
 *.ly
+!/test/regression/lilypond/*.ly
 *.mid
 *.o
 *.pdf

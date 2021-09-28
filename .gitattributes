@@ -1,0 +1,4 @@
+# Tells git not to do any newline conversion for golden files. For git
+#
+# See also https://hackage.haskell.org/package/tasty-golden-2.3.4/docs/Test-Tasty-Golden.html
+test/regression -text

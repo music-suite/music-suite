@@ -306,6 +306,7 @@ test-suite "music-suite-test-umts"
     hs-source-dirs:     test
     default-language:   Haskell2010
 
+
 test-suite "music-suite-test-laws"
     build-depends:      base,
                         tasty,
@@ -321,6 +322,19 @@ test-suite "music-suite-test-laws"
                         music-suite
     type:               exitcode-stdio-1.0
     main-is:            Laws.hs
+    hs-source-dirs:     test
+    default-language:   Haskell2010
+
+test-suite "music-suite-test-regression"
+    build-depends:      base,
+                        bytestring,
+                        text,
+                        tasty,
+                        tasty-golden,
+                        prettify,
+                        music-suite
+    type:               exitcode-stdio-1.0
+    main-is:            Regression.hs
     hs-source-dirs:     test
     default-language:   Haskell2010
 
