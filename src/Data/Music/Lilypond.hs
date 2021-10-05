@@ -296,11 +296,9 @@ instance Pretty Music where
   pretty (Breathe Nothing) = "\\breathe"
   pretty (Breathe a) = notImpl "Non-standard breath marks"
   pretty (Tempo Nothing Nothing) = mempty
-  pretty (Tempo (Just t) Nothing) = "\\time" <+> pretty t
-  pretty (Tempo Nothing (Just (d, bpm))) = "\\time" <+> pretty d <+> "=" <+> pretty bpm
-  pretty (Tempo (Just t) (Just (d, bpm))) = "\\time" <+> pretty t <+> pretty d <+> "=" <+> pretty bpm
-  -- TODO metronome
-  -- TODO tempo
+  pretty (Tempo (Just t) Nothing) = "\\tempo" <+> pretty t
+  pretty (Tempo Nothing (Just (d, bpm))) = "\\tempo" <+> pretty d <+> "=" <+> pretty bpm
+  pretty (Tempo (Just t) (Just (d, bpm))) = "\\tempo" <+> pretty t <+> pretty d <+> "=" <+> pretty bpm
 
   pretty (New typ name x) =
     "\\new" <+> string typ <+> pretty name <+> pretty x
