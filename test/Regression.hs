@@ -23,7 +23,7 @@ toLilypondRaw' header ly = do
 lilypondRegresionTest name =
   goldenVsString
     name
-    ("test/regression/lilypond" ++ name ++ ".ly")
+    ("test/regression/lilypond/" ++ name ++ ".ly")
 
 tests :: [TestTree]
 tests =
@@ -44,6 +44,14 @@ tests =
         ""
         ( Lilypond.sequential
             (Lilypond.Tempo Nothing (Just (1 / 4, 120)))
+            (Lilypond.Note c Nothing [])
+        ),
+    lilypondRegresionTest
+      "data-lilypond-fermata"
+      $ toLilypondRaw'
+        ""
+        ( Lilypond.addArticulation
+            Lilypond.Fermata
             (Lilypond.Note c Nothing [])
         )
   ]
