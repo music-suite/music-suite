@@ -313,8 +313,6 @@ instance Pretty Music where
   pretty (Revert name) =
     "\\revert" <+> string name
 
-  -- pretty _                        = notImpl "Unknown music expression"
-
   prettyList = hsep . fmap pretty
 
 instance IsPitch Music where
@@ -534,16 +532,10 @@ data Articulation
   deriving (Eq, Show)
 
 instance Pretty Articulation where
-  -- pretty Accent             = "\\accent"
-  -- pretty Marcato            = "\\marcato"
-  -- pretty Staccatissimo      = "\\staccatissimo"
   pretty Accent = ">"
   pretty Marcato = "^"
   pretty Staccatissimo = "!"
   pretty Espressivo = "\\espressivo"
-  -- pretty Staccato           = "\\staccato"
-  -- pretty Tenuto             = "\\tenuto"
-  -- pretty Portato            = "\\portato"
   pretty Staccato = "."
   pretty Tenuto = "-"
   pretty Portato = "_"
@@ -556,7 +548,6 @@ instance Pretty Articulation where
   pretty LeftToe = "\\lefttoe"
   pretty RightToe = "\\righttoe"
   pretty Open = "\\open"
-  -- pretty Stopped            = "\\stopped"
   pretty Stopped = "+"
   pretty Turn = "\\turn"
   pretty ReverseTurn = "\\reverseturn"
