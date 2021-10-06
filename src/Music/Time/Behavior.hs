@@ -8,6 +8,7 @@ module Music.Time.Behavior
     -- * Construction
     behavior,
     sampled,
+    constB,
 
     -- * Lookup
     (!),
@@ -15,6 +16,10 @@ module Music.Time.Behavior
     -- * Combinators
     switch,
     switch',
+    latchDuring,
+    latchDuring',
+    loopEvery,
+
     -- splice,
     trim,
     trimBefore,
@@ -26,6 +31,7 @@ module Music.Time.Behavior
     -- ** Oscillators
     line,
     sawtooth,
+    square,
     sine,
     cosine,
 
@@ -50,6 +56,7 @@ import Music.Time.Internal.Preliminaries
 import Music.Time.Internal.Transform
 import Music.Time.Juxtapose
 import Music.Time.Score
+import Music.Time.Internal.Util (floor')
 
 -- Behavior is 'Representable':
 --
@@ -203,6 +210,11 @@ behavior = iso Behavior getBehavior
 sampled :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
 sampled = from behavior
 
+-- \
+-- A behavior that will always return the initial value
+constB :: a -> Behavior a
+constB x = (const x) ^.behavior
+
 -- |
 -- A behavior that gives the current time.
 --
@@ -248,6 +260,11 @@ cosine = cos (line * tau)
 sawtooth :: RealFrac a => Behavior a
 sawtooth = line - fmap floor' line
 
+-- |
+-- A behavior that switches from 0 to 1 repeatedly with a period of 1.
+square :: Num a => Behavior a
+square = loopEvery 1 $
+  switch 0.5 1 0
 -- |
 -- A behavior that is 1 at time 0, and 0 at all other times.
 impulse :: Num a => Behavior a
@@ -296,7 +313,29 @@ switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
 
 -- | Sample the given behavior at the given time.
 (!) :: Behavior a -> Time -> a
-(!) b t = getBehavior b t
+(!) = getBehavior
+
+-- |
+-- Switches to the second behavior during the span, otherwise first behavior.
+-- If the span is `1 <-> 3` then at `1` it will switch to the second behavior
+-- and at time `3` it will switch back to the first behavior.
+-- 
+-- Note: If span duration is 0, then this is just the first behavior
+latchDuring :: Span -> Behavior a -> Behavior a -> Behavior a
+latchDuring s rx ry = view behavior $ \u ->
+  if (u < s ^.onset) || (u >= s ^.offset) then rx ! u
+  else ry ! u
+
+-- |
+-- Switches to the second behavior during the span, otherwise first behavior.
+-- If the span is `1 <-> 3` then at `1` it will switch to the second behavior
+-- and then _after_ time `3` it will switch back to the first behavior.
+-- 
+-- Note: If span duration is 0, then this is the same as an impulse.
+latchDuring' :: Span -> Behavior a -> Behavior a -> Behavior a
+latchDuring' s rx ry = view behavior $ \u ->
+  if (u < s ^.onset) || (u > s ^.offset) then rx ! u
+  else ry ! u
 
 -- | Replace everything outside the given span by 'mempty'.
 trim :: Monoid a => Span -> Behavior a -> Behavior a
@@ -320,6 +359,14 @@ concatB = mconcat . toListOf traverse . mapWithSpan transform . fmap (trim mempt
 tau :: Floating a => a
 tau = 2 * pi
 
--- TODO use Internal.Util version
-floor' :: RealFrac a => a -> a
-floor' = fromInteger . floor
+-- |
+-- Loops the behavior every @d seconds
+loopEvery :: Duration -> Behavior a -> Behavior a
+loopEvery d b =
+  Behavior $
+      \t -> 
+        let
+          dx :: Duration = t .-. 0
+          p :: Duration = dx - (d * fromInteger (truncate (dx/d)))
+        in
+          b ! (0 .+^ p)
