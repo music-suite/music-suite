@@ -296,11 +296,9 @@ instance Pretty Music where
   pretty (Breathe Nothing) = "\\breathe"
   pretty (Breathe a) = notImpl "Non-standard breath marks"
   pretty (Tempo Nothing Nothing) = mempty
-  pretty (Tempo (Just t) Nothing) = "\\time" <+> pretty t
-  pretty (Tempo Nothing (Just (d, bpm))) = "\\time" <+> pretty d <+> "=" <+> pretty bpm
-  pretty (Tempo (Just t) (Just (d, bpm))) = "\\time" <+> pretty t <+> pretty d <+> "=" <+> pretty bpm
-  -- TODO metronome
-  -- TODO tempo
+  pretty (Tempo (Just t) Nothing) = "\\tempo" <+> pretty t
+  pretty (Tempo Nothing (Just (d, bpm))) = "\\tempo" <+> pretty d <+> "=" <+> pretty bpm
+  pretty (Tempo (Just t) (Just (d, bpm))) = "\\tempo" <+> pretty t <+> pretty d <+> "=" <+> pretty bpm
 
   pretty (New typ name x) =
     "\\new" <+> string typ <+> pretty name <+> pretty x
@@ -312,8 +310,6 @@ instance Pretty Music where
     "\\override" <+> string name <+> "=" <+> pretty val
   pretty (Revert name) =
     "\\revert" <+> string name
-
-  -- pretty _                        = notImpl "Unknown music expression"
 
   prettyList = hsep . fmap pretty
 
@@ -534,16 +530,10 @@ data Articulation
   deriving (Eq, Show)
 
 instance Pretty Articulation where
-  -- pretty Accent             = "\\accent"
-  -- pretty Marcato            = "\\marcato"
-  -- pretty Staccatissimo      = "\\staccatissimo"
   pretty Accent = ">"
   pretty Marcato = "^"
   pretty Staccatissimo = "!"
   pretty Espressivo = "\\espressivo"
-  -- pretty Staccato           = "\\staccato"
-  -- pretty Tenuto             = "\\tenuto"
-  -- pretty Portato            = "\\portato"
   pretty Staccato = "."
   pretty Tenuto = "-"
   pretty Portato = "_"
@@ -556,7 +546,6 @@ instance Pretty Articulation where
   pretty LeftToe = "\\lefttoe"
   pretty RightToe = "\\righttoe"
   pretty Open = "\\open"
-  -- pretty Stopped            = "\\stopped"
   pretty Stopped = "+"
   pretty Turn = "\\turn"
   pretty ReverseTurn = "\\reverseturn"
