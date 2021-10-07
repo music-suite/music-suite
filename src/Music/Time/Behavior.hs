@@ -320,7 +320,7 @@ switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
 -- If the span is `1 <-> 3` then at `1` it will switch to the second behavior
 -- and at time `3` it will switch back to the first behavior.
 -- 
--- Note: If span duration is 0, then this is just the first behavior
+-- If the duration of the span is zero, the given behavior is returned unchanged.
 latchDuring :: Span -> Behavior a -> Behavior a -> Behavior a
 latchDuring s rx ry = view behavior $ \u ->
   if (u < s ^.onset) || (u >= s ^.offset) then rx ! u
