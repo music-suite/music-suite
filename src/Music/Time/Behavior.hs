@@ -8,7 +8,7 @@ module Music.Time.Behavior
     -- * Construction
     behavior,
     sampled,
-    constB,
+    constant,
 
     -- * Lookup
     (!),
@@ -212,8 +212,8 @@ sampled = from behavior
 
 -- \
 -- A behavior that will always return the initial value
-constB :: a -> Behavior a
-constB x = (const x) ^.behavior
+constant :: a -> Behavior a
+constant = pure
 
 -- |
 -- A behavior that gives the current time.
