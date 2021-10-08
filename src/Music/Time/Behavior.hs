@@ -16,8 +16,8 @@ module Music.Time.Behavior
     -- * Combinators
     switch,
     switch',
-    latchDuring,
-    latchDuring',
+    latch,
+    latchWithOptions,
     loop,
 
     -- splice,
@@ -315,27 +315,49 @@ switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
 (!) :: Behavior a -> Time -> a
 (!) = getBehavior
 
+data EdgeInc = Included | Excluded
+
+-- |
+-- Determines whether a behavior will include the start and end of a 'behavior'.
+data SpanEdge = SpanEdge{
+  start:: EdgeInc, 
+  end::EdgeInc
+}
+
+-- |
+-- Switches to the second @Behavior@ during the span. When the @Behavior@ switches
+-- is determined by @SpanEdge@. 
+-- Assuming the @Span = s<->e@ and @time = t@ then if @start == Included@ 
+-- the latch will switch when time @t == start@ otherwise it will start when 
+-- time @t >= start@.
+--
+-- if @end == Included@ 
+-- the latch will switch back to the original behavior when time @t == end@ 
+-- otherwise it will start when time @t >= start@.
+latchWithOptions :: SpanEdge -> Span -> Behavior a -> Behavior a -> Behavior a
+latchWithOptions r s rx ry = case r of 
+  SpanEdge{start=Excluded, end=Excluded} -> view behavior $ \u -> 
+        if (u <= s ^.onset) || (u >= s ^.offset) then rx ! u 
+        else ry ! u
+  SpanEdge{start=Excluded, end=Included} -> view behavior $ \u -> 
+        if (u <= s ^.onset) || (u > s ^.offset) then rx ! u 
+        else ry ! u
+  SpanEdge{start=Included, end=Excluded} -> view behavior $ \u -> 
+        if (u < s ^.onset) || (u >= s ^.offset) then rx ! u 
+        else ry ! u
+  SpanEdge{start=Included, end=Included} -> view behavior $ \u -> 
+        if (u < s ^.onset) || (u > s ^.offset) then rx ! u 
+        else ry ! u
+
 -- |
 -- Switches to the second behavior during the span, otherwise first behavior.
 -- If the span is `1 <-> 3` then at `1` it will switch to the second behavior
 -- and at time `3` it will switch back to the first behavior.
 -- 
 -- If the duration of the span is zero, the given behavior is returned unchanged.
-latchDuring :: Span -> Behavior a -> Behavior a -> Behavior a
-latchDuring s rx ry = view behavior $ \u ->
-  if (u < s ^.onset) || (u >= s ^.offset) then rx ! u
-  else ry ! u
+latch :: Span -> Behavior a -> Behavior a -> Behavior a
+latch = latchWithOptions $ SpanEdge Included Excluded
 
--- |
--- Switches to the second behavior during the span, otherwise first behavior.
--- If the span is `1 <-> 3` then at `1` it will switch to the second behavior
--- and then _after_ time `3` it will switch back to the first behavior.
--- 
--- Note: If span duration is 0, then this is the same as an impulse.
-latchDuring' :: Span -> Behavior a -> Behavior a -> Behavior a
-latchDuring' s rx ry = view behavior $ \u ->
-  if (u < s ^.onset) || (u > s ^.offset) then rx ! u
-  else ry ! u
 
 -- | Replace everything outside the given span by 'mempty'.
 trim :: Monoid a => Span -> Behavior a -> Behavior a
