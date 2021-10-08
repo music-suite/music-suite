@@ -210,7 +210,7 @@ behavior = iso Behavior getBehavior
 sampled :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
 sampled = from behavior
 
--- \
+-- |
 -- A behavior that will always return the initial value
 constB :: a -> Behavior a
 constB x = (const x) ^.behavior
