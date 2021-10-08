@@ -15,11 +15,9 @@ module Music.Time.Reactive
     atTime,
 
     -- * Construction
-    alwaysR,
 
     -- * Combine
     switchR,
-    trigger,
     trimR,
 
     -- * Split
@@ -111,11 +109,6 @@ instance Augmentable a => Augmentable (Reactive a) where
 
   diminish = fmap diminish
 
--- | Construct a reactive that always returns the value of the Behavior.
-alwaysR :: Behavior a -> Reactive a
-alwaysR b = 
-  Reactive ([], b)
-
 -- |
 -- Get the initial value.
 initial :: Reactive a -> a
@@ -182,27 +175,6 @@ switchR t (Reactive (tx, bx)) (Reactive (ty, by)) =
       (filter (< t) tx <> [t] <> filter (> t) ty)
       (switch t bx by)
 
--- | @switch t a b@ behaves as @b@ during span @s@, otherwise as @a@.
-latchDuringR :: Span -> Reactive a -> Reactive a -> Reactive a
-latchDuringR s (Reactive (tx, bx)) (Reactive (ty, by)) =
-  Reactive $
-    (,)
-      (tx1 <> ty1 <> tx2)
-      (latchDuring' s bx by)
-  where
-    tx1 = filter (< (s ^.onset)) tx
-    ty1 = filter (\y -> (y >= (s ^.onset)) && (y < s ^.offset)) ty
-    tx2 = filter (>= (s ^.offset)) tx
-
--- | @switch t a b@ behaves as @a@ except at time @t@ when it behaves as @b@.
-trigger :: Time -> Reactive a -> Reactive a -> Reactive a
-trigger t (Reactive (tx, bx)) (Reactive (ty, by)) =
-  Reactive $
-    (,)
-      (filter (< t) tx <> [t] <> filter (> t) ty)
-      (switch' t bx by bx)
-
-
 -- | Replace everything outside the given span by mempty.
 trimR :: Monoid a => Span -> Reactive a -> Reactive a
 trimR (view onsetAndOffset -> (t, u)) x = switchR t mempty (switchR u x mempty)
@@ -236,4 +208,3 @@ continousWith f x = continous $ liftA2 (<*>) (pure f) (fmap pure x)
 -- | Sample a 'Behavior' into a reactive.
 sample :: [Time] -> Behavior a -> Reactive a
 sample ts b = Reactive (ts, b)
-
