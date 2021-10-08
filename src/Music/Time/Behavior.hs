@@ -18,7 +18,7 @@ module Music.Time.Behavior
     switch',
     latchDuring,
     latchDuring',
-    loopEvery,
+    loop,
 
     -- splice,
     trim,
@@ -211,7 +211,7 @@ sampled :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
 sampled = from behavior
 
 -- |
--- A behavior that will always return the initial value
+-- A behavior that will always return the initial value.
 constant :: a -> Behavior a
 constant = pure
 
@@ -263,7 +263,7 @@ sawtooth = line - fmap floor' line
 -- |
 -- A behavior that switches from 0 to 1 repeatedly with a period of 1.
 square :: Num a => Behavior a
-square = loopEvery 1 $
+square = loop 1 $
   switch 0.5 1 0
 -- |
 -- A behavior that is 1 at time 0, and 0 at all other times.
@@ -361,8 +361,8 @@ tau = 2 * pi
 
 -- |
 -- Loops the behavior every @d@ seconds.
-loopEvery :: Duration -> Behavior a -> Behavior a
-loopEvery d b =
+loop :: Duration -> Behavior a -> Behavior a
+loop d b =
   Behavior $
       \t -> 
         let
