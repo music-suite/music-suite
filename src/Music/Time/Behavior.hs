@@ -360,7 +360,7 @@ tau :: Floating a => a
 tau = 2 * pi
 
 -- |
--- Loops the behavior every @d seconds
+-- Loops the behavior every @d@ seconds.
 loopEvery :: Duration -> Behavior a -> Behavior a
 loopEvery d b =
   Behavior $
