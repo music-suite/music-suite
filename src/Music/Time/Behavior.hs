@@ -210,7 +210,7 @@ behavior = iso Behavior getBehavior
 sampled :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
 sampled = from behavior
 
--- \
+-- |
 -- A behavior that will always return the initial value
 constant :: a -> Behavior a
 constant = pure
@@ -360,7 +360,7 @@ tau :: Floating a => a
 tau = 2 * pi
 
 -- |
--- Loops the behavior every @d seconds
+-- Loops the behavior every @d@ seconds.
 loopEvery :: Duration -> Behavior a -> Behavior a
 loopEvery d b =
   Behavior $
