@@ -315,13 +315,13 @@ switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
 (!) :: Behavior a -> Time -> a
 (!) = getBehavior
 
-data EdgeInc = Included | Excluded
+data Include = Included | Excluded
 
 -- |
 -- Determines whether a behavior will include the start and end of a 'behavior'.
-data SpanEdge = SpanEdge{
-  start:: EdgeInc, 
-  end::EdgeInc
+data SpanOptions = SpanOptions{
+  start:: Include, 
+  end::Include
 }
 
 -- |
@@ -334,18 +334,18 @@ data SpanEdge = SpanEdge{
 -- if @end == Included@ 
 -- the latch will switch back to the original behavior when time @t == end@ 
 -- otherwise it will start when time @t >= start@.
-latchWithOptions :: SpanEdge -> Span -> Behavior a -> Behavior a -> Behavior a
+latchWithOptions :: SpanOptions -> Span -> Behavior a -> Behavior a -> Behavior a
 latchWithOptions r s rx ry = case r of 
-  SpanEdge{start=Excluded, end=Excluded} -> view behavior $ \u -> 
+  SpanOptions{start=Excluded, end=Excluded} -> view behavior $ \u -> 
         if (u <= s ^.onset) || (u >= s ^.offset) then rx ! u 
         else ry ! u
-  SpanEdge{start=Excluded, end=Included} -> view behavior $ \u -> 
+  SpanOptions{start=Excluded, end=Included} -> view behavior $ \u -> 
         if (u <= s ^.onset) || (u > s ^.offset) then rx ! u 
         else ry ! u
-  SpanEdge{start=Included, end=Excluded} -> view behavior $ \u -> 
+  SpanOptions{start=Included, end=Excluded} -> view behavior $ \u -> 
         if (u < s ^.onset) || (u >= s ^.offset) then rx ! u 
         else ry ! u
-  SpanEdge{start=Included, end=Included} -> view behavior $ \u -> 
+  SpanOptions{start=Included, end=Included} -> view behavior $ \u -> 
         if (u < s ^.onset) || (u > s ^.offset) then rx ! u 
         else ry ! u
 
@@ -356,7 +356,7 @@ latchWithOptions r s rx ry = case r of
 -- 
 -- If the duration of the span is zero, the given behavior is returned unchanged.
 latch :: Span -> Behavior a -> Behavior a -> Behavior a
-latch = latchWithOptions $ SpanEdge Included Excluded
+latch = latchWithOptions $ SpanOptions Included Excluded
 
 
 -- | Replace everything outside the given span by 'mempty'.
