@@ -6,6 +6,7 @@ module Music.Score.Meta
 
     -- * Meta-events
     addMetaEvent,
+    addMetaAt,
     fromMetaReactive,
     metaAtStart,
     withMeta,
@@ -20,7 +21,10 @@ import Music.Time
 import Music.Time.Meta
 
 addMetaEvent :: forall a b. (AttributeClass a, HasMeta b) => Event a -> b -> b
-addMetaEvent x = applyMeta $ wrapTMeta $ noteToReactive x
+addMetaEvent x = applyMeta $ wrapTMeta $ eventToReactive x
+
+addMetaAt :: forall a b. (AttributeClass a, HasMeta b) => Time -> a -> b -> b
+addMetaAt t x = applyMeta $ wrapTMeta $ timeToReactive t x
 
 fromMetaReactive :: forall b. AttributeClass b => Meta -> Reactive b
 fromMetaReactive = fromMaybe mempty . unwrapMeta
@@ -64,11 +68,15 @@ mapAfter t f x = let (y, n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2, _)
 runScoreMeta :: forall a b. (HasMeta a, AttributeClass b) => a -> Reactive b
 runScoreMeta = fromMetaReactive . view meta
 
-noteToReactive :: Monoid a => Event a -> Reactive a
-noteToReactive n = (pure <$> n) `activate` pure mempty
+eventToReactive :: Monoid a => Event a -> Reactive a
+eventToReactive n = (pure <$> n) `activateDuring` pure mempty
 
-activate :: Event (Reactive a) -> Reactive a -> Reactive a
-activate (view (from event) -> (view onsetAndOffset -> (start, stop), x)) y = y `turnOn` (x `turnOff` y)
+activateDuring :: Event (Reactive a) -> Reactive a -> Reactive a
+activateDuring (view (from event) -> (view onsetAndOffset -> (start, stop), x)) y = y `turnOn` (x `turnOff` y)
   where
     turnOn = switchR start
     turnOff = switchR stop
+
+timeToReactive :: Monoid a => Time -> a -> Reactive a
+timeToReactive t n = switchR t (pure mempty) r
+  where r = sample [0] $ impulse' n

@@ -32,6 +32,7 @@ module Music.Time.Behavior
     -- ** Impulse functions
     unit,
     impulse,
+    impulse',
     turnOn,
     turnOff,
   )
@@ -252,6 +253,12 @@ sawtooth = line - fmap floor' line
 -- A behavior that is 1 at time 0, and 0 at all other times.
 impulse :: Num a => Behavior a
 impulse = switch' 0 0 1 0
+
+-- |
+-- A behavior that is the value passed in at time 0 and mempty
+-- at all other times
+impulse' :: Monoid a => a-> Behavior a
+impulse' x = switch' 0 mempty (pure x) mempty
 
 -- |
 -- A behavior that goes from 0 to 1 at time 0.
