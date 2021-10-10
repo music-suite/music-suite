@@ -10,21 +10,25 @@ module Music.Score.Meta
     fromMetaReactive,
     metaAtStart,
     withMeta,
+    Impulses(..),
   )
 where
 
-import Control.Lens hiding (parts)
+import Control.Lens hiding (transform, parts, at)
+import Data.Bifunctor (first)
 import Control.Monad.Plus
 import Data.Maybe
 import Music.Score.Internal.Util (composed)
 import Music.Time
 import Music.Time.Meta
+import Data.Map (Map)
+import qualified Data.Map
 
 addMetaEvent :: forall a b. (AttributeClass a, HasMeta b) => Event a -> b -> b
 addMetaEvent x = applyMeta $ wrapTMeta $ eventToReactive x
 
 addMetaAt :: forall a b. (AttributeClass a, HasMeta b) => Time -> a -> b -> b
-addMetaAt t x = applyMeta $ wrapTMeta $ timeToReactive t x
+addMetaAt t x = applyMeta $ wrapTMeta $ timeToImpulses t x
 
 fromMetaReactive :: forall b. AttributeClass b => Meta -> Reactive b
 fromMetaReactive = fromMaybe mempty . unwrapMeta
@@ -77,22 +81,32 @@ activateDuring (view (from event) -> (view onsetAndOffset -> (start, stop), x)) 
     turnOn = switchR start
     turnOff = switchR stop
 
-data OnOff = On | Off deriving (Eq, Show)
+data OnOff = On | Off deriving (Eq, Show, Ord)
+instance Transformable OnOff where
+  transform _ x = x
 instance Semigroup OnOff where
   Off <> Off = Off
   _ <> _ = On
 instance Monoid OnOff where
   mempty = Off
 
+newtype Impulses a = Impulses { getImpulses :: Map Time a }
+  deriving (Eq, Ord, Show, Semigroup, Monoid)
+
+at :: Monoid a => Impulses a -> Time -> a
+at (Impulses xs) k = fromMaybe mempty $ Data.Map.lookup k xs
+
+instance Transformable (Impulses a) where
+  transform t (Impulses xs) = Impulses $ Data.Map.fromList $ fmap (first $ transform t) $ Data.Map.toList xs
+
 -- |
--- >>> timeToReactive 2 On `atTime` 1
+-- >>> timeToImpulses 2 On `at` 1
 -- Off
 --
--- >>> timeToReactive 2 On `atTime` 2
--- Off
+-- >>> timeToImpulses 2 On `at` 2
+-- On
 --
--- >>> timeToReactive 2 On `atTime` 3
+-- >>> timeToImpulses 2 On `at` 3
 -- Off
-timeToReactive :: Monoid a => Time -> a -> Reactive a
-timeToReactive t n = switchR t (pure mempty) r
-  where r = sample [0] $ impulse' n
+timeToImpulses :: Time -> a -> Impulses a
+timeToImpulses t n = Impulses $ Data.Map.singleton t n
