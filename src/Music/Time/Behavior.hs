@@ -275,6 +275,9 @@ turnOff = switch 0 1 0
 
 -- |
 -- Instantly switch from one behavior to another.
+--
+-- >>> switch 1 10 20 ! 0
+-- 10
 switch :: Time -> Behavior a -> Behavior a -> Behavior a
 switch t rx ry = switch' t rx ry ry
 
