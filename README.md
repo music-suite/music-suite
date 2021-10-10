@@ -16,6 +16,11 @@ Music Suite is a language for describing music, based on Haskell.
 
 ### Development environment
 
+There are two ways of setting up the development environment:
+
+1. Using Nix (recommended on Linux)
+2. Manually (recommended on Windows and OS X)
+
 #### Nix setup
 
 Install the [Nix package manager](https://en.wikipedia.org/wiki/Nix_package_manager). We recommend using 2.3.1 or later.
@@ -30,12 +35,13 @@ All build commands should be run in the Nix shell. You can exit the Nix shell us
 
 #### Manual setup
 
-Install the following:
+Install the following.
 
-- [Git](https://git-scm.com/)
-- [Lilypond](http://lilypond.org/)
-- [Timidity++](https://sourceforge.net/projects/timidity/)
+- [Lilypond](http://lilypond.org/), 2.22.1 or later
+- [Timidity++](https://sourceforge.net/projects/timidity/), 2.15.0 or later
 - [ghcup](https://www.haskell.org/ghcup)
+
+Make sure that `lilypond` `timidity` and `ghcup` are available your shell environment (e.g. by adding them to `PATH`).
 
 Use `ghcup` to install GHC:
 
