@@ -81,7 +81,7 @@ $ cabal run music-suite-test-xml-parser
 Music Suite makes heavy use of [doctests](https://en.wikipedia.org/wiki/Doctest). To run all doctests, type:
 
 ```
-$ cabal build music-suite && doctests
+$ cabal build music-suite && cabal exec doctester --package music-suite
 ```
 
 or (Nix only):
