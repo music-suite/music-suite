@@ -77,6 +77,22 @@ activateDuring (view (from event) -> (view onsetAndOffset -> (start, stop), x)) 
     turnOn = switchR start
     turnOff = switchR stop
 
+data OnOff = On | Off deriving (Eq, Show)
+instance Semigroup OnOff where
+  Off <> Off = Off
+  _ <> _ = On
+instance Monoid OnOff where
+  mempty = Off
+
+-- |
+-- >>> timeToReactive 2 On `atTime` 1
+-- Off
+--
+-- >>> timeToReactive 2 On `atTime` 2
+-- Off
+--
+-- >>> timeToReactive 2 On `atTime` 3
+-- Off
 timeToReactive :: Monoid a => Time -> a -> Reactive a
 timeToReactive t n = switchR t (pure mempty) r
   where r = sample [0] $ impulse' n
