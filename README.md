@@ -12,71 +12,48 @@ Music Suite is a language for describing music, based on Haskell.
 <!-- See <http://music-suite.github.io>. -->
 
 
-## How to build Music Suite
+## Build Music Suite
 
-Music Suite can be built in a Nix environment (Linux only), or with Cabal.
-If you use Nix then Music Suite will have all the dependencies it needs
-installed for you. If you choose to use Cabal then you will need to install
-additional programs manually.
+### Development environment
 
-## Set up the Build Environment
-Befor you can build Music Suite you need to set up the build environment.
-The steps are outlined separately for Nix and Cabal.
+There are two ways of setting up the development environment:
 
-### Set up the Build Environment for Nix
+1. Using Nix (recommended on Linux)
+2. Manually (recommended on Windows and OS X)
 
-Install Nix (2.3.1 or later).
+#### Nix setup
 
-Enter build environment using:
+Install the [Nix package manager](https://en.wikipedia.org/wiki/Nix_package_manager). We recommend using 2.3.1 or later.
+
+Enter environment using:
 
 ```
 nix-shell --pure
 ```
 
-You should see this prompt:
+All build commands should be run in the Nix shell. You can exit the Nix shell using `Ctrl-D`.
 
-```
-#
-```
+#### Manual setup
 
-### Set up the Build Environment for Cabal
-You will need to install the following:
-- [Git](https://git-scm.com/)
-- [Lilypond](http://lilypond.org/)
-- [Timidity++](https://sourceforge.net/projects/timidity/)
+Install the following.
 
-On Linux you should find these in your package manager if they're not
-already installed. On OSX you can either download these, or use Homebrew, or 
-MacPorts. You should be able to install these on Windows as well.
+- [Lilypond](http://lilypond.org/), 2.22.1 or later
+- [Timidity++](https://sourceforge.net/projects/timidity/), 2.15.0 or later
+- [ghcup](https://www.haskell.org/ghcup)
 
-For OSX and Linux users, install ghcup using [these
-instructions](https://www.haskell.org/ghcup). If you're using Windows consult a guide on current best
-practices for installing Haskell on Windows. Some of the instructions below
-may not work on Windows..
+Make sure that `lilypond` `timidity` and `ghcup` are available your shell environment (e.g. by adding them to `PATH`).
 
-Install GHC 8.10.4:
+Use `ghcup` to install GHC:
 
 ```
 ghcup install 8.10.4
 ```
 
-Go to a directory where you want to use Music Suite and type the following
-commands:
-
-```
-git clone https://github.com/music-suite/music-suite.git
-cd music-suite
-```
-
-
 ## Build the library and examples
 
-The following instructions work both inside the Nix shell (if you're 
-using Nix), or inside the music-suite directory (if you're just using Cabal).
-
 ```
-# cabal update
-# cabal build
+$ cabal update
+$ cabal build
 ```
 
 ### Build and run the tests
@@ -84,31 +61,39 @@ using Nix), or inside the music-suite directory (if you're just using Cabal).
 #### Standard test suite
 
 ```
-# cabal test --test-show-details=streaming --test-options=--color=always
+$ cabal test --test-show-details=streaming --test-options=--color=always
 ```
 
 To run individual tests:
 
 ```
-# cabal run TEST_NAME -- TEST_ARGS...
+$ cabal run TEST_NAME -- TEST_ARGS...
 ```
 
 e.g.
 
 ```
-cabal run music-suite-test-xml-parser
+$ cabal run music-suite-test-xml-parser
 ```
 
 #### Doctests
 
-```
-# cabal build && doctests
-```
-
-To run doctests for individual files/directories:
+Music Suite makes heavy use of [doctests](https://en.wikipedia.org/wiki/Doctest). To run all doctests, type:
 
 ```
-# cabal build && cabal exec doctester --package music-suite -- src/Music/Pitch
+$ cabal build music-suite && cabal exec doctester --package music-suite
+```
+
+or (Nix only):
+
+```
+doctests
+```
+
+You can also pass individual directories to run a subset of the doctests. For example to test `src/Music/Pitch`:
+
+```
+$ cabal build-music-suite && cabal exec doctester --package music-suite -- src/Music/Pitch
 ```
 
 
@@ -116,13 +101,13 @@ To run doctests for individual files/directories:
 ### Development shell
 
 ```
-# cabal build music-suite && cabal exec --package music-suite ghci
+$ cabal build music-suite && cabal exec --package music-suite ghci
 ```
 
 or
 
 ```
-# cabal repl
+$ cabal repl
 ```
 
 ### Build the documentation
@@ -136,14 +121,14 @@ The output appears in `docs/build`. You can point a HTTP server to this director
 #### API docs
 
 ```
-m> cabal haddock
+$ cabal haddock
 ```
 
 
 ### Run example
 
 ```
-cabal exec runhaskell -- examples/chopin.hs -f ly -o t.ly
+$ cabal exec runhaskell -- examples/chopin.hs -f ly -o t.ly
 ```
 
 
@@ -153,21 +138,20 @@ cabal exec runhaskell -- examples/chopin.hs -f ly -o t.ly
 We use Nix to pin the version of GHC and Cabal freeze files to pin the
 version of all Haskell dependencies. This describes how to upgrade GHC.
 
-Because GHC pins a version of the Haskell base library, this generally
-also means upgrading your Cabal dependencies.
+Because GHC pins a version of the Haskell base library, GHC and the Cabal dependencies need to be upgraded together. This is the recommended workflow:
 
-- Update the commit/URL and hash in `default.nix`
-  - Use `$ nix-prefetch-url --unpack <url>` to obtain the hash (and verify)
-- Enter new Nix shell (may take a while)
-- Update the `ghc-version` field in `cabal.project` to whatever is printed by `ghc --version`
-- Comment out `reject-unconstrained-dependencies` in `cabal.project`
-- Update `index-state` in Cabal config to a recent time
-- Run `cabal update`
-- Run `rm cabal.project.freeze`
-- Run `cabal freeze`
-- Run `cabal test` to check that compiling/testing works (and fix errors)
-- Restore `reject-unconstrained-dependencies`
-- Commit your changes.
+1. Update the commit/URL and hash in `default.nix`
+  1. Use `$ nix-prefetch-url --unpack <url>` to obtain the hash (and verify)
+1. Enter new Nix shell (may take a while)
+1. Update the `ghc-version` field in `cabal.project` to whatever is printed by `ghc --version`
+1. Comment out `reject-unconstrained-dependencies` in `cabal.project`
+1. Update `index-state` in Cabal config to a recent time
+1. Run `cabal update`
+1. Run `rm cabal.project.freeze`
+1. Run `cabal freeze`
+1. Run `cabal test` to check that compiling/testing works (and fix errors)
+1. Restore `reject-unconstrained-dependencies`
+1. Commit your changes.
 
 
 # Developer notes
