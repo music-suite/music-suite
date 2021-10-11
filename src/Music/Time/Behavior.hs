@@ -8,6 +8,7 @@ module Music.Time.Behavior
     -- * Construction
     behavior,
     sampled,
+    constant,
 
     -- * Lookup
     (!),
@@ -15,6 +16,10 @@ module Music.Time.Behavior
     -- * Combinators
     switch,
     switch',
+    latch,
+    latchWithOptions,
+    loop,
+
     -- splice,
     trim,
     trimBefore,
@@ -26,6 +31,7 @@ module Music.Time.Behavior
     -- ** Oscillators
     line,
     sawtooth,
+    square,
     sine,
     cosine,
 
@@ -51,6 +57,7 @@ import Music.Time.Internal.Preliminaries
 import Music.Time.Internal.Transform
 import Music.Time.Juxtapose
 import Music.Time.Score
+import Music.Time.Internal.Util (floor')
 
 -- Behavior is 'Representable':
 --
@@ -205,6 +212,11 @@ sampled :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
 sampled = from behavior
 
 -- |
+-- A behavior that will always return the initial value.
+constant :: a -> Behavior a
+constant = pure
+
+-- |
 -- A behavior that gives the current time.
 --
 -- @
@@ -249,6 +261,11 @@ cosine = cos (line * tau)
 sawtooth :: RealFrac a => Behavior a
 sawtooth = line - fmap floor' line
 
+-- |
+-- A behavior that switches from 0 to 1 repeatedly with a period of 1.
+square :: Num a => Behavior a
+square = loop 1 $
+  switch 0.5 1 0
 -- |
 -- A behavior that is 1 at time 0, and 0 at all other times.
 impulse :: Num a => Behavior a
@@ -306,7 +323,51 @@ switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
 
 -- | Sample the given behavior at the given time.
 (!) :: Behavior a -> Time -> a
-(!) b t = getBehavior b t
+(!) = getBehavior
+
+data Include = Included | Excluded
+
+-- |
+-- Determines whether a behavior will include the start and end of a 'behavior'.
+data SpanOptions = SpanOptions{
+  start:: Include, 
+  end::Include
+}
+
+-- |
+-- Switches to the second @Behavior@ during the span. When the @Behavior@ switches
+-- is determined by @SpanEdge@. 
+-- Assuming the @Span = s<->e@ and @time = t@ then if @start == Included@ 
+-- the latch will switch when time @t == start@ otherwise it will start when 
+-- time @t >= start@.
+--
+-- if @end == Included@ 
+-- the latch will switch back to the original behavior when time @t == end@ 
+-- otherwise it will start when time @t >= start@.
+latchWithOptions :: SpanOptions -> Span -> Behavior a -> Behavior a -> Behavior a
+latchWithOptions r s rx ry = case r of 
+  SpanOptions{start=Excluded, end=Excluded} -> view behavior $ \u -> 
+        if (u <= s ^.onset) || (u >= s ^.offset) then rx ! u 
+        else ry ! u
+  SpanOptions{start=Excluded, end=Included} -> view behavior $ \u -> 
+        if (u <= s ^.onset) || (u > s ^.offset) then rx ! u 
+        else ry ! u
+  SpanOptions{start=Included, end=Excluded} -> view behavior $ \u -> 
+        if (u < s ^.onset) || (u >= s ^.offset) then rx ! u 
+        else ry ! u
+  SpanOptions{start=Included, end=Included} -> view behavior $ \u -> 
+        if (u < s ^.onset) || (u > s ^.offset) then rx ! u 
+        else ry ! u
+
+-- |
+-- Switches to the second behavior during the span, otherwise first behavior.
+-- If the span is `1 <-> 3` then at `1` it will switch to the second behavior
+-- and at time `3` it will switch back to the first behavior.
+-- 
+-- If the duration of the span is zero, the given behavior is returned unchanged.
+latch :: Span -> Behavior a -> Behavior a -> Behavior a
+latch = latchWithOptions $ SpanOptions Included Excluded
+
 
 -- | Replace everything outside the given span by 'mempty'.
 trim :: Monoid a => Span -> Behavior a -> Behavior a
@@ -330,6 +391,14 @@ concatB = mconcat . toListOf traverse . mapWithSpan transform . fmap (trim mempt
 tau :: Floating a => a
 tau = 2 * pi
 
--- TODO use Internal.Util version
-floor' :: RealFrac a => a -> a
-floor' = fromInteger . floor
+-- |
+-- Loops the behavior every @d@ seconds.
+loop :: Duration -> Behavior a -> Behavior a
+loop d b =
+  Behavior $
+      \t -> 
+        let
+          dx :: Duration = t .-. 0
+          p :: Duration = dx - (d * fromInteger (truncate (dx/d)))
+        in
+          b ! (0 .+^ p)

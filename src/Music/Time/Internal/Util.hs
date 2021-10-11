@@ -33,6 +33,7 @@ module Music.Time.Internal.Util
     partial3,
     _zipList,
     dependingOn,
+    floor'
   )
 where
 

@@ -75,6 +75,7 @@ library
       build-depends:    unix
 
     exposed-modules:
+                        Music.Prelude.Standard
                         Control.Monad.Abort
                         Control.Monad.Log
                         Data.AffineSpace.Point
@@ -145,7 +146,6 @@ library
                         Music.Pitch.Scale
                         Music.Prelude
                         Music.Prelude.Inspectable
-                        Music.Prelude.Standard
                         Music.Score
                         Music.Score.Articulation
                         Music.Score.Color
