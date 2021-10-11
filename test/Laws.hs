@@ -285,6 +285,9 @@ instance Arbitrary a => Arbitrary (AddMeta a) where
 instance Arbitrary a => Arbitrary (Aligned a) where
   arbitrary = aligned <$> arbitrary <*> arbitrary <*> arbitrary
 
+instance Arbitrary a => Arbitrary (Impulses a) where
+  arbitrary = Impulses <$> arbitrary
+
 {-
 instance (Ord a, Arbitrary a) => Arbitrary (Set.Set a) where
   arbitrary = fmap Set.fromList arbitrary
@@ -455,6 +458,7 @@ oldTests =
   I_TEST2("Transformable AddMeta (Placed Double)", _Transformable, AddMeta (Placed Double)),
 
   I_TEST2("Transformable Reactive Int", _Transformable, Reactive Int),
+  I_TEST2("Transformable Reactive Int", _Transformable, Impulses Int),
   I_TEST2("Transformable Aligned Int", _Transformable, Aligned Int),
   I_TEST2("Transformable Aligned (Voice Int)", _Transformable, Aligned (Voice Int)),
   I_TEST2("HasPosition/Transformable (Aligned (Voice Int))",
