@@ -18,13 +18,15 @@ import Control.Monad.Plus
 import Data.Maybe
 import Music.Score.Internal.Util (composed)
 import Music.Time
+import Music.Time.Impulses
 import Music.Time.Meta
+import qualified Data.Map
 
 addMetaEvent :: forall a b. (AttributeClass a, HasMeta b) => Event a -> b -> b
 addMetaEvent x = applyMeta $ wrapTMeta $ eventToReactive x
 
 addMetaAt :: forall a b. (AttributeClass a, HasMeta b) => Time -> a -> b -> b
-addMetaAt t x = applyMeta $ wrapTMeta $ timeToReactive t x
+addMetaAt t x = applyMeta $ wrapTMeta $ timeToImpulses t x
 
 fromMetaReactive :: forall b. AttributeClass b => Meta -> Reactive b
 fromMetaReactive = fromMaybe mempty . unwrapMeta
@@ -77,6 +79,24 @@ activateDuring (view (from event) -> (view onsetAndOffset -> (start, stop), x)) 
     turnOn = switchR start
     turnOff = switchR stop
 
-timeToReactive :: Monoid a => Time -> a -> Reactive a
-timeToReactive t n = switchR t (pure mempty) r
-  where r = sample [0] $ impulse' n
+-- |
+-- >>> timeToImpulses 2 On `at` 1
+-- Off
+--
+-- >>> timeToImpulses 2 On `at` 2
+-- On
+--
+-- >>> timeToImpulses 2 On `at` 3
+-- Off
+-- |
+-- >>> (timeToImpulses 2 On <> timeToImpulses 4 On) `at` 1
+-- Off
+--
+-- >>> (timeToImpulses 2 On <> timeToImpulses 4 On) `at` 2
+-- On
+--
+-- >>> (timeToImpulses 2 [1] <> timeToImpulses 2 [3]) `at` 2
+-- [1,3]
+--
+timeToImpulses :: Time -> a -> Impulses a
+timeToImpulses t n = Impulses $ Data.Map.singleton t n

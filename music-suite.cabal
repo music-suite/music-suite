@@ -187,6 +187,7 @@ library
                         Music.Time.Behavior
                         Music.Time.Duration
                         Music.Time.Event
+                        Music.Time.Impulses
                         Music.Time.Internal.Convert
                         Music.Time.Internal.Placed
                         Music.Time.Internal.Preliminaries
