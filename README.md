@@ -78,22 +78,24 @@ $ cabal run music-suite-test-xml-parser
 
 #### Doctests
 
-Music Suite makes heavy use of [doctests](https://en.wikipedia.org/wiki/Doctest). To run all doctests, type:
+Music Suite makes heavy use of [doctests](https://en.wikipedia.org/wiki/Doctest). 
+
+You can pass any file or directory. For example to test `src/Music/Pitch`:
 
 ```
-$ cabal build music-suite && cabal exec doctester --package music-suite
+$ cabal build music-suite && cabal exec doctester --package music-suite -- src/Music/Pitch
 ```
 
-or (Nix only):
+To test a single file:
 
 ```
-doctests
+$ cabal build music-suite && cabal exec doctester --package music-suite -- src/Music/Score/Meta.hs
 ```
 
-You can also pass individual directories to run a subset of the doctests. For example to test `src/Music/Pitch`:
+To run all doctests use (Nix only):
 
 ```
-$ cabal build-music-suite && cabal exec doctester --package music-suite -- src/Music/Pitch
+$ doctests
 ```
 
 
