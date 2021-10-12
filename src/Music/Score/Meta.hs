@@ -13,7 +13,7 @@ module Music.Score.Meta
   )
 where
 
-import Control.Lens hiding (parts)
+import Control.Lens hiding (parts, at)
 import Control.Monad.Plus
 import Data.Maybe
 import Music.Score.Internal.Util (composed)
@@ -88,7 +88,7 @@ activateDuring (view (from event) -> (view onsetAndOffset -> (start, stop), x)) 
 --
 -- >>> timeToImpulses 2 On `at` 3
 -- Off
--- |
+--
 -- >>> (timeToImpulses 2 On <> timeToImpulses 4 On) `at` 1
 -- Off
 --
@@ -96,7 +96,7 @@ activateDuring (view (from event) -> (view onsetAndOffset -> (start, stop), x)) 
 -- On
 --
 -- >>> (timeToImpulses 2 [1] <> timeToImpulses 2 [3]) `at` 2
--- [1,3]
+-- [1]
 --
 timeToImpulses :: Time -> a -> Impulses a
 timeToImpulses t n = Impulses $ Data.Map.singleton t n

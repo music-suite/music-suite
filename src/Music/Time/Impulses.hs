@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
-
 module Music.Time.Impulses
   (
     Impulses(..),
@@ -13,9 +11,29 @@ import Data.Map(Map)
 import qualified Data.Map
 import Music.Time.Juxtapose
 
+
 newtype Impulses a = Impulses { getImpulses :: Map Time a }
   deriving (Eq, Ord, Show, Semigroup, Monoid)
 
+-- |
+-- >>> (Impulses $ Data.Map.singleton 2 On) `at ` 1
+-- Off
+--
+-- >>> (Impulses $ Data.Map.singleton 2 On) `at` 2
+-- On
+--
+-- >>> (Impulses $ Data.Map.singleton 2 On) `at` 3
+-- Off
+-- 
+-- >>> ((Impulses $ Data.Map.singleton 2 On) <> (Impulses $ Data.Map.singleton 4 On)) `at` 1
+-- Off
+--
+-- >>> ((Impulses $ Data.Map.singleton 2 On) <> (Impulses $ Data.Map.singleton 4 On)) `at` 2
+-- On
+--
+-- >>> ((Impulses $ Data.Map.singleton 2 [1]) <> (Impulses $ Data.Map.singleton 2 [3])) `at` 2
+-- [1]
+--
 at :: Monoid a => Impulses a -> Time -> a
 at (Impulses xs) k = fromMaybe mempty $ Data.Map.lookup k xs
 
