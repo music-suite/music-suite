@@ -34,10 +34,10 @@ sines =
   , (delay 5 $ stretch 12 $ sine * 3, times 48 c |/ 2)
   ]
 
-at :: IsPitch a => Behavior Pitch -> a
-at = fromPitch . ($ 0) . view sampled
+atPos :: IsPitch a => Behavior Pitch -> a
+atPos = fromPitch . ($ 0) . view sampled
 
 -- FIXME this gives value at 0 only!
 main :: IO ()
-main = defaultMain $ rcat $ fmap (fmap at) $
+main = defaultMain $ rcat $ fmap (fmap atPos) $
   fmap (\(p, x) -> set pitches (fmap toPitch p) x) sines

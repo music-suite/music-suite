@@ -25,7 +25,7 @@ module Music.Score.Meta.Barline
 
     -- ** Adding barlines to scores
     barline,
-    barlineDuring,
+    barlineAt,
   )
 where
 
@@ -51,6 +51,7 @@ import Music.Score.Part
 import Music.Score.Pitch
 import Music.Time
 import Music.Time.Reactive
+import Data.Monoid
 
 -- | Represents an explicitly added barline.
 data Barline = StandardBarline | DoubleBarline
@@ -60,8 +61,8 @@ data Barline = StandardBarline | DoubleBarline
 barline :: (HasMeta a, HasPosition a) => Barline -> a -> a
 barline c x = case _era x of
   Nothing -> x
-  Just e -> barlineDuring e c x
+  Just e -> barlineAt (view onset e) c x
 
 -- | Add a barline to the given score.
-barlineDuring :: HasMeta a => Span -> Barline -> a -> a
-barlineDuring s c = addMetaEvent $ view event (s, Just $ Last c)
+barlineAt :: HasMeta a => Time -> Barline -> a -> a
+barlineAt t c = addMetaAt t  $ Data.Monoid.Last $ Just c

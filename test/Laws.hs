@@ -284,6 +284,9 @@ instance Arbitrary a => Arbitrary (AddMeta a) where
 instance Arbitrary a => Arbitrary (Aligned a) where
   arbitrary = aligned <$> arbitrary <*> arbitrary <*> arbitrary
 
+instance Arbitrary a => Arbitrary (Impulses a) where
+  arbitrary = Impulses <$> arbitrary
+
 {-
 instance (Ord a, Arbitrary a) => Arbitrary (Set.Set a) where
   arbitrary = fmap Set.fromList arbitrary
@@ -446,6 +449,7 @@ oldTests =
   testProperty "instance Transformable AddMeta (Placed Double)" $ _Transformable (undefined:: AddMeta (Placed Double)),
 
   testProperty "instance Transformable Reactive Int" $ _Transformable (undefined:: Reactive Int),
+  testProperty "instance Transformable Reactive Int" $ _Transformable (undefined:: Impulses Int),
   testProperty "instance Transformable Aligned Int" $ _Transformable (undefined:: Aligned Int),
   testProperty "instance Transformable Aligned (Voice Int)" $ _Transformable (undefined:: Aligned (Voice Int)),
   testProperty "instance HasPosition/Transformable (Aligned (Voice Int))" $ _HasPositionTransformable (undefined:: Aligned (Voice Int)),
@@ -482,6 +486,4 @@ oldTests =
   testProperty "instance Splittable Note Int" $ _Splittable (undefined:: Note Int),
 
   testProperty "instance Transformable Note [Event Int]" $ _Transformable (undefined:: Note [Event Int])
-
   ]
-

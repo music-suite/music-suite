@@ -584,7 +584,7 @@ umts_12a =
         [PitchLayer $ Beat 1 P.c]
     middleCWithClefBar (Just clef) =
       Bar
-        (at 0 .~ Just clef $ mempty)
+        (Control.Lens.at 0 .~ Just clef $ mempty)
         [PitchLayer $ Beat 1 P.c]
     clefs :: [Maybe Music.Pitch.Clef]
     clefs =
@@ -1885,8 +1885,8 @@ umts_46c =
       Staff
         mempty
         [ mempty,
-          Bar (at (1 / 2) .~ Just Music.Pitch.mezzoSopranoClef $ mempty) chords,
-          Bar (at (1 / 2) .~ Just Music.Pitch.trebleClef $ mempty) chords
+          Bar (Control.Lens.at (1 / 2) .~ Just Music.Pitch.mezzoSopranoClef $ mempty) chords,
+          Bar (Control.Lens.at (1 / 2) .~ Just Music.Pitch.trebleClef $ mempty) chords
         ]
     chords =
       [PitchLayer $ Group $ replicate 4 $ Beat (1 / 4) P.c]
@@ -1930,7 +1930,7 @@ umts_51b =
   Work mempty $ pure
     $ Movement
       ( movementTitle .~ title_
-          $ movementAttribution . at "composer" .~ Just composer_
+          $ movementAttribution . Control.Lens.at "composer" .~ Just composer_
           $ mempty
       )
       (repeat mempty)

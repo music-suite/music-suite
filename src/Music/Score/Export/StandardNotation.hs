@@ -380,7 +380,7 @@ toLy opts work = do
           [ ("title", firstMovement ^. movementInfo . movementTitle),
             ( "composer",
               Data.Maybe.fromMaybe "" $
-                firstMovement ^. movementInfo . movementAttribution . at "composer"
+                firstMovement ^. movementInfo . movementAttribution . Control.Lens.at "composer"
             )
           ]
   let headerData = case layout opts of
@@ -693,7 +693,7 @@ toXml work = do
       Just x -> return x
   say "MusicXML: Extracting title and composer"
   let title = firstMovement ^. movementInfo . movementTitle
-  let composer = maybe "" id $ firstMovement ^. movementInfo . movementAttribution . at "composer"
+  let composer = maybe "" id $ firstMovement ^. movementInfo . movementAttribution . Control.Lens.at "composer"
   say "MusicXML: Generating part list"
   partList <- movementToPartList firstMovement
   say "MusicXML: Generating bar content"
@@ -1471,7 +1471,7 @@ toStandardNotation sc' = do
                  flip Music.Score.Meta.Title.getTitleAt 0 $
                    Music.Score.Meta.metaAtStart sc
              )
-          $ (movementAttribution . at "composer")
+          $ (movementAttribution . Control.Lens.at "composer")
             .~ ( flip Music.Score.Meta.Attribution.getAttribution "composer" $ Music.Score.Meta.metaAtStart sc
                )
             $ mempty

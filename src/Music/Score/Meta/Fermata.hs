@@ -62,4 +62,4 @@ fermata c x = case _era x of
 
 -- | Add a fermata to the given score.
 fermataAt :: HasMeta a => Time -> Fermata -> a -> a
-fermataAt s c = addMetaEvent $ view event (s <-> s, Data.Monoid.Last $ Just c)
+fermataAt t c = addMetaAt t $ Data.Monoid.Last $ Just c
