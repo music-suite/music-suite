@@ -486,4 +486,4 @@ oldTests =
   testProperty "instance Splittable Note Int" $ _Splittable (undefined:: Note Int),
 
   testProperty "instance Transformable Note [Event Int]" $ _Transformable (undefined:: Note [Event Int])
-]
+  ]
