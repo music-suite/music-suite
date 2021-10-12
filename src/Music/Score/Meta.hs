@@ -96,7 +96,10 @@ activateDuring (view (from event) -> (view onsetAndOffset -> (start, stop), x)) 
 -- On
 --
 -- >>> (timeToImpulses 2 [1] <> timeToImpulses 2 [3]) `at` 2
--- [1]
+-- [1,3]
+--
+-- >>> ((timeToImpulses 2 $ Data.Monoid.Last $ Just 1) <> (timeToImpulses 2 $ Data.Monoid.Last $ Just 3)) `at` 2
+-- Last {getLast = Just 3}
 --
 timeToImpulses :: Time -> a -> Impulses a
 timeToImpulses t n = Impulses $ Data.Map.singleton t n
