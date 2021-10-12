@@ -1,6 +1,5 @@
 
 
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PolyKinds #-}
@@ -342,13 +341,6 @@ unzipR f = (fmap fst f, fmap snd f)
 
 -- main = quickCheck $ \() () -> True
 
-#define A_TEST(EXPR) (testProperty "EXPR" $ EXPR)
-
-#define I_TEST2(INSTANCE_NAME,CLASS,TYPE) ( \
-  testProperty ("instance "++ INSTANCE_NAME) $ (CLASS (undefined::TYPE)) \
-  )
-
-
 main = defaultMain $ testGroup "all" [newTests, oldTests]
 
 data TProxy (a :: k) where
@@ -494,5 +486,4 @@ oldTests =
   testProperty "instance Splittable Note Int" $ _Splittable (undefined:: Note Int),
 
   testProperty "instance Transformable Note [Event Int]" $ _Transformable (undefined:: Note [Event Int])
-
-  ]
+]
