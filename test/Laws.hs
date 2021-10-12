@@ -1,6 +1,5 @@
 
 
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PolyKinds #-}
@@ -339,13 +338,6 @@ unzipR f = (fmap fst f, fmap snd f)
 
 -- main = quickCheck $ \() () -> True
 
-#define A_TEST(EXPR) (testProperty "EXPR" $ EXPR)
-
-#define I_TEST2(INSTANCE_NAME,CLASS,TYPE) ( \
-  testProperty ("instance "++ INSTANCE_NAME) $ (CLASS (undefined::TYPE)) \
-  )
-
-
 main = defaultMain $ testGroup "all" [newTests, oldTests]
 
 data TProxy (a :: k) where
@@ -398,99 +390,98 @@ newTests = testGroup "Instances (new tests)"
 
 oldTests =
   testGroup "Instances (old tests)" [
+  testProperty "instance Monoid ()" $ _Monoid (undefined:: ()),
+  testProperty "instance Monoid Sum Int" $ _Monoid (undefined:: Sum Int),
+  testProperty "instance Monoid [Int]" $ _Monoid (undefined:: [Int]),
 
-  I_TEST2("Monoid ()", _Monoid, ()),
-  I_TEST2("Monoid Sum Int", _Monoid, Sum Int),
-  I_TEST2("Monoid [Int]", _Monoid, [Int]),
+  testProperty "instance Monoid Average Rational" $ _Monoid (undefined:: Average Rational),
+  testProperty "instance Monoid Average Double" $ _Monoid (undefined:: Average Double),
 
-  I_TEST2("Monoid Average Rational", _Monoid, Average Rational),
-  I_TEST2("Monoid Average Double", _Monoid, Average Double),
+  testProperty "instance Monoid Time" $ _Monoid (undefined:: Time),
+  testProperty "instance Monoid Duration" $ _Monoid (undefined:: Duration),
+  testProperty "instance Monoid Span" $ _Monoid (undefined:: Span),
 
-  I_TEST2("Monoid Time", _Monoid, Time),
-  I_TEST2("Monoid Duration", _Monoid, Duration),
-  I_TEST2("Monoid Span", _Monoid, Span),
+  testProperty "instance Monoid Event ()" $ _Monoid (undefined:: Event ()),
+  testProperty "instance Monoid Placed ()" $ _Monoid (undefined:: Placed ()),
+  testProperty "instance Monoid Note ()" $ _Monoid (undefined:: Note ()),
 
-  I_TEST2("Monoid Event ()", _Monoid, Event ()),
-  I_TEST2("Monoid Placed ()", _Monoid, Placed ()),
-  I_TEST2("Monoid Note ()", _Monoid, Note ()),
-
-  I_TEST2("Monoid Voice Int", _Monoid, Voice Int),
-  I_TEST2("Monoid Score Int", _Monoid, Score Int),
+  testProperty "instance Monoid Voice Int" $ _Monoid (undefined:: Voice Int),
+  testProperty "instance Monoid Score Int" $ _Monoid (undefined:: Score Int),
 
   -- TODO lawless!
-  -- I_TEST2("Monoid (After (Score ()))", _Monoid, After (Score ())),
+  -- testProperty "instance Monoid (After (Score ()))" $ _Monoid (undefined:: After (Score ())),
   -- TODO lawless!
-  -- I_TEST2("Monoid (After (Score Int))", _Monoid, After (Score Int)),
+  -- testProperty "instance Monoid (After (Score Int))" $ _Monoid (undefined:: After (Score Int)),
 
-  I_TEST2("Transformable ()", _Transformable, ()),
-  I_TEST2("Transformable Bool", _Transformable, Bool),
-  I_TEST2("Transformable Pitch", _Transformable, Pitch),
-  I_TEST2("Transformable Part", _Transformable, Part),
+  testProperty "instance Transformable ()" $ _Transformable (undefined:: ()),
+  testProperty "instance Transformable Bool" $ _Transformable (undefined:: Bool),
+  testProperty "instance Transformable Pitch" $ _Transformable (undefined:: Pitch),
+  testProperty "instance Transformable Part" $ _Transformable (undefined:: Part),
 
-  I_TEST2("Transformable Time", _Transformable, Time),
-  I_TEST2("Transformable Duration", _Transformable, Duration),
-  I_TEST2("Transformable Span", _Transformable, Span),
+  testProperty "instance Transformable Time" $ _Transformable (undefined:: Time),
+  testProperty "instance Transformable Duration" $ _Transformable (undefined:: Duration),
+  testProperty "instance Transformable Span" $ _Transformable (undefined:: Span),
 
-  I_TEST2("Transformable [Time]", _Transformable, [Time]),
-  I_TEST2("Transformable [Duration]", _Transformable, [Duration]),
-  I_TEST2("Transformable [Span]", _Transformable, [Span]),
+  testProperty "instance Transformable [Time]" $ _Transformable (undefined:: [Time]),
+  testProperty "instance Transformable [Duration]" $ _Transformable (undefined:: [Duration]),
+  testProperty "instance Transformable [Span]" $ _Transformable (undefined:: [Span]),
 
-  I_TEST2("Transformable Set.Set Time", _Transformable, Set.Set Time),
-  I_TEST2("Transformable Set.Set Duration", _Transformable, Set.Set Duration),
-  I_TEST2("Transformable Set.Set Span", _Transformable, Set.Set Span),
+  testProperty "instance Transformable Set.Set Time" $ _Transformable (undefined:: Set.Set Time),
+  testProperty "instance Transformable Set.Set Duration" $ _Transformable (undefined:: Set.Set Duration),
+  testProperty "instance Transformable Set.Set Span" $ _Transformable (undefined:: Set.Set Span),
 
-  I_TEST2("Transformable Map.Map Int Time", _Transformable, Map.Map Int Time),
-  I_TEST2("Transformable Map.Map Int Duration", _Transformable, Map.Map Int Duration),
-  I_TEST2("Transformable Map.Map Int Span", _Transformable, Map.Map Int Span),
+  testProperty "instance Transformable Map.Map Int Time" $ _Transformable (undefined:: Map.Map Int Time),
+  testProperty "instance Transformable Map.Map Int Duration" $ _Transformable (undefined:: Map.Map Int Duration),
+  testProperty "instance Transformable Map.Map Int Span" $ _Transformable (undefined:: Map.Map Int Span),
 
-  I_TEST2("Transformable Int", _Transformable, Int),
-  I_TEST2("Transformable Double", _Transformable, Double),
+  testProperty "instance Transformable Int" $ _Transformable (undefined:: Int),
+  testProperty "instance Transformable Double" $ _Transformable (undefined:: Double),
 
-  I_TEST2("Transformable Event Int", _Transformable, Event Int),
-  I_TEST2("Transformable Event Double", _Transformable, Event Double),
-  I_TEST2("Transformable Note Int", _Transformable, Note Int),
-  I_TEST2("Transformable Note Double", _Transformable, Note Double),
-  I_TEST2("Transformable Placed Int", _Transformable, Placed Int),
-  I_TEST2("Transformable Placed Double", _Transformable, Placed Double),
-  I_TEST2("Transformable AddMeta (Placed Double)", _Transformable, AddMeta (Placed Double)),
+  testProperty "instance Transformable Event Int" $ _Transformable (undefined:: Event Int),
+  testProperty "instance Transformable Event Double" $ _Transformable (undefined:: Event Double),
+  testProperty "instance Transformable Note Int" $ _Transformable (undefined:: Note Int),
+  testProperty "instance Transformable Note Double" $ _Transformable (undefined:: Note Double),
+  testProperty "instance Transformable Placed Int" $ _Transformable (undefined:: Placed Int),
+  testProperty "instance Transformable Placed Double" $ _Transformable (undefined:: Placed Double),
+  testProperty "instance Transformable AddMeta (Placed Double)" $ _Transformable (undefined:: AddMeta (Placed Double)),
 
-  I_TEST2("Transformable Reactive Int", _Transformable, Reactive Int),
-  I_TEST2("Transformable Aligned Int", _Transformable, Aligned Int),
-  I_TEST2("Transformable Aligned (Voice Int)", _Transformable, Aligned (Voice Int)),
-  I_TEST2("HasPosition/Transformable (Aligned (Voice Int))",
-    _HasPositionTransformable, Aligned (Voice Int)),
-  I_TEST2("HasPosition/HasDuration (Aligned (Voice Int))",
-    _HasDurationHasPosition, Aligned (Voice Int)),
+  testProperty "instance Transformable Reactive Int" $ _Transformable (undefined:: Reactive Int),
+  testProperty "instance Transformable Aligned Int" $ _Transformable (undefined:: Aligned Int),
+  testProperty "instance Transformable Aligned (Voice Int)" $ _Transformable (undefined:: Aligned (Voice Int)),
+  testProperty "instance HasPosition/Transformable (Aligned (Voice Int))" $ _HasPositionTransformable (undefined:: Aligned (Voice Int)),
+  
+  testProperty "instance HasPosition/HasDuration (Aligned (Voice Int))" $ _HasDurationHasPosition (undefined:: Aligned (Voice Int)),
 
-  I_TEST2("Transformable Voice Int", _Transformable, Voice Int),
-  I_TEST2("Transformable Score Int", _Transformable, Score Int),
-  I_TEST2("Transformable Track Int", _Transformable, Track Int),
-  I_TEST2("Transformable [Voice Int]", _Transformable, [Voice Int]),
+  
+  testProperty "instance Transformable Voice Int" $ _Transformable (undefined:: Voice Int),
+  testProperty "instance Transformable Score Int" $ _Transformable (undefined:: Score Int),
+  testProperty "instance Transformable Track Int" $ _Transformable (undefined:: Track Int),
+  testProperty "instance Transformable [Voice Int]" $ _Transformable (undefined:: [Voice Int]),
 
   -- TODO requires comparison of rendered form
   -- Use newtype wrapper for Eq instance!
   -- Similarly for Behavior
-  --  I_TEST2("Transformable Pattern Int", _Transformable, Pattern Int),
+  --  testProperty "instance Transformable Pattern Int" $ _Transformable (undefined:: Pattern Int),
 
-  I_TEST2("HasDuration Span", _HasDuration, Span),
-  I_TEST2("HasDuration Event Int", _HasDuration, Event Int),
-  I_TEST2("HasDuration Event Double", _HasDuration, Event Double),
+  testProperty "instance HasDuration Span" $ _HasDuration (undefined:: Span),
+  testProperty "instance HasDuration Event Int" $ _HasDuration (undefined:: Event Int),
+  testProperty "instance HasDuration Event Double" $ _HasDuration (undefined:: Event Double),
 
-  I_TEST2("HasPosition/HasDuration Span", _HasDurationHasPosition, Span),
-  I_TEST2("HasPosition/HasDuration Event Int", _HasDurationHasPosition, Event Int),
-  I_TEST2("HasPosition/HasDuration Event Double", _HasDurationHasPosition, Event Double),
-  I_TEST2("HasPosition/Transformable Score Int", _HasPositionTransformable, Score Int),
-  I_TEST2("HasPosition/HasDuration Event (Event Int)", _HasDurationHasPosition, Event (Event Int)),
-  I_TEST2("HasPosition/HasDuration Event (Score Int)", _HasDurationHasPosition, Event (Score Int)),
+  testProperty "instance HasPosition/HasDuration Span" $ _HasDurationHasPosition (undefined:: Span),
+  testProperty "instance HasPosition/HasDuration Event Int" $ _HasDurationHasPosition (undefined:: Event Int),
+  testProperty "instance HasPosition/HasDuration Event Double" $ _HasDurationHasPosition (undefined:: Event Double),
+  testProperty "instance HasPosition/Transformable Score Int" $ _HasPositionTransformable (undefined:: Score Int),
+  testProperty "instance HasPosition/HasDuration Event (Event Int)" $ _HasDurationHasPosition (undefined:: Event (Event Int)),
+  testProperty "instance HasPosition/HasDuration Event (Score Int)" $ _HasDurationHasPosition (undefined:: Event (Score Int)),
 
-  I_TEST2("Splittable Duration", _Splittable, Duration),
-  I_TEST2("Splittable AddMeta Duration", _Splittable, AddMeta Duration),
-  I_TEST2("Splittable Voice ()", _Splittable, Voice ()),
-  I_TEST2("Splittable Note ()", _Splittable, Note ()),
-  I_TEST2("Splittable Voice Int", _Splittable, Voice Int),
-  I_TEST2("Splittable Note Int", _Splittable, Note Int),
+  testProperty "instance Splittable Duration" $ _Splittable (undefined:: Duration),
+  testProperty "instance Splittable AddMeta Duration" $ _Splittable (undefined:: AddMeta Duration),
+  testProperty "instance Splittable Voice ()" $ _Splittable (undefined:: Voice ()),
+  testProperty "instance Splittable Note ()" $ _Splittable (undefined:: Note ()),
+  testProperty "instance Splittable Voice Int" $ _Splittable (undefined:: Voice Int),
+  testProperty "instance Splittable Note Int" $ _Splittable (undefined:: Note Int),
 
-  I_TEST2("Transformable Note [Event Int]", _Transformable, Note [Event Int])
+  testProperty "instance Transformable Note [Event Int]" $ _Transformable (undefined:: Note [Event Int])
 
   ]
 
