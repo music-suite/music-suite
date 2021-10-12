@@ -72,6 +72,7 @@ pkgs.stdenv.mkDerivation {
         #  cabal exec doctester --package music-suite -- src/Music/Score/Export && \
         cabal exec doctester --package music-suite -- src/Music/Score/Import && \
         cabal exec doctester --package music-suite -- src/Music/Score/Meta && \
+        cabal exec doctester --package music-suite -- src/Music/Score/Meta.hs && \
         cabal exec doctester --package music-suite -- src/Music/Time && \
         true;
     }
