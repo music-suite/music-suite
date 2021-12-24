@@ -32,9 +32,9 @@ let
     });
 
   pkgs = import (builtins.fetchTarball {
-    url = https://github.com/nixos/nixpkgs/archive/bad3ccd099ebe9a8aa017bda8500ab02787d90aa.tar.gz;
+    url = https://github.com/nixos/nixpkgs/archive/1158f3463912d54cc981d61213839ec6c02570d3.tar.gz;
     # Hash obtained using `nix-prefetch-url --unpack <url>`
-    sha256 = "07ik6rcfpcvj2zch3mzkxwxjs817iysbvsydkm85f14kn7gnyzp5";
+    sha256 = "1v94p8mn3kw3yq79jhmrg0a7zam34v9pvx1sz534y737k2cwbx41";
   }) { config = opts; overlays = [ addOrmulo ]; };
 in
 
