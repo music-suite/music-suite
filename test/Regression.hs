@@ -8,18 +8,20 @@ import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.Golden (goldenVsString)
 import qualified Text.Pretty
 
--- | Export a score as Lilypond. Returns a UTF-8 encoded byte sequence.
+-- | Export a score as Lilypond. Returns an UTF-8 encoded byte sequence.
 toLilypondRaw :: Music -> IO ByteString
 toLilypondRaw music = do
   work <- runIOExportM $ toStandardNotation music
   (h, ly) <- runIOExportM $ toLy defaultLilypondOptions work
   toLilypondRaw' h ly
 
+-- | Same as @toLilypondRaw@ but accepts @Lilypond.Music@.
 toLilypondRaw' :: String -> Lilypond.Music -> IO ByteString
 toLilypondRaw' header ly = do
   let ly' = header ++ show (Text.Pretty.pretty ly)
   pure $ fromStrict $ encodeUtf8 $ pack ly'
 
+lilypondRegresionTest :: String -> IO ByteString -> TestTree
 lilypondRegresionTest name =
   goldenVsString
     name
