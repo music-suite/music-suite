@@ -6,6 +6,7 @@
 *.ly
 !/test/regression/lilypond/*.ly
 *.mid
+!/test/regression/midi/*.mid
 *.o
 *.pdf
 *.plg
