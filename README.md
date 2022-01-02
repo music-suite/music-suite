@@ -56,9 +56,12 @@ $ cabal update
 $ cabal build
 ```
 
-### Build and run the tests
 
-#### Standard test suite
+### Testing
+
+#### Run the test suite:
+
+To run all tests except doctests (see below):
 
 ```
 $ cabal test --test-show-details=streaming --test-options=--color=always
@@ -76,9 +79,21 @@ e.g.
 $ cabal run music-suite-test-xml-parser
 ```
 
+#### Expected output (regression tests)
+
+Some tests have *expected output*, stored in `test/regression`.
+
+If the output of these tests have changed, the diff should be manually inspected to assure that the new output is in fact correct. This may be because:
+
+1. The output is in fact expected to change.
+1. The output has changed in a way that is invisible to the end user, such as a a change to an `*.ly` output file that does not affect the appearance of the printed music.
+
+To identify the latter it may be necessar to run `lilypond` or `timidity` on both the old and new versions of the output file.
+
+
 #### Doctests
 
-Music Suite makes heavy use of [doctests](https://en.wikipedia.org/wiki/Doctest). 
+Music Suite makes use of [doctests](https://en.wikipedia.org/wiki/Doctest).
 
 You can pass any file or directory. For example to test `src/Music/Pitch`:
 
@@ -97,6 +112,7 @@ To run all doctests use (Nix only):
 ```
 $ doctests
 ```
+
 
 
 
@@ -133,6 +149,14 @@ $ cabal haddock
 $ cabal exec runhaskell -- examples/chopin.hs -f ly -o t.ly
 ```
 
+
+### Continous Integration
+
+To replicate all steps run by the CI (Nix only), run:
+
+```
+$ ci
+```
 
 
 ## How to upgrade the compiler
