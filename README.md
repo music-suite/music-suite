@@ -88,8 +88,16 @@ If the output of these tests have changed, the diff should be manually inspected
 1. The output is in fact expected to change.
 1. The output has changed in a way that is invisible to the end user, such as a a change to an `*.ly` output file that does not affect the appearance of the printed music.
 
-To identify the latter it may be necessar to run `lilypond` or `timidity` on both the old and new versions of the output file.
+To identify the latter it may be necessar to run `lilypond` or `timidity` on both the old and new versions of the output file. To do this manually after a failure.
 
+1. (optional) Re-run regression tests to see that it fails: `cabal test music-suite-test-regression`
+1. For each failing file, run `lilypond` (for `*.ly` files) or `timidity` (for `*.mid` files).
+1. Regenerate the expected files: `cabal test music-suite-test-regression --test-options=--accept`
+1. For each changed file, run `lilypond` or `timidity` as before.
+1. Inspect the old/new version side by side.
+1. If all are correct, commit the changes to `test/regression`.
+
+> Note: after running `--accept`, you can use `git diff --name-only test/regression` to get a list of changed files, assuming the repo was clean before.
 
 #### Doctests
 
