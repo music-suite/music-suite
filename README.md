@@ -90,9 +90,9 @@ If the output of these tests have changed, the diff should be manually inspected
 
 To identify the latter it may be necessar to run `lilypond` or `timidity` on both the old and new versions of the output file. To do this manually after a failure.
 
-1. (optional) Re-run regression tests to see that it fails: `cabal test music-suite-test-regression`
+1. (optional) Re-run regression tests to see that it fails: `cabal test music-suite-test-regression --test-options=--color=always`
 1. For each failing file, run `lilypond` (for `*.ly` files) or `timidity` (for `*.mid` files).
-1. Regenerate the expected files: `cabal test music-suite-test-regression --test-options=--accept`
+1. Regenerate the expected files: `cabal test music-suite-test-regression --test-options=--color=always --test-options=--accept`
 1. For each changed file, run `lilypond` or `timidity` as before.
 1. Inspect the old/new version side by side.
 1. If all are correct, commit the changes to `test/regression`.
