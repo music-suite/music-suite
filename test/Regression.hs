@@ -1,10 +1,12 @@
 import Data.ByteString.Lazy (ByteString, fromStrict)
 import qualified Data.Music.Lilypond as Lilypond
 import qualified Codec.Midi as Midi
+import qualified Codec.ByteString.Builder
 import Data.Text (pack)
 import Data.Text.Encoding (encodeUtf8)
 import Music.Prelude (Music, c, d, e, pseq, timeSignature, (|>))
 import Music.Score.Export.StandardNotation (defaultLilypondOptions, runIOExportM, toLy, toStandardNotation)
+import qualified Music.Score.Export.StandardNotation as StandardNotation
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.Golden (goldenVsString)
 import qualified Text.Pretty
@@ -21,6 +23,12 @@ toLilypondRaw' :: String -> Lilypond.Music -> IO ByteString
 toLilypondRaw' header ly = do
   let ly' = header ++ show (Text.Pretty.pretty ly)
   pure $ fromStrict $ encodeUtf8 $ pack ly'
+
+toMidi :: Music -> IO ByteString
+toMidi music = do
+  midi <- runIOExportM $ StandardNotation.toMidi music
+  let builder = Midi.buildMidi midi
+  pure $ Codec.ByteString.Builder.toLazyByteString builder
 
 lilypondRegresionTest :: String -> IO ByteString -> TestTree
 lilypondRegresionTest name =
@@ -54,7 +62,10 @@ tests =
         ( Lilypond.sequential
             (Lilypond.Tempo Nothing (Just (1 / 4, 120)))
             (Lilypond.Note c Nothing [])
-        )
+        ),
+    midiRegressionTest
+      "two-notes"
+      $ toMidi $ pseq [c,d]
   ]
 
 main = defaultMain (testGroup "Regression tests" tests)
