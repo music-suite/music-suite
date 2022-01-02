@@ -26,13 +26,13 @@ lilypondRegresionTest :: String -> IO ByteString -> TestTree
 lilypondRegresionTest name =
   goldenVsString
     name
-    ("test/regression/lilypond" ++ name ++ ".ly")
+    ("test/regression/lilypond/" ++ name ++ ".ly")
 
 midiRegressionTest :: String -> IO ByteString -> TestTree
 midiRegressionTest name =
   goldenVsString
     name
-    ("test/regression/midi" ++ name ++ ".mid")
+    ("test/regression/midi/" ++ name ++ ".mid")
 
 tests :: [TestTree]
 tests =
