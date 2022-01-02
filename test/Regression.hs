@@ -4,11 +4,11 @@ import qualified Codec.Midi as Midi
 import qualified Codec.ByteString.Builder
 import Data.Text (pack)
 import Data.Text.Encoding (encodeUtf8)
-import Music.Prelude (Music, c, d, e, pseq, timeSignature, (|>), violins, trumpets, parts')
+import Music.Prelude (Music, c, d, e, f, g, pseq, timeSignature, (|>), violins, trumpets, parts', solo, fromMidiProgram, stretch, delay)
 import Music.Score.Export.StandardNotation (defaultLilypondOptions, runIOExportM, toLy, toStandardNotation)
 import qualified Music.Score.Export.StandardNotation as StandardNotation
 import Test.Tasty (TestTree, defaultMain, testGroup)
-import Test.Tasty.Golden (goldenVsString)
+import Test.Tasty.Golden (goldenVsString, goldenVsStringDiff)
 import qualified Text.Pretty
 import qualified Control.Lens
 
@@ -39,8 +39,9 @@ lilypondRegresionTest name =
 
 midiRegressionTest :: String -> IO ByteString -> TestTree
 midiRegressionTest name =
-  goldenVsString
+  goldenVsStringDiff
     name
+    (\ref new -> ["diff", ref, new]) -- TODO better diff
     ("test/regression/midi/" ++ name ++ ".mid")
 
 tests :: [TestTree]
@@ -69,7 +70,14 @@ tests =
       $ toMidi $ pseq [c,d],
     midiRegressionTest
       "two-notes-parts"
-      $ toMidi $ pseq [Control.Lens.set parts' violins c, Control.Lens.set parts' trumpets d]
+      $ toMidi $ pseq [Control.Lens.set parts' violins c, Control.Lens.set parts' trumpets d],
+    midiRegressionTest
+      "set-parts"
+      $ toMidi $
+         pseq $ fmap (stretch (1/8)) $ concat $
+          flip fmap [57.. 80] $ \channel ->
+            flip fmap [c, d, e, f, g] $ \note ->
+              Control.Lens.set parts' (solo (fromMidiProgram channel)) note
   ]
 
 main = defaultMain (testGroup "Regression tests" tests)
