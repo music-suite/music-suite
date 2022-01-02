@@ -116,7 +116,7 @@ $ cabal repl
 
 #### User Guide
 
-TODO
+See [these instructions](docs-sphinx).
 
 The output appears in `docs/build`. You can point a HTTP server to this directory.
 
