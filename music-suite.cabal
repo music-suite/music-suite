@@ -329,10 +329,11 @@ test-suite "music-suite-test-laws"
 test-suite "music-suite-test-regression"
     build-depends:      base,
                         bytestring,
-                        text,
+                        HCodecs,
+                        prettify,
                         tasty,
                         tasty-golden,
-                        prettify,
+                        text,
                         music-suite
     type:               exitcode-stdio-1.0
     main-is:            Regression.hs

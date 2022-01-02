@@ -1,5 +1,6 @@
 import Data.ByteString.Lazy (ByteString, fromStrict)
 import qualified Data.Music.Lilypond as Lilypond
+import qualified Codec.Midi as Midi
 import Data.Text (pack)
 import Data.Text.Encoding (encodeUtf8)
 import Music.Prelude (Music, c, d, e, pseq, timeSignature, (|>))
@@ -26,6 +27,12 @@ lilypondRegresionTest name =
   goldenVsString
     name
     ("test/regression/lilypond" ++ name ++ ".ly")
+
+midiRegressionTest :: String -> IO ByteString -> TestTree
+midiRegressionTest name =
+  goldenVsString
+    name
+    ("test/regression/midi" ++ name ++ ".mid")
 
 tests :: [TestTree]
 tests =
