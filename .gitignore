@@ -43,3 +43,4 @@ tags
 .music-suite-inspect
 # For now, used by the interactive shell:
 r/
+*.wav

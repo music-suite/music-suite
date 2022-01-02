@@ -4,12 +4,13 @@ import qualified Codec.Midi as Midi
 import qualified Codec.ByteString.Builder
 import Data.Text (pack)
 import Data.Text.Encoding (encodeUtf8)
-import Music.Prelude (Music, c, d, e, pseq, timeSignature, (|>))
+import Music.Prelude (Music, c, d, e, pseq, timeSignature, (|>), violins, trumpets, parts')
 import Music.Score.Export.StandardNotation (defaultLilypondOptions, runIOExportM, toLy, toStandardNotation)
 import qualified Music.Score.Export.StandardNotation as StandardNotation
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.Golden (goldenVsString)
 import qualified Text.Pretty
+import qualified Control.Lens
 
 -- | Export a score as Lilypond. Returns an UTF-8 encoded byte sequence.
 toLilypondRaw :: Music -> IO ByteString
@@ -65,7 +66,10 @@ tests =
         ),
     midiRegressionTest
       "two-notes"
-      $ toMidi $ pseq [c,d]
+      $ toMidi $ pseq [c,d],
+    midiRegressionTest
+      "two-notes-parts"
+      $ toMidi $ pseq [Control.Lens.set parts' violins c, Control.Lens.set parts' trumpets d]
   ]
 
 main = defaultMain (testGroup "Regression tests" tests)
