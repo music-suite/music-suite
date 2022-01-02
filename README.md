@@ -116,7 +116,7 @@ $ cabal repl
 
 #### User Guide
 
-See [these instructions](https://github.com/music-suite/music-suite/tree/main/docs-sphinx).
+See [these instructions](docs-sphinx).
 
 The output appears in `docs/build`. You can point a HTTP server to this directory.
 
