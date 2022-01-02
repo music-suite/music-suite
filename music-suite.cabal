@@ -330,6 +330,7 @@ test-suite "music-suite-test-regression"
     build-depends:      base,
                         bytestring,
                         HCodecs,
+                        lens,
                         prettify,
                         tasty,
                         tasty-golden,
