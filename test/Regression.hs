@@ -6,7 +6,7 @@ import qualified Codec.Midi.Json as Midi.Json
 import qualified Codec.ByteString.Builder
 import Data.Text (pack)
 import Data.Text.Encoding (encodeUtf8)
-import Music.Prelude (Music, c, d, e, f, g, pseq, timeSignature, (|>), violins, trumpets, parts', solo, fromMidiProgram, stretch, delay)
+import Music.Prelude (Music, c, d, e, f, g, pseq, timeSignature, (|>), (|*), violins, trumpets, parts', solo, fromMidiProgram, stretch, delay)
 import Music.Score.Export.StandardNotation (defaultLilypondOptions, runIOExportM, toLy, toStandardNotation)
 import qualified Music.Score.Export.StandardNotation as StandardNotation
 import Test.Tasty (TestTree, defaultMain, testGroup)
@@ -106,25 +106,25 @@ tests =
         "set-parts"
         $ stretch (1/16)
         $ pseq $ flip fmap ([56..60]++[64..73]) $ \prog ->
-           pseq $ flip fmap [c, d, e, f, g] $ \note ->
+           pseq $ flip fmap [c, d, e, f, g |* 4] $ \note ->
             Control.Lens.set parts' (solo $ fromMidiProgram prog) note,
       midiRegressionTest
         "set-parts-issue-91"
         $ stretch (1/16)
         $ pseq $ flip fmap [20.. 30] $ \channel ->
-            pseq $ flip fmap [c, d] $ \note ->
+            pseq $ flip fmap [c, d |* 3] $ \note ->
               Control.Lens.set parts' (solo $ fromMidiProgram channel) note,
       midiRegressionTest
         "set-parts-issue-91-mini"
         $ stretch (1/16)
         $ pseq $ flip fmap [25,26] $ \channel ->
-            pseq $ flip fmap [c] $ \note ->
+            pseq $ flip fmap [c |* 4] $ \note ->
               Control.Lens.set parts' (solo $ fromMidiProgram channel) note,
       midiRegressionTest
         "set-parts-issue-91-short"
         $ stretch (1/16)
         $ pseq $ flip fmap [20..26] $ \channel ->
-            pseq $ flip fmap [c, d] $ \note ->
+            pseq $ flip fmap [c, d |* 3] $ \note ->
               Control.Lens.set parts' (solo $ fromMidiProgram channel) note
 
     ])
