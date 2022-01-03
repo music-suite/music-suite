@@ -73,59 +73,7 @@
                 {
                     "tag": "ProgramChange",
                     "channel": 1,
-                    "preset": 23
-                }
-            ],
-            [
-                0,
-                {
-                    "tag": "NoteOn",
-                    "channel": 1,
-                    "key": 60,
-                    "velocity": 64
-                }
-            ],
-            [
-                128,
-                {
-                    "tag": "NoteOff",
-                    "channel": 1,
-                    "key": 60,
-                    "velocity": 64
-                }
-            ],
-            [
-                0,
-                {
-                    "tag": "NoteOn",
-                    "channel": 1,
-                    "key": 62,
-                    "velocity": 64
-                }
-            ],
-            [
-                128,
-                {
-                    "tag": "NoteOff",
-                    "channel": 1,
-                    "key": 62,
-                    "velocity": 64
-                }
-            ],
-            [
-                10000,
-                {
-                    "tag": "TrackEnd"
-                }
-            ]
-        ],
-        [
-            [
-                0,
-                {
-                    "tag": "ProgramChange",
-                    "channel": 1,
-                    "preset": 23
+                    "preset": 21
                 }
             ],
             [
@@ -176,7 +124,7 @@
                 0,
                 {
                     "tag": "ProgramChange",
-                    "channel": 1,
+                    "channel": 2,
                     "preset": 23
                 }
             ],
@@ -184,7 +132,7 @@
                 768,
                 {
                     "tag": "NoteOn",
-                    "channel": 1,
+                    "channel": 2,
                     "key": 60,
                     "velocity": 64
                 }
@@ -193,7 +141,7 @@
                 128,
                 {
                     "tag": "NoteOff",
-                    "channel": 1,
+                    "channel": 2,
                     "key": 60,
                     "velocity": 64
                 }
@@ -202,7 +150,7 @@
                 0,
                 {
                     "tag": "NoteOn",
-                    "channel": 1,
+                    "channel": 2,
                     "key": 62,
                     "velocity": 64
                 }
@@ -211,7 +159,7 @@
                 128,
                 {
                     "tag": "NoteOff",
-                    "channel": 1,
+                    "channel": 2,
                     "key": 62,
                     "velocity": 64
                 }
@@ -228,15 +176,67 @@
                 0,
                 {
                     "tag": "ProgramChange",
-                    "channel": 2,
-                    "preset": 26
+                    "channel": 3,
+                    "preset": 20
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 3,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 3,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 3,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 3,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ],
+        [
+            [
+                0,
+                {
+                    "tag": "ProgramChange",
+                    "channel": 4,
+                    "preset": 24
                 }
             ],
             [
                 1024,
                 {
                     "tag": "NoteOn",
-                    "channel": 2,
+                    "channel": 4,
                     "key": 60,
                     "velocity": 64
                 }
@@ -245,7 +245,7 @@
                 128,
                 {
                     "tag": "NoteOff",
-                    "channel": 2,
+                    "channel": 4,
                     "key": 60,
                     "velocity": 64
                 }
@@ -254,7 +254,7 @@
                 0,
                 {
                     "tag": "NoteOn",
-                    "channel": 2,
+                    "channel": 4,
                     "key": 62,
                     "velocity": 64
                 }
@@ -263,7 +263,7 @@
                 128,
                 {
                     "tag": "NoteOff",
-                    "channel": 2,
+                    "channel": 4,
                     "key": 62,
                     "velocity": 64
                 }
@@ -280,59 +280,7 @@
                 0,
                 {
                     "tag": "ProgramChange",
-                    "channel": 2,
-                    "preset": 26
-                }
-            ],
-            [
-                1280,
-                {
-                    "tag": "NoteOn",
-                    "channel": 2,
-                    "key": 60,
-                    "velocity": 64
-                }
-            ],
-            [
-                128,
-                {
-                    "tag": "NoteOff",
-                    "channel": 2,
-                    "key": 60,
-                    "velocity": 64
-                }
-            ],
-            [
-                0,
-                {
-                    "tag": "NoteOn",
-                    "channel": 2,
-                    "key": 62,
-                    "velocity": 64
-                }
-            ],
-            [
-                128,
-                {
-                    "tag": "NoteOff",
-                    "channel": 2,
-                    "key": 62,
-                    "velocity": 64
-                }
-            ],
-            [
-                10000,
-                {
-                    "tag": "TrackEnd"
-                }
-            ]
-        ],
-        [
-            [
-                0,
-                {
-                    "tag": "ProgramChange",
-                    "channel": 2,
+                    "channel": 5,
                     "preset": 26
                 }
             ],
@@ -340,7 +288,7 @@
                 1536,
                 {
                     "tag": "NoteOn",
-                    "channel": 2,
+                    "channel": 5,
                     "key": 60,
                     "velocity": 64
                 }
@@ -349,7 +297,7 @@
                 128,
                 {
                     "tag": "NoteOff",
-                    "channel": 2,
+                    "channel": 5,
                     "key": 60,
                     "velocity": 64
                 }
@@ -358,7 +306,7 @@
                 0,
                 {
                     "tag": "NoteOn",
-                    "channel": 2,
+                    "channel": 5,
                     "key": 62,
                     "velocity": 64
                 }
@@ -367,7 +315,59 @@
                 128,
                 {
                     "tag": "NoteOff",
-                    "channel": 2,
+                    "channel": 5,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ],
+        [
+            [
+                0,
+                {
+                    "tag": "ProgramChange",
+                    "channel": 6,
+                    "preset": 25
+                }
+            ],
+            [
+                1280,
+                {
+                    "tag": "NoteOn",
+                    "channel": 6,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 6,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 6,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 6,
                     "key": 62,
                     "velocity": 64
                 }

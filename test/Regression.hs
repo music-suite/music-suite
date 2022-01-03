@@ -120,10 +120,15 @@ tests =
             pseq $ flip fmap [c, d] $ \note ->
               Control.Lens.set parts' (solo $ fromMidiProgram channel) note,
       midiRegressionTest
-        -- TODO this one has right structure but the wrong presets
+        "set-parts-issue-91-mini"
+        $ stretch (1/16)
+        $ pseq $ flip fmap [25,26] $ \channel ->
+            pseq $ flip fmap [c] $ \note ->
+              Control.Lens.set parts' (solo $ fromMidiProgram channel) note,
+      midiRegressionTest
         "set-parts-issue-91-short"
         $ stretch (1/16)
-        $ pseq $ flip fmap [20.. 26] $ \channel ->
+        $ pseq $ flip fmap [20..26] $ \channel ->
             pseq $ flip fmap [c, d] $ \note ->
               Control.Lens.set parts' (solo $ fromMidiProgram channel) note
 
