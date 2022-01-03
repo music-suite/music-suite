@@ -1,6 +1,7 @@
 import Data.ByteString.Lazy (ByteString, fromStrict)
 import qualified Data.Music.Lilypond as Lilypond
 import qualified Codec.Midi as Midi
+import qualified Codec.Midi.Json as Midi.Json
 import qualified Codec.ByteString.Builder
 import Data.Text (pack)
 import Data.Text.Encoding (encodeUtf8)
@@ -43,6 +44,13 @@ midiRegressionTest name =
     name
     (\ref new -> ["diff", ref, new]) -- TODO better diff
     ("test/regression/midi/" ++ name ++ ".mid")
+
+midiJsonRegressionTest :: String -> IO ByteString -> TestTree
+midiJsonRegressionTest name =
+  goldenVsString
+    name
+    ("test/regression/midi-json/" ++ name ++ ".json")
+
 
 tests :: [TestTree]
 tests =

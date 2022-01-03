@@ -27,6 +27,7 @@ library
     build-depends:
                         base,
                         aeson,
+                        aeson-pretty,
                         average,
                         base-orphans,
                         base-prelude,
@@ -79,6 +80,7 @@ library
                         Control.Monad.Abort
                         Control.Monad.Log
                         Codec.Midi.Generic
+                        Codec.Midi.Json
                         Data.AffineSpace.Point
                         Data.AffineSpace.Point.Offsets
                         Data.FiniteSeq
