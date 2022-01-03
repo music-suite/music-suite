@@ -1024,7 +1024,7 @@ movementToPartwiseXml movement = music
 type MidiInstr = (Midi.Channel, Midi.Preset)
 
 data MidiScore a = MidiScore [(MidiInstr, Score a)]
-  deriving (Functor)
+  deriving (Functor, Show)
 
 type MidiExportM m = (MonadLog String m, MonadError String m)
 
@@ -1057,6 +1057,12 @@ type MidiExportM m = (MonadLog String m, MonadError String m)
 toMidi :: (MidiExportM m) => Asp -> m Midi.Midi
 toMidi = fmap (finalizeExport . fmap exportNote) . exportScore . mcatMaybes
 
+-- |
+-- >>> let c = Music.Pitch.c
+-- >>> let d = Music.Pitch.d
+-- >>> let (Right res) = runPureExportMNoLog $ exportScore $ c
+-- >>> fmap (fmap $ Control.Lens.toListOf Music.Score.pitches') res
+-- MidiScore [((0,0),[(0 <-> 2,PartT {getPartT = (Piano I,[c])})^.event]^.score)]
 exportScore :: MidiExportM m => Score Asp1a -> m (MidiScore Asp1a)
 exportScore xs = do
   pa :: PartAllocation <- allocateParts $ Data.Set.fromList $ fmap (view Music.Parts.instrument . fst) ys
