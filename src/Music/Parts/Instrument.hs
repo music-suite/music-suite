@@ -116,6 +116,9 @@ instance FromJSON Instrument where
 -- >>> fmap (toMidiProgram . fromMidiProgram) [20..26]
 -- [Just 20,Just 21,Just 22,Just 23,Just 24,Just 25,Just 26]
 --
+-- >>> fmap (toMidiProgram . fromMidiProgram) [20..30]
+-- [Just 20,Just 21,Just 22,Just 23,Just 24,Just 25,Just 26,Just 27,Just 28,Just 29,Just 30]
+--
 -- >>> Data.List.nub (fmap fromMidiProgram [20..26])
 -- [Reed Organ,Accordion,Harmonica,Bandoneon,Acoustic Guitar,Steel-String Guitar,Electric Guitar]
 fromMidiProgram :: Int -> Instrument
