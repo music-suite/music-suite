@@ -68,8 +68,7 @@ pkgs.stdenv.mkDerivation {
         # cabal exec doctester --package music-suite -- src/Music/Score && \
         cabal exec doctester --package music-suite -- src/Music/Score/Dynamics && \
         cabal exec doctester --package music-suite -- src/Music/Score/Part && \
-        # TODO: strange import error:
-        #  cabal exec doctester --package music-suite -- src/Music/Score/Export && \
+        cabal exec doctester --package music-suite -- src/Music/Score/Export && \
         cabal exec doctester --package music-suite -- src/Music/Score/Import && \
         cabal exec doctester --package music-suite -- src/Music/Score/Meta && \
         cabal exec doctester --package music-suite -- src/Music/Score/Meta.hs && \
