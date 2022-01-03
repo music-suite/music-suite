@@ -78,6 +78,7 @@ library
                         Music.Prelude.Standard
                         Control.Monad.Abort
                         Control.Monad.Log
+                        Codec.Midi.Generic
                         Data.AffineSpace.Point
                         Data.AffineSpace.Point.Offsets
                         Data.FiniteSeq
