@@ -80,4 +80,5 @@ tests =
               Control.Lens.set parts' (solo $ fromMidiProgram prog) note
   ]
 
+main :: IO ()
 main = defaultMain (testGroup "Regression tests" tests)
