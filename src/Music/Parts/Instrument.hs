@@ -85,7 +85,9 @@ instance Eq Instrument where
   x == y = soundId x == soundId y
 
 instance Ord Instrument where
-  compare x y = compare (scoreOrder x) (scoreOrder y)
+  compare x y = case compare (scoreOrder x) (scoreOrder y) of
+    EQ -> compare (soundId x) (soundId y)
+    x -> x
 
 -- | This instance is quite arbitrary but very handy.
 instance Default Instrument where
