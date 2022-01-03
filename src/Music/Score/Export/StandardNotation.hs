@@ -330,7 +330,7 @@ type Template = String
 -- |
 -- One-function templating system.
 --
--- TODO>>> expand "me : $(name)" (Map.fromList [("name","Hans")])
+-- >>> expandTemplate "me : $(name)" (Data.Map.fromList [("name","Hans")])
 -- "me : Hans"
 expandTemplate :: Template -> Map String String -> String
 expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys vs) t
