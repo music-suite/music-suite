@@ -1,0 +1,76 @@
+{
+    "tracks": [
+        [
+            [
+                0,
+                {
+                    "tag": "TempoChange",
+                    "contents": 1000000
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ],
+        [
+            [
+                0,
+                {
+                    "tag": "ProgramChange",
+                    "channel": 0,
+                    "preset": 0
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 0,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                2048,
+                {
+                    "tag": "NoteOff",
+                    "channel": 0,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 0,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                2048,
+                {
+                    "tag": "NoteOff",
+                    "channel": 0,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ]
+    ],
+    "fileType": "MultiTrack",
+    "timeDiv": {
+        "tag": "TicksPerBeat",
+        "contents": 1024
+    }
+}
