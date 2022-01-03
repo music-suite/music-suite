@@ -107,6 +107,15 @@ instance FromJSON Instrument where
 
 -- | Create an instrument from a MIDI program number.
 -- Given number should be in the range 0 - 127.
+--
+-- >>> fromMidiProgram 20
+-- Reed Organ
+--
+-- >>> fmap (toMidiProgram . fromMidiProgram) [20..26]
+-- [Just 20,Just 21,Just 22,Just 23,Just 24,Just 25,Just 26]
+--
+-- >>> Data.List.nub (fmap fromMidiProgram [20..26])
+-- [Reed Organ,Accordion,Harmonica,Bandoneon,Acoustic Guitar,Steel-String Guitar,Electric Guitar]
 fromMidiProgram :: Int -> Instrument
 fromMidiProgram = StdInstrument
 

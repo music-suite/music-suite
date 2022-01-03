@@ -113,7 +113,17 @@ tests =
         $ stretch (1/16)
         -- TODO too few tracks/ProgramChange events
         -- Does fromMidiProgram not preserve equality for these values?
+        --
+        -- Captured by this doctest failure
+        -- >>> fmap (toMidiProgram . fromMidiProgram) [20..30] == fmap Just [20..30]
         $ pseq $ flip fmap [20.. 30] $ \channel ->
+            pseq $ flip fmap [c, d] $ \note ->
+              Control.Lens.set parts' (solo $ fromMidiProgram channel) note,
+      midiRegressionTest
+        -- TODO this one has right structure but the wrong presets
+        "set-parts-issue-91-short"
+        $ stretch (1/16)
+        $ pseq $ flip fmap [20.. 26] $ \channel ->
             pseq $ flip fmap [c, d] $ \note ->
               Control.Lens.set parts' (solo $ fromMidiProgram channel) note
 
