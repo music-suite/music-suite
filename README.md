@@ -187,6 +187,15 @@ Because GHC pins a version of the Haskell base library, GHC and the Cabal depend
 1. Restore `reject-unconstrained-dependencies`
 1. Commit your changes.
 
+## How to add a new dependency
+
+1. Comment out `reject-unconstrained-dependencies` in `cabal.project`
+1. Add the dependency to `music-suite.cabal`
+1. Update `index-state` in Cabal config to a recent time
+1. Run `cabal freeze`
+1. Run `cabal test` to check that compiling/testing works (and fix errors)
+1. Restore `reject-unconstrained-dependencies`
+1. Commit your changes.
 
 # Developer notes
 
