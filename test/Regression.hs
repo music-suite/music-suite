@@ -75,9 +75,9 @@ tests =
       "set-parts"
       $ toMidi $
          pseq $ fmap (stretch (1/8)) $ concat $
-          flip fmap [57.. 80] $ \channel ->
+          flip fmap ([56..60]++[64..73]) $ \prog ->
             flip fmap [c, d, e, f, g] $ \note ->
-              Control.Lens.set parts' (solo (fromMidiProgram channel)) note
+              Control.Lens.set parts' (solo $ fromMidiProgram prog) note
   ]
 
 main = defaultMain (testGroup "Regression tests" tests)
