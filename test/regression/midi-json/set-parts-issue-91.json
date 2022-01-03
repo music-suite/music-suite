@@ -1,0 +1,532 @@
+{
+    "tracks": [
+        [
+            [
+                0,
+                {
+                    "tag": "TempoChange",
+                    "contents": 1000000
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ],
+        [
+            [
+                0,
+                {
+                    "tag": "ProgramChange",
+                    "channel": 0,
+                    "preset": 22
+                }
+            ],
+            [
+                512,
+                {
+                    "tag": "NoteOn",
+                    "channel": 0,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 0,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 0,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 0,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ],
+        [
+            [
+                0,
+                {
+                    "tag": "ProgramChange",
+                    "channel": 1,
+                    "preset": 23
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 1,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 1,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 1,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 1,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ],
+        [
+            [
+                0,
+                {
+                    "tag": "ProgramChange",
+                    "channel": 1,
+                    "preset": 23
+                }
+            ],
+            [
+                256,
+                {
+                    "tag": "NoteOn",
+                    "channel": 1,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 1,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 1,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 1,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ],
+        [
+            [
+                0,
+                {
+                    "tag": "ProgramChange",
+                    "channel": 1,
+                    "preset": 23
+                }
+            ],
+            [
+                768,
+                {
+                    "tag": "NoteOn",
+                    "channel": 1,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 1,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 1,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 1,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ],
+        [
+            [
+                0,
+                {
+                    "tag": "ProgramChange",
+                    "channel": 2,
+                    "preset": 26
+                }
+            ],
+            [
+                1024,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ],
+        [
+            [
+                0,
+                {
+                    "tag": "ProgramChange",
+                    "channel": 2,
+                    "preset": 26
+                }
+            ],
+            [
+                1280,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ],
+        [
+            [
+                0,
+                {
+                    "tag": "ProgramChange",
+                    "channel": 2,
+                    "preset": 26
+                }
+            ],
+            [
+                1536,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 60,
+                    "velocity": 64
+                }
+            ],
+            [
+                0,
+                {
+                    "tag": "NoteOn",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                128,
+                {
+                    "tag": "NoteOff",
+                    "channel": 2,
+                    "key": 62,
+                    "velocity": 64
+                }
+            ],
+            [
+                10000,
+                {
+                    "tag": "TrackEnd"
+                }
+            ]
+        ]
+    ],
+    "fileType": "MultiTrack",
+    "timeDiv": {
+        "tag": "TicksPerBeat",
+        "contents": 1024
+    }
+}

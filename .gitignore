@@ -3,6 +3,7 @@
 *.bom
 *.hi
 *.json
+!/test/regression/midi-json/*.json
 *.ly
 !/test/regression/lilypond/*.ly
 *.mid
