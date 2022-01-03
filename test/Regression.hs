@@ -1,6 +1,7 @@
 import Data.ByteString.Lazy (ByteString, fromStrict)
 import qualified Data.Music.Lilypond as Lilypond
 import qualified Codec.Midi as Midi
+import Codec.Midi (Midi)
 import qualified Codec.Midi.Json as Midi.Json
 import qualified Codec.ByteString.Builder
 import Data.Text (pack)
@@ -12,6 +13,9 @@ import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.Golden (goldenVsString, goldenVsStringDiff)
 import qualified Text.Pretty
 import qualified Control.Lens
+import qualified Data.List
+
+-- TODO supress logging for runIOExportM unless flag is passed
 
 -- | Export a score as Lilypond. Returns an UTF-8 encoded byte sequence.
 toLilypondRaw :: Music -> IO ByteString
@@ -32,60 +36,79 @@ toMidi music = do
   let builder = Midi.buildMidi midi
   pure $ Codec.ByteString.Builder.toLazyByteString builder
 
+toMidiJson :: Music -> IO ByteString
+toMidiJson music = do
+  midi <- runIOExportM $ StandardNotation.toMidi music
+  pure $ Midi.Json.encode midi
+
 lilypondRegresionTest :: String -> IO ByteString -> TestTree
 lilypondRegresionTest name =
   goldenVsString
     name
     ("test/regression/lilypond/" ++ name ++ ".ly")
 
-midiRegressionTest :: String -> IO ByteString -> TestTree
-midiRegressionTest name =
+midiRegressionTestNoJson :: String -> Music -> TestTree
+midiRegressionTestNoJson name midi =
   goldenVsStringDiff
     name
     (\ref new -> ["diff", ref, new]) -- TODO better diff
     ("test/regression/midi/" ++ name ++ ".mid")
+    (toMidi midi)
 
-midiJsonRegressionTest :: String -> IO ByteString -> TestTree
-midiJsonRegressionTest name =
+midiJsonRegressionTest :: String -> Music -> TestTree
+midiJsonRegressionTest name midi =
   goldenVsString
     name
     ("test/regression/midi-json/" ++ name ++ ".json")
+    (toMidiJson midi)
+
+midiRegressionTest :: String -> Music -> [TestTree]
+midiRegressionTest name music =
+  [ midiRegressionTestNoJson name music, midiJsonRegressionTest name music ]
 
 
 tests :: [TestTree]
 tests =
-  [ lilypondRegresionTest
-      "tempo-change-generated" -- TODO this is time, not tempo, fix!!
-      $ toLilypondRaw $ c |> timeSignature (3 / 4) (pseq [d, e]),
-    lilypondRegresionTest
-      "data-lilypond-tempo-change-text-generated"
-      $ toLilypondRaw'
-        ""
-        ( Lilypond.sequential
-            (Lilypond.Tempo (Just "Allegro") Nothing)
-            (Lilypond.Note c Nothing [])
-        ),
-    lilypondRegresionTest
-      "data-lilypond-tempo-change-bpm-generated"
-      $ toLilypondRaw'
-        ""
-        ( Lilypond.sequential
-            (Lilypond.Tempo Nothing (Just (1 / 4, 120)))
-            (Lilypond.Note c Nothing [])
-        ),
-    midiRegressionTest
-      "two-notes"
-      $ toMidi $ pseq [c,d],
-    midiRegressionTest
-      "two-notes-parts"
-      $ toMidi $ pseq [Control.Lens.set parts' violins c, Control.Lens.set parts' trumpets d],
-    midiRegressionTest
-      "set-parts"
-      $ toMidi $
-         pseq $ fmap (stretch (1/8)) $ concat $
-          flip fmap ([56..60]++[64..73]) $ \prog ->
-            flip fmap [c, d, e, f, g] $ \note ->
-              Control.Lens.set parts' (solo $ fromMidiProgram prog) note
+  [
+  testGroup "Lilypond (from high-level DSL)"
+    [ lilypondRegresionTest
+        "tempo-change-generated" -- TODO this is time, not tempo, fix!!
+        $ toLilypondRaw $ c |> timeSignature (3 / 4) (pseq [d, e])
+    ],
+  testGroup "Lilypond (from Data.Lilypond)"
+    [
+      lilypondRegresionTest
+        "data-lilypond-tempo-change-text-generated"
+        $ toLilypondRaw'
+          ""
+          ( Lilypond.sequential
+              (Lilypond.Tempo (Just "Allegro") Nothing)
+              (Lilypond.Note c Nothing [])
+          ),
+      lilypondRegresionTest
+        "data-lilypond-tempo-change-bpm-generated"
+        $ toLilypondRaw'
+          ""
+          ( Lilypond.sequential
+              (Lilypond.Tempo Nothing (Just (1 / 4, 120)))
+              (Lilypond.Note c Nothing [])
+          )
+    ],
+  testGroup "Midi"
+    ((\[mid,json] -> [testGroup "MIDI files" mid, testGroup "JSON files" json]) $ Data.List.transpose [
+      midiRegressionTest
+        "two-notes"
+        $ pseq [c,d],
+      midiRegressionTest
+        "two-notes-parts"
+        $ pseq [Control.Lens.set parts' violins c, Control.Lens.set parts' trumpets d],
+      midiRegressionTest
+        "set-parts"
+        $ pseq $ fmap (stretch (1/8)) $ concat $
+            flip fmap ([56..60]++[64..73]) $ \prog ->
+              flip fmap [c, d, e, f, g] $ \note ->
+                Control.Lens.set parts' (solo $ fromMidiProgram prog) note
+    ])
   ]
 
 main :: IO ()
