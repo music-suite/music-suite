@@ -3,6 +3,9 @@
 -- |
 -- Simple canon on a familiar subject.
 --
+
+module Main where
+
 import Music.Prelude
 import Control.Lens (set)
 

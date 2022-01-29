@@ -6,6 +6,9 @@
 --
 -- Inspired by the Abjad transcription
 --
+
+module Main where
+
 import Music.Prelude hiding (open)
 import qualified Music.Score as S
 

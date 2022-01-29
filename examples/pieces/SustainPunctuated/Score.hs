@@ -47,7 +47,7 @@ subj2 :: (HasPitches' a, IsPitch a, S.GetPitch a ~ Pitch) => Voice a
 subj2 =
   compress 16
     $ mconcat $ take 6 -- (!! 3)
-    -- $ (!! 3)
+    --  $ (!! 3)
     $ stitchTogether
     $ mconcat
     $ concat
