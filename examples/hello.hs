@@ -1,7 +1,9 @@
 
 -- |
 -- This is the "Hello, world!" of Music Suite.
---
+
+module Main where
+
 -- The 'import' statement allow us to use Music Suite in this Haskell file.
 import Music.Prelude
 

@@ -2,7 +2,7 @@
 import Music.Prelude
 import Control.Lens (set)
 
-main = defaultMain $ fugue1a -- |> fugueX
+main = defaultMain $ fugue1a --  |> fugueX
 
 {-
 Develop tools for basic counterpoint techniques.
