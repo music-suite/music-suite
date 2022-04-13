@@ -202,19 +202,18 @@ Because GHC pins a version of the Haskell base library, GHC and the Cabal depend
 ## Module hierarchy
 
 - The high-level DSL:
-  - `Music.Time`: high-level DSL for time and rhythm
-  - `Music.Pitch`: high-level DSL for pitch (common, scientific)
-  - `Music.Dynamics`: high-level DSL for dynamics
-  - `Music.Articulation`: high-level DSL for musical articulation
-  - `Music.Part`: high-level DSL for instruments and parts
-  - `Music.Prelude`: prelude/standard library for the Music Suite DSL
+  - [`Music.Time`](src/Music/Time): high-level DSL for time and rhythm
+  - [`Music.Pitch`](src/Music/Pitch): high-level DSL for pitch (common, scientific)
+  - [`Music.Dynamics`](src/Music/Dynamics): high-level DSL for dynamics
+  - [`Music.Parts`](src/Music/Parts): high-level DSL for instruments and parts
+  - [`Music.Prelude`](src/Music/Prelude): prelude/standard library for the Music Suite DSL
 
 - The notation DSL:
-  - `Music.Notation.Standard`: DSL for representing Common/Western music notation
+  - [`Music.Notation.Standard`](src/Music/Notation/Standard): DSL for representing Common/Western music notation
 
 - Import & Export:
-  - `Data.Music.Lilypond`: AST, parsing and pretty-printing for the Lilypond language
-  - `Data.Music.MusicXml`: AST, parsing and pretty-printing for MusicXML
+  - [`Data.Music.Lilypond`](https://github.com/music-suite/music-suite/tree/main/src/Data/Music/Lilypond): AST, parsing and pretty-printing for the Lilypond language
+  - [`Data.Music.MusicXml`](https://github.com/music-suite/music-suite/tree/main/src/Data/Music/MusicXml): AST, parsing and pretty-printing for MusicXML
 
 - Utility
   - `Control.*`: miscellaneous algorithms and utilities
